@@ -95,6 +95,21 @@ export interface ISubject {
   color?: string;
 }
 
+export type ClassStatus = "DRAFT" | "PUBLISHED" | "SCHEDULED" | "LIVE" | "COMPLETED" | "CANCELLED";
+
+export interface IClassMaterial {
+  title: string;
+  fileUrl: string;
+  category?: string;
+  fileSize?: string;
+}
+
+export interface IAttendanceSession {
+  joinTime: Date | string;
+  leaveTime?: Date | string;
+  durationMinutes: number;
+}
+
 export interface ILiveSession {
   _id: string;
   title: string;
@@ -103,17 +118,23 @@ export interface ILiveSession {
   batchId: string | IBatch;
   teacherId: string | IUser;
   topic: string;
+  description?: string;
   date: string; // YYYY-MM-DD
   startTime: string; // "19:00"
   endTime: string; // "20:00"
-  status: "SCHEDULED" | "LIVE" | "COMPLETED" | "CANCELLED";
-  livekitRoomId: string;
+  status: ClassStatus;
+  meetingId: string;
+  livekitRoomId?: string;
   gracePeriodMinutes: number;
+  attendanceThresholdPercent?: number;
+  materials?: IClassMaterial[];
   actualStartTime?: Date;
   actualEndTime?: Date;
   allowLateJoinManually?: boolean;
   recordingUrl?: string;
   activePoll?: IClassroomPoll;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface IAttendance {
@@ -122,13 +143,17 @@ export interface IAttendance {
   sessionId: string | ILiveSession;
   batchId: string | IBatch;
   classLevel: ClassLevel;
+  sessions?: IAttendanceSession[];
+  totalDurationMinutes?: number;
   joinTime?: Date;
   leaveTime?: Date;
   durationMinutes: number;
   status: AttendanceStatus;
   manualOverride: boolean;
   remarks?: string;
+  lastActiveTime?: Date;
   createdAt: Date;
+  updatedAt?: Date;
 }
 
 export interface IStaffAttendance {

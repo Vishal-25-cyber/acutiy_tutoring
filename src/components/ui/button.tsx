@@ -15,24 +15,24 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "md", isLoading, children, disabled, ...props }, ref) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none rounded-xl active:scale-[0.98]";
+      "inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none rounded-lg cursor-pointer";
 
     const variants = {
-      default: "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-500/20 focus-visible:ring-indigo-500",
-      primary: "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/25 focus-visible:ring-indigo-500",
-      secondary: "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700 focus-visible:ring-slate-400",
-      outline: "border border-slate-300 dark:border-slate-700 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 focus-visible:ring-slate-400",
-      ghost: "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-750 dark:text-slate-300 focus-visible:ring-slate-400",
-      destructive: "bg-rose-600 text-white hover:bg-rose-700 shadow-md shadow-rose-500/20 focus-visible:ring-rose-500",
-      success: "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-500/20 focus-visible:ring-emerald-500",
-      glow: "bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50",
+      default: "bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:ring-indigo-500",
+      primary: "bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:ring-indigo-500",
+      secondary: "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 focus-visible:ring-slate-400",
+      outline: "border border-slate-300 dark:border-slate-700 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 focus-visible:ring-slate-400",
+      ghost: "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 focus-visible:ring-slate-400",
+      destructive: "bg-rose-600 text-white hover:bg-rose-700 focus-visible:ring-rose-500",
+      success: "bg-emerald-600 text-white hover:bg-emerald-700 focus-visible:ring-emerald-500",
+      glow: "bg-emerald-600 text-white hover:bg-emerald-700 focus-visible:ring-emerald-500",
     };
 
     const sizes = {
       sm: "h-8 px-3 text-xs",
-      md: "h-10 px-4 py-2 text-sm",
-      lg: "h-12 px-6 text-base font-semibold",
-      icon: "h-10 w-10 p-0",
+      md: "h-9 px-4 text-xs sm:text-sm",
+      lg: "h-11 px-6 text-sm font-semibold",
+      icon: "h-9 w-9 p-0",
     };
 
     return (

@@ -16,31 +16,40 @@ interface NotificationItem {
 
 export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationItem[]>([
-    {
-      _id: "1",
-      title: "Live Class in 25 Minutes",
-      message: "Class 10 Quadratic Equations batch starts at 7:00 PM.",
-      type: "CLASS_REMINDER",
-      read: false,
-      linkUrl: "/student/classes",
-      createdAt: "Just now",
-    },
-    {
-      _id: "2",
-      title: "New Worksheet Available",
-      message: "Science Ray Diagrams sample questions uploaded by Prof. Rajesh.",
-      type: "NEW_MATERIAL",
-      read: false,
-      linkUrl: "/student/materials",
-      createdAt: "1 hour ago",
-    },
-  ]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+
+  useEffect(() => {
+    async function loadNotifications() {
+      try {
+        const res = await fetch("/api/notifications");
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.notifications) && data.notifications.length > 0) {
+            setNotifications(data.notifications);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load notifications", err);
+      }
+    }
+    loadNotifications();
+    const interval = setInterval(loadNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    try {
+      await fetch("/api/notifications", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markAll: true }),
+      });
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   return (

@@ -257,24 +257,18 @@ export async function runSeed() {
     batchId: batch2._id, // 7:00 PM – 8:00 PM
     teacherId: teacherSarah._id,
     topic: "Roots of Quadratic Equations & Word Problems",
+    description: "Discriminant Formula & Solving Complex Word Problems from NCERT.",
     date: todayStr,
     startTime: "19:00",
     endTime: "20:00",
     status: "LIVE",
-    livekitRoomId: "acuity-class10-maths-live",
+    meetingId: "ACUITY-MATH-QUADRATICS-101",
+    livekitRoomId: "ACUITY-MATH-QUADRATICS-101",
     gracePeriodMinutes: 5,
-    allowLateJoinManually: false,
-    activePoll: {
-      question: "What is the discriminant value of 2x² - 4x + 3 = 0?",
-      options: [
-        { text: "D > 0 (Two real roots)", votes: 3 },
-        { text: "D = 0 (Equal roots)", votes: 1 },
-        { text: "D < 0 (No real roots)", votes: 9 },
-        { text: "Cannot be determined", votes: 0 },
-      ],
-      isActive: true,
-      votedUserIds: [],
-    },
+    attendanceThresholdPercent: 75,
+    materials: [
+      { title: "Quadratic Formula Sheet", fileUrl: "https://acuity.edu/materials/quad-formula.pdf", category: "NOTES" },
+    ],
   });
 
   const session2 = await LiveSession.create({
@@ -284,27 +278,36 @@ export async function runSeed() {
     batchId: batch1._id,
     teacherId: teacherRajesh._id,
     topic: "Newton's 2nd Law (F = ma) & Numerical Problems",
+    description: "Derivations and problem set on conservation of momentum.",
     date: todayStr,
     startTime: "18:00",
     endTime: "19:00",
     status: "COMPLETED",
-    livekitRoomId: "acuity-class9-science-completed",
+    meetingId: "ACUITY-SCI-NEWTON-901",
+    livekitRoomId: "ACUITY-SCI-NEWTON-901",
     gracePeriodMinutes: 5,
+    attendanceThresholdPercent: 75,
   });
 
   const session3 = await LiveSession.create({
-    title: "Class 10 — Trigonometric Identities & Applications",
-    subject: "Mathematics",
+    title: "Class 10 — Database Management Systems (DBMS)",
+    subject: "DBMS",
     classLevel: "Class 10",
     batchId: batch2._id,
     teacherId: teacherSarah._id,
-    topic: "Heights and Distances & Multi-step proofs",
-    date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-    startTime: "19:00",
-    endTime: "20:00",
-    status: "SCHEDULED",
-    livekitRoomId: "acuity-class10-trig-tomorrow",
+    topic: "Normalization (1NF to BCNF)",
+    description: "Core concepts of database normalization and functional dependencies.",
+    date: todayStr,
+    startTime: "10:00",
+    endTime: "11:00",
+    status: "PUBLISHED",
+    meetingId: "ACUITY-DBMS-NORMALIZATION-102",
+    livekitRoomId: "ACUITY-DBMS-NORMALIZATION-102",
     gracePeriodMinutes: 5,
+    attendanceThresholdPercent: 75,
+    materials: [
+      { title: "DBMS Normalization Guide", fileUrl: "https://acuity.edu/materials/normalization.pdf", category: "NOTES" },
+    ],
   });
   console.log("✅ Live Sessions Seeded");
 
@@ -385,24 +388,64 @@ export async function runSeed() {
   await Attendance.insertMany([
     {
       studentId: studentAravind._id,
-      sessionId: session2._id,
+      sessionId: session1._id,
       batchId: batch2._id,
       classLevel: "Class 10",
-      joinTime: new Date(Date.now() - 60 * 60 * 1000),
+      joinTime: new Date(Date.now() - 55 * 60 * 1000),
       leaveTime: new Date(),
-      durationMinutes: 58,
+      durationMinutes: 55,
+      totalDurationMinutes: 55,
       status: "PRESENT",
+      sessions: [
+        {
+          joinTime: new Date(Date.now() - 55 * 60 * 1000),
+          leaveTime: new Date(),
+          durationMinutes: 55,
+        },
+      ],
+      manualOverride: false,
+    },
+    {
+      studentId: studentPriya._id,
+      sessionId: session2._id,
+      batchId: batch1._id,
+      classLevel: "Class 9",
+      joinTime: new Date(Date.now() - 60 * 60 * 1000),
+      leaveTime: new Date(Date.now() - 45 * 60 * 1000),
+      durationMinutes: 15,
+      totalDurationMinutes: 15,
+      status: "ABSENT",
+      sessions: [
+        {
+          joinTime: new Date(Date.now() - 60 * 60 * 1000),
+          leaveTime: new Date(Date.now() - 45 * 60 * 1000),
+          durationMinutes: 15,
+        },
+      ],
       manualOverride: false,
     },
     {
       studentId: studentRohit._id,
-      sessionId: session2._id,
+      sessionId: session1._id,
       batchId: batch2._id,
       classLevel: "Class 8",
-      joinTime: new Date(Date.now() - 55 * 60 * 1000),
+      joinTime: new Date(Date.now() - 50 * 60 * 1000),
       leaveTime: new Date(),
-      durationMinutes: 52,
-      status: "LATE",
+      durationMinutes: 48,
+      totalDurationMinutes: 48,
+      status: "PRESENT",
+      sessions: [
+        {
+          joinTime: new Date(Date.now() - 50 * 60 * 1000),
+          leaveTime: new Date(Date.now() - 30 * 60 * 1000),
+          durationMinutes: 20,
+        },
+        {
+          joinTime: new Date(Date.now() - 28 * 60 * 1000),
+          leaveTime: new Date(),
+          durationMinutes: 28,
+        },
+      ],
       manualOverride: false,
     },
   ]);
@@ -465,4 +508,13 @@ export async function runSeed() {
 
   console.log("🌟 Acuity Tutoring Database Seeding Completed Successfully!");
   return { success: true };
+}
+
+if (require.main === module || process.argv[1]?.includes("seed")) {
+  runSeed()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error("Seed error:", err);
+      process.exit(1);
+    });
 }

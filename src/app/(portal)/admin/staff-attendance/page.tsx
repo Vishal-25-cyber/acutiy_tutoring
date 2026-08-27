@@ -1,101 +1,185 @@
 "use client";
 
-import React from "react";
-import { Clock, UserCheck, CheckCircle2, ShieldCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import React, { useState } from "react";
+import { Clock, UserCheck, CheckCircle2, ShieldCheck, Users, Search, AlertCircle } from "lucide-react";
 import { useFastFetch } from "@/lib/api-cache";
 
 export default function AdminStaffAttendancePage() {
   const { data } = useFastFetch("/api/admin/staff-attendance");
+  const [search, setSearch] = useState("");
 
   const stats = data?.stats || {
-    totalTeachers: 12,
-    todayPresent: 11,
-    attendancePercentage: 94,
-    monthlyAverage: 95,
+    totalTeachers: 3,
+    todayPresent: 3,
+    attendancePercentage: 100,
+    monthlyAverage: 96,
   };
 
-  const sampleStaff = [
-    { name: "Dr. Sarah Jenkins", email: "sarah.maths@acuity.edu", classesConducted: 2, hours: "3.5 hrs", status: "PRESENT", login: "5:45 PM" },
-    { name: "Prof. Rajesh Kumar", email: "rajesh.science@acuity.edu", classesConducted: 2, hours: "3.0 hrs", status: "PRESENT", login: "5:50 PM" },
-    { name: "Anita Natarajan", email: "anita.english@acuity.edu", classesConducted: 1, hours: "1.5 hrs", status: "PRESENT", login: "6:45 PM" },
-  ];
+  const staffRoster = Array.isArray(data?.staffRoster) ? data.staffRoster : [];
+
+  const filtered = staffRoster.filter(
+    (st: any) =>
+      !search.trim() ||
+      st.name?.toLowerCase().includes(search.toLowerCase()) ||
+      st.email?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const todayFormatted = new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date());
 
   return (
-    <main className="p-6 sm:p-8 space-y-6 max-w-6xl animate-in fade-in duration-150">
-      <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-          Staff Attendance Management
-        </h1>
-        <p className="text-xs text-slate-500 mt-1">
-          Track faculty presence, live classes conducted, and working hour logs.
-        </p>
+    <main className="w-full min-h-full bg-transparent p-6 sm:p-8 lg:p-10 space-y-8 animate-in fade-in duration-150">
+      {/* ── HEADER ── */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+              Staff Attendance & Presence Logs
+            </h1>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Live Automated Tracking
+            </span>
+          </div>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Real-time automated staff attendance logged upon faculty portal login and active live classroom sessions.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+          <Clock className="w-3.5 h-3.5" />
+          <span>{todayFormatted}</span>
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="p-5">
-          <span className="text-xs font-bold text-slate-500 uppercase">Teacher Attendance Today</span>
-          <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
-            {stats.todayPresent} / {stats.totalTeachers}
-          </p>
-          <p className="text-xs text-slate-500 mt-1">Faculty logged in for evening batches</p>
-        </Card>
+      {/* ── METRIC SUMMARY (CARDLESS) ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Present Today</span>
+            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">
+              {stats.todayPresent} <span className="text-xs font-normal text-slate-400">of {stats.totalTeachers}</span>
+            </p>
+          </div>
+          <div className="w-9 h-9 rounded-md bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <CheckCircle2 className="w-4 h-4" />
+          </div>
+        </div>
 
-        <Card className="p-5">
-          <span className="text-xs font-bold text-slate-500 uppercase">Staff Attendance Rate</span>
-          <p className="text-3xl font-black text-indigo-600 dark:text-indigo-400 mt-1">
-            {stats.attendancePercentage}%
-          </p>
-          <p className="text-xs text-slate-500 mt-1">Overall monthly metric</p>
-        </Card>
+        <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Staff Attendance Rate</span>
+            <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight">
+              {stats.attendancePercentage}% <span className="text-xs font-normal text-slate-400">turnout</span>
+            </p>
+          </div>
+          <div className="w-9 h-9 rounded-md bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+            <UserCheck className="w-4 h-4" />
+          </div>
+        </div>
 
-        <Card className="p-5">
-          <span className="text-xs font-bold text-slate-500 uppercase">Class Turnout Ratio</span>
-          <p className="text-3xl font-black text-slate-900 dark:text-slate-100 mt-1">100%</p>
-          <p className="text-xs text-slate-500 mt-1">0 scheduled lectures missed</p>
-        </Card>
+        <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Total Faculty</span>
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+              {stats.totalTeachers} <span className="text-xs font-normal text-slate-400">registered</span>
+            </p>
+          </div>
+          <div className="w-9 h-9 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center">
+            <Users className="w-4 h-4" />
+          </div>
+        </div>
+
+        <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Monthly Average</span>
+            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400 tracking-tight">
+              {stats.monthlyAverage}% <span className="text-xs font-normal text-slate-400">compliance</span>
+            </p>
+          </div>
+          <div className="w-9 h-9 rounded-md bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+            <Clock className="w-4 h-4" />
+          </div>
+        </div>
       </div>
 
-      <Card className="overflow-hidden border border-slate-200 dark:border-slate-800">
-        <div className="p-5 border-b border-slate-100 dark:border-slate-800">
-          <h2 className="font-bold text-base text-slate-900 dark:text-slate-100">
-            Faculty Roster & Attendance
+      {/* ── SEARCH ── */}
+      <div className="relative max-w-md">
+        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+        <input
+          type="text"
+          placeholder="Search faculty by name or email..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex h-10 w-full rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-10 pr-4 text-xs sm:text-sm font-medium focus:outline-none focus:border-indigo-500"
+        />
+      </div>
+
+      {/* ── STAFF ATTENDANCE TABLE (CARDLESS) ── */}
+      <div className="space-y-3">
+        <div className="pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <h2 className="font-semibold text-sm text-slate-800 dark:text-slate-200">
+            Faculty Attendance Log (Today)
           </h2>
+          <span className="text-[11px] font-mono text-slate-400">{filtered.length} Teachers</span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 border-b border-slate-200 dark:border-slate-800">
-              <tr>
-                <th className="p-4 font-bold">Faculty Name</th>
-                <th className="p-4 font-bold">Login Timestamp</th>
-                <th className="p-4 font-bold">Lectures Today</th>
-                <th className="p-4 font-bold">Teaching Hours</th>
-                <th className="p-4 font-bold">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {sampleStaff.map((st, idx) => (
-                <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                  <td className="p-4 font-bold text-slate-900 dark:text-slate-100">
-                    {st.name}
-                    <span className="block text-[11px] font-normal text-slate-400">{st.email}</span>
-                  </td>
-                  <td className="p-4 font-mono text-slate-500">{st.login}</td>
-                  <td className="p-4 font-semibold">{st.classesConducted} Classes</td>
-                  <td className="p-4 font-medium text-indigo-600 dark:text-indigo-400">{st.hours}</td>
-                  <td className="p-4">
-                    <Badge variant="success">{st.status}</Badge>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+        {filtered.length === 0 ? (
+          <div className="p-12 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-lg space-y-2">
+            <Users className="w-8 h-8 text-slate-400 mx-auto" />
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">No staff records found</p>
+          </div>
+        ) : (
+          <div className="border border-slate-200 dark:border-slate-800 rounded-lg divide-y divide-slate-200 dark:divide-slate-800 overflow-hidden bg-white dark:bg-slate-900/50">
+            {filtered.map((st: any) => {
+              const isPresent = st.status === "PRESENT";
+
+              return (
+                <div
+                  key={st.id}
+                  className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-sm sm:text-base text-slate-900 dark:text-slate-100">
+                        {st.name}
+                      </h3>
+                      <span className="text-[11px] font-mono text-slate-400">
+                        ({st.email})
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 flex-wrap">
+                      <span>Login Timestamp: <strong className="font-mono text-slate-700 dark:text-slate-300">{st.loginTime}</strong></span>
+                      <span>·</span>
+                      <span>Lectures Conducted: <strong className="text-slate-700 dark:text-slate-300">{st.classesConducted}</strong></span>
+                      <span>·</span>
+                      <span>Active Hours: <strong className="text-indigo-600 dark:text-indigo-400">{st.hours}</strong></span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold ${
+                        isPresent
+                          ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60"
+                          : "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60"
+                      }`}
+                    >
+                      {isPresent ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <AlertCircle className="w-3.5 h-3.5 text-amber-600" />}
+                      <span>{isPresent ? "PRESENT (Logged In)" : "PENDING LOGIN"}</span>
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </main>
   );
 }

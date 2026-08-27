@@ -1,5 +1,19 @@
 import mongoose from "mongoose";
 
+// Import all models to ensure schemas are registered in Mongoose
+import "@/models/User";
+import "@/models/StudentProfile";
+import "@/models/TeacherProfile";
+import "@/models/Batch";
+import "@/models/Subject";
+import "@/models/LiveSession";
+import "@/models/Attendance";
+import "@/models/StaffAttendance";
+import "@/models/Assignment";
+import "@/models/AssignmentSubmission";
+import "@/models/Material";
+import "@/models/Notification";
+
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/acuity_tutoring";
 
 interface MongooseCache {
@@ -30,12 +44,15 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
       connectTimeoutMS: 10000,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
-      return mongooseInstance;
-    }).catch((err) => {
-      console.warn("MongoDB connection warning / fallback:", err.message);
-      throw err;
-    });
+    cached.promise = mongoose
+      .connect(MONGODB_URI, opts)
+      .then((mongooseInstance) => {
+        return mongooseInstance;
+      })
+      .catch((err) => {
+        console.warn("MongoDB connection warning / fallback:", err.message);
+        throw err;
+      });
   }
 
   try {

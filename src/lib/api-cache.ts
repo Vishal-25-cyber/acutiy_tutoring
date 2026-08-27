@@ -3,11 +3,80 @@
 import { useState, useEffect, useRef } from "react";
 
 const memoryCache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_TTL_MS = 60 * 1000; // 60 seconds TTL
+const inflightRequests = new Map<string, Promise<any>>();
+const CACHE_TTL_MS = 2 * 60 * 1000; // 2 minutes TTL
 
 /**
- * High-performance Stale-While-Revalidate (SWR) hook with in-memory caching.
- * Returns cached data synchronously on mount at 0ms, then updates in background.
+ * Prefetches and caches an API endpoint in the background with deduplication.
+ */
+export async function prefetchApi(url: string): Promise<any> {
+  if (!url || typeof window === "undefined") return null;
+
+  const cached = memoryCache.get(url);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.data;
+  }
+
+  // Deduplicate inflight requests to prevent duplicate network calls
+  if (inflightRequests.has(url)) {
+    return inflightRequests.get(url);
+  }
+
+  const fetchPromise = (async () => {
+    try {
+      const res = await fetch(url, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        memoryCache.set(url, { data, timestamp: Date.now() });
+        return data;
+      }
+    } catch (e) {
+      // ignore background prefetch error
+    } finally {
+      inflightRequests.delete(url);
+    }
+    return null;
+  })();
+
+  inflightRequests.set(url, fetchPromise);
+  return fetchPromise;
+}
+
+/**
+ * Pre-warms common portal routes into memory cache for instant sub-millisecond navigation.
+ */
+export function warmupPortalCache(role: string = "STUDENT") {
+  if (typeof window === "undefined") return;
+
+  const endpoints =
+    role === "STUDENT"
+      ? [
+        "/api/auth/me",
+        "/api/student/dashboard",
+        "/api/student/classes",
+        "/api/student/materials",
+        "/api/student/assignments",
+        "/api/student/attendance",
+        "/api/notifications",
+      ]
+      : [
+        "/api/auth/me",
+        "/api/teacher/dashboard",
+        "/api/classes",
+        "/api/teacher/materials",
+        "/api/teacher/assignments",
+        "/api/teacher/students",
+        "/api/notifications",
+      ];
+
+  endpoints.forEach((ep) => {
+    prefetchApi(ep);
+  });
+}
+
+/**
+ * High-performance Stale-While-Revalidate (SWR) hook with instant zero-millisecond memory caching.
+ * Returns cached data immediately on mount, then updates seamlessly in background.
  */
 export function useFastFetch<T = any>(
   url: string | null,
@@ -15,6 +84,7 @@ export function useFastFetch<T = any>(
 ): { data: T | null; isLoading: boolean; error: any; refetch: () => Promise<void> } {
   // Check memory cache synchronously
   const cachedEntry = url ? memoryCache.get(url) : null;
+  const isFresh = Boolean(cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_TTL_MS);
   const hasCachedData = Boolean(cachedEntry && cachedEntry.data);
 
   const [data, setData] = useState<T | null>(
@@ -23,20 +93,20 @@ export function useFastFetch<T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(!hasCachedData);
   const [error, setError] = useState<any>(null);
 
-  const fetchRef = useRef<boolean>(false);
-
   const executeFetch = async (isManualRefetch = false) => {
     if (!url) return;
 
     if (!isManualRefetch && hasCachedData) {
       // Data is already displayed instantly from cache; revalidate silently in background
       setIsLoading(false);
+      // If cache is still fresh and not a manual refetch, avoid unnecessary network calls
+      if (isFresh) return;
     } else {
       setIsLoading(true);
     }
 
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { credentials: "include" });
       if (res.ok) {
         const json = await res.json();
         memoryCache.set(url, { data: json, timestamp: Date.now() });

@@ -7,6 +7,7 @@ import StudentProfile from "@/models/StudentProfile";
 import Assignment from "@/models/Assignment";
 import AssignmentSubmission from "@/models/AssignmentSubmission";
 import Material from "@/models/Material";
+import StaffAttendance from "@/models/StaffAttendance";
 
 export async function GET() {
   try {
@@ -19,6 +20,24 @@ export async function GET() {
     const profile = await TeacherProfile.findOne({ userId: session.userId });
 
     const todayDateStr = new Date().toISOString().split("T")[0];
+
+    // Ensure staff attendance is marked PRESENT for today on access
+    try {
+      await StaffAttendance.findOneAndUpdate(
+        { teacherId: session.userId, date: todayDateStr },
+        {
+          $setOnInsert: {
+            teacherId: session.userId,
+            date: todayDateStr,
+            loginTime: new Date(),
+            status: "PRESENT",
+          },
+        },
+        { upsert: true, new: true }
+      );
+    } catch (e) {
+      // Ignore background presence error
+    }
     const classesTaught = profile?.classesTaught || [];
 
     const [

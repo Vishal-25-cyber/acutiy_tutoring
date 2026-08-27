@@ -1,12 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { FileCheck, Plus, CheckCircle2, Award, Clock, Send, Eye } from "lucide-react";
+import { FileCheck, Plus, CheckCircle2, Clock, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
-import { Input, Textarea } from "@/components/ui/input";
 import { getSubjectsForClassAndBoard, CLASS_LIST } from "@/lib/curriculum";
 import { useFastFetch } from "@/lib/api-cache";
 
@@ -15,12 +12,10 @@ export default function TeacherAssignmentsPage() {
   const [isCreateModal, setIsCreateModal] = useState(false);
   const [selectedSub, setSelectedSub] = useState<any>(null);
 
-  // Grade Form
   const [marks, setMarks] = useState(18);
   const [feedback, setFeedback] = useState("");
   const [isGrading, setIsGrading] = useState(false);
 
-  // Create Assignment Form
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -59,39 +54,17 @@ export default function TeacherAssignmentsPage() {
             setFormData((prev) => ({ ...prev, batchId: bData.batches[0]._id }));
           }
         }
-      } catch (err) {
-        console.error(err);
+      } catch (e) {
+        console.error(e);
       }
     }
     loadBatches();
   }, []);
 
-  const assignments = data?.assignments || [
-    {
-      _id: "assign-math-1",
-      title: "Class 10 Mathematics — Quadratic Equations Practice Worksheet 4",
-      subject: "Mathematics",
-      classLevel: "Class 10",
-      dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-      maxMarks: 20,
-      description: "Solve all 10 word problems from Exercise 4.3 with clear working steps.",
-    },
-  ];
+  const assignments = data?.assignments || [];
+  const submissions = data?.submissions || [];
 
-  const submissions = data?.submissions || [
-    {
-      _id: "sub-1",
-      assignmentId: { title: "Class 10 Mathematics — Quadratic Equations Worksheet 4", maxMarks: 20 },
-      studentId: { name: "Aravind Swaminathan", email: "aravind@example.com" },
-      submissionText: "Solved all 10 quadratic word problems. Verified roots using discriminant formula.",
-      marksObtained: null,
-      feedback: null,
-      status: "SUBMITTED",
-      createdAt: new Date().toISOString(),
-    },
-  ];
-
-  const handleCreateAssignment = async (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const res = await fetch("/api/teacher/assignments", {
@@ -99,18 +72,8 @@ export default function TeacherAssignmentsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-
       if (res.ok) {
         setIsCreateModal(false);
-        setFormData({
-          title: "",
-          description: "",
-          subject: "Mathematics",
-          classLevel: "Class 10",
-          batchId: batches[0]?._id || "",
-          dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-          maxMarks: 20,
-        });
         refetch();
       }
     } catch (err) {
@@ -118,12 +81,12 @@ export default function TeacherAssignmentsPage() {
     }
   };
 
-  const handleGradeSubmission = async (e: React.FormEvent) => {
+  const handleGrade = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSub) return;
     setIsGrading(true);
     try {
-      const res = await fetch("/api/teacher/assignments/grade", {
+      const res = await fetch(`/api/teacher/assignments/${selectedSub.assignmentId}/grade`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -132,10 +95,8 @@ export default function TeacherAssignmentsPage() {
           feedback,
         }),
       });
-
       if (res.ok) {
         setSelectedSub(null);
-        setFeedback("");
         refetch();
       }
     } catch (err) {
@@ -146,263 +107,312 @@ export default function TeacherAssignmentsPage() {
   };
 
   return (
-    <main className="p-6 sm:p-8 space-y-6 max-w-6xl animate-in fade-in duration-150">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-            Homework & Grading Desk
+    <main className="w-full min-h-full bg-transparent p-6 sm:p-8 lg:p-10 space-y-8 animate-in fade-in duration-150">
+      {/* ── HEADER ── */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
+        <div className="space-y-1.5">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            Assignments & Grading Management
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Publish syllabus assignments, inspect student solutions, and award feedback marks.
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Publish homework assignments for batches, review student solution photo snapshots, and record scores.
           </p>
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          className="font-bold text-xs gap-1.5 rounded-xl"
+
+        <button
           onClick={() => setIsCreateModal(true)}
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer self-start md:self-auto"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-3.5 h-3.5" />
           <span>Create Assignment</span>
-        </Button>
+        </button>
       </div>
 
-      {/* Submissions Pending Grading */}
-      <Card className="overflow-hidden border border-slate-200 dark:border-slate-800">
-        <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
-            Student Submissions Queue
-          </h3>
-          <Badge variant="warning">{submissions.filter((s: any) => s.status === "SUBMITTED").length} Pending</Badge>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 border-b border-slate-200 dark:border-slate-800">
-              <tr>
-                <th className="p-4 font-bold">Student</th>
-                <th className="p-4 font-bold">Assignment</th>
-                <th className="p-4 font-bold">Submitted Date</th>
-                <th className="p-4 font-bold">Status / Score</th>
-                <th className="p-4 font-bold text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {submissions.map((sub: any) => (
-                <tr key={sub._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                  <td className="p-4 font-bold text-slate-900 dark:text-slate-100">
-                    {sub.studentId?.name || "Student"}
-                    <span className="block text-[11px] font-normal text-slate-400">
-                      {sub.studentId?.email}
-                    </span>
-                  </td>
-                  <td className="p-4 font-medium text-slate-700 dark:text-slate-300">
-                    {sub.assignmentId?.title}
-                  </td>
-                  <td className="p-4 text-slate-500">
-                    {new Date(sub.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="p-4">
-                    {sub.status === "EVALUATED" ? (
-                      <Badge variant="success">
-                        {sub.marksObtained} / {sub.assignmentId?.maxMarks || 20} Marks
-                      </Badge>
-                    ) : (
-                      <Badge variant="warning">SUBMITTED (Needs Grading)</Badge>
-                    )}
-                  </td>
-                  <td className="p-4 text-right">
-                    <Button
-                      size="sm"
-                      variant={sub.status === "EVALUATED" ? "outline" : "primary"}
-                      className="text-xs font-bold"
-                      onClick={() => {
-                        setSelectedSub(sub);
-                        setMarks(sub.marksObtained || 18);
-                        setFeedback(sub.feedback || "Good work! Keep practicing.");
-                      }}
-                    >
-                      {sub.status === "EVALUATED" ? "Edit Grade" : "Evaluate & Score"}
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-
-      {/* Active Published Assignments List */}
+      {/* ── SUBMISSIONS PENDING EVALUATION (CARDLESS) ── */}
       <div className="space-y-3">
-        <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
-          Active Published Assignments
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {assignments.map((item: any) => (
-            <Card key={item._id} className="p-5 border border-slate-200 dark:border-slate-800 space-y-2">
-              <div className="flex items-center justify-between">
-                <Badge variant="default" className="text-[10px]">
-                  {item.classLevel} • {item.subject}
-                </Badge>
-                <span className="text-xs text-slate-400">
-                  Due: {new Date(item.dueDate).toLocaleDateString()}
-                </span>
-              </div>
-              <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">{item.title}</h4>
-              <p className="text-xs text-slate-500 line-clamp-2">{item.description}</p>
-              <div className="pt-2 text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                Max Marks: {item.maxMarks}
-              </div>
-            </Card>
-          ))}
+        <div className="pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <h2 className="font-semibold text-sm text-slate-800 dark:text-slate-200">
+            Student Submissions Awaiting Evaluation
+          </h2>
+          <span className="text-[11px] font-mono text-amber-600 dark:text-amber-400">{submissions.length} Submissions</span>
         </div>
+
+        {submissions.length === 0 ? (
+          <div className="p-8 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-lg space-y-1">
+            <CheckCircle2 className="w-6 h-6 text-emerald-600 mx-auto" />
+            <p className="text-xs font-medium text-slate-700 dark:text-slate-300">All submissions graded!</p>
+            <p className="text-[11px] text-slate-400">No student homework submissions are currently waiting for grading.</p>
+          </div>
+        ) : (
+          <div className="border border-slate-200 dark:border-slate-800 rounded-lg divide-y divide-slate-200 dark:divide-slate-800 overflow-hidden bg-white dark:bg-slate-900/50">
+            {submissions.map((sub: any) => (
+              <div
+                key={sub._id}
+                className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-xs text-slate-800 dark:text-slate-200">
+                      {sub.studentId?.userId?.name || "Student"}
+                    </h3>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                      {sub.assignmentId?.title}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Submitted on {new Date(sub.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setSelectedSub(sub);
+                    setMarks(sub.marksObtained || 18);
+                    setFeedback(sub.feedback || "");
+                  }}
+                  className="px-3 py-1.5 rounded-md text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>Review & Grade</span>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Create Modal */}
-      {isCreateModal && (
-        <Modal
-          isOpen={isCreateModal}
-          onClose={() => setIsCreateModal(false)}
-          title="Create New Homework Assignment"
-          description="Publish homework questions for your assigned batch."
-        >
-          <form onSubmit={handleCreateAssignment} className="space-y-4 pt-2">
-            <div>
-              <label className="block text-xs font-bold mb-1">Assignment Title *</label>
-              <Input
-                required
-                placeholder="e.g. Class 10 Mathematics — Quadratic Equations Worksheet 4"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              />
-            </div>
+      {/* ── ACTIVE ASSIGNMENTS LIST (CARDLESS) ── */}
+      <div className="space-y-3">
+        <div className="pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <h2 className="font-semibold text-sm text-slate-800 dark:text-slate-200">
+            Published Homework Tasks
+          </h2>
+          <span className="text-[11px] font-mono text-slate-400">{assignments.length} Tasks</span>
+        </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold mb-1">Target Class *</label>
-                <select
-                  value={formData.classLevel}
-                  onChange={(e) => handleClassChange(e.target.value)}
-                  className="flex h-11 w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium"
-                >
-                  {CLASS_LIST.map((cls) => (
-                    <option key={cls} value={cls}>
-                      {cls}
-                    </option>
-                  ))}
-                </select>
+        {assignments.length === 0 ? (
+          <div className="p-12 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-lg space-y-2">
+            <FileCheck className="w-8 h-8 text-slate-400 mx-auto" />
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">No assignments created yet</p>
+            <p className="text-xs text-slate-400">Click &quot;Create Assignment&quot; to assign problems to your batch.</p>
+          </div>
+        ) : (
+          <div className="border border-slate-200 dark:border-slate-800 rounded-lg divide-y divide-slate-200 dark:divide-slate-800 overflow-hidden bg-white dark:bg-slate-900/50">
+            {assignments.map((asg: any) => (
+              <div
+                key={asg._id}
+                className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+              >
+                <div className="space-y-1.5 min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                      {asg.subject}
+                    </span>
+                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                      {asg.classLevel}
+                    </span>
+                    <span className="text-xs font-mono text-slate-400">· Max Marks: {asg.maxMarks || 20}</span>
+                  </div>
+
+                  <h3 className="font-semibold text-sm sm:text-base text-slate-900 dark:text-slate-100">
+                    {asg.title}
+                  </h3>
+
+                  <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
+                    {asg.description}
+                  </p>
+
+                  <div className="flex items-center gap-2 text-[11px] text-slate-400 pt-0.5">
+                    <Clock className="w-3 h-3" />
+                    <span>Due: {asg.dueDate ? new Date(asg.dueDate).toLocaleDateString() : "This Week"}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs text-slate-500 font-mono">
+                    {asg.submissionCount || 0} Submissions
+                  </span>
+                </div>
               </div>
-
-              <div>
-                <label className="block text-xs font-bold mb-1">
-                  Subject ({formData.classLevel}) *
-                </label>
-                <select
-                  value={formData.subject}
-                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                  className="flex h-11 w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium"
-                >
-                  {availableSubjects.map((sub) => (
-                    <option key={sub} value={sub}>
-                      {sub}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold mb-1">Due Date *</label>
-                <Input
-                  type="date"
-                  required
-                  value={formData.dueDate}
-                  onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold mb-1">Max Marks *</label>
-                <Input
-                  type="number"
-                  required
-                  value={formData.maxMarks}
-                  onChange={(e) => setFormData({ ...formData, maxMarks: Number(e.target.value) })}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold mb-1">Instructions & Problem Statement *</label>
-              <Textarea
-                required
-                rows={3}
-                placeholder="List problems or exercise numbers for students to solve..."
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="ghost" onClick={() => setIsCreateModal(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" variant="primary" className="font-bold">
-                Publish Assignment
-              </Button>
-            </div>
-          </form>
-        </Modal>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Grade Modal */}
       {selectedSub && (
         <Modal
           isOpen={!!selectedSub}
+          maxWidth="2xl"
           onClose={() => setSelectedSub(null)}
-          title={`Grade: ${selectedSub.studentId?.name || "Student"}`}
-          description={`Assignment: ${selectedSub.assignmentId?.title} (Max: ${selectedSub.assignmentId?.maxMarks || 20})`}
+          title="Grade Homework Submission"
         >
-          <form onSubmit={handleGradeSubmission} className="space-y-4 pt-2">
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 text-xs space-y-1">
-              <span className="font-bold text-slate-700 dark:text-slate-300">Student Answer / Working:</span>
-              <p className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap">
-                {selectedSub.submissionText || "No text notes attached."}
+          <form onSubmit={handleGrade} className="space-y-4 text-xs">
+            <div className="p-3 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
+              <p className="font-semibold text-slate-800 dark:text-slate-200">
+                Student: {selectedSub.studentId?.userId?.name || "Student"}
               </p>
+              <p className="text-slate-500">{selectedSub.assignmentId?.title}</p>
             </div>
 
+            {selectedSub.fileUrl && (
+              <div>
+                <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">Attached Solution Image:</label>
+                <div className="max-h-60 rounded-md overflow-hidden border border-slate-700 bg-black flex items-center justify-center">
+                  <img src={selectedSub.fileUrl} alt="Solution" className="max-h-60 object-contain" />
+                </div>
+              </div>
+            )}
+
+            {selectedSub.submissionText && (
+              <div>
+                <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">Student Notes:</label>
+                <p className="p-2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                  {selectedSub.submissionText}
+                </p>
+              </div>
+            )}
+
             <div>
-              <label className="block text-xs font-bold mb-1">Awarded Marks (Out of {selectedSub.assignmentId?.maxMarks || 20}) *</label>
-              <Input
+              <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">Marks Awarded (out of {selectedSub.assignmentId?.maxMarks || 20}) *</label>
+              <input
                 type="number"
                 required
-                max={selectedSub.assignmentId?.maxMarks || 20}
                 min={0}
+                max={selectedSub.assignmentId?.maxMarks || 100}
                 value={marks}
                 onChange={(e) => setMarks(Number(e.target.value))}
+                className="w-full rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 text-xs focus:outline-none focus:border-indigo-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold mb-1">Constructive Teacher Feedback *</label>
-              <Textarea
-                required
-                rows={3}
-                placeholder="e.g. Excellent step-by-step discriminant proof! Review question 4 calculation."
+              <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">Teacher Feedback</label>
+              <textarea
+                rows={2}
+                placeholder="Good derivation steps, review question 3..."
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
+                className="w-full rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 text-xs focus:outline-none"
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="ghost" onClick={() => setSelectedSub(null)}>
+            <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setSelectedSub(null)}
+                className="px-3.5 py-2 rounded-md text-xs font-medium border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+              >
                 Cancel
-              </Button>
-              <Button type="submit" variant="primary" isLoading={isGrading} className="font-bold">
-                Submit Grade & Notify Student
-              </Button>
+              </button>
+              <button
+                type="submit"
+                disabled={isGrading}
+                className="px-4 py-2 rounded-md text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer disabled:opacity-60 shadow-xs"
+              >
+                {isGrading ? "Recording..." : "Save Grade"}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Create Modal */}
+      {isCreateModal && (
+        <Modal
+          isOpen={isCreateModal}
+          maxWidth="2xl"
+          onClose={() => setIsCreateModal(false)}
+          title="Create New Homework Assignment"
+        >
+          <form onSubmit={handleCreate} className="space-y-4 pt-2 text-xs">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Task Title *</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Exercise 4.2 Quadratic Equations & Word Problems"
+                value={formData.title}
+                onChange={(e) => setFormData((p) => ({ ...p, title: e.target.value }))}
+                className="w-full h-9 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Grade Level *</label>
+                <select
+                  value={formData.classLevel}
+                  onChange={(e) => handleClassChange(e.target.value)}
+                  className="w-full h-9 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
+                >
+                  {CLASS_LIST.map((cls) => (
+                    <option key={cls} value={cls}>{cls}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Subject *</label>
+                <select
+                  value={formData.subject}
+                  onChange={(e) => setFormData((p) => ({ ...p, subject: e.target.value }))}
+                  className="w-full h-9 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
+                >
+                  {availableSubjects.map((sub) => (
+                    <option key={sub} value={sub}>{sub}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Due Date</label>
+                <input
+                  type="date"
+                  value={formData.dueDate}
+                  onChange={(e) => setFormData((p) => ({ ...p, dueDate: e.target.value }))}
+                  className="w-full h-9 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Max Marks</label>
+                <input
+                  type="number"
+                  value={formData.maxMarks}
+                  onChange={(e) => setFormData((p) => ({ ...p, maxMarks: Number(e.target.value) }))}
+                  className="w-full h-9 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Instructions & Problem Numbers</label>
+              <textarea
+                rows={3}
+                placeholder="Specify question numbers from NCERT text or problem statements..."
+                value={formData.description}
+                onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
+                className="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-2.5 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setIsCreateModal(false)}
+                className="px-3.5 py-2 rounded-md text-xs font-medium border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 rounded-md text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer shadow-xs"
+              >
+                Publish Assignment
+              </button>
             </div>
           </form>
         </Modal>

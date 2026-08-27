@@ -33,19 +33,19 @@ export default function AdminTeachersPage() {
   };
 
   return (
-    <main className="p-6 sm:p-8 space-y-6 max-w-7xl animate-in fade-in duration-150">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <main className="w-full min-h-full bg-transparent p-6 sm:p-8 lg:p-10 space-y-8 animate-in fade-in duration-150">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Faculty & Teacher Approvals
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Review teacher qualifications, background credentials, approve, reject, or assign salary tiers.
+          <p className="text-sm text-slate-500 mt-1">
+            Review teacher qualifications, credentials, and manage approval status.
           </p>
         </div>
 
         {/* Status Filter Tabs */}
-        <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+        <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
           {[
             { id: "ALL", label: "All Staff" },
             { id: "PENDING_APPROVAL", label: "Pending Review" },
@@ -55,7 +55,7 @@ export default function AdminTeachersPage() {
             <button
               key={tab.id}
               onClick={() => setFilterStatus(tab.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                 filterStatus === tab.id
                   ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs"
                   : "text-slate-500 hover:text-slate-900"
@@ -68,7 +68,7 @@ export default function AdminTeachersPage() {
       </div>
 
       {/* Teachers List Table */}
-      <Card className="overflow-hidden border border-slate-200 dark:border-slate-800">
+      <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 border-b border-slate-200 dark:border-slate-800">
@@ -150,7 +150,7 @@ export default function AdminTeachersPage() {
             </tbody>
           </table>
         </div>
-      </Card>
+      </div>
 
       {/* Inspect Teacher Application Modal */}
       {selectedTeacher && (

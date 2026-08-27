@@ -15,25 +15,20 @@ export async function GET() {
 
     await connectToDatabase();
     const payments = await Payment.find()
-      .populate({
-        path: "studentId",
-        select: "name email phone",
-        populate: {
-          path: "studentProfile",
-        },
-      })
-      .sort({ createdAt: -1 });
+      .populate("studentId", "name email phone")
+      .sort({ createdAt: -1 })
+      .lean();
 
     const totalCollected = payments
-      .filter((p) => p.status === "PAID")
-      .reduce((sum, p) => sum + p.amount, 0);
+      .filter((p: any) => p.status === "PAID")
+      .reduce((sum: number, p: any) => sum + p.amount, 0);
 
     const totalPending = payments
-      .filter((p) => p.status === "PENDING" || p.status === "OVERDUE")
-      .reduce((sum, p) => sum + p.amount, 0);
+      .filter((p: any) => p.status === "PENDING" || p.status === "OVERDUE")
+      .reduce((sum: number, p: any) => sum + p.amount, 0);
 
-    const paidCount = payments.filter((p) => p.status === "PAID").length;
-    const unpaidCount = payments.filter((p) => p.status === "PENDING" || p.status === "OVERDUE").length;
+    const paidCount = payments.filter((p: any) => p.status === "PAID").length;
+    const unpaidCount = payments.filter((p: any) => p.status === "PENDING" || p.status === "OVERDUE").length;
 
     // Monthly revenue trend for charts
     const monthlyTrend = [

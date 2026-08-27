@@ -3,6 +3,15 @@ import { IAttendance } from "@/types";
 
 export interface IAttendanceDocument extends Document, Omit<IAttendance, "_id"> {}
 
+const AttendanceSessionSchema = new Schema(
+  {
+    joinTime: { type: Date, required: true },
+    leaveTime: { type: Date },
+    durationMinutes: { type: Number, default: 0 },
+  },
+  { _id: false }
+);
+
 const AttendanceSchema = new Schema<IAttendanceDocument>(
   {
     studentId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
@@ -22,9 +31,11 @@ const AttendanceSchema = new Schema<IAttendanceDocument>(
         "Class 9",
         "Class 10",
       ],
-      required: true,
+      default: "Class 10",
       index: true,
     },
+    sessions: [AttendanceSessionSchema],
+    totalDurationMinutes: { type: Number, default: 0 },
     joinTime: { type: Date },
     leaveTime: { type: Date },
     durationMinutes: { type: Number, default: 0 },
@@ -36,6 +47,7 @@ const AttendanceSchema = new Schema<IAttendanceDocument>(
     },
     manualOverride: { type: Boolean, default: false },
     remarks: { type: String, trim: true },
+    lastActiveTime: { type: Date, default: Date.now },
   },
   {
     timestamps: true,

@@ -18,12 +18,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       <PortalSidebar role="STUDENT" />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <PortalHeader
-          userName="Aravind"
-          userRole="STUDENT"
-          streakCount={7}
-          currentClass="Class 10"
-        />
+        <PortalHeader userRole="STUDENT" />
 
         <div className="flex-1 transition-opacity duration-150 ease-out">
           {children}

@@ -3,6 +3,7 @@ import connectToDatabase from "@/lib/db/mongoose";
 import User from "@/models/User";
 import StudentProfile from "@/models/StudentProfile";
 import TeacherProfile from "@/models/TeacherProfile";
+import StaffAttendance from "@/models/StaffAttendance";
 import Batch from "@/models/Batch";
 import { comparePassword } from "@/lib/auth/passwords";
 import { signToken } from "@/lib/auth/jwt";
@@ -25,9 +26,6 @@ export async function POST(req: NextRequest) {
       if (!loginId) {
         return NextResponse.json({ error: "Email or phone number is required." }, { status: 400 });
       }
-      if (!batchId) {
-        return NextResponse.json({ error: "Please select your assigned batch." }, { status: 400 });
-      }
 
       // Find user by email or phone
       const user = await User.findOne({
@@ -40,7 +38,10 @@ export async function POST(req: NextRequest) {
       }
 
       if (user.status === "SUSPENDED" || user.status === "REJECTED") {
-        return NextResponse.json({ error: "Your account is currently suspended. Please contact administration." }, { status: 403 });
+        return NextResponse.json(
+          { error: "Your account is currently suspended. Please contact administration." },
+          { status: 403 }
+        );
       }
 
       const isMatch = await comparePassword(password, user.passwordHash);
@@ -48,19 +49,13 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Invalid credentials. Please check your password." }, { status: 401 });
       }
 
-      // STRICT BATCH VALIDATION: Verify against database record
+      // Resolve Student Profile & Assigned Batch
       const studentProfile = await StudentProfile.findOne({ userId: user._id });
       if (!studentProfile) {
         return NextResponse.json({ error: "Student profile not found." }, { status: 404 });
       }
 
-      if (studentProfile.batchId.toString() !== batchId) {
-        // Find assigned batch name for informative feedback if needed
-        return NextResponse.json({
-          error: "Your account is not assigned to this batch.",
-          detail: "Please select your officially enrolled batch time to log in.",
-        }, { status: 403 });
-      }
+      const assignedBatchId = studentProfile.batchId ? studentProfile.batchId.toString() : batchId || "";
 
       // Generate Session Token
       const token = await signToken({
@@ -69,7 +64,7 @@ export async function POST(req: NextRequest) {
         role: "STUDENT",
         name: user.name,
         status: user.status,
-        batchId: studentProfile.batchId.toString(),
+        batchId: assignedBatchId,
         currentClass: studentProfile.currentClass,
       });
 
@@ -100,7 +95,7 @@ export async function POST(req: NextRequest) {
         action: "STUDENT_LOGIN",
         entityType: "USER",
         entityId: user._id.toString(),
-        details: { batchId },
+        details: { batchId: assignedBatchId },
       });
 
       return response;
@@ -122,10 +117,13 @@ export async function POST(req: NextRequest) {
 
       const teacherProfile = await TeacherProfile.findOne({ userId: user._id });
       if (user.status === "PENDING_APPROVAL" || teacherProfile?.approvalStatus === "PENDING_APPROVAL") {
-        return NextResponse.json({
-          error: "Your account is awaiting admin approval.",
-          status: "PENDING_APPROVAL",
-        }, { status: 403 });
+        return NextResponse.json(
+          {
+            error: "Your account is awaiting admin approval.",
+            status: "PENDING_APPROVAL",
+          },
+          { status: 403 }
+        );
       }
 
       if (user.status === "SUSPENDED" || user.status === "REJECTED") {
@@ -160,6 +158,25 @@ export async function POST(req: NextRequest) {
         path: "/",
         maxAge: 7 * 24 * 60 * 60,
       });
+
+      // Automatically mark staff attendance as PRESENT on login
+      try {
+        const todayDateStr = new Date().toISOString().split("T")[0];
+        await StaffAttendance.findOneAndUpdate(
+          { teacherId: user._id, date: todayDateStr },
+          {
+            $setOnInsert: {
+              teacherId: user._id,
+              date: todayDateStr,
+              loginTime: new Date(),
+              status: "PRESENT",
+            },
+          },
+          { upsert: true, new: true }
+        );
+      } catch (attErr) {
+        console.warn("Auto staff attendance recording error:", attErr);
+      }
 
       await recordAuditLog({
         actorId: user._id.toString(),

@@ -23,7 +23,7 @@
     --border: 220 13% 91%;
     --input: 220 13% 91%;
     --ring: 238 84% 59%;
-    --radius: 0.75rem;
+    --radius: 0.5rem;
   }
 
   .dark {
@@ -96,4 +96,23 @@
 
 .gradient-badge {
   @apply bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-emerald-500/10 border border-indigo-500/20 text-indigo-700 dark:text-indigo-300;
+}
+
+/* Hide Next.js Development Indicator & Dev Tools Overlay */
+nextjs-portal,
+[data-nextjs-dev-overlay-container],
+#nextjs-dev-overlay,
+div[data-nextjs-toast],
+div[data-nextjs-dialog-header],
+div[data-next-dev-tools],
+[data-nextjs-dev-tools-button],
+[data-nextjs-router-announcer] + * button,
+[aria-label="Next.js Dev Tools"],
+[data-nextjs-dev-tools],
+div[data-nextjs-route-announcer],
+button[aria-label*="Next.js"] {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }

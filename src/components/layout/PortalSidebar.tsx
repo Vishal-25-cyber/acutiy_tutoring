@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   GraduationCap,
   LayoutDashboard,
@@ -25,9 +25,10 @@ import {
   DollarSign,
   Activity,
   History,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { warmupPortalCache, prefetchApi, invalidateCache } from "@/lib/api-cache";
 
 interface SidebarProps {
   role: "STUDENT" | "TEACHER" | "ADMIN";
@@ -35,26 +36,28 @@ interface SidebarProps {
 
 export function PortalSidebar({ role }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Pre-warm data into in-memory cache on initial load for instant 0ms transitions
+  useEffect(() => {
+    warmupPortalCache(role);
+  }, [role]);
 
   const studentLinks = [
-    { href: "/student/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/student/classes", label: "Live Classes & Timetable", icon: Video, badge: "Live" },
-    { href: "/student/materials", label: "Learning Hub", icon: BookOpen },
-    { href: "/student/assignments", label: "Assignments & Tasks", icon: FileCheck },
-    { href: "/student/attendance", label: "Attendance & Streak", icon: CalendarCheck2 },
-    { href: "/student/performance", label: "Performance & Scores", icon: TrendingUp },
-    { href: "/student/ai-tutor", label: "AI Study Buddy", icon: Bot, badge: "AI" },
-    { href: "/student/fees", label: "Fees & Receipts", icon: CreditCard },
-    { href: "/student/parent-view", label: "Parent View Portal", icon: Users2 },
+    { href: "/student/dashboard", label: "Dashboard", icon: LayoutDashboard, api: "/api/student/dashboard" },
+    { href: "/student/classes", label: "Live Classes & Timetable", icon: Video, badge: "Live", api: "/api/student/classes" },
+    { href: "/student/materials", label: "Learning Hub", icon: BookOpen, api: "/api/student/materials" },
+    { href: "/student/assignments", label: "Assignments & Tasks", icon: FileCheck, api: "/api/student/assignments" },
+    { href: "/student/attendance", label: "Attendance & Streak", icon: CalendarCheck2, api: "/api/student/attendance" },
   ];
 
   const teacherLinks = [
-    { href: "/teacher/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/teacher/schedule", label: "Timetable & Schedule", icon: CalendarCheck2 },
+    { href: "/teacher/dashboard", label: "Dashboard", icon: LayoutDashboard, api: "/api/teacher/dashboard" },
+    { href: "/teacher/schedule", label: "Timetable & Schedule", icon: CalendarCheck2, api: "/api/classes" },
     { href: "/teacher/live-class/create", label: "Create Live Class", icon: Video, badge: "Host" },
-    { href: "/teacher/materials", label: "Upload Materials", icon: BookOpen },
-    { href: "/teacher/assignments", label: "Assignments & Grading", icon: FileCheck },
-    { href: "/teacher/students", label: "Batch Student Roster", icon: Users2 },
+    { href: "/teacher/materials", label: "Upload Materials", icon: BookOpen, api: "/api/teacher/materials" },
+    { href: "/teacher/assignments", label: "Assignments & Grading", icon: FileCheck, api: "/api/teacher/assignments" },
+    { href: "/teacher/students", label: "Batch Student Roster", icon: Users2, api: "/api/teacher/students" },
     { href: "/teacher/attendance", label: "Attendance Log", icon: Clock },
   ];
 
@@ -74,49 +77,67 @@ export function PortalSidebar({ role }: SidebarProps) {
 
   const links = role === "STUDENT" ? studentLinks : role === "TEACHER" ? teacherLinks : adminLinks;
 
+  const handleHoverPrefetch = (item: any) => {
+    if (item.href) router.prefetch(item.href);
+    if (item.api) prefetchApi(item.api);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      invalidateCache("/api");
+    } catch (e) {
+      console.error(e);
+    }
+    router.push("/login");
+  };
+
   return (
-    <aside className="w-64 border-r border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 flex flex-col h-screen sticky top-0 shrink-0 select-none z-30">
+    <aside className="w-60 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-screen sticky top-0 shrink-0 select-none z-30 transition-colors">
       {/* Sidebar Header */}
-      <div className="h-20 px-6 flex items-center gap-3 border-b border-slate-200/80 dark:border-slate-800/80">
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
-          <GraduationCap className="w-5 h-5" />
+      <div className="h-16 px-5 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800">
+        <div className="w-8 h-8 rounded-md bg-indigo-600 flex items-center justify-center text-white shrink-0">
+          <GraduationCap className="w-4 h-4" />
         </div>
         <div>
-          <span className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-slate-100">
+          <span className="font-bold text-sm tracking-tight text-slate-800 dark:text-slate-200">
             ACUITY
           </span>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              {role} PORTAL
-            </span>
-          </div>
+          <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+            {role} Portal
+          </p>
         </div>
       </div>
 
       {/* Navigation Links */}
-      <div className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 py-3 px-2.5 space-y-0.5 overflow-y-auto">
         {links.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const isActive =
+            pathname === item.href ||
+            (pathname.startsWith(`${item.href}/`) &&
+              item.href !== "/student/dashboard" &&
+              item.href !== "/teacher/dashboard");
 
           return (
             <Link
               key={item.href}
               href={item.href}
               prefetch={true}
+              onMouseEnter={() => handleHoverPrefetch(item)}
+              onFocus={() => handleHoverPrefetch(item)}
               className={cn(
-                "flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 group",
+                "flex items-center justify-between px-3 py-2 rounded-md text-[13px] font-medium transition-colors group",
                 isActive
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/25"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200"
+                  ? "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60"
+                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-800 dark:hover:text-slate-200"
               )}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 <Icon
                   className={cn(
-                    "w-4 h-4 transition-transform group-hover:scale-110",
-                    isActive ? "text-white" : "text-slate-500 dark:text-slate-400"
+                    "w-4 h-4",
+                    isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 dark:text-slate-500"
                   )}
                 />
                 <span>{item.label}</span>
@@ -124,10 +145,10 @@ export function PortalSidebar({ role }: SidebarProps) {
               {item.badge && (
                 <span
                   className={cn(
-                    "text-[10px] px-2 py-0.5 rounded-full font-bold uppercase",
+                    "text-[10px] px-1.5 py-0.5 rounded font-semibold",
                     isActive
-                      ? "bg-white/20 text-white"
-                      : "bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300"
+                      ? "bg-indigo-200/60 dark:bg-indigo-800/40 text-indigo-700 dark:text-indigo-300"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                   )}
                 >
                   {item.badge}
@@ -136,18 +157,17 @@ export function PortalSidebar({ role }: SidebarProps) {
             </Link>
           );
         })}
-      </div>
+      </nav>
 
-      {/* Footer Hotlines Badge */}
-      <div className="p-4 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/40">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>Emergency / Support</span>
-          </div>
-          <p className="text-[11px] text-slate-500 mt-1 font-mono">+91 98765 43210</p>
-          <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium">3 Hotlines Active 24/7</p>
-        </div>
+      {/* Footer: Sign Out */}
+      <div className="p-2.5 border-t border-slate-200 dark:border-slate-800">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          <span>Sign Out</span>
+        </button>
       </div>
     </aside>
   );

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="acuityGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#4f46e5" />
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="8" fill="url(#acuityGrad)" />
+  <path d="M16 6 L24 24 L19.5 24 L17.5 19.5 L14.5 19.5 L12.5 24 L8 24 Z M16 12 L14.8 16.5 L17.2 16.5 Z" fill="#ffffff" />
+</svg>

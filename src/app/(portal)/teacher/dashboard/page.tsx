@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import {
   Video,
-  Users2,
+  Users,
   FileCheck,
   BookOpen,
   CalendarCheck2,
@@ -12,169 +12,219 @@ import {
   Plus,
   ArrowRight,
   ShieldCheck,
-  CheckCircle2,
-  Sparkles,
+  GraduationCap,
+  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { useFastFetch } from "@/lib/api-cache";
 
 export default function TeacherDashboardPage() {
   const { data } = useFastFetch("/api/teacher/dashboard");
 
   const teacher = data?.teacher || {
-    name: "Dr. Sarah Jenkins",
-    qualification: "M.Sc. Mathematics, Ph.D",
-    specialization: "Class 8-10 Mathematics",
-    subjects: ["Mathematics"],
+    name: "Faculty Member",
+    qualification: "M.Sc., B.Ed",
+    specialization: "Class 8-10 Mathematics & Science",
+    subjects: ["Mathematics", "Science"],
     classesTaught: ["Class 8", "Class 9", "Class 10"],
   };
 
   const stats = data?.stats || {
-    totalStudents: 45,
-    todayClassesCount: 1,
-    pendingEvaluations: 2,
-    totalMaterials: 6,
+    totalStudents: 3,
+    todayClassesCount: 0,
+    pendingEvaluations: 0,
+    totalMaterials: 4,
     averageAttendance: 94,
   };
 
-  const todayClasses = data?.todayClasses || [
-    {
-      _id: "acuity-class10-maths-live",
-      title: "Class 10 CBSE — Quadratic Equations Masterclass",
-      subject: "Mathematics",
-      topic: "Discriminant Formula & Solving Complex Word Problems",
-      date: new Date().toISOString().split("T")[0],
-      startTime: "19:00",
-      endTime: "20:00",
-      status: "LIVE",
-      batchId: { name: "7:00 PM – 8:00 PM (Batch 2)" },
-    },
-  ];
+  const todayClasses = Array.isArray(data?.todayClasses) ? data.todayClasses : [];
+
+  const todayFormatted = new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date());
 
   return (
-    <main className="p-6 sm:p-8 space-y-8 max-w-7xl animate-in fade-in duration-150">
-      {/* Teacher Profile Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-              Welcome, {teacher.name}! 🎓
+    <main className="w-full min-h-full bg-transparent p-6 sm:p-8 lg:p-10 space-y-8 animate-in fade-in duration-150">
+      {/* ── HEADER ── */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+              Welcome, {teacher.name}
             </h1>
-            <Badge variant="default" className="text-xs">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+              <ShieldCheck className="w-3.5 h-3.5" />
               Verified Faculty
-            </Badge>
+            </span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Subjects: <strong>{teacher.subjects.join(", ")}</strong> • Grades: <strong>{teacher.classesTaught.join(", ")}</strong>
-          </p>
+          <div className="text-sm text-slate-500 dark:text-slate-400 space-y-0.5 pt-0.5">
+            <p>
+              Subjects: <strong className="text-slate-700 dark:text-slate-300">{teacher.subjects?.join(", ")}</strong>
+            </p>
+            <p>
+              Grades: <strong className="text-slate-700 dark:text-slate-300">{teacher.classesTaught?.join(", ")}</strong>
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Link href="/teacher/live-class/create" prefetch={true}>
-            <Button variant="primary" size="sm" className="gap-1.5 font-bold text-xs rounded-xl shadow-md shadow-indigo-500/20">
-              <Plus className="w-4 h-4" />
-              <span>Schedule Live Class</span>
-            </Button>
-          </Link>
+        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium self-start md:self-auto">
+          <Calendar className="w-3.5 h-3.5" />
+          <span>{todayFormatted}</span>
         </div>
       </div>
 
-      {/* Hero Live Session Card */}
+      {/* ── METRICS (CARDLESS HAIRLINE SUMMARY) ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Assigned Students</span>
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+              {stats.totalStudents} <span className="text-xs font-normal text-slate-400">enrolled</span>
+            </p>
+          </div>
+          <div className="w-9 h-9 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center">
+            <Users className="w-4 h-4" />
+          </div>
+        </div>
+
+        <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Today&apos;s Sessions</span>
+            <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight">
+              {stats.todayClassesCount} <span className="text-xs font-normal text-slate-400">scheduled</span>
+            </p>
+          </div>
+          <div className="w-9 h-9 rounded-md bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+            <Video className="w-4 h-4" />
+          </div>
+        </div>
+
+        <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Pending Grading</span>
+            <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 tracking-tight">
+              {stats.pendingEvaluations} <span className="text-xs font-normal text-slate-400">tasks</span>
+            </p>
+          </div>
+          <div className="w-9 h-9 rounded-md bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+            <FileCheck className="w-4 h-4" />
+          </div>
+        </div>
+
+        <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Avg Attendance</span>
+            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">
+              {stats.averageAttendance}% <span className="text-xs font-normal text-slate-400">turnout</span>
+            </p>
+          </div>
+          <div className="w-9 h-9 rounded-md bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <CalendarCheck2 className="w-4 h-4" />
+          </div>
+        </div>
+      </div>
+
+      {/* ── TODAY'S LIVE CLASS SCHEDULE (IF ANY) ── */}
       {todayClasses.length > 0 && (
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-950 via-slate-950 to-indigo-900 border border-indigo-500/30 p-6 sm:p-8 text-white shadow-2xl">
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-3 max-w-xl">
-              <div className="flex items-center gap-2">
-                <Badge variant="live" className="text-xs font-bold px-3 py-0.5 animate-pulse">
-                  HOST CLASSROOM
-                </Badge>
-                <span className="text-xs text-indigo-200 font-mono">
-                  {todayClasses[0].startTime} – {todayClasses[0].endTime}
-                </span>
-                <span className="text-xs text-slate-400">• {todayClasses[0].batchId?.name || "Evening Batch"}</span>
+        <div className="space-y-3">
+          <div className="pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <h2 className="font-semibold text-sm text-slate-800 dark:text-slate-200">
+              Today&apos;s Active Lecture
+            </h2>
+            <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400">Live Session Ready</span>
+          </div>
+
+          <div className="border border-slate-200 dark:border-slate-800 rounded-lg divide-y divide-slate-200 dark:divide-slate-800 overflow-hidden bg-white dark:bg-slate-900/50">
+            {todayClasses.map((cls: any) => (
+              <div key={cls._id} className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                      {cls.subject}
+                    </span>
+                    <span className="text-xs font-mono text-slate-500">
+                      {cls.startTime} – {cls.endTime}
+                    </span>
+                  </div>
+                  <h3 className="font-semibold text-sm sm:text-base text-slate-900 dark:text-slate-100">
+                    {cls.title}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {cls.topic}
+                  </p>
+                </div>
+
+                <Link href={`/classroom/${cls._id || "acuity-live-classroom"}`}>
+                  <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer shadow-sm">
+                    <Video className="w-4 h-4" />
+                    <span>Start Live Classroom</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                </Link>
               </div>
-
-              <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight">
-                {todayClasses[0].title}
-              </h2>
-
-              <p className="text-xs sm:text-sm text-indigo-200/90 leading-relaxed">
-                <strong>Topic:</strong> {todayClasses[0].topic}
-              </p>
-            </div>
-
-            <div className="shrink-0 flex items-center gap-3">
-              <Link href={`/teacher/classroom/${todayClasses[0]._id || "acuity-class10-maths-live"}`}>
-                <Button
-                  variant="glow"
-                  size="lg"
-                  className="font-black text-sm px-8 py-6 rounded-2xl shadow-xl shadow-emerald-500/25 gap-2"
-                >
-                  <Video className="w-5 h-5" />
-                  <span>START TEACHER CLASSROOM</span>
-                </Button>
-              </Link>
-            </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* KPI Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-5">
-          <span className="text-xs font-bold text-slate-500 uppercase">Assigned Students</span>
-          <p className="text-3xl font-black text-slate-900 dark:text-slate-100 mt-1">{stats.totalStudents}</p>
-          <p className="text-xs text-slate-500 mt-1">Across Class 8, 9, 10</p>
-        </Card>
+      {/* ── QUICK ACTIONS (CARDLESS OPEN-SPACE) ── */}
+      <div className="space-y-3">
+        <div className="pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <h2 className="font-semibold text-sm text-slate-800 dark:text-slate-200">
+            Teaching Management Modules
+          </h2>
+          <span className="text-[11px] text-slate-400">Direct Navigation</span>
+        </div>
 
-        <Card className="p-5">
-          <span className="text-xs font-bold text-slate-500 uppercase">Today's Sessions</span>
-          <p className="text-3xl font-black text-indigo-600 dark:text-indigo-400 mt-1">{stats.todayClassesCount}</p>
-          <p className="text-xs text-slate-500 mt-1">Live WebRTC batches</p>
-        </Card>
-
-        <Card className="p-5">
-          <span className="text-xs font-bold text-slate-500 uppercase">Pending Grading</span>
-          <p className="text-3xl font-black text-amber-500 mt-1">{stats.pendingEvaluations}</p>
-          <Link href="/teacher/assignments" prefetch={true} className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold hover:underline mt-1 block">
-            Grade homework →
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Link
+            href="/teacher/materials"
+            prefetch={true}
+            className="p-5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors group flex flex-col justify-between h-32"
+          >
+            <div className="flex items-center justify-between">
+              <BookOpen className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-xs text-slate-800 dark:text-slate-200">Upload Learning Notes</h3>
+              <p className="text-[11px] text-slate-400 mt-0.5">Share PDFs, formula handbooks & workbooks</p>
+            </div>
           </Link>
-        </Card>
 
-        <Card className="p-5">
-          <span className="text-xs font-bold text-slate-500 uppercase">Class Attendance</span>
-          <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{stats.averageAttendance}%</p>
-          <p className="text-xs text-emerald-600 font-semibold mt-1">Excellent student turnout</p>
-        </Card>
-      </div>
+          <Link
+            href="/teacher/assignments"
+            prefetch={true}
+            className="p-5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors group flex flex-col justify-between h-32"
+          >
+            <div className="flex items-center justify-between">
+              <FileCheck className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-xs text-slate-800 dark:text-slate-200">Assignments & Grading</h3>
+              <p className="text-[11px] text-slate-400 mt-0.5">Post homework tasks & grade student solutions</p>
+            </div>
+          </Link>
 
-      {/* Quick Action Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Link href="/teacher/materials" prefetch={true} className="group">
-          <Card className="p-5 group-hover:border-indigo-500/50 transition-all">
-            <BookOpen className="w-6 h-6 text-indigo-600 mb-2 group-hover:scale-110 transition-transform" />
-            <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Upload Learning Notes</h3>
-            <p className="text-xs text-slate-500 mt-1">Share PDFs, formula sheets, and Ray Diagram workbooks.</p>
-          </Card>
-        </Link>
-
-        <Link href="/teacher/assignments" prefetch={true} className="group">
-          <Card className="p-5 group-hover:border-purple-500/50 transition-all">
-            <FileCheck className="w-6 h-6 text-purple-600 mb-2 group-hover:scale-110 transition-transform" />
-            <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Create & Grade Worksheets</h3>
-            <p className="text-xs text-slate-500 mt-1">Post homework problems and provide scored feedback.</p>
-          </Card>
-        </Link>
-
-        <Link href="/teacher/students" prefetch={true} className="group">
-          <Card className="p-5 group-hover:border-emerald-500/50 transition-all">
-            <Users2 className="w-6 h-6 text-emerald-600 mb-2 group-hover:scale-110 transition-transform" />
-            <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Student Directory & Attendance</h3>
-            <p className="text-xs text-slate-500 mt-1">Inspect student profiles and export attendance records.</p>
-          </Card>
-        </Link>
+          <Link
+            href="/teacher/students"
+            prefetch={true}
+            className="p-5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors group flex flex-col justify-between h-32"
+          >
+            <div className="flex items-center justify-between">
+              <Users className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-xs text-slate-800 dark:text-slate-200">Batch Student Roster</h3>
+              <p className="text-[11px] text-slate-400 mt-0.5">Review enrolled students & attendance log</p>
+            </div>
+          </Link>
+        </div>
       </div>
     </main>
   );
