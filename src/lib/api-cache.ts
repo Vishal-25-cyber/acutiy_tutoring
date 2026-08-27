@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 
 const memoryCache = new Map<string, { data: any; timestamp: number }>();
 const inflightRequests = new Map<string, Promise<any>>();
-const CACHE_TTL_MS = 2 * 60 * 1000; // 2 minutes TTL
+const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes TTL for ultra-fast navigation
 
 /**
  * Prefetches and caches an API endpoint in the background with deduplication.
@@ -59,13 +59,24 @@ export function warmupPortalCache(role: string = "STUDENT") {
         "/api/student/attendance",
         "/api/notifications",
       ]
-      : [
+      : role === "TEACHER"
+      ? [
         "/api/auth/me",
         "/api/teacher/dashboard",
         "/api/classes",
         "/api/teacher/materials",
         "/api/teacher/assignments",
         "/api/teacher/students",
+        "/api/teacher/attendance",
+        "/api/notifications",
+      ]
+      : [
+        "/api/auth/me",
+        "/api/admin/students",
+        "/api/admin/teachers",
+        "/api/batches",
+        "/api/admin/staff-attendance",
+        "/api/admin/finance",
         "/api/notifications",
       ];
 
@@ -102,7 +113,7 @@ export function useFastFetch<T = any>(
       // If cache is still fresh and not a manual refetch, avoid unnecessary network calls
       if (isFresh) return;
     } else {
-      setIsLoading(true);
+      setIsLoading(!hasCachedData);
     }
 
     try {

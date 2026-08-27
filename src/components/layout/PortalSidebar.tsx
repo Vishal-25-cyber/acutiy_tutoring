@@ -30,6 +30,14 @@ import {
 import { cn } from "@/components/ui/button";
 import { warmupPortalCache, prefetchApi, invalidateCache } from "@/lib/api-cache";
 
+interface SidebarLink {
+  href: string;
+  label: string;
+  icon: any;
+  badge?: string;
+  api?: string;
+}
+
 interface SidebarProps {
   role: "STUDENT" | "TEACHER" | "ADMIN";
 }
@@ -38,12 +46,7 @@ export function PortalSidebar({ role }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Pre-warm data into in-memory cache on initial load for instant 0ms transitions
-  useEffect(() => {
-    warmupPortalCache(role);
-  }, [role]);
-
-  const studentLinks = [
+  const studentLinks: SidebarLink[] = [
     { href: "/student/dashboard", label: "Dashboard", icon: LayoutDashboard, api: "/api/student/dashboard" },
     { href: "/student/classes", label: "Live Classes & Timetable", icon: Video, badge: "Live", api: "/api/student/classes" },
     { href: "/student/materials", label: "Learning Hub", icon: BookOpen, api: "/api/student/materials" },
@@ -51,7 +54,7 @@ export function PortalSidebar({ role }: SidebarProps) {
     { href: "/student/attendance", label: "Attendance & Streak", icon: CalendarCheck2, api: "/api/student/attendance" },
   ];
 
-  const teacherLinks = [
+  const teacherLinks: SidebarLink[] = [
     { href: "/teacher/dashboard", label: "Dashboard", icon: LayoutDashboard, api: "/api/teacher/dashboard" },
     { href: "/teacher/schedule", label: "Timetable & Schedule", icon: CalendarCheck2, api: "/api/classes" },
     { href: "/teacher/live-class/create", label: "Create Live Class", icon: Video, badge: "Host" },
@@ -61,7 +64,7 @@ export function PortalSidebar({ role }: SidebarProps) {
     { href: "/teacher/attendance", label: "Attendance Log", icon: Clock },
   ];
 
-  const adminLinks = [
+  const adminLinks: SidebarLink[] = [
     { href: "/admin/dashboard", label: "Command Center", icon: LayoutDashboard },
     { href: "/admin/students", label: "Student Management", icon: Users2 },
     { href: "/admin/teachers", label: "Teacher Approvals & Staff", icon: UserCheck, badge: "Pending" },
@@ -76,6 +79,24 @@ export function PortalSidebar({ role }: SidebarProps) {
   ];
 
   const links = role === "STUDENT" ? studentLinks : role === "TEACHER" ? teacherLinks : adminLinks;
+
+  // Pre-warm data into in-memory cache on initial load for instant 0ms transitions
+  useEffect(() => {
+    warmupPortalCache(role);
+    // Prefetch all router pages ahead of time
+    links.forEach((item) => {
+      if (item.href) {
+        try {
+          router.prefetch(item.href);
+        } catch (e) {
+          // ignore
+        }
+      }
+      if (item.api) {
+        prefetchApi(item.api);
+      }
+    });
+  }, [role, router, links]);
 
   const handleHoverPrefetch = (item: any) => {
     if (item.href) router.prefetch(item.href);
