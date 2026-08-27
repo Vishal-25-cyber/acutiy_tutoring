@@ -17,28 +17,34 @@ import {
 } from "lucide-react";
 import { useFastFetch } from "@/lib/api-cache";
 
+const INITIAL_METRICS = {
+  totalStudents: 3,
+  activeStudents: 3,
+  totalTeachers: 3,
+  activeTeachers: 3,
+  pendingApprovals: 1,
+  todayClasses: 2,
+  activeLiveSessions: 0,
+  monthlyRevenue: 15000,
+  pendingRevenue: 2500,
+  averageAttendance: 95,
+};
+
+const INITIAL_ACTIVITY = [
+  { id: "1", type: "STUDENT", title: "Student enrolled in Class 10 CBSE batch", time: "10 mins ago" },
+  { id: "2", type: "LIVE", title: "Class 10 Mathematics Live Classroom session scheduled", time: "35 mins ago" },
+  { id: "3", type: "PAYMENT", title: "Tuition fee received (₹2,500) for Class 10", time: "1 hour ago" },
+  { id: "4", type: "TEACHER", title: "Faculty profile verified for Class 8-10 Science", time: "2 hours ago" },
+];
+
 export default function AdminDashboardPage() {
-  const { data } = useFastFetch("/api/admin/dashboard");
+  const { data } = useFastFetch("/api/admin/dashboard", {
+    metrics: INITIAL_METRICS,
+    recentActivity: INITIAL_ACTIVITY,
+  });
 
-  const metrics = data?.metrics || {
-    totalStudents: 3,
-    activeStudents: 3,
-    totalTeachers: 3,
-    activeTeachers: 3,
-    pendingApprovals: 0,
-    todayClasses: 2,
-    activeLiveSessions: 0,
-    monthlyRevenue: 15000,
-    pendingRevenue: 2500,
-    averageAttendance: 95,
-  };
-
-  const recentActivity = data?.recentActivity || [
-    { id: "1", type: "STUDENT", title: "Student enrolled in Class 10 CBSE batch", time: "10 mins ago" },
-    { id: "2", type: "LIVE", title: "Class 10 Mathematics Live Classroom session scheduled", time: "35 mins ago" },
-    { id: "3", type: "PAYMENT", title: "Tuition fee received (₹2,500) for Class 10", time: "1 hour ago" },
-    { id: "4", type: "TEACHER", title: "Faculty profile verified for Class 8-10 Science", time: "2 hours ago" },
-  ];
+  const metrics = data?.metrics || INITIAL_METRICS;
+  const recentActivity = data?.recentActivity || INITIAL_ACTIVITY;
 
   const todayFormatted = new Intl.DateTimeFormat("en-US", {
     weekday: "long",

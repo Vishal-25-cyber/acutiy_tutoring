@@ -28,13 +28,14 @@ import {
   LogOut,
 } from "lucide-react";
 import { cn } from "@/components/ui/button";
-import { warmupPortalCache, prefetchApi, invalidateCache } from "@/lib/api-cache";
+import { warmupPortalCache, prefetchApi, invalidateCache, useFastFetch } from "@/lib/api-cache";
 
 interface SidebarLink {
   href: string;
   label: string;
   icon: any;
   badge?: string;
+  badgeVariant?: "default" | "warning" | "success" | "live";
   api?: string;
 }
 
@@ -45,13 +46,30 @@ interface SidebarProps {
 export function PortalSidebar({ role }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { data: paymentData } = useFastFetch(role === "STUDENT" ? "/api/student/payments" : "");
+
+  const currentFee = paymentData?.currentFee;
+  const pendingVerification = paymentData?.pendingVerification;
+  const feeBadge = currentFee
+    ? `Due: ₹${currentFee.amount}`
+    : pendingVerification
+    ? "Verifying"
+    : undefined;
 
   const studentLinks: SidebarLink[] = [
     { href: "/student/dashboard", label: "Dashboard", icon: LayoutDashboard, api: "/api/student/dashboard" },
-    { href: "/student/classes", label: "Live Classes & Timetable", icon: Video, badge: "Live", api: "/api/student/classes" },
+    { href: "/student/classes", label: "Live Classes & Timetable", icon: Video, badge: "Live", badgeVariant: "live", api: "/api/student/classes" },
     { href: "/student/materials", label: "Learning Hub", icon: BookOpen, api: "/api/student/materials" },
     { href: "/student/assignments", label: "Assignments & Tasks", icon: FileCheck, api: "/api/student/assignments" },
     { href: "/student/attendance", label: "Attendance & Streak", icon: CalendarCheck2, api: "/api/student/attendance" },
+    {
+      href: "/student/fees",
+      label: "Tuition & Fees",
+      icon: CreditCard,
+      badge: feeBadge,
+      badgeVariant: currentFee ? "warning" : "default",
+      api: "/api/student/payments",
+    },
   ];
 
   const teacherLinks: SidebarLink[] = [
@@ -65,17 +83,17 @@ export function PortalSidebar({ role }: SidebarProps) {
   ];
 
   const adminLinks: SidebarLink[] = [
-    { href: "/admin/dashboard", label: "Command Center", icon: LayoutDashboard },
-    { href: "/admin/students", label: "Student Management", icon: Users2 },
-    { href: "/admin/teachers", label: "Teacher Approvals & Staff", icon: UserCheck, badge: "Pending" },
-    { href: "/admin/batches", label: "Dynamic Batch Manager", icon: Layers },
-    { href: "/admin/classes", label: "Live Session Monitor", icon: Video },
-    { href: "/admin/attendance", label: "Student Attendance", icon: CalendarCheck2 },
-    { href: "/admin/staff-attendance", label: "Staff Attendance", icon: Clock },
-    { href: "/admin/finance", label: "Monthly Income & Fees", icon: DollarSign },
-    { href: "/admin/analytics", label: "Advanced Analytics", icon: Activity },
-    { href: "/admin/settings", label: "System Settings", icon: Settings },
-    { href: "/admin/audit-logs", label: "Admin Audit Logs", icon: History },
+    { href: "/admin/dashboard", label: "Command Center", icon: LayoutDashboard, api: "/api/admin/dashboard" },
+    { href: "/admin/students", label: "Student Management", icon: Users2, api: "/api/admin/students" },
+    { href: "/admin/teachers", label: "Teacher Approvals & Staff", icon: UserCheck, badge: "Pending", api: "/api/admin/teachers?status=ALL" },
+    { href: "/admin/batches", label: "Dynamic Batch Manager", icon: Layers, api: "/api/admin/batches" },
+    { href: "/admin/classes", label: "Live Session Monitor", icon: Video, api: "/api/admin/classes" },
+    { href: "/admin/attendance", label: "Student Attendance", icon: CalendarCheck2, api: "/api/admin/attendance?classLevel=ALL&status=ALL" },
+    { href: "/admin/staff-attendance", label: "Staff Attendance", icon: Clock, api: "/api/admin/staff-attendance" },
+    { href: "/admin/finance", label: "Monthly Income & Fees", icon: DollarSign, api: "/api/admin/finance" },
+    { href: "/admin/analytics", label: "Advanced Analytics", icon: Activity, api: "/api/admin/analytics" },
+    { href: "/admin/settings", label: "System Settings", icon: Settings, api: "/api/admin/settings" },
+    { href: "/admin/audit-logs", label: "Admin Audit Logs", icon: History, api: "/api/admin/audit-logs" },
   ];
 
   const links = role === "STUDENT" ? studentLinks : role === "TEACHER" ? teacherLinks : adminLinks;
@@ -166,8 +184,12 @@ export function PortalSidebar({ role }: SidebarProps) {
               {item.badge && (
                 <span
                   className={cn(
-                    "text-[10px] px-1.5 py-0.5 rounded font-semibold",
-                    isActive
+                    "text-[10px] px-1.5 py-0.5 rounded font-bold",
+                    item.badgeVariant === "warning"
+                      ? "bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30"
+                      : item.badgeVariant === "live"
+                      ? "bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/30"
+                      : isActive
                       ? "bg-indigo-200/60 dark:bg-indigo-800/40 text-indigo-700 dark:text-indigo-300"
                       : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                   )}

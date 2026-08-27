@@ -18,30 +18,36 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useFastFetch } from "@/lib/api-cache";
 
+const INITIAL_DISTRIBUTION = [
+  { class: "Class 1", count: 8 },
+  { class: "Class 2", count: 9 },
+  { class: "Class 3", count: 12 },
+  { class: "Class 4", count: 14 },
+  { class: "Class 5", count: 16 },
+  { class: "Class 6", count: 22 },
+  { class: "Class 7", count: 25 },
+  { class: "Class 8", count: 32 },
+  { class: "Class 9", count: 38 },
+  { class: "Class 10", count: 44 },
+];
+
+const INITIAL_GROWTH = [
+  { month: "Aug", students: 110, teachers: 8 },
+  { month: "Sep", students: 145, teachers: 10 },
+  { month: "Oct", students: 172, teachers: 12 },
+  { month: "Nov", students: 195, teachers: 12 },
+  { month: "Dec", students: 220, teachers: 14 },
+];
+
 export default function AdminAnalyticsPage() {
-  const { data } = useFastFetch("/api/admin/analytics");
+  const { data } = useFastFetch("/api/admin/analytics", {
+    classDistribution: INITIAL_DISTRIBUTION,
+    enrollmentGrowth: INITIAL_GROWTH,
+  });
   const [timeRange, setTimeRange] = useState("This Month");
 
-  const classDistribution = data?.classDistribution || [
-    { class: "Class 1", count: 8 },
-    { class: "Class 2", count: 9 },
-    { class: "Class 3", count: 12 },
-    { class: "Class 4", count: 14 },
-    { class: "Class 5", count: 16 },
-    { class: "Class 6", count: 22 },
-    { class: "Class 7", count: 25 },
-    { class: "Class 8", count: 32 },
-    { class: "Class 9", count: 38 },
-    { class: "Class 10", count: 44 },
-  ];
-
-  const enrollmentGrowth = data?.enrollmentGrowth || [
-    { month: "Aug", students: 110, teachers: 8 },
-    { month: "Sep", students: 145, teachers: 10 },
-    { month: "Oct", students: 172, teachers: 12 },
-    { month: "Nov", students: 195, teachers: 12 },
-    { month: "Dec", students: 220, teachers: 14 },
-  ];
+  const classDistribution = data?.classDistribution || INITIAL_DISTRIBUTION;
+  const enrollmentGrowth = data?.enrollmentGrowth || INITIAL_GROWTH;
 
   return (
     <main className="p-6 sm:p-8 space-y-6 max-w-7xl animate-in fade-in duration-150">

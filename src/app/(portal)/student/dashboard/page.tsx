@@ -16,13 +16,15 @@ import {
   ChevronRight,
   FileCheck,
   CalendarCheck2,
+  CreditCard,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, cn } from "@/components/ui/button";
 import { useFastFetch } from "@/lib/api-cache";
 
 export default function StudentDashboardPage() {
   const { data: authData } = useFastFetch("/api/auth/me");
   const { data } = useFastFetch("/api/student/dashboard");
+  const { data: paymentData } = useFastFetch("/api/student/payments");
 
   const authUser = authData?.user;
   const student = data?.student;
@@ -32,10 +34,14 @@ export default function StudentDashboardPage() {
   const classLevel = student?.classLevel || authUser?.profile?.currentClass || "Class 10";
   const board = student?.board || authUser?.profile?.board || "CBSE";
   const studentEmail = student?.email || authUser?.email || "student@acuity.edu";
-  const batchName = student?.batch?.name || authUser?.profile?.batchId?.name || "7:00 PM – 8:00 PM";
-  const attendancePercentage = student?.attendancePercentage ?? 100;
+  const batchName = student?.batch?.name || authUser?.profile?.batchId?.name || "6:00 PM – 7:00 PM";
+  
+  // Real strictly computed attendance values
+  const totalSessions = student?.totalSessions ?? 0;
+  const totalAttended = student?.totalAttended ?? 0;
+  const attendancePercentage = student?.attendancePercentage ?? 0;
 
-  // Real assessment summary stats from database
+  // Real assessment summary stats strictly from database
   const assessments = data?.assessmentSummary || {
     total: 0,
     submitted: 0,
@@ -43,6 +49,10 @@ export default function StudentDashboardPage() {
     evaluated: 0,
     averageScore: 0,
   };
+
+  // Real fee status
+  const currentFee = paymentData?.currentFee || data?.feeStatus?.currentFee;
+  const pendingVerification = paymentData?.pendingVerification || data?.feeStatus?.pendingVerification;
 
   const todayFormatted = new Intl.DateTimeFormat("en-US", {
     weekday: "long",
@@ -55,9 +65,14 @@ export default function StudentDashboardPage() {
     <main className="w-full min-h-full bg-transparent p-6 sm:p-8 lg:p-10 space-y-8 animate-in fade-in duration-150">
       {/* 1. CLEAN OPEN-SPACE HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-200/80 dark:border-slate-800/80">
-        <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-          Welcome, {safeName}
-        </h1>
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+            Welcome, {safeName}
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Real-time student workspace • {classLevel} ({board} Board)
+          </p>
+        </div>
 
         <div className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400 self-start md:self-auto">
           <Calendar className="w-4 h-4 text-slate-400" />
@@ -65,7 +80,79 @@ export default function StudentDashboardPage() {
         </div>
       </div>
 
-      {/* 2. CORE ACADEMIC METRICS (Larger typography & clearer icons) */}
+      {/* 2. REAL-TIME TUITION FEE & DUES BANNER */}
+      {currentFee ? (
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/5 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <CreditCard className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100">
+                  Monthly Tuition Fee Due: ₹{currentFee.amount}
+                </span>
+                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 animate-pulse">
+                  Payment Required
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                Billing Month: <span className="font-semibold text-slate-800 dark:text-slate-200">{currentFee.billingMonth || "February 2025"}</span> • Due Date: <span className="font-semibold text-slate-800 dark:text-slate-200">{currentFee.dueDate ? new Date(currentFee.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Immediate"}</span> • Invoice Ref: <span className="font-mono text-slate-500">{currentFee.receiptNumber}</span>
+              </p>
+            </div>
+          </div>
+          <Link href="/student/fees" prefetch={true} className="shrink-0">
+            <Button variant="glow" size="sm" className="font-bold text-xs bg-amber-600 hover:bg-amber-500 text-white shadow-md shadow-amber-500/25 px-5">
+              Pay Tuition (₹{currentFee.amount}) →
+            </Button>
+          </Link>
+        </div>
+      ) : pendingVerification ? (
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-indigo-500/15 via-blue-500/10 to-indigo-500/5 border border-indigo-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-xl bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+              <Clock className="w-6 h-6 animate-spin text-indigo-500" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100">
+                  Payment Verification in Progress (₹{pendingVerification.amount})
+                </span>
+                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">
+                  Pending Admin Approval
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                Submitted Transaction / UTR: <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">{pendingVerification.transactionId || "Submitted"}</span> • Real-time listener active
+              </p>
+            </div>
+          </div>
+          <Link href="/student/fees" prefetch={true} className="shrink-0">
+            <Button variant="outline" size="sm" className="font-bold text-xs border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50">
+              View Payment Details
+            </Button>
+          </Link>
+        </div>
+      ) : (
+        <div className="p-3.5 sm:p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+            <div>
+              <span className="font-bold text-xs sm:text-sm text-emerald-700 dark:text-emerald-300">
+                Tuition Status: All Fees Cleared & Full Access Active
+              </span>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Your live classrooms, curriculum materials, and assignment submissions are active.
+              </p>
+            </div>
+          </div>
+          <Link href="/student/fees" prefetch={true}>
+            <span className="text-xs font-bold text-emerald-600 hover:underline">View Receipts & Invoices →</span>
+          </Link>
+        </div>
+      )}
+
+      {/* 3. CORE ACADEMIC METRICS (Strictly 100% real-time from database) */}
       <div className="py-4 border-y border-slate-200/80 dark:border-slate-800/80 grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-200/80 dark:divide-slate-800/80">
         <div className="p-4 sm:p-5 flex items-center justify-between">
           <div className="space-y-1">
@@ -107,7 +194,7 @@ export default function StudentDashboardPage() {
           <div className="space-y-1">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Attendance Rate</span>
             <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight">
-              {attendancePercentage}% <span className="text-sm font-semibold text-slate-400">Present</span>
+              {totalSessions > 0 ? `${attendancePercentage}%` : "0%"} <span className="text-sm font-semibold text-slate-400">{totalSessions > 0 ? "Present" : "No Classes Yet"}</span>
             </p>
           </div>
           <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center">
@@ -116,7 +203,7 @@ export default function StudentDashboardPage() {
         </div>
       </div>
 
-      {/* 3. REAL LOGIN DATA SPECIFICATIONS & MODULE ACCESS */}
+      {/* 4. REAL LOGIN DATA SPECIFICATIONS & MODULE ACCESS */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         {/* Left 6-Column: Verified Academic Profile with Real Login Details */}
         <div className="lg:col-span-6 space-y-3">
@@ -156,8 +243,32 @@ export default function StudentDashboardPage() {
             <div className="py-3.5 flex items-center justify-between gap-4">
               <span className="font-medium text-slate-500">Live Attendance Standing</span>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm sm:text-base">{attendancePercentage}% Turnout</span>
+                <span className={cn(
+                  "font-bold text-sm sm:text-base",
+                  totalSessions === 0 ? "text-slate-500" : attendancePercentage >= 75 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
+                )}>
+                  {totalSessions > 0 ? `${attendancePercentage}% Turnout (${totalAttended}/${totalSessions})` : "0% Turnout (New Enrollment • 0 Sessions)"}
+                </span>
                 <span className="text-xs text-slate-400">(Requirement: ≥ 75%)</span>
+              </div>
+            </div>
+
+            <div className="py-3.5 flex items-center justify-between gap-4">
+              <span className="font-medium text-slate-500">Tuition Fee Standing</span>
+              <div className="flex items-center gap-2">
+                {currentFee ? (
+                  <span className="font-bold text-amber-600 dark:text-amber-400 text-sm sm:text-base">
+                    ₹{currentFee.amount} Due ({currentFee.billingMonth})
+                  </span>
+                ) : pendingVerification ? (
+                  <span className="font-bold text-indigo-600 dark:text-indigo-400 text-sm sm:text-base">
+                    Pending Verification (₹{pendingVerification.amount})
+                  </span>
+                ) : (
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm sm:text-base">
+                    ✓ All Dues Cleared
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -239,7 +350,7 @@ export default function StudentDashboardPage() {
               className="py-3.5 flex items-center justify-between gap-4 hover:text-indigo-600 transition-colors group"
             >
               <div className="flex items-center gap-3.5">
-                <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
                   <CalendarCheck2 className="w-4 h-4" />
                 </div>
                 <div>
@@ -247,6 +358,46 @@ export default function StudentDashboardPage() {
                     Attendance Records
                   </p>
                   <p className="text-xs text-slate-500">Presence history, reconnection tracking & turnout</p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-1 transition-transform" />
+            </Link>
+
+            {/* Tuition Fees & Payments Module Link */}
+            <Link
+              href="/student/fees"
+              prefetch={true}
+              className="py-3.5 flex items-center justify-between gap-4 hover:text-indigo-600 transition-colors group"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className={cn(
+                  "w-9 h-9 rounded-xl flex items-center justify-center shrink-0",
+                  currentFee ? "bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400" : "bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400"
+                )}>
+                  <CreditCard className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 transition-colors">
+                      Tuition & Fee Payments
+                    </p>
+                    {currentFee ? (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                        ₹{currentFee.amount} Due
+                      </span>
+                    ) : pendingVerification ? (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">
+                        Verifying
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                        Paid
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    {currentFee ? `Pending tuition fee of ₹${currentFee.amount} for ${currentFee.billingMonth}` : "Online UPI payment, transaction history & invoice receipts"}
+                  </p>
                 </div>
               </div>
               <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-1 transition-transform" />

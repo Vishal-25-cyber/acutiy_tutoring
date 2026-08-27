@@ -16,8 +16,51 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useFastFetch } from "@/lib/api-cache";
 
+const INITIAL_SUMMARY = {
+  totalCollected: 248500,
+  totalPending: 32000,
+  collectionRate: 88,
+  totalTransactions: 104,
+};
+
+const INITIAL_PAYMENTS = [
+  {
+    _id: "pay-1",
+    studentId: { _id: "u1", name: "Aravind Swaminathan", email: "aravind.class10@acuity.edu" },
+    amount: 2500,
+    month: "October 2025",
+    type: "TUITION_FEE",
+    status: "PAID",
+    paidAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+    receiptNumber: "REC-2025-00189",
+  },
+  {
+    _id: "pay-2",
+    studentId: { _id: "u2", name: "Priya Sharma", email: "priya.class9@acuity.edu" },
+    amount: 2500,
+    month: "October 2025",
+    type: "TUITION_FEE",
+    status: "PAID",
+    paidAt: new Date(Date.now() - 5 * 86400000).toISOString(),
+    receiptNumber: "REC-2025-00174",
+  },
+  {
+    _id: "pay-3",
+    studentId: { _id: "u3", name: "Rohit Verma", email: "rohit.class8@acuity.edu" },
+    amount: 2500,
+    month: "October 2025",
+    type: "TUITION_FEE",
+    status: "PENDING",
+    paidAt: null,
+    receiptNumber: null,
+  },
+];
+
 export default function AdminFinancePage() {
-  const { data, refetch } = useFastFetch("/api/admin/finance");
+  const { data, refetch } = useFastFetch("/api/admin/finance", {
+    summary: INITIAL_SUMMARY,
+    payments: INITIAL_PAYMENTS,
+  });
 
   const handleMarkPaid = async (paymentId: string) => {
     try {
@@ -35,14 +78,8 @@ export default function AdminFinancePage() {
     }
   };
 
-  const summary = data?.summary || {
-    totalCollected: 248500,
-    totalPending: 32000,
-    collectionRate: 88,
-    totalTransactions: 104,
-  };
-
-  const payments = data?.payments || [];
+  const summary = data?.summary || INITIAL_SUMMARY;
+  const payments = data?.payments || INITIAL_PAYMENTS;
 
   const chartData = [
     { month: "Aug", collected: 180000, pending: 25000 },
@@ -132,9 +169,9 @@ export default function AdminFinancePage() {
             <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 border-b border-slate-200 dark:border-slate-800">
               <tr>
                 <th className="p-4 font-bold">Student</th>
-                <th className="p-4 font-bold">Billing Month</th>
+                <th className="p-4 font-bold">Billing Month / Course</th>
                 <th className="p-4 font-bold">Amount</th>
-                <th className="p-4 font-bold">Method</th>
+                <th className="p-4 font-bold">Method & UTR</th>
                 <th className="p-4 font-bold">Status</th>
                 <th className="p-4 font-bold text-right">Action</th>
               </tr>
@@ -147,33 +184,75 @@ export default function AdminFinancePage() {
                   </td>
                 </tr>
               ) : (
-                payments.map((p: any) => (
-                  <tr key={p._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                    <td className="p-4 font-bold text-slate-900 dark:text-slate-100">
-                      {p.studentId?.name || "Student"}
-                    </td>
-                    <td className="p-4 text-slate-600 dark:text-slate-400">{p.billingMonth}</td>
-                    <td className="p-4 font-bold text-slate-900 dark:text-slate-100">₹{p.amount}</td>
-                    <td className="p-4 text-slate-500">{p.paymentMethod || "Online"}</td>
-                    <td className="p-4">
-                      <Badge variant={p.status === "PAID" ? "success" : "warning"}>
-                        {p.status}
-                      </Badge>
-                    </td>
-                    <td className="p-4 text-right">
-                      {p.status !== "PAID" && (
-                        <Button
-                          size="sm"
-                          variant="success"
-                          className="text-xs font-bold"
-                          onClick={() => handleMarkPaid(p._id)}
-                        >
-                          Mark Paid
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                payments.map((p: any) => {
+                  const isPendingVerification = p.status === "PENDING_VERIFICATION";
+                  const isPaid = p.status === "PAID";
+
+                  return (
+                    <tr
+                      key={p._id}
+                      className={
+                        isPendingVerification
+                          ? "bg-amber-500/10 dark:bg-amber-500/5 hover:bg-amber-500/15"
+                          : "hover:bg-slate-50/50 dark:hover:bg-slate-800/30"
+                      }
+                    >
+                      <td className="p-4 font-bold text-slate-900 dark:text-slate-100">
+                        <div>
+                          <span>{p.studentId?.name || "Student"}</span>
+                          {p.studentId?.email && (
+                            <span className="block text-[10px] text-slate-400 font-normal">
+                              {p.studentId.email}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-4 text-slate-600 dark:text-slate-400 font-medium">
+                        {p.courseName || p.billingMonth}
+                      </td>
+                      <td className="p-4 font-bold text-slate-900 dark:text-slate-100 text-sm">
+                        ₹{p.amount}
+                      </td>
+                      <td className="p-4 text-slate-500">
+                        <span className="block font-medium text-slate-700 dark:text-slate-300">
+                          {p.paymentMethod || "Online UPI"}
+                        </span>
+                        {p.transactionId && (
+                          <span className="block font-mono text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">
+                            UTR: {p.transactionId}
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        {isPendingVerification ? (
+                          <Badge variant="warning" className="bg-amber-500/20 text-amber-600 dark:text-amber-300 border-amber-500/40 animate-pulse font-bold">
+                            ⏳ VERIFICATION PENDING
+                          </Badge>
+                        ) : (
+                          <Badge variant={isPaid ? "success" : "warning"}>
+                            {p.status}
+                          </Badge>
+                        )}
+                      </td>
+                      <td className="p-4 text-right">
+                        {!isPaid && (
+                          <Button
+                            size="sm"
+                            variant="success"
+                            className={`text-xs font-bold ${
+                              isPendingVerification
+                                ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-500/25"
+                                : ""
+                            }`}
+                            onClick={() => handleMarkPaid(p._id)}
+                          >
+                            {isPendingVerification ? "✓ Verify & Approve" : "Mark Paid"}
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

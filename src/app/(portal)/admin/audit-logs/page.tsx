@@ -6,17 +6,34 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useFastFetch } from "@/lib/api-cache";
 
+const INITIAL_LOGS = [
+  { _id: "1", action: "TEACHER_STATUS_ACTIVE", actor: "Acuity Administrator", entity: "USER", time: "10 mins ago", ip: "127.0.0.1", details: "Approved Dr. Sarah Jenkins" },
+  { _id: "2", action: "STUDENT_REGISTERED", actor: "System", entity: "USER", time: "45 mins ago", ip: "127.0.0.1", details: "Enrolled Aravind in Class 10 Batch 2" },
+  { _id: "3", action: "BATCH_UPDATED", actor: "Acuity Administrator", entity: "BATCH", time: "2 hours ago", ip: "127.0.0.1", details: "Set grace period to 5 minutes" },
+  { _id: "4", action: "PAYMENT_STATUS_PAID", actor: "Online Webhook", entity: "PAYMENT", time: "3 hours ago", ip: "127.0.0.1", details: "₹2,500 tuition verified" },
+];
+
+const formatDetails = (details: any) => {
+  if (!details) return "—";
+  if (typeof details === "string") return details;
+  if (typeof details === "object") {
+    try {
+      return Object.entries(details)
+        .map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : v}`)
+        .join(", ");
+    } catch {
+      return JSON.stringify(details);
+    }
+  }
+  return String(details);
+};
+
 export default function AdminAuditLogsPage() {
-  const { data } = useFastFetch("/api/admin/audit-logs");
+  const { data } = useFastFetch("/api/admin/audit-logs", {
+    logs: INITIAL_LOGS,
+  });
 
-  const sampleLogs = [
-    { _id: "1", action: "TEACHER_STATUS_ACTIVE", actor: "Acuity Administrator", entity: "USER", time: "10 mins ago", ip: "127.0.0.1", details: "Approved Dr. Sarah Jenkins" },
-    { _id: "2", action: "STUDENT_REGISTERED", actor: "System", entity: "USER", time: "45 mins ago", ip: "127.0.0.1", details: "Enrolled Aravind in Class 10 Batch 2" },
-    { _id: "3", action: "BATCH_UPDATED", actor: "Acuity Administrator", entity: "BATCH", time: "2 hours ago", ip: "127.0.0.1", details: "Set grace period to 5 minutes" },
-    { _id: "4", action: "PAYMENT_STATUS_PAID", actor: "Online Webhook", entity: "PAYMENT", time: "3 hours ago", ip: "127.0.0.1", details: "₹2,500 tuition verified" },
-  ];
-
-  const displayLogs = data?.logs && data.logs.length > 0 ? data.logs : sampleLogs;
+  const displayLogs = data?.logs && data.logs.length > 0 ? data.logs : INITIAL_LOGS;
 
   return (
     <main className="p-6 sm:p-8 space-y-6 max-w-6xl animate-in fade-in duration-150">
@@ -46,16 +63,32 @@ export default function AdminAuditLogsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {displayLogs.map((log: any) => (
-                <tr key={log._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                  <td className="p-4">
-                    <Badge variant="default">{log.action}</Badge>
-                  </td>
-                  <td className="p-4 font-bold text-slate-900 dark:text-slate-100">{log.actor}</td>
-                  <td className="p-4 text-slate-600 dark:text-slate-400">{log.details}</td>
-                  <td className="p-4 font-mono text-slate-400">{log.time}</td>
-                </tr>
-              ))}
+              {displayLogs.map((log: any) => {
+                const actorName =
+                  log.actorId?.name ||
+                  (typeof log.actor === "string" ? log.actor : log.actor?.name || "System Administrator");
+                const logTime = log.createdAt
+                  ? new Date(log.createdAt).toLocaleString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : log.time || "Just now";
+
+                return (
+                  <tr key={log._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                    <td className="p-4">
+                      <Badge variant="default">{log.action}</Badge>
+                    </td>
+                    <td className="p-4 font-bold text-slate-900 dark:text-slate-100">{actorName}</td>
+                    <td className="p-4 text-slate-600 dark:text-slate-400 font-mono text-[11px]">
+                      {formatDetails(log.details)}
+                    </td>
+                    <td className="p-4 font-mono text-slate-400 whitespace-nowrap">{logTime}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -8,12 +8,47 @@ import { Card } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
 import { useFastFetch } from "@/lib/api-cache";
 
+const INITIAL_TEACHERS = [
+  {
+    _id: "t1",
+    userId: { _id: "u_sarah", name: "Dr. Sarah Jenkins", email: "sarah.maths@acuity.edu", phone: "9876543213", status: "ACTIVE" },
+    qualification: "M.Sc. Mathematics, Ph.D, B.Ed",
+    specialization: "Class 8-10 CBSE & ICSE Mathematics",
+    subjects: ["Mathematics"],
+    classesTaught: ["Class 8", "Class 9", "Class 10"],
+    experienceYears: 8,
+    approvalStatus: "ACTIVE",
+  },
+  {
+    _id: "t2",
+    userId: { _id: "u_rajesh", name: "Prof. Rajesh Kumar", email: "rajesh.science@acuity.edu", phone: "9876543214", status: "ACTIVE" },
+    qualification: "M.Sc. Physics, M.Ed",
+    specialization: "Experimental Physics & Chemistry for High School",
+    subjects: ["Science", "Physics", "Chemistry"],
+    classesTaught: ["Class 7", "Class 8", "Class 9", "Class 10"],
+    experienceYears: 10,
+    approvalStatus: "ACTIVE",
+  },
+  {
+    _id: "t3",
+    userId: { _id: "u_anita", name: "Ms. Anita Desai", email: "anita.english@acuity.edu", phone: "9876543215", status: "PENDING_APPROVAL" },
+    qualification: "M.A. English Literature",
+    specialization: "Creative Writing and Grammar",
+    subjects: ["English"],
+    classesTaught: ["Class 5", "Class 6", "Class 7", "Class 8"],
+    experienceYears: 4,
+    approvalStatus: "PENDING_APPROVAL",
+  },
+];
+
 export default function AdminTeachersPage() {
   const [filterStatus, setFilterStatus] = useState("ALL");
-  const { data, refetch } = useFastFetch(`/api/admin/teachers?status=${filterStatus}`);
+  const { data, refetch } = useFastFetch(`/api/admin/teachers?status=${filterStatus}`, {
+    teachers: INITIAL_TEACHERS,
+  });
   const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
 
-  const teachers = data?.teachers || [];
+  const teachers = data?.teachers || INITIAL_TEACHERS;
 
   const handleUpdateStatus = async (teacherId: string, status: string) => {
     try {

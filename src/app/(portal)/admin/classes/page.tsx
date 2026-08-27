@@ -8,35 +8,39 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useFastFetch } from "@/lib/api-cache";
 
-export default function AdminClassesMonitorPage() {
-  const { data } = useFastFetch("/api/admin/classes");
+const INITIAL_SESSIONS = [
+  {
+    id: "acuity-class10-maths-live",
+    title: "Class 10 CBSE — Quadratic Equations Masterclass",
+    subject: "Mathematics",
+    classLevel: "Class 10",
+    batch: "7:00 PM – 8:00 PM",
+    teacher: "Dr. Sarah Jenkins",
+    participantsCount: 18,
+    status: "LIVE",
+    startedAt: "7:00 PM",
+    graceMinutes: 5,
+  },
+  {
+    id: "acuity-class9-science-live",
+    title: "Class 9 — Laws of Motion & Momentum",
+    subject: "Science",
+    classLevel: "Class 9",
+    batch: "6:00 PM – 7:00 PM",
+    teacher: "Prof. Rajesh Kumar",
+    participantsCount: 22,
+    status: "COMPLETED",
+    startedAt: "6:00 PM",
+    graceMinutes: 5,
+  },
+];
 
-  const liveSessions = data?.sessions || [
-    {
-      id: "acuity-class10-maths-live",
-      title: "Class 10 CBSE — Quadratic Equations Masterclass",
-      subject: "Mathematics",
-      classLevel: "Class 10",
-      batch: "7:00 PM – 8:00 PM",
-      teacher: "Dr. Sarah Jenkins",
-      participantsCount: 18,
-      status: "LIVE",
-      startedAt: "7:00 PM",
-      graceMinutes: 5,
-    },
-    {
-      id: "acuity-class9-science-live",
-      title: "Class 9 — Laws of Motion & Momentum",
-      subject: "Science",
-      classLevel: "Class 9",
-      batch: "6:00 PM – 7:00 PM",
-      teacher: "Prof. Rajesh Kumar",
-      participantsCount: 22,
-      status: "COMPLETED",
-      startedAt: "6:00 PM",
-      graceMinutes: 5,
-    },
-  ];
+export default function AdminClassesMonitorPage() {
+  const { data } = useFastFetch("/api/admin/classes", {
+    sessions: INITIAL_SESSIONS,
+  });
+
+  const liveSessions = data?.sessions || INITIAL_SESSIONS;
 
   return (
     <main className="p-6 sm:p-8 space-y-6 max-w-6xl animate-in fade-in duration-150">

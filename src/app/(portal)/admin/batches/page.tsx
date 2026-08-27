@@ -9,8 +9,49 @@ import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { useFastFetch } from "@/lib/api-cache";
 
+const INITIAL_BATCHES = [
+  {
+    _id: "batch-6pm",
+    name: "6:00 PM – 7:00 PM",
+    startTime: "18:00",
+    endTime: "19:00",
+    days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    capacity: 30,
+    enrolledCount: 1,
+    occupancyPercentage: 3,
+    gracePeriodMinutes: 5,
+    isActive: true,
+  },
+  {
+    _id: "batch-7pm",
+    name: "7:00 PM – 8:00 PM",
+    startTime: "19:00",
+    endTime: "20:00",
+    days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    capacity: 30,
+    enrolledCount: 2,
+    occupancyPercentage: 7,
+    gracePeriodMinutes: 5,
+    isActive: true,
+  },
+  {
+    _id: "batch-8pm",
+    name: "8:00 PM – 9:00 PM",
+    startTime: "20:00",
+    endTime: "21:00",
+    days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    capacity: 30,
+    enrolledCount: 0,
+    occupancyPercentage: 0,
+    gracePeriodMinutes: 5,
+    isActive: true,
+  },
+];
+
 export default function AdminBatchesPage() {
-  const { data, refetch } = useFastFetch("/api/admin/batches");
+  const { data, refetch } = useFastFetch("/api/admin/batches", {
+    batches: INITIAL_BATCHES,
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModal, setIsEditModal] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<any>(null);
@@ -24,7 +65,7 @@ export default function AdminBatchesPage() {
     gracePeriodMinutes: 5,
   });
 
-  const batches = data?.batches || [];
+  const batches = data?.batches || INITIAL_BATCHES;
 
   const handleCreateBatch = async (e: React.FormEvent) => {
     e.preventDefault();

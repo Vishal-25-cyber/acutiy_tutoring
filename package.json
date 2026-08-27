@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed": "node -r ts-node/register --loader ts-node/esm src/scripts/seed.ts"
+    "seed": "tsx src/scripts/seed.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

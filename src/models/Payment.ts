@@ -12,18 +12,25 @@ const PaymentSchema = new Schema<IPaymentDocument>(
     paidDate: { type: Date },
     status: {
       type: String,
-      enum: ["PAID", "PENDING", "OVERDUE", "FAILED"],
+      enum: ["PAID", "PENDING", "PENDING_VERIFICATION", "OVERDUE", "FAILED"],
       default: "PENDING",
       index: true,
     },
     receiptNumber: { type: String, required: true, unique: true, index: true },
     paymentMethod: { type: String, default: "Online (Razorpay Gateway Architecture)" },
     transactionId: { type: String },
+    courseName: { type: String },
+    courseId: { type: String },
+    upiId: { type: String },
   },
   {
     timestamps: true,
   }
 );
+
+if (mongoose.models && mongoose.models.Payment) {
+  delete (mongoose.models as any).Payment;
+}
 
 export const Payment: Model<IPaymentDocument> =
   mongoose.models.Payment || mongoose.model<IPaymentDocument>("Payment", PaymentSchema);

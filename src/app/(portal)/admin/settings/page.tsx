@@ -8,20 +8,24 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useFastFetch } from "@/lib/api-cache";
 
+const INITIAL_SETTINGS = {
+  companyName: "Acuity Tutoring & Live Learning",
+  supportPhone1: "+91 98765 43210",
+  supportPhone2: "+91 98765 43211",
+  supportPhone3: "+91 98765 43212",
+  supportEmail: "support@acuity.edu",
+  defaultGracePeriodMinutes: 5,
+  minAttendanceThresholdPercent: 75,
+  monthlyTuitionFee: 2500,
+  registrationFee: 500,
+  academicYear: "2025-2026",
+};
+
 export default function AdminSettingsPage() {
-  const { data } = useFastFetch("/api/admin/settings");
-  const [settings, setSettings] = useState<any>({
-    companyName: "Acuity Tutoring & Live Learning",
-    supportPhone1: "+91 98765 43210",
-    supportPhone2: "+91 98765 43211",
-    supportPhone3: "+91 98765 43212",
-    supportEmail: "support@acuity.edu",
-    defaultGracePeriodMinutes: 5,
-    minAttendanceThresholdPercent: 75,
-    monthlyTuitionFee: 2500,
-    registrationFee: 500,
-    academicYear: "2025-2026",
+  const { data } = useFastFetch("/api/admin/settings", {
+    settings: INITIAL_SETTINGS,
   });
+  const [settings, setSettings] = useState<any>(INITIAL_SETTINGS);
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 

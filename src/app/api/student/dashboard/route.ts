@@ -9,6 +9,8 @@ import Assignment from "@/models/Assignment";
 import AssignmentSubmission from "@/models/AssignmentSubmission";
 import Material from "@/models/Material";
 import Notification from "@/models/Notification";
+import Payment from "@/models/Payment";
+import SystemSettings from "@/models/SystemSettings";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +41,7 @@ export async function GET() {
     const batchStart = (profile.batchId as any)?.startTime || "18:00";
     const batchEnd = (profile.batchId as any)?.endTime || "19:00";
 
-    // Fetch REAL created live sessions from teacher
+    // Fetch REAL created live sessions, attendance, assignments, and payments
     const [
       dbTodayClasses,
       upcomingClasses,
@@ -48,6 +50,7 @@ export async function GET() {
       submissions,
       dbMaterials,
       unreadNotifications,
+      paymentsList,
     ] = await Promise.all([
       LiveSession.find({
         batchId: profile.batchId,
@@ -90,23 +93,59 @@ export async function GET() {
       })
         .sort({ createdAt: -1 })
         .lean(),
+
+      Payment.find({ studentId: session.userId }).sort({ dueDate: -1 }).lean(),
     ]);
 
-    // Assessment Statistics
+    // Ensure payment invoice exists for current student
+    let studentPayments: any[] = paymentsList;
+    if (studentPayments.length === 0) {
+      const settings = await SystemSettings.findOne();
+      const monthlyFee = settings?.monthlyTuitionFee || 2500;
+      const newInvoice = await Payment.create({
+        studentId: session.userId,
+        amount: monthlyFee,
+        billingMonth: "February 2025",
+        courseName: `${profile.currentClass} ${profile.board || "CBSE"} — All Subjects Comprehensive Bundle`,
+        dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+        status: "PENDING",
+        receiptNumber: `REC-${Date.now().toString().slice(-6)}`,
+      });
+      studentPayments = [newInvoice.toObject ? newInvoice.toObject() : newInvoice];
+    }
+
+    const pendingFee = studentPayments.find((p: any) => p.status === "PENDING" || p.status === "OVERDUE");
+    const pendingVerificationFee = studentPayments.find((p: any) => p.status === "PENDING_VERIFICATION");
+    const paidFee = studentPayments.find((p: any) => p.status === "PAID");
+
+    const feeStatus = {
+      hasPending: !!pendingFee,
+      hasPendingVerification: !!pendingVerificationFee,
+      isPaid: !pendingFee && !pendingVerificationFee && !!paidFee,
+      dueAmount: pendingFee?.amount || (pendingVerificationFee?.amount ?? 0),
+      billingMonth: pendingFee?.billingMonth || pendingVerificationFee?.billingMonth || paidFee?.billingMonth || "February 2025",
+      dueDate: pendingFee?.dueDate || pendingVerificationFee?.dueDate || null,
+      receiptNumber: pendingFee?.receiptNumber || pendingVerificationFee?.receiptNumber || paidFee?.receiptNumber || null,
+      transactionId: pendingVerificationFee?.transactionId || paidFee?.transactionId || null,
+      currentFee: pendingFee || null,
+      pendingVerification: pendingVerificationFee || null,
+    };
+
+    // Assessment Statistics strictly from real DB records
     const submittedIds = new Set(submissions.map((s: any) => s.assignmentId?.toString()));
     const evaluatedSubmissions = submissions.filter((s: any) => s.status === "EVALUATED");
-    const totalAssignments = Math.max(activeAssignments.length, 3);
-    const submittedCount = submissions.length || 2;
+    const totalAssignments = activeAssignments.length;
+    const submittedCount = submissions.length;
     const pendingCount = Math.max(0, totalAssignments - submittedCount);
     const avgScore = evaluatedSubmissions.length > 0
       ? Math.round(evaluatedSubmissions.reduce((acc: number, s: any) => acc + (s.score || 0), 0) / evaluatedSubmissions.length)
-      : 88;
+      : 0;
 
     const assessmentSummary = {
       total: totalAssignments,
       submitted: submittedCount,
       pending: pendingCount,
-      evaluated: evaluatedSubmissions.length || 2,
+      evaluated: evaluatedSubmissions.length,
       averageScore: avgScore,
     };
 
@@ -244,12 +283,14 @@ export async function GET() {
       ),
     ].slice(0, 8);
 
-    // Attendance Calculation
+    // Attendance Calculation strictly from real database records
+    const totalSessions = attendanceRecords.length;
     const totalAttended = attendanceRecords.filter(
       (a: any) => a.status === "PRESENT" || a.status === "LATE"
     ).length;
-    const totalSessions = Math.max(attendanceRecords.length, 1);
-    const attendancePercentage = Math.round((totalAttended / totalSessions) * 100);
+    const attendancePercentage = totalSessions > 0
+      ? Math.round((totalAttended / totalSessions) * 100)
+      : 0;
 
     const pendingAssignmentsList = activeAssignments.slice(0, 4).map((a: any) => {
       const sub = submissions.find((s: any) => s.assignmentId?.toString() === a._id?.toString());
@@ -265,10 +306,10 @@ export async function GET() {
     });
 
     const subjectMastery = [
-      { subject: "Mathematics", score: 92, progress: 92, color: "#6366f1" },
-      { subject: "Science", score: 88, progress: 88, color: "#10b981" },
-      { subject: "English", score: 85, progress: 85, color: "#f59e0b" },
-      { subject: "Social Science", score: 90, progress: 90, color: "#ec4899" },
+      { subject: "Mathematics", score: evaluatedSubmissions.length > 0 ? avgScore : 0, progress: evaluatedSubmissions.length > 0 ? avgScore : 0, color: "#6366f1" },
+      { subject: "Science", score: evaluatedSubmissions.length > 0 ? avgScore : 0, progress: evaluatedSubmissions.length > 0 ? avgScore : 0, color: "#10b981" },
+      { subject: "English", score: evaluatedSubmissions.length > 0 ? avgScore : 0, progress: evaluatedSubmissions.length > 0 ? avgScore : 0, color: "#f59e0b" },
+      { subject: "Social Science", score: evaluatedSubmissions.length > 0 ? avgScore : 0, progress: evaluatedSubmissions.length > 0 ? avgScore : 0, color: "#ec4899" },
     ];
 
     return NextResponse.json({
@@ -281,10 +322,13 @@ export async function GET() {
         board: profile.board || "CBSE",
         schoolName: profile.schoolName,
         batch: profile.batchId,
-        streakCount: profile.streakCount || 7,
-        earnedBadges: profile.earnedBadges || ["First Class", "7-Day Streak 🔥", "Assignment Champion"],
-        attendancePercentage: attendancePercentage > 0 ? attendancePercentage : 100,
+        streakCount: profile.streakCount || 0,
+        earnedBadges: profile.earnedBadges || [],
+        attendancePercentage: attendancePercentage,
+        totalAttended,
+        totalSessions,
       },
+      feeStatus,
       currentDay: currentDayName,
       todayClasses: dbTodayClasses,
       hasCreatedClass: dbTodayClasses.length > 0,
@@ -297,7 +341,7 @@ export async function GET() {
       unreadNotifications,
     }, {
       headers: {
-        "Cache-Control": "private, max-age=15, stale-while-revalidate=60",
+        "Cache-Control": "private, max-age=5, stale-while-revalidate=15",
       },
     });
   } catch (error: any) {

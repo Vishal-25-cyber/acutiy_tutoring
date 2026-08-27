@@ -4,7 +4,7 @@ export type AccountStatus = "ACTIVE" | "PENDING_APPROVAL" | "SUSPENDED" | "REJEC
 
 export type AttendanceStatus = "PRESENT" | "LATE" | "PARTIAL" | "ABSENT";
 
-export type PaymentStatus = "PAID" | "PENDING" | "OVERDUE" | "FAILED";
+export type PaymentStatus = "PAID" | "PENDING" | "PENDING_VERIFICATION" | "OVERDUE" | "FAILED";
 
 export type SubmissionStatus = "PENDING" | "SUBMITTED" | "EVALUATED" | "OVERDUE";
 
@@ -221,6 +221,9 @@ export interface IPayment {
   receiptNumber: string;
   paymentMethod?: string;
   transactionId?: string;
+  courseName?: string;
+  courseId?: string;
+  upiId?: string;
 }
 
 export interface INotification {

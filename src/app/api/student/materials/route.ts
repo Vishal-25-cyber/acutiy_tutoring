@@ -110,6 +110,10 @@ export async function GET(req: NextRequest) {
       studentClass: currentClass,
       board: profile.board || "CBSE",
       enrolledSubjects: profile.subjects || ["Mathematics", "Science", "English", "Social Science"],
+    }, {
+      headers: {
+        "Cache-Control": "private, max-age=30, stale-while-revalidate=120",
+      },
     });
   } catch (error: any) {
     console.error("Student Materials API Error:", error);

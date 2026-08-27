@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 
 const memoryCache = new Map<string, { data: any; timestamp: number }>();
 const inflightRequests = new Map<string, Promise<any>>();
-const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes TTL for ultra-fast navigation
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes TTL for ultra-fast navigation
 
 /**
  * Prefetches and caches an API endpoint in the background with deduplication.
@@ -57,6 +57,7 @@ export function warmupPortalCache(role: string = "STUDENT") {
         "/api/student/materials",
         "/api/student/assignments",
         "/api/student/attendance",
+        "/api/student/payments",
         "/api/notifications",
       ]
       : role === "TEACHER"
@@ -72,16 +73,24 @@ export function warmupPortalCache(role: string = "STUDENT") {
       ]
       : [
         "/api/auth/me",
+        "/api/admin/dashboard",
         "/api/admin/students",
-        "/api/admin/teachers",
+        "/api/admin/teachers?status=ALL",
+        "/api/admin/batches",
         "/api/batches",
+        "/api/admin/classes",
+        "/api/admin/attendance?classLevel=ALL&status=ALL",
         "/api/admin/staff-attendance",
         "/api/admin/finance",
+        "/api/admin/analytics",
+        "/api/admin/settings",
+        "/api/admin/audit-logs",
         "/api/notifications",
       ];
 
-  endpoints.forEach((ep) => {
-    prefetchApi(ep);
+  // Stagger prefetch calls to avoid flooding the server
+  endpoints.forEach((ep, i) => {
+    setTimeout(() => prefetchApi(ep), i * 50);
   });
 }
 

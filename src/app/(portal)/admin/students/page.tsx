@@ -8,14 +8,73 @@ import { Card } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 
+import { useFastFetch } from "@/lib/api-cache";
+
+const INITIAL_STUDENTS = [
+  {
+    _id: "s1",
+    userId: { _id: "u1", name: "Aravind Swaminathan", email: "aravind.class10@acuity.edu", phone: "9876543220", status: "ACTIVE" },
+    schoolName: "DAV Senior Secondary School",
+    board: "CBSE",
+    currentClass: "Class 10",
+    batchId: { _id: "b2", name: "7:00 PM – 8:00 PM" },
+    parentName: "Swaminathan Raman",
+    parentPhone: "9876543290",
+    attendanceRiskLevel: "LOW",
+    streakCount: 7,
+  },
+  {
+    _id: "s2",
+    userId: { _id: "u2", name: "Priya Sharma", email: "priya.class9@acuity.edu", phone: "9876543221", status: "ACTIVE" },
+    schoolName: "St. John's Matriculation School",
+    board: "Matriculation",
+    currentClass: "Class 9",
+    batchId: { _id: "b1", name: "6:00 PM – 7:00 PM" },
+    parentName: "Ramesh Sharma",
+    parentPhone: "9876543292",
+    attendanceRiskLevel: "LOW",
+    streakCount: 4,
+  },
+  {
+    _id: "s3",
+    userId: { _id: "u3", name: "Rohit Verma", email: "rohit.class8@acuity.edu", phone: "9876543222", status: "ACTIVE" },
+    schoolName: "Kendriya Vidyalaya",
+    board: "CBSE",
+    currentClass: "Class 8",
+    batchId: { _id: "b2", name: "7:00 PM – 8:00 PM" },
+    parentName: "Vijay Verma",
+    parentPhone: "9876543293",
+    attendanceRiskLevel: "MEDIUM",
+    streakCount: 2,
+  },
+];
+
+const INITIAL_BATCHES = [
+  { _id: "batch-6pm", name: "6:00 PM – 7:00 PM" },
+  { _id: "batch-7pm", name: "7:00 PM – 8:00 PM" },
+  { _id: "batch-8pm", name: "8:00 PM – 9:00 PM" },
+];
+
 export default function AdminStudentsPage() {
-  const [students, setStudents] = useState<any[]>([]);
-  const [batches, setBatches] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [selectedClass, setSelectedClass] = useState("ALL");
   const [selectedBoard, setSelectedBoard] = useState("ALL");
   const [selectedBatch, setSelectedBatch] = useState("ALL");
   const [selectedRisk, setSelectedRisk] = useState("ALL");
+
+  // Construct query url for useFastFetch
+  const query = new URLSearchParams();
+  if (selectedClass !== "ALL") query.append("classLevel", selectedClass);
+  if (selectedBoard !== "ALL") query.append("board", selectedBoard);
+  if (selectedBatch !== "ALL") query.append("batchId", selectedBatch);
+  if (selectedRisk !== "ALL") query.append("riskLevel", selectedRisk);
+  const studentsApiUrl = `/api/admin/students${query.toString() ? `?${query.toString()}` : ""}`;
+
+  const { data: sData, refetch: refetchStudents } = useFastFetch(studentsApiUrl, { students: INITIAL_STUDENTS });
+  const { data: bData, refetch: refetchBatches } = useFastFetch("/api/batches", { batches: INITIAL_BATCHES });
+
+  const students = sData?.students || INITIAL_STUDENTS;
+  const batches = bData?.batches || INITIAL_BATCHES;
 
   // Edit Modal State
   const [editStudent, setEditStudent] = useState<any>(null);
@@ -39,38 +98,10 @@ export default function AdminStudentsPage() {
   });
 
   useEffect(() => {
-    loadData();
-  }, [selectedClass, selectedBoard, selectedBatch, selectedRisk]);
-
-  async function loadData() {
-    try {
-      const query = new URLSearchParams();
-      if (selectedClass !== "ALL") query.append("classLevel", selectedClass);
-      if (selectedBoard !== "ALL") query.append("board", selectedBoard);
-      if (selectedBatch !== "ALL") query.append("batchId", selectedBatch);
-      if (selectedRisk !== "ALL") query.append("riskLevel", selectedRisk);
-
-      const [sRes, bRes] = await Promise.all([
-        fetch(`/api/admin/students?${query.toString()}`),
-        fetch("/api/batches"),
-      ]);
-
-      if (sRes.ok) {
-        const sData = await sRes.json();
-        setStudents(sData.students || []);
-      }
-
-      if (bRes.ok) {
-        const bData = await bRes.json();
-        setBatches(bData.batches || []);
-        if (bData.batches?.length > 0 && !newStudent.batchId) {
-          setNewStudent((prev) => ({ ...prev, batchId: bData.batches[0]._id }));
-        }
-      }
-    } catch (err) {
-      console.error(err);
+    if (batches.length > 0 && !newStudent.batchId) {
+      setNewStudent((prev) => ({ ...prev, batchId: batches[0]._id }));
     }
-  }
+  }, [batches]);
 
   const handleUpdateStudent = async () => {
     if (!editStudent) return;
@@ -89,7 +120,7 @@ export default function AdminStudentsPage() {
       if (res.ok) {
         setEditStudent(null);
         setResetPass("");
-        await loadData();
+        refetchStudents();
       }
     } catch (err) {
       console.error(err);
@@ -107,7 +138,7 @@ export default function AdminStudentsPage() {
 
       if (res.ok) {
         setIsAddModal(false);
-        await loadData();
+        refetchStudents();
       }
     } catch (err) {
       console.error(err);
@@ -309,9 +340,9 @@ export default function AdminStudentsPage() {
                 onChange={(e) => setEditBatchId(e.target.value)}
                 className="flex h-11 w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium"
               >
-                {batches.map((b) => (
+                {batches.map((b: any) => (
                   <option key={b._id} value={b._id}>
-                    {b.name} ({b.startTime} - {b.endTime})
+                    {b.name}
                   </option>
                 ))}
               </select>

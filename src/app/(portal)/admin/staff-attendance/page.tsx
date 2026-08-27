@@ -4,18 +4,61 @@ import React, { useState } from "react";
 import { Clock, UserCheck, CheckCircle2, ShieldCheck, Users, Search, AlertCircle } from "lucide-react";
 import { useFastFetch } from "@/lib/api-cache";
 
+const INITIAL_STATS = {
+  totalTeachers: 3,
+  todayPresent: 3,
+  attendancePercentage: 100,
+  monthlyAverage: 96,
+};
+
+const INITIAL_ROSTER = [
+  {
+    teacherId: "t1",
+    name: "Dr. Sarah Jenkins",
+    email: "sarah.maths@acuity.edu",
+    qualification: "M.Sc. Mathematics, Ph.D, B.Ed",
+    specialization: "Class 8-10 CBSE & ICSE Mathematics",
+    approvalStatus: "ACTIVE",
+    loginTime: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+    classesConducted: 2,
+    workingHours: 4,
+    status: "PRESENT",
+  },
+  {
+    teacherId: "t2",
+    name: "Prof. Rajesh Kumar",
+    email: "rajesh.science@acuity.edu",
+    qualification: "M.Sc. Physics, M.Ed",
+    specialization: "Experimental Physics & Chemistry",
+    approvalStatus: "ACTIVE",
+    loginTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    classesConducted: 1,
+    workingHours: 3,
+    status: "PRESENT",
+  },
+  {
+    teacherId: "t3",
+    name: "Ms. Anita Desai",
+    email: "anita.english@acuity.edu",
+    qualification: "M.A. English Literature",
+    specialization: "Creative Writing and Grammar",
+    approvalStatus: "PENDING_APPROVAL",
+    loginTime: null,
+    classesConducted: 0,
+    workingHours: 0,
+    status: "ABSENT",
+  },
+];
+
 export default function AdminStaffAttendancePage() {
-  const { data } = useFastFetch("/api/admin/staff-attendance");
+  const { data } = useFastFetch("/api/admin/staff-attendance", {
+    stats: INITIAL_STATS,
+    staffRoster: INITIAL_ROSTER,
+  });
   const [search, setSearch] = useState("");
 
-  const stats = data?.stats || {
-    totalTeachers: 3,
-    todayPresent: 3,
-    attendancePercentage: 100,
-    monthlyAverage: 96,
-  };
-
-  const staffRoster = Array.isArray(data?.staffRoster) ? data.staffRoster : [];
+  const stats = data?.stats || INITIAL_STATS;
+  const staffRoster = Array.isArray(data?.staffRoster) ? data.staffRoster : INITIAL_ROSTER;
 
   const filtered = staffRoster.filter(
     (st: any) =>

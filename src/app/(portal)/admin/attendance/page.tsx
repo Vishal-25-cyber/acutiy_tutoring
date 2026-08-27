@@ -7,20 +7,58 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useFastFetch } from "@/lib/api-cache";
 
+const INITIAL_STATS = {
+  totalRecords: 24,
+  presentCount: 22,
+  lateCount: 2,
+  partialCount: 0,
+  attendanceRate: 95,
+  highRiskCount: 1,
+};
+
+const INITIAL_RECORDS = [
+  {
+    _id: "att-1",
+    studentId: { _id: "u1", name: "Aravind Swaminathan", email: "aravind.class10@acuity.edu", phone: "9876543220" },
+    sessionId: { title: "Class 10 CBSE — Quadratic Equations Masterclass", subject: "Mathematics" },
+    classLevel: "Class 10",
+    batchId: { name: "7:00 PM – 8:00 PM" },
+    joinTime: new Date(Date.now() - 30 * 60 * 1000),
+    durationMinutes: 52,
+    status: "PRESENT",
+  },
+  {
+    _id: "att-2",
+    studentId: { _id: "u2", name: "Priya Sharma", email: "priya.class9@acuity.edu", phone: "9876543221" },
+    sessionId: { title: "Class 9 — Laws of Motion & Momentum", subject: "Science" },
+    classLevel: "Class 9",
+    batchId: { name: "6:00 PM – 7:00 PM" },
+    joinTime: new Date(Date.now() - 90 * 60 * 1000),
+    durationMinutes: 48,
+    status: "PRESENT",
+  },
+  {
+    _id: "att-3",
+    studentId: { _id: "u3", name: "Rohit Verma", email: "rohit.class8@acuity.edu", phone: "9876543222" },
+    sessionId: { title: "Class 8 — Force & Pressure Fundamentals", subject: "Science" },
+    classLevel: "Class 8",
+    batchId: { name: "7:00 PM – 8:00 PM" },
+    joinTime: new Date(Date.now() - 35 * 60 * 1000),
+    durationMinutes: 42,
+    status: "LATE",
+  },
+];
+
 export default function AdminAttendancePage() {
   const [selectedClass, setSelectedClass] = useState("ALL");
   const [selectedStatus, setSelectedStatus] = useState("ALL");
-  const { data } = useFastFetch(`/api/admin/attendance?classLevel=${selectedClass}&status=${selectedStatus}`);
+  const { data } = useFastFetch(`/api/admin/attendance?classLevel=${selectedClass}&status=${selectedStatus}`, {
+    records: INITIAL_RECORDS,
+    stats: INITIAL_STATS,
+  });
 
-  const records = data?.records || [];
-  const stats = data?.stats || {
-    totalRecords: 24,
-    presentCount: 22,
-    lateCount: 2,
-    partialCount: 0,
-    attendanceRate: 95,
-    highRiskCount: 1,
-  };
+  const records = data?.records || INITIAL_RECORDS;
+  const stats = data?.stats || INITIAL_STATS;
 
   // Export CSV
   const handleExportCSV = () => {

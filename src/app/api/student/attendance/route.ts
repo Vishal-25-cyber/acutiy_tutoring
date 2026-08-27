@@ -118,13 +118,15 @@ export async function GET() {
     }
 
     const overallPercentage =
-      totalScheduled > 0 ? Math.round((totalAttended / totalScheduled) * 100) : 100;
+      totalScheduled > 0 ? Math.round((totalAttended / totalScheduled) * 100) : 0;
 
     let riskLevel: "LOW" | "MEDIUM" | "HIGH" = "LOW";
-    if (overallPercentage < 65) {
-      riskLevel = "HIGH";
-    } else if (overallPercentage < 75) {
-      riskLevel = "MEDIUM";
+    if (totalScheduled > 0) {
+      if (overallPercentage < 65) {
+        riskLevel = "HIGH";
+      } else if (overallPercentage < 75) {
+        riskLevel = "MEDIUM";
+      }
     }
 
     // 5. Formatted presence history log rows strictly from DB
@@ -161,7 +163,7 @@ export async function GET() {
         presentCount: totalAttended,
         attendancePercentage: overallPercentage,
         riskLevel,
-        streakCount: profile.streakCount || 7,
+        streakCount: profile.streakCount || 0,
         studentName: session.name,
         currentClass: profile.currentClass,
         board: profile.board || "CBSE",
