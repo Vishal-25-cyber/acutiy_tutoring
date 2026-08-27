@@ -54,28 +54,10 @@ export default function StudentDashboardPage() {
   return (
     <main className="w-full min-h-full bg-transparent p-6 sm:p-8 lg:p-10 space-y-8 animate-in fade-in duration-150">
       {/* 1. CLEAN OPEN-SPACE HEADER */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 pb-5 border-b border-slate-200/80 dark:border-slate-800/80">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-              Welcome, {safeName}
-            </h1>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-extrabold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-              <GraduationCap className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              <span>{classLevel} ({board})</span>
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400 flex-wrap">
-            <span className="flex items-center gap-1.5 font-medium">
-              <Clock className="w-4 h-4 text-indigo-500 shrink-0" />
-              <span>Assigned Batch:</span>
-              <strong className="font-mono font-bold text-slate-800 dark:text-slate-200">{batchName}</strong>
-            </span>
-            <span>•</span>
-            <span className="font-mono text-slate-500 dark:text-slate-400">{studentEmail}</span>
-          </div>
-        </div>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-200/80 dark:border-slate-800/80">
+        <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+          Welcome, {safeName}
+        </h1>
 
         <div className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400 self-start md:self-auto">
           <Calendar className="w-4 h-4 text-slate-400" />
