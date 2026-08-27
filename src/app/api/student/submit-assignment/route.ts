@@ -18,11 +18,24 @@ export async function POST(req: NextRequest) {
     }
 
     await connectToDatabase();
-    const assignment = await Assignment.findById(assignmentId);
+    const assignment = await Assignment.findById(assignmentId).lean();
     if (!assignment) {
       return NextResponse.json({ error: "Assignment not found" }, { status: 404 });
     }
 
+    // Server-side Deadline Enforcement
+    if (assignment.dueDate) {
+      const d = new Date(assignment.dueDate);
+      d.setHours(23, 59, 59, 999);
+      if (Date.now() > d.getTime()) {
+        return NextResponse.json(
+          { error: `Submission closed: The deadline (${new Date(assignment.dueDate).toLocaleDateString()}) has passed.` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Fast atomic upsert
     const submission = await AssignmentSubmission.findOneAndUpdate(
       { assignmentId, studentId: session.userId },
       {
@@ -31,20 +44,22 @@ export async function POST(req: NextRequest) {
         submittedAt: new Date(),
         status: "SUBMITTED",
       },
-      { upsert: true, new: true }
+      { upsert: true, new: true, lean: true }
     );
 
-    // Notify teacher
-    await Notification.create({
-      userId: assignment.teacherId,
-      title: "New Assignment Submission",
-      message: `${session.name} submitted their assignment for "${assignment.title}".`,
-      type: "ASSIGNMENT",
-    });
+    // Non-blocking notification
+    if (assignment.teacherId) {
+      Notification.create({
+        userId: assignment.teacherId,
+        title: "New Assignment Submission",
+        message: `${session.name} submitted solution for "${assignment.title}".`,
+        type: "ASSIGNMENT",
+      }).catch((e) => console.error("Notification creation failed:", e));
+    }
 
     return NextResponse.json({ success: true, submission });
   } catch (error: any) {
     console.error("Submit Assignment Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to submit assignment" }, { status: 500 });
   }
 }

@@ -129,3 +129,58 @@ export async function GET(
     return NextResponse.json({ error: error.message || "Failed to fetch attendance log." }, { status: 500 });
   }
 }
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getSession();
+    if (!session || (session.role !== "TEACHER" && session.role !== "ADMIN")) {
+      return NextResponse.json(
+        { error: "Forbidden: Only staff can mark student attendance." },
+        { status: 403 }
+      );
+    }
+
+    const { id } = await params;
+    await connectToDatabase();
+
+    const liveClass = await LiveSession.findById(id);
+    if (!liveClass) {
+      return NextResponse.json({ error: "Class session not found." }, { status: 404 });
+    }
+
+    const body = await req.json();
+    const { updates } = body;
+
+    if (!Array.isArray(updates) || updates.length === 0) {
+      return NextResponse.json({ error: "No attendance updates provided." }, { status: 400 });
+    }
+
+    for (const item of updates) {
+      if (!item.studentId || !item.status) continue;
+
+      await Attendance.findOneAndUpdate(
+        {
+          sessionId: liveClass._id,
+          studentId: item.studentId,
+        },
+        {
+          sessionId: liveClass._id,
+          studentId: item.studentId,
+          status: item.status,
+          remarks: item.remarks || "Staff verified",
+          durationMinutes: item.status === "PRESENT" ? 60 : item.status === "LATE" ? 45 : 0,
+          updatedAt: new Date(),
+        },
+        { upsert: true, new: true }
+      );
+    }
+
+    return NextResponse.json({ success: true, updatedCount: updates.length });
+  } catch (error: any) {
+    console.error("POST /api/classes/[id]/attendance error:", error);
+    return NextResponse.json({ error: error.message || "Failed to update attendance." }, { status: 500 });
+  }
+}

@@ -295,3 +295,226 @@ export async function downloadMaterial(material: DownloadableMaterial): Promise<
     return false;
   }
 }
+
+export interface TimetableDocData {
+  studentName?: string;
+  currentClass: string;
+  board: string;
+  batchName: string;
+  weeklySchedule: Array<{
+    day: string;
+    time?: string;
+    subject: string;
+    topic: string;
+    faculty: string;
+    description?: string;
+    status?: string;
+  }>;
+}
+
+/**
+ * Generates and downloads the clean, formatted Weekly Schedule Timetable table file.
+ */
+export function downloadTimetableDoc(data: TimetableDocData): boolean {
+  try {
+    const rawFileName = `Acuity_Timetable_${data.currentClass.replace(/\s+/g, "_")}_${data.board}.html`;
+    const rowsHtml = data.weeklySchedule
+      .map(
+        (item) => `
+      <tr>
+        <td style="padding: 12px 16px; font-weight: 700; color: #1e293b; border-bottom: 1px solid #e2e8f0;">${item.day}</td>
+        <td style="padding: 12px 16px; font-family: monospace; font-size: 13px; color: #4338ca; border-bottom: 1px solid #e2e8f0;">${item.time || data.batchName}</td>
+        <td style="padding: 12px 16px; font-weight: 600; color: #0f172a; border-bottom: 1px solid #e2e8f0;">${item.subject}</td>
+        <td style="padding: 12px 16px; color: #334155; border-bottom: 1px solid #e2e8f0;">
+          <div style="font-weight: 600; color: #1e293b;">${item.topic}</div>
+          ${item.description ? `<div style="font-size: 12px; color: #64748b; margin-top: 2px;">${item.description}</div>` : ""}
+        </td>
+        <td style="padding: 12px 16px; font-weight: 500; color: #475569; border-bottom: 1px solid #e2e8f0;">${item.faculty}</td>
+        <td style="padding: 12px 16px; font-weight: 700; color: #16a34a; border-bottom: 1px solid #e2e8f0; text-align: center;">
+          <span style="display: inline-block; padding: 3px 8px; background: #dcfce7; color: #15803d; border-radius: 6px; font-size: 11px;">LIVE HD</span>
+        </td>
+      </tr>
+    `
+      )
+      .join("");
+
+    const docContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Acuity Tutoring — Live Class Timetable (${data.currentClass})</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 36px;
+      color: #1e293b;
+      background: #ffffff;
+      line-height: 1.5;
+    }
+    .header {
+      border-bottom: 3px solid #4f46e5;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .brand {
+      font-size: 24px;
+      font-weight: 900;
+      color: #312e81;
+      letter-spacing: -0.5px;
+    }
+    .brand span {
+      color: #4f46e5;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: #6366f1;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+    .meta-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .meta-item label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .meta-item .val {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 2px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 13px;
+    }
+    th {
+      background: #f1f5f9;
+      color: #475569;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 2px solid #cbd5e1;
+    }
+    .info-card {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: 12px;
+      color: #166534;
+      margin-bottom: 20px;
+    }
+    .footer {
+      border-top: 1px solid #e2e8f0;
+      padding-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    @media print {
+      body { padding: 15px; }
+      .no-print { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="brand">ACUITY <span>TUTORING</span></div>
+      <div class="subtitle">Official Weekly Live Classroom Schedule & Timetable</div>
+    </div>
+    <div style="text-align: right; font-size: 12px; color: #64748b;">
+      <div><strong>Academic Year:</strong> 2025–2026</div>
+      <div><strong>Issued Date:</strong> ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</div>
+    </div>
+  </div>
+
+  <div class="meta-box">
+    <div class="meta-item">
+      <label>Grade & Curriculum</label>
+      <div class="val">${data.currentClass} (${data.board})</div>
+    </div>
+    <div class="meta-item">
+      <label>Assigned Batch Schedule</label>
+      <div class="val" style="color: #4f46e5;">${data.batchName} (Mon–Sat)</div>
+    </div>
+    <div class="meta-item">
+      <label>Attendance Requirement</label>
+      <div class="val" style="color: #16a34a;">Minimum 75% Active Turnout</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 12%;">Day</th>
+        <th style="width: 18%;">Session Time</th>
+        <th style="width: 16%;">Subject</th>
+        <th style="width: 32%;">Topic & Learning Objectives</th>
+        <th style="width: 14%;">Faculty</th>
+        <th style="width: 8%; text-align: center;">Delivery</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rowsHtml}
+    </tbody>
+  </table>
+
+  <div class="info-card">
+    <strong>📌 Student Guidelines:</strong> Live sessions open 5 minutes prior to scheduled batch time. A 5-minute late entry grace period is enforced. Attendance is recorded automatically in real-time.
+  </div>
+
+  <div class="footer">
+    <div>Acuity Tutoring System • Live HD Classroom Network</div>
+    <div>Support Helpline: +91 98765 43210 • support@acuity.edu</div>
+  </div>
+
+  <script>
+    if (window.location.search.includes('print=true')) {
+      window.onload = () => window.print();
+    }
+  </script>
+</body>
+</html>`;
+
+    const blob = new Blob([docContent], { type: "text/html" });
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = rawFileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(blobUrl);
+    return true;
+  } catch (error) {
+    console.error("Failed to download timetable:", error);
+    return false;
+  }
+}

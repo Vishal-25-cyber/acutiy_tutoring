@@ -15,19 +15,19 @@ import {
   Filter,
   FileSpreadsheet,
   Video,
+  Save,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
+import { useParams } from "react-router-dom";
 
-export default function TeacherClassAttendanceDetailPage({
-  params,
-}: {
-  params: Promise<{ classId: string }>;
+export default function TeacherClassAttendanceDetailPage(props?: {
+  params?: Promise<{ classId: string }> | { classId: string };
 }) {
-  const resolvedParams = use(params);
-  const classId = resolvedParams.classId;
+  const routerParams = useParams<{ classId: string }>();
+  const classId = routerParams?.classId || "acuity-live-classroom";
 
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,6 +35,11 @@ export default function TeacherClassAttendanceDetailPage({
   const [statusFilter, setStatusFilter] = useState<"ALL" | "PRESENT" | "ABSENT">("ALL");
   const [sortBy, setSortBy] = useState<"name" | "duration" | "joinTime">("duration");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  // Interactive Staff Attendance Marking State
+  const [studentStatusMap, setStudentStatusMap] = useState<{ [studentId: string]: string }>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
     async function loadClassAttendance() {
@@ -44,6 +49,14 @@ export default function TeacherClassAttendanceDetailPage({
         const resData = await res.json();
         if (res.ok) {
           setData(resData);
+          // Initialize student status map
+          const initialMap: { [id: string]: string } = {};
+          if (Array.isArray(resData.roster)) {
+            resData.roster.forEach((st: any) => {
+              initialMap[st.studentId] = st.status || "ABSENT";
+            });
+          }
+          setStudentStatusMap(initialMap);
         }
       } catch (err) {
         console.error("Failed to load attendance details:", err);
@@ -55,17 +68,61 @@ export default function TeacherClassAttendanceDetailPage({
   }, [classId]);
 
   const liveClass = data?.class;
-  const stats = data?.stats || {
-    totalStudents: 0,
-    presentCount: 0,
-    absentCount: 0,
-    attendancePercentage: 0,
-  };
   const roster: any[] = data?.roster || [];
+
+  const handleStatusChange = (studentId: string, status: string) => {
+    setStudentStatusMap((prev) => ({
+      ...prev,
+      [studentId]: status,
+    }));
+  };
+
+  const handleMarkAll = (status: "PRESENT" | "ABSENT") => {
+    const updatedMap: { [id: string]: string } = {};
+    roster.forEach((st) => {
+      updatedMap[st.studentId] = status;
+    });
+    setStudentStatusMap(updatedMap);
+  };
+
+  const handleSaveAttendance = async () => {
+    setIsSaving(true);
+    try {
+      const updates = Object.keys(studentStatusMap).map((studentId) => ({
+        studentId,
+        status: studentStatusMap[studentId],
+      }));
+
+      const res = await fetch(`/api/classes/${classId}/attendance`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ updates }),
+      });
+
+      if (res.ok) {
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+      } else {
+        const json = await res.json();
+        alert(json.error || "Failed to save attendance");
+      }
+    } catch (e) {
+      console.error("Save attendance error:", e);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Calculated Stats based on current edits
+  const totalStudents = roster.length;
+  const presentCount = Object.values(studentStatusMap).filter((s) => s === "PRESENT" || s === "LATE").length;
+  const absentCount = totalStudents - presentCount;
+  const attendancePercentage = totalStudents > 0 ? Math.round((presentCount / totalStudents) * 100) : 0;
 
   // Filter & Sort Roster
   const filteredRoster = roster
     .filter((student) => {
+      const currentStatus = studentStatusMap[student.studentId] || student.status;
       const matchesSearch =
         !searchQuery.trim() ||
         student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -75,8 +132,8 @@ export default function TeacherClassAttendanceDetailPage({
         statusFilter === "ALL"
           ? true
           : statusFilter === "PRESENT"
-          ? student.status === "PRESENT" || student.status === "LATE"
-          : student.status === "ABSENT" || student.status === "PARTIAL";
+          ? currentStatus === "PRESENT" || currentStatus === "LATE"
+          : currentStatus === "ABSENT" || currentStatus === "PARTIAL";
 
       return matchesSearch && matchesStatus;
     })
@@ -124,7 +181,7 @@ export default function TeacherClassAttendanceDetailPage({
       `"${s.leaveTime ? new Date(s.leaveTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "--"}"`,
       s.durationMinutes || 0,
       s.sessionsCount || 0,
-      s.status || "ABSENT",
+      studentStatusMap[s.studentId] || s.status || "ABSENT",
     ]);
 
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
@@ -137,11 +194,6 @@ export default function TeacherClassAttendanceDetailPage({
     document.body.removeChild(link);
   };
 
-  const chartData = [
-    { name: "Present", value: stats.presentCount, color: "#10b981" },
-    { name: "Absent", value: stats.absentCount, color: "#f43f5e" },
-  ];
-
   if (isLoading) {
     return (
       <main className="p-8 max-w-6xl text-center text-xs text-slate-400">
@@ -153,7 +205,7 @@ export default function TeacherClassAttendanceDetailPage({
   return (
     <main className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-6xl animate-in fade-in duration-150">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-3">
           <Link href="/teacher/attendance">
             <Button variant="ghost" size="sm" className="rounded-xl">
@@ -162,77 +214,102 @@ export default function TeacherClassAttendanceDetailPage({
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                 {liveClass?.subject} — {liveClass?.topic}
               </h1>
               <Badge variant="default" className="text-[10px] font-bold">
                 {liveClass?.date}
               </Badge>
             </div>
-            <p className="text-xs text-slate-500 mt-1">
-              Time: <strong>{liveClass?.startTime} – {liveClass?.endTime}</strong> • Batch: <strong>{liveClass?.batch?.name || "Assigned Batch"}</strong>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Batch: <strong>{liveClass?.batch?.name || "Assigned Batch"}</strong> ({liveClass?.startTime} – {liveClass?.endTime})
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Link href={`/classroom/${classId}`}>
-            <Button variant="outline" size="sm" className="font-bold text-xs gap-1.5 rounded-xl">
-              <Video className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Enter Classroom</span>
-            </Button>
-          </Link>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleMarkAll("PRESENT")}
+            className="text-xs font-semibold rounded-xl"
+          >
+            Mark All Present
+          </Button>
+
           <Button
             variant="primary"
             size="sm"
+            onClick={handleSaveAttendance}
+            disabled={isSaving}
+            className="text-xs font-bold gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white"
+          >
+            {saveSuccess ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-300" />
+                <span>Attendance Saved!</span>
+              </>
+            ) : isSaving ? (
+              <span>Saving...</span>
+            ) : (
+              <>
+                <Save className="w-3.5 h-3.5" />
+                <span>Save Attendance</span>
+              </>
+            )}
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleExportCSV}
-            className="font-bold text-xs gap-1.5 rounded-xl shadow-xs"
+            className="text-xs font-semibold gap-1.5 rounded-xl"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Export CSV</span>
+            <span>CSV</span>
           </Button>
         </div>
       </div>
 
-      {/* KPI Cards & Chart */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-5 flex flex-col justify-between">
-          <span className="text-xs font-bold text-slate-500 uppercase">Total Students</span>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="p-4 flex flex-col justify-between">
+          <span className="text-xs font-bold text-slate-500 uppercase">Enrolled Students</span>
           <div>
-            <p className="text-3xl font-black text-slate-900 dark:text-slate-100 mt-1">
-              {stats.totalStudents}
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">
+              {totalStudents}
             </p>
-            <p className="text-xs text-slate-500 mt-1">Enrolled in Batch</p>
+            <p className="text-[11px] text-slate-400">Total in batch</p>
           </div>
         </Card>
 
-        <Card className="p-5 flex flex-col justify-between">
+        <Card className="p-4 flex flex-col justify-between">
           <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase">Present</span>
           <div>
-            <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
-              {stats.presentCount}
+            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+              {presentCount}
             </p>
-            <p className="text-xs text-slate-500 mt-1">≥ {liveClass?.attendanceThresholdPercent || 75}% duration</p>
+            <p className="text-[11px] text-slate-400">Students attending</p>
           </div>
         </Card>
 
-        <Card className="p-5 flex flex-col justify-between">
+        <Card className="p-4 flex flex-col justify-between">
           <span className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase">Absent</span>
           <div>
-            <p className="text-3xl font-black text-rose-600 dark:text-rose-400 mt-1">
-              {stats.absentCount}
+            <p className="text-2xl font-bold text-rose-600 dark:text-rose-400 mt-1">
+              {absentCount}
             </p>
-            <p className="text-xs text-slate-500 mt-1">&lt; {liveClass?.attendanceThresholdPercent || 75}% duration</p>
+            <p className="text-[11px] text-slate-400">Students not present</p>
           </div>
         </Card>
 
-        <Card className="p-5 flex flex-col justify-between">
-          <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase">Attendance Rate</span>
+        <Card className="p-4 flex flex-col justify-between">
+          <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase">Turnout Rate</span>
           <div>
-            <p className="text-3xl font-black text-indigo-600 dark:text-indigo-400 mt-1">
-              {stats.attendancePercentage}%
+            <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">
+              {attendancePercentage}%
             </p>
-            <p className="text-xs text-slate-500 mt-1">Batch turnout</p>
+            <p className="text-[11px] text-slate-400">Batch average</p>
           </div>
         </Card>
       </div>
@@ -243,7 +320,7 @@ export default function TeacherClassAttendanceDetailPage({
         <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <h2 className="font-bold text-sm text-slate-900 dark:text-slate-100">
-              Student Attendance Roster ({filteredRoster.length})
+              Staff Attendance Marking Roster ({filteredRoster.length})
             </h2>
           </div>
 
@@ -284,57 +361,23 @@ export default function TeacherClassAttendanceDetailPage({
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 border-b border-slate-200 dark:border-slate-800 font-bold">
               <tr>
-                <th
-                  className="p-4 cursor-pointer hover:text-indigo-600"
-                  onClick={() => {
-                    setSortBy("name");
-                    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-                  }}
-                >
-                  <div className="flex items-center gap-1">
-                    <span>Student Name</span>
-                    <ArrowUpDown className="w-3 h-3" />
-                  </div>
-                </th>
-                <th
-                  className="p-4 cursor-pointer hover:text-indigo-600"
-                  onClick={() => {
-                    setSortBy("joinTime");
-                    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-                  }}
-                >
-                  <div className="flex items-center gap-1">
-                    <span>Join Time</span>
-                    <ArrowUpDown className="w-3 h-3" />
-                  </div>
-                </th>
-                <th className="p-4">Leave Time</th>
-                <th
-                  className="p-4 cursor-pointer hover:text-indigo-600"
-                  onClick={() => {
-                    setSortBy("duration");
-                    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-                  }}
-                >
-                  <div className="flex items-center gap-1">
-                    <span>Duration</span>
-                    <ArrowUpDown className="w-3 h-3" />
-                  </div>
-                </th>
-                <th className="p-4">Sessions</th>
-                <th className="p-4 text-right">Status</th>
+                <th className="p-4">Student</th>
+                <th className="p-4">Join Time</th>
+                <th className="p-4">Duration</th>
+                <th className="p-4 text-right">Staff Attendance Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filteredRoster.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-400">
+                  <td colSpan={4} className="p-8 text-center text-slate-400">
                     No students match your filter.
                   </td>
                 </tr>
               ) : (
                 filteredRoster.map((student, idx) => {
-                  const isPresent = student.status === "PRESENT" || student.status === "LATE";
+                  const currentStatus = studentStatusMap[student.studentId] || student.status || "ABSENT";
+
                   return (
                     <tr
                       key={student.studentId || idx}
@@ -356,30 +399,46 @@ export default function TeacherClassAttendanceDetailPage({
                           ? new Date(student.joinTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
                           : "--"}
                       </td>
-                      <td className="p-4 font-mono text-slate-600 dark:text-slate-400">
-                        {student.leaveTime
-                          ? new Date(student.leaveTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                          : "--"}
-                      </td>
                       <td className="p-4 font-bold text-slate-900 dark:text-slate-100 font-mono">
                         {student.durationMinutes} min
                       </td>
-                      <td className="p-4 text-slate-500">
-                        {student.sessionsCount > 1 ? (
-                          <span className="bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-bold px-2 py-0.5 rounded text-[10px]">
-                            {student.sessionsCount} sessions (Rejoined)
-                          </span>
-                        ) : (
-                          <span>{student.sessionsCount || 0}</span>
-                        )}
-                      </td>
                       <td className="p-4 text-right">
-                        <Badge
-                          variant={isPresent ? "success" : "destructive"}
-                          className="text-[11px] font-bold px-2.5 py-0.5"
-                        >
-                          {isPresent ? "Present" : "Absent"}
-                        </Badge>
+                        {/* Interactive Staff Attendance Switcher */}
+                        <div className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                          <button
+                            type="button"
+                            onClick={() => handleStatusChange(student.studentId, "PRESENT")}
+                            className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                              currentStatus === "PRESENT"
+                                ? "bg-emerald-600 text-white shadow-xs"
+                                : "text-slate-600 dark:text-slate-400 hover:text-emerald-600"
+                            }`}
+                          >
+                            Present
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleStatusChange(student.studentId, "LATE")}
+                            className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                              currentStatus === "LATE"
+                                ? "bg-amber-600 text-white shadow-xs"
+                                : "text-slate-600 dark:text-slate-400 hover:text-amber-600"
+                            }`}
+                          >
+                            Late
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleStatusChange(student.studentId, "ABSENT")}
+                            className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                              currentStatus === "ABSENT"
+                                ? "bg-rose-600 text-white shadow-xs"
+                                : "text-slate-600 dark:text-slate-400 hover:text-rose-600"
+                            }`}
+                          >
+                            Absent
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

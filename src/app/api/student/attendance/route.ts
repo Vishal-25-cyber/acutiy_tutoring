@@ -23,28 +23,28 @@ export async function GET() {
     // Standard school subjects for Class 10 (CBSE)
     const validCurriculumSubjects = ["Mathematics", "Science", "Social Science", "English"];
 
-    // 1. Fetch all real live sessions created in database for this student's class
+    // 1. Fetch all live sessions for this student's class
     const allClasses = await LiveSession.find({
       classLevel: profile.currentClass,
       subject: { $in: validCurriculumSubjects },
       status: { $in: ["PUBLISHED", "SCHEDULED", "LIVE", "COMPLETED"] },
     }).sort({ date: -1, startTime: -1 }).lean();
 
-    // 2. Fetch student's real attendance records from database
+    // 2. Fetch student's real attendance records
     const attendanceRecords = await Attendance.find({
       studentId: session.userId,
     })
-      .populate("sessionId", "title subject topic date startTime endTime status")
+      .populate("sessionId", "title subject topic date startTime endTime status teacherId")
       .sort({ createdAt: -1 })
       .lean();
 
-    // Filter to valid school curriculum subjects only
+    // Filter to valid curriculum subjects
     const validAttendanceRecords = attendanceRecords.filter((att: any) => {
       const subj = att.sessionId?.subject || att.subject;
       return !subj || validCurriculumSubjects.includes(subj);
     });
 
-    // Map attended sessions by sessionId string
+    // Map attended sessions by sessionId
     const attendanceBySessionMap = new Map<string, any>();
     validAttendanceRecords.forEach((att: any) => {
       const sId = att.sessionId?._id?.toString() || att.sessionId?.toString();
@@ -53,7 +53,7 @@ export async function GET() {
       }
     });
 
-    // 3. Exact Subject-wise Aggregation strictly from database counts
+    // 3. Subject-wise Aggregation
     const subjectsMap = new Map<string, { total: number; attended: number }>();
     validCurriculumSubjects.forEach((sub) => {
       subjectsMap.set(sub, { total: 0, attended: 0 });
@@ -72,7 +72,6 @@ export async function GET() {
       }
     });
 
-    // Also account for sessions where student attended directly
     validAttendanceRecords.forEach((att: any) => {
       const subj = att.sessionId?.subject;
       if (subj && subjectsMap.has(subj)) {
@@ -86,7 +85,6 @@ export async function GET() {
       }
     });
 
-    // Generate strict real stats per subject
     const subjectWiseStats = validCurriculumSubjects.map((subject) => {
       const item = subjectsMap.get(subject) || { total: 0, attended: 0 };
       const percentage =
@@ -101,7 +99,7 @@ export async function GET() {
       };
     });
 
-    // 4. Overall attendance stats strictly from real DB records
+    // 4. Overall attendance stats
     let totalScheduled = 0;
     let totalAttended = 0;
 
@@ -129,7 +127,17 @@ export async function GET() {
       }
     }
 
-    // 5. Formatted presence history log rows strictly from DB
+    // 5. Today's attendance status marked by teacher
+    const todayIso = new Date().toISOString().split("T")[0];
+    const todayRecord = validAttendanceRecords.find((r: any) => {
+      const sessDate = r.sessionId?.date;
+      const createdDate = r.createdAt ? new Date(r.createdAt).toISOString().split("T")[0] : null;
+      return sessDate === todayIso || createdDate === todayIso;
+    });
+
+    const todayStatus = todayRecord ? todayRecord.status : "NOT_MARKED";
+
+    // 6. Formatted presence history log
     const formattedRecords = validAttendanceRecords.map((r: any) => {
       const sessionObj = r.sessionId;
       const subName = sessionObj?.subject || "Science";
@@ -139,7 +147,7 @@ export async function GET() {
         ? `${sessionObj.startTime} – ${sessionObj.endTime || "20:00"}`
         : "19:00 – 20:00";
 
-      const durMins = r.totalDurationMinutes || r.durationMinutes || (r.status === "PRESENT" ? 55 : 0);
+      const durMins = r.totalDurationMinutes || r.durationMinutes || (r.status === "PRESENT" ? 60 : 0);
 
       return {
         _id: r._id.toString(),
@@ -162,8 +170,8 @@ export async function GET() {
         totalSessions: totalScheduled,
         presentCount: totalAttended,
         attendancePercentage: overallPercentage,
-        riskLevel,
         streakCount: profile.streakCount || 0,
+        todayStatus, // "PRESENT" | "LATE" | "ABSENT" | "NOT_MARKED"
         studentName: session.name,
         currentClass: profile.currentClass,
         board: profile.board || "CBSE",

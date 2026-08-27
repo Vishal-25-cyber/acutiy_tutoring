@@ -290,23 +290,23 @@ export async function runSeed() {
   });
 
   const session3 = await LiveSession.create({
-    title: "Class 10 — Database Management Systems (DBMS)",
-    subject: "DBMS",
+    title: "Class 10 CBSE — Applications of Trigonometry (Heights & Distances)",
+    subject: "Mathematics",
     classLevel: "Class 10",
     batchId: batch2._id,
     teacherId: teacherSarah._id,
-    topic: "Normalization (1NF to BCNF)",
-    description: "Core concepts of database normalization and functional dependencies.",
+    topic: "Heights & Distances — Angle of Elevation & Depression Solved Exemplars",
+    description: "NCERT & State Board exam-oriented problem sets with step-by-step diagram methods.",
     date: todayStr,
-    startTime: "10:00",
-    endTime: "11:00",
+    startTime: "19:00",
+    endTime: "20:00",
     status: "PUBLISHED",
-    meetingId: "ACUITY-DBMS-NORMALIZATION-102",
-    livekitRoomId: "ACUITY-DBMS-NORMALIZATION-102",
+    meetingId: "ACUITY-MATH-TRIGONOMETRY-102",
+    livekitRoomId: "ACUITY-MATH-TRIGONOMETRY-102",
     gracePeriodMinutes: 5,
     attendanceThresholdPercent: 75,
     materials: [
-      { title: "DBMS Normalization Guide", fileUrl: "https://acuity.edu/materials/normalization.pdf", category: "NOTES" },
+      { title: "Class 10 Trigonometry Formula Sheet", fileUrl: "https://acuity.edu/materials/trig-formulas.pdf", category: "NOTES" },
     ],
   });
   console.log("✅ Live Sessions Seeded");

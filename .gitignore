@@ -9,6 +9,7 @@ out/
 
 # Production build
 build/
+dist/
 
 # Environment variables
 .env

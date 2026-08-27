@@ -167,52 +167,56 @@ export default function StudentRegisterPage() {
   };
 
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-slate-50 dark:bg-slate-950 font-sans">
-      {/* LEFT SIDE: Brand & Overview */}
-      <div className="lg:col-span-5 bg-gradient-to-br from-indigo-950 via-slate-950 to-indigo-900 p-8 lg:p-12 flex flex-col justify-between text-white relative">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-slate-50 dark:bg-slate-950 font-sans antialiased text-slate-900 dark:text-slate-100 selection:bg-blue-600 selection:text-white">
+      {/* LEFT SIDE: Brand & Overview (Cool Modern Blue) */}
+      <div className="lg:col-span-5 bg-gradient-to-br from-blue-900 via-slate-900 to-indigo-950 border-r border-slate-800 p-8 lg:p-12 flex flex-col justify-between text-white relative">
         <div>
-          <Link href="/" prefetch={true} className="flex items-center gap-3 w-fit">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-black shadow-lg shadow-indigo-500/25">
-              <GraduationCap className="w-5 h-5" />
+          <Link href="/" prefetch={true} className="flex items-center gap-3.5 w-fit">
+            <div className="w-12 h-12 rounded-2xl bg-white p-1.5 shadow-xl flex items-center justify-center border border-white/80">
+              <img
+                src="/images/acuity_logo.png"
+                alt="Acuity Logo"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
-              <span className="font-extrabold text-xl tracking-tight">ACUITY</span>
-              <p className="text-xs text-indigo-300 font-medium">Classes 1 to 10 Tuition</p>
+              <span className="font-extrabold text-xl tracking-tight text-white">ACUITY</span>
+              <p className="text-xs text-yellow-300 font-medium">Where Accuracy Meets Knowledge</p>
             </div>
           </Link>
 
           <div className="mt-12 space-y-4">
-            <Badge variant="live" className="text-xs font-bold px-3 py-1">
+            <span className="inline-block text-[11px] font-bold px-3 py-1 rounded-full bg-blue-500/20 text-sky-200 border border-sky-400/30 backdrop-blur-md">
               CBSE & STATE BOARD SYLLABUS
-            </Badge>
+            </span>
             <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight">
               Begin your journey to academic excellence.
             </h1>
-            <p className="text-slate-300 text-sm leading-relaxed">
+            <p className="text-slate-200 text-sm leading-relaxed">
               Curriculum-aligned live online masterclasses for school students from Class 1 to Class 10 with verified syllabus mapping.
             </p>
           </div>
         </div>
 
         {/* Dynamic Curriculum Preview Info */}
-        <div className="my-8 p-5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm space-y-3">
+        <div className="my-8 p-5 rounded-2xl bg-white/10 dark:bg-slate-900/60 border border-white/20 dark:border-slate-700/60 backdrop-blur-xl space-y-3 shadow-lg">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-300 font-semibold">Selected Curriculum</span>
-            <span className="text-indigo-400 font-bold">{formData.board}</span>
+            <span className="text-slate-200 font-semibold">Selected Curriculum</span>
+            <span className="text-yellow-300 font-bold">{formData.board}</span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-300 font-semibold">Grade Level</span>
+            <span className="text-slate-200 font-semibold">Grade Level</span>
             <span className="text-emerald-400 font-bold">{formData.currentClass}</span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-300 font-semibold">Available Syllabus Subjects</span>
-            <span className="text-purple-300 font-bold">{syllabusSubjects.length} Subjects</span>
+            <span className="text-slate-200 font-semibold">Available Syllabus Subjects</span>
+            <span className="text-sky-300 font-bold">{syllabusSubjects.length} Subjects</span>
           </div>
         </div>
 
-        <div className="text-xs text-slate-400 space-y-1">
-          <p className="font-semibold text-slate-300">24/7 Official Support Hotlines:</p>
-          <p className="font-mono text-indigo-300">+91 98765 43210 • +91 98765 43211</p>
+        <div className="text-xs text-slate-300 space-y-1">
+          <p className="font-semibold text-white">24/7 Official Support Hotlines:</p>
+          <p className="font-mono text-yellow-300">+91 98765 43210 • +91 98765 43211</p>
         </div>
       </div>
 
@@ -231,7 +235,7 @@ export default function StudentRegisterPage() {
           </div>
           <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
             <div
-              className="h-full bg-indigo-600 rounded-full transition-all duration-300 ease-out"
+              className="h-full bg-gradient-to-r from-blue-600 to-sky-500 rounded-full transition-all duration-300 ease-out"
               style={{ width: `${(step / 4) * 100}%` }}
             />
           </div>

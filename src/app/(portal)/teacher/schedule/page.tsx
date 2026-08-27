@@ -12,9 +12,11 @@ import {
   Ban,
   FileCheck2,
   Search,
+  Shuffle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { ScheduleSwapModal } from "@/components/classroom/ScheduleSwapModal";
 
 export default function TeacherSchedulePage() {
   const [classes, setClasses] = useState<any[]>([]);
@@ -24,6 +26,7 @@ export default function TeacherSchedulePage() {
   const [actionMessage, setActionMessage] = useState("");
   const [cancelModalClass, setCancelModalClass] = useState<any>(null);
   const [deleteModalClass, setDeleteModalClass] = useState<any>(null);
+  const [swapModalClass, setSwapModalClass] = useState<any>(null);
 
   const loadClasses = async () => {
     try {
@@ -252,6 +255,17 @@ export default function TeacherSchedulePage() {
 
                     {!isCancelled && !isCompleted && !isDraft && (
                       <button
+                        onClick={() => setSwapModalClass(cls)}
+                        className="px-3 py-1.5 rounded-md text-xs font-semibold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer"
+                        title="Swap Subject Days or Change Slot"
+                      >
+                        <Shuffle className="w-3.5 h-3.5 text-[#004b79] dark:text-[#dfb74a]" />
+                        <span>Swap / Reschedule</span>
+                      </button>
+                    )}
+
+                    {!isCancelled && !isCompleted && !isDraft && (
+                      <button
                         onClick={() => setCancelModalClass(cls)}
                         className="px-2.5 py-1.5 rounded-md text-xs font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                         title="Cancel Class"
@@ -276,6 +290,17 @@ export default function TeacherSchedulePage() {
           </div>
         )}
       </div>
+
+      {/* Schedule Reschedule & Day Swap Modal */}
+      {swapModalClass && (
+        <ScheduleSwapModal
+          isOpen={!!swapModalClass}
+          onClose={() => setSwapModalClass(null)}
+          targetSession={swapModalClass}
+          allSessions={classes}
+          onSuccess={loadClasses}
+        />
+      )}
 
       {/* Cancel Class Modal */}
       {cancelModalClass && (

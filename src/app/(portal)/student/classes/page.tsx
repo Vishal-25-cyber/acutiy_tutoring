@@ -19,9 +19,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useFastFetch } from "@/lib/api-cache";
+import { downloadTimetableDoc } from "@/lib/download";
+import { Download, Check } from "lucide-react";
 
 export default function StudentClassesPage() {
   const { data } = useFastFetch("/api/student/classes");
+  const [isDownloading, setIsDownloading] = React.useState(false);
+  const [isDownloaded, setIsDownloaded] = React.useState(false);
 
   const currentClass = data?.currentClass || "Class 10";
   const board = data?.board || "CBSE";
@@ -115,8 +119,21 @@ export default function StudentClassesPage() {
     }
   };
 
-  const handlePrint = () => {
-    if (typeof window !== "undefined") window.print();
+  const handleDownloadTimetable = () => {
+    setIsDownloading(true);
+    const success = downloadTimetableDoc({
+      currentClass,
+      board,
+      batchName,
+      weeklySchedule,
+    });
+    if (success) {
+      setIsDownloaded(true);
+      setTimeout(() => {
+        setIsDownloaded(false);
+      }, 2500);
+    }
+    setIsDownloading(false);
   };
 
   return (
@@ -141,15 +158,31 @@ export default function StudentClassesPage() {
           </p>
         </div>
 
-        <Button
-          onClick={handlePrint}
-          variant="outline"
-          size="sm"
-          className="text-xs font-semibold gap-2 rounded-lg border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 self-start"
-        >
-          <Printer className="w-3.5 h-3.5" />
-          Print Timetable
-        </Button>
+        <div className="flex items-center gap-2 self-start">
+          <Button
+            onClick={handleDownloadTimetable}
+            variant="outline"
+            size="sm"
+            className="text-xs font-semibold gap-2 rounded-lg border-slate-200 dark:border-slate-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 hover:border-indigo-300 transition-all shadow-xs"
+          >
+            {isDownloaded ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-500" />
+                <span className="text-emerald-600 dark:text-emerald-400">Timetable Downloaded</span>
+              </>
+            ) : isDownloading ? (
+              <>
+                <Download className="w-3.5 h-3.5 animate-bounce text-indigo-500" />
+                <span>Downloading...</span>
+              </>
+            ) : (
+              <>
+                <Download className="w-3.5 h-3.5 text-indigo-500" />
+                <span>Print & Download Timetable</span>
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* ── WEEKLY SCHEDULE TABLE ── */}

@@ -47,8 +47,9 @@ export function PortalHeader({
     if (pathname.includes("/attendance")) return "Attendance Records";
     if (pathname.includes("/performance")) return "Performance & Analytics";
     if (pathname.includes("/students")) return "Batch Student Roster";
-    if (pathname.includes("/live-class/create")) return "Host Live Classroom";
-    return userRole === "ADMIN" ? "Admin Command Center" : userRole === "TEACHER" ? "Teacher Workspace" : "Student Dashboard";
+    if (pathname.includes("/teacher/dashboard")) return "Faculty Command Dashboard";
+    if (pathname.includes("/admin/dashboard")) return "Administrator Command Center";
+    return userRole === "ADMIN" ? "Admin Command Center" : userRole === "TEACHER" ? "Faculty Workspace" : "Student Learning Dashboard";
   };
 
   return (
@@ -100,10 +101,10 @@ export function PortalHeader({
         <div className="h-8 w-px bg-slate-200 dark:bg-slate-700" />
 
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-md bg-indigo-600 flex items-center justify-center text-white font-semibold text-xs shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-[#004b79] flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-xs">
             {safeName.charAt(0).toUpperCase()}
           </div>
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300 hidden sm:inline">
+          <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 hidden sm:inline">
             {safeName}
           </span>
         </div>

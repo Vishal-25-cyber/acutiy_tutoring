@@ -135,14 +135,18 @@ export function PortalSidebar({ role }: SidebarProps) {
     <aside className="w-60 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-screen sticky top-0 shrink-0 select-none z-30 transition-colors">
       {/* Sidebar Header */}
       <div className="h-16 px-5 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800">
-        <div className="w-8 h-8 rounded-md bg-indigo-600 flex items-center justify-center text-white shrink-0">
-          <GraduationCap className="w-4 h-4" />
+        <div className="w-9 h-9 rounded-xl bg-white p-1 shadow-xs flex items-center justify-center shrink-0">
+          <img
+            src="/images/acuity_logo.png"
+            alt="Acuity Logo"
+            className="w-full h-full object-contain"
+          />
         </div>
         <div>
           <span className="font-bold text-sm tracking-tight text-slate-800 dark:text-slate-200">
             ACUITY
           </span>
-          <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+          <p className="text-[10px] font-semibold text-[#dfb74a] uppercase tracking-wider">
             {role} Portal
           </p>
         </div>
@@ -166,9 +170,9 @@ export function PortalSidebar({ role }: SidebarProps) {
               onMouseEnter={() => handleHoverPrefetch(item)}
               onFocus={() => handleHoverPrefetch(item)}
               className={cn(
-                "flex items-center justify-between px-3 py-2 rounded-md text-[13px] font-medium transition-colors group",
+                "flex items-center justify-between px-3 py-2 rounded-xl text-[13px] font-semibold transition-colors group",
                 isActive
-                  ? "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60"
+                  ? "bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#fde047] border border-blue-200 dark:border-[#004b79]/70"
                   : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-800 dark:hover:text-slate-200"
               )}
             >
@@ -176,7 +180,7 @@ export function PortalSidebar({ role }: SidebarProps) {
                 <Icon
                   className={cn(
                     "w-4 h-4",
-                    isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 dark:text-slate-500"
+                    isActive ? "text-[#004b79] dark:text-[#dfb74a]" : "text-slate-400 dark:text-slate-500"
                   )}
                 />
                 <span>{item.label}</span>
@@ -184,13 +188,13 @@ export function PortalSidebar({ role }: SidebarProps) {
               {item.badge && (
                 <span
                   className={cn(
-                    "text-[10px] px-1.5 py-0.5 rounded font-bold",
+                    "text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                     item.badgeVariant === "warning"
                       ? "bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30"
                       : item.badgeVariant === "live"
                       ? "bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/30"
                       : isActive
-                      ? "bg-indigo-200/60 dark:bg-indigo-800/40 text-indigo-700 dark:text-indigo-300"
+                      ? "bg-blue-200/60 dark:bg-blue-900/40 text-blue-700 dark:text-sky-300"
                       : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                   )}
                 >

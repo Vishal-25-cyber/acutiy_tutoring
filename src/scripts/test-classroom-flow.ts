@@ -22,14 +22,14 @@ export async function runTestFlow() {
   console.log(`👨‍🏫 Authenticated Staff: ${teacher.name} (${teacher.email})`);
   console.log(`📦 Assigned Batch: ${batch.name} (${batch._id})`);
 
-  // 2. Staff creates and publishes a DBMS Normalization class
+  // 2. Staff creates and publishes a Mathematics Trigonometry class
   const todayStr = new Date().toISOString().split("T")[0];
-  const uniqueMeetingId = `ACUITY-DBMS-NORMALIZATION-${Date.now()}`;
+  const uniqueMeetingId = `ACUITY-MATH-TRIGONOMETRY-${Date.now()}`;
 
   const createdClass = await LiveSession.create({
-    title: "Database Management Systems — Normalization Masterclass",
-    subject: "DBMS",
-    topic: "Normalization (1NF to BCNF)",
+    title: "Class 10 CBSE — Applications of Trigonometry",
+    subject: "Mathematics",
+    topic: "Heights & Distances (Angle of Elevation & Depression)",
     description: "Functional dependencies, candidate keys, and multi-valued dependencies.",
     classLevel: "Class 10",
     batchId: batch._id,
