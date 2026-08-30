@@ -9,7 +9,7 @@ const StudentProfileSchema = new Schema<IStudentProfileDocument>(
     schoolName: { type: String, required: true, trim: true },
     board: {
       type: String,
-      enum: ["CBSE", "Matriculation", "ICSE", "State Board", "Other"],
+      enum: ["CBSE", "State Board"],
       required: true,
       index: true,
     },

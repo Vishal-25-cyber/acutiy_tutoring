@@ -1,0 +1,159 @@
+import { NextRequest, NextResponse } from "next/server";
+import connectToDatabase from "@/lib/db/mongoose";
+import User from "@/models/User";
+import StudentProfile from "@/models/StudentProfile";
+import TeacherProfile from "@/models/TeacherProfile";
+import Batch from "@/models/Batch";
+import { hashPassword } from "@/lib/auth/passwords";
+
+/**
+ * POST /api/auth/register
+ * 
+ * Registers a new STUDENT or TEACHER.
+ * Creates records in:
+ *  - STUDENT: `users` collection + `studentprofiles` collection
+ *  - TEACHER:  `users` collection + `teacherprofiles` collection (status: PENDING_APPROVAL)
+ */
+export async function POST(req: NextRequest) {
+  try {
+    await connectToDatabase();
+    const body = await req.json();
+    const { role } = body;
+
+    if (!role || !["STUDENT", "TEACHER"].includes(role)) {
+      return NextResponse.json({ error: "Role must be STUDENT or TEACHER." }, { status: 400 });
+    }
+
+    // ── STUDENT REGISTRATION ──
+    if (role === "STUDENT") {
+      const {
+        name, email, phone, password,
+        schoolName, board, currentClass, batchId,
+        parentName, parentPhone, gender, dob,
+      } = body;
+
+      // Validate required fields
+      if (!name || !email || !phone || !password) {
+        return NextResponse.json({ error: "Name, email, phone and password are required." }, { status: 400 });
+      }
+      if (!schoolName || !board || !currentClass || !batchId) {
+        return NextResponse.json({ error: "School name, board, class and batch are required." }, { status: 400 });
+      }
+      if (!parentName || !parentPhone) {
+        return NextResponse.json({ error: "Parent name and parent phone are required." }, { status: 400 });
+      }
+      if (password.length < 6) {
+        return NextResponse.json({ error: "Password must be at least 6 characters." }, { status: 400 });
+      }
+
+      // Check if email or phone is already registered
+      const existing = await User.findOne({ $or: [{ email: email.toLowerCase() }, { phone }] });
+      if (existing) {
+        return NextResponse.json({ error: "An account with this email or phone already exists." }, { status: 409 });
+      }
+
+      // Check batch exists
+      const batch = await Batch.findById(batchId);
+      if (!batch) {
+        return NextResponse.json({ error: "Selected batch not found. Please contact admin." }, { status: 404 });
+      }
+
+      const passwordHash = await hashPassword(password);
+
+      // Save to `users` collection
+      const user = await User.create({
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        passwordHash,
+        role: "STUDENT",
+        status: "ACTIVE",
+      });
+
+      // Save to `studentprofiles` collection
+      await StudentProfile.create({
+        userId: user._id,
+        schoolName: schoolName.trim(),
+        board,
+        currentClass,
+        batchId,
+        parentName: parentName.trim(),
+        parentPhone: parentPhone.trim(),
+        gender: gender || "OTHER",
+        dob: dob || "",
+        subjects: [],
+        streakCount: 0,
+        totalClassesAttended: 0,
+        totalClassesScheduled: 0,
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: "Student account created successfully! You can now sign in.",
+        user: { name: user.name, email: user.email, role: "STUDENT" },
+      }, { status: 201 });
+    }
+
+    // ── TEACHER REGISTRATION ──
+    if (role === "TEACHER") {
+      const {
+        name, email, phone, password,
+        qualification, specialization, experienceYears, address,
+      } = body;
+
+      if (!name || !email || !phone || !password) {
+        return NextResponse.json({ error: "Name, email, phone and password are required." }, { status: 400 });
+      }
+      if (!qualification || !specialization) {
+        return NextResponse.json({ error: "Qualification and specialization are required." }, { status: 400 });
+      }
+      if (password.length < 6) {
+        return NextResponse.json({ error: "Password must be at least 6 characters." }, { status: 400 });
+      }
+
+      // Check if email or phone already exists
+      const existing = await User.findOne({ $or: [{ email: email.toLowerCase() }, { phone }] });
+      if (existing) {
+        return NextResponse.json({ error: "An account with this email or phone already exists." }, { status: 409 });
+      }
+
+      const passwordHash = await hashPassword(password);
+
+      // Save to `users` collection (PENDING_APPROVAL status for teachers)
+      const user = await User.create({
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        passwordHash,
+        role: "TEACHER",
+        status: "PENDING_APPROVAL",
+      });
+
+      // Save to `teacherprofiles` collection
+      await TeacherProfile.create({
+        userId: user._id,
+        qualification: qualification.trim(),
+        specialization: specialization.trim(),
+        subjects: [],
+        classesTaught: [],
+        experienceYears: parseInt(experienceYears) || 0,
+        address: address?.trim() || "",
+        approvalStatus: "PENDING_APPROVAL",
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: "Teacher registration submitted! Your account is pending admin approval. You will be notified once approved.",
+        user: { name: user.name, email: user.email, role: "TEACHER", status: "PENDING_APPROVAL" },
+      }, { status: 201 });
+    }
+
+    return NextResponse.json({ error: "Invalid role." }, { status: 400 });
+  } catch (error: any) {
+    console.error("Register API error:", error);
+    if (error.code === 11000) {
+      return NextResponse.json({ error: "This email or phone is already registered." }, { status: 409 });
+    }
+    return NextResponse.json({ error: error.message || "Registration failed." }, { status: 500 });
+  }
+}

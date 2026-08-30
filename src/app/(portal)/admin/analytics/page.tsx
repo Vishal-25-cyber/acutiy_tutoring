@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Activity, TrendingUp, Users, BookOpen, Layers, UserCheck } from "lucide-react";
+import { Activity, TrendingUp, Users, BookOpen, Layers, UserCheck, ShieldCheck } from "lucide-react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -13,8 +13,6 @@ import {
   LineChart,
   Line,
 } from "recharts";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { useFastFetch } from "@/lib/api-cache";
 
 const EMPTY_DISTRIBUTION = [
@@ -44,81 +42,87 @@ export default function AdminAnalyticsPage() {
   const totalTeachers = data?.totalTeachers ?? 0;
 
   return (
-    <main className="p-6 sm:p-8 space-y-6 max-w-7xl animate-in fade-in duration-150">
-      {/* ── HEADER ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
-        <div>
-          <div className="flex items-center gap-2">
+    <main className="w-full max-w-7xl mx-auto p-6 sm:p-8 space-y-6 sm:space-y-8 animate-in fade-in duration-150 select-none">
+      {/* ── 1. CLEAN CARDLESS HEADER ── */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2.5">
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-              Platform Growth & Academic Analytics
+              Platform Growth &amp; Academic Analytics
             </h1>
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-              ● LIVE DB SYNC
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#dfb74a] border border-blue-200 dark:border-[#004b79]/60">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Live DB Analytics
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             Real-time enrollment distribution across Class 1 to 10, faculty staff, and live batch occupancy.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-2 text-xs">
-            <Users className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Enrolled Students: <strong className="text-slate-900 dark:text-slate-100">{totalStudents}</strong></span>
+        <div className="flex items-center gap-4 text-xs font-medium self-start sm:self-auto">
+          <div className="flex items-center gap-2">
+            <span className="text-slate-400">Enrolled Students:</span>
+            <span className="font-extrabold text-slate-900 dark:text-slate-100 font-mono text-sm">{totalStudents}</span>
           </div>
-          <div className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-2 text-xs">
-            <UserCheck className="w-3.5 h-3.5 text-purple-600" />
-            <span>Faculty Staff: <strong className="text-slate-900 dark:text-slate-100">{totalTeachers}</strong></span>
+          <span className="text-slate-300 dark:text-slate-700">•</span>
+          <div className="flex items-center gap-2">
+            <span className="text-slate-400">Faculty Staff:</span>
+            <span className="font-extrabold text-[#004b79] dark:text-[#dfb74a] font-mono text-sm">{totalTeachers}</span>
           </div>
         </div>
       </div>
 
-      {/* ── CHARTS GRID ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* ── 2. CHARTS GRID (CARDLESS) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Class Enrollment Distribution */}
-        <Card className="p-6 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50">
-          <h2 className="font-bold text-sm text-slate-900 dark:text-slate-100 mb-0.5">
-            Student Enrollment by Class (Grade 1 to 10)
-          </h2>
-          <p className="text-xs text-slate-500 mb-6">Real-time distribution across active CBSE & State Board classes</p>
+        <div className="space-y-3">
+          <div>
+            <h2 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100">
+              Student Enrollment by Class (Grade 1 to 10)
+            </h2>
+            <p className="text-xs text-slate-500">Distribution across active CBSE &amp; State Board classes</p>
+          </div>
 
-          <div className="h-64 w-full">
+          <div className="h-64 w-full pt-2">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={classDistribution} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.15} />
                 <XAxis dataKey="class" tick={{ fontSize: 10 }} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                 <Tooltip
                   formatter={(value: any) => [`${value} Enrolled`, "Students"]}
-                  contentStyle={{ borderRadius: "8px", fontSize: "12px" }}
+                  contentStyle={{ borderRadius: "12px", fontSize: "12px" }}
                 />
-                <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} name="Enrolled Students" />
+                <Bar dataKey="count" fill="#004b79" radius={[4, 4, 0, 0]} name="Enrolled Students" />
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </Card>
+        </div>
 
         {/* Growth Curve */}
-        <Card className="p-6 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50">
-          <h2 className="font-bold text-sm text-slate-900 dark:text-slate-100 mb-0.5">
-            Monthly Student & Teacher Growth
-          </h2>
-          <p className="text-xs text-slate-500 mb-6">Live cumulative expansion metrics over the session</p>
+        <div className="space-y-3">
+          <div>
+            <h2 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100">
+              Monthly Student &amp; Teacher Growth
+            </h2>
+            <p className="text-xs text-slate-500">Cumulative platform expansion metrics</p>
+          </div>
 
-          <div className="h-64 w-full">
+          <div className="h-64 w-full pt-2">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={enrollmentGrowth} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.15} />
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                 <Tooltip
                   formatter={(value: any, name: any) => [`${value} Registered`, name]}
-                  contentStyle={{ borderRadius: "8px", fontSize: "12px" }}
+                  contentStyle={{ borderRadius: "12px", fontSize: "12px" }}
                 />
                 <Line
                   type="monotone"
                   dataKey="students"
-                  stroke="#6366f1"
+                  stroke="#004b79"
                   strokeWidth={3}
                   dot={{ r: 4 }}
                   name="Students"
@@ -134,45 +138,42 @@ export default function AdminAnalyticsPage() {
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </Card>
+        </div>
       </div>
 
-      {/* ── BATCH OCCUPANCY BREAKDOWN ── */}
+      {/* ── 3. BATCH OCCUPANCY BREAKDOWN (CARDLESS) ── */}
       {batchOccupancy.length > 0 && (
-        <Card className="p-6 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 space-y-4">
+        <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-slate-800">
           <div>
-            <h2 className="font-bold text-sm text-slate-900 dark:text-slate-100">
-              Live Classroom Slot Occupancy
+            <h2 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100">
+              Classroom Slot Occupancy Utilization
             </h2>
             <p className="text-xs text-slate-500">Real-time student batch capacity utilization</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-1">
             {batchOccupancy.map((b: any, idx: number) => {
               const pct = b.capacity > 0 ? Math.round((b.enrolled / b.capacity) * 100) : 0;
               return (
-                <div
-                  key={idx}
-                  className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 space-y-2"
-                >
+                <div key={idx} className="space-y-1.5 py-1">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-bold text-slate-900 dark:text-slate-100">{b.name}</span>
-                    <span className="text-indigo-600 dark:text-indigo-400 font-bold">{pct}%</span>
+                    <span className="font-mono font-bold text-[#004b79] dark:text-[#dfb74a]">{pct}%</span>
                   </div>
-                  <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                  <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                     <div
-                      className="bg-indigo-600 h-full transition-all duration-300 rounded-full"
-                      style={{ width: `${Math.min(100, pct)}%` }}
+                      className="bg-[#004b79] dark:bg-[#dfb74a] h-full transition-all duration-300 rounded-full"
+                      style={{ width: `${Math.min(100, Math.max(pct, 4))}%` }}
                     />
                   </div>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-slate-400 font-mono">
                     {b.enrolled} / {b.capacity} Students Enrolled
                   </p>
                 </div>
               );
             })}
           </div>
-        </Card>
+        </div>
       )}
     </main>
   );

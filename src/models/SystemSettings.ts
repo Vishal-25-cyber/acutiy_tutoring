@@ -7,6 +7,8 @@ const SystemSettingsSchema = new Schema<ISystemSettingsDocument>(
   {
     companyName: { type: String, default: "Acuity Tutoring & Live Learning" },
     logoUrl: { type: String, default: "" },
+    upiId: { type: String, default: "acuity.tutoring@upi" },
+    qrCodeImageUrl: { type: String, default: "" },
     supportPhone1: { type: String, default: "+91 98765 43210" },
     supportPhone2: { type: String, default: "+91 98765 43211" },
     supportPhone3: { type: String, default: "+91 98765 43212" },

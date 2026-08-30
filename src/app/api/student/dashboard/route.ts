@@ -42,6 +42,10 @@ export async function GET() {
     const batchName = (profile.batchId as any)?.name || "6:00 PM – 7:00 PM";
     const batchId = (profile.batchId as any)?._id || profile.batchId;
 
+    const liveSessionFilter = batchId
+      ? { $or: [{ batchId }, { classLevel: currentClass }] }
+      : { classLevel: currentClass };
+
     // Fetch REAL created live sessions, attendance, assignments, and payments directly from DB
     const [
       dbTodayClasses,
@@ -55,7 +59,7 @@ export async function GET() {
       paymentsList,
     ] = await Promise.all([
       LiveSession.find({
-        batchId,
+        ...liveSessionFilter,
         date: todayDateStr,
         status: "LIVE",
       })
@@ -64,7 +68,7 @@ export async function GET() {
         .lean(),
 
       LiveSession.find({
-        batchId,
+        ...liveSessionFilter,
         status: { $in: ["PUBLISHED", "SCHEDULED", "LIVE"] },
         date: { $gte: todayDateStr },
       })
@@ -74,7 +78,7 @@ export async function GET() {
         .lean(),
 
       LiveSession.find({
-        batchId,
+        ...liveSessionFilter,
         status: { $in: ["COMPLETED", "LIVE"] },
       }).lean(),
 

@@ -22,7 +22,7 @@ export type ClassLevel =
   | "Class 9"
   | "Class 10";
 
-export type EducationBoard = "CBSE" | "State Board" | "Matriculation" | "ICSE" | "Other";
+export type EducationBoard = "CBSE" | "State Board";
 
 export interface IUser {
   _id: string;
@@ -243,6 +243,8 @@ export interface INotification {
 export interface ISystemSettings {
   companyName: string;
   logoUrl?: string;
+  upiId?: string;
+  qrCodeImageUrl?: string;
   supportPhone1: string;
   supportPhone2: string;
   supportPhone3: string;

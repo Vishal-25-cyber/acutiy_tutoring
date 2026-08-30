@@ -37,6 +37,30 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Server-side Evaluated / Graded Check: Cannot resubmit if evaluated
+    const existingSubmission = await AssignmentSubmission.findOne({
+      assignmentId: mongoose.Types.ObjectId.isValid(assignmentId)
+        ? new mongoose.Types.ObjectId(assignmentId)
+        : assignmentId,
+      studentId: mongoose.Types.ObjectId.isValid(session.userId)
+        ? new mongoose.Types.ObjectId(session.userId)
+        : session.userId,
+    }).lean();
+
+    if (
+      existingSubmission &&
+      (existingSubmission.status === "EVALUATED" ||
+        existingSubmission.marksObtained !== undefined)
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "This assignment has already been evaluated and graded by faculty. Resubmissions are not permitted.",
+        },
+        { status: 400 }
+      );
+    }
+
     // Fast atomic upsert
     const submission = await AssignmentSubmission.findOneAndUpdate(
       {

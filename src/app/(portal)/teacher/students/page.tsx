@@ -611,9 +611,7 @@ export default function TeacherStudentsPage() {
                   className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 text-xs font-semibold text-slate-900 dark:text-slate-100"
                 >
                   <option value="CBSE">CBSE</option>
-                  <option value="ICSE">ICSE</option>
                   <option value="State Board">State Board</option>
-                  <option value="Matriculation">Matriculation</option>
                 </select>
               </div>
             </div>

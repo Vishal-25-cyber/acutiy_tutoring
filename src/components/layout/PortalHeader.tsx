@@ -28,7 +28,7 @@ export default function PortalHeader({
 
   const getPageTitle = () => {
     if (pathname.includes("/student/dashboard")) return "Student Dashboard";
-    if (pathname.includes("/admin/dashboard")) return "Admin Dashboard";
+    if (pathname.includes("/admin/dashboard")) return "Admin Overview";
     if (pathname.includes("/teacher/dashboard")) return "Teacher Dashboard";
     if (pathname.includes("/student/classes") || pathname.includes("/teacher/schedule")) return "Live Classes & Timetable";
     if (pathname.includes("/materials")) return "Learning Hub";
@@ -41,14 +41,14 @@ export default function PortalHeader({
     if (pathname.includes("/finance")) return "Finance & Invoices";
     if (pathname.includes("/analytics")) return "Analytics";
     if (pathname.includes("/settings")) return "Settings";
-    return userRole === "STUDENT" ? "Student Dashboard" : userRole === "TEACHER" ? "Faculty Workspace" : "Admin Command Center";
+    return userRole === "STUDENT" ? "Student Dashboard" : userRole === "TEACHER" ? "Faculty Workspace" : "Admin Overview";
   };
 
   return (
     <header className="h-16 px-6 sm:px-8 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm flex items-center justify-between sticky top-0 z-40">
       {/* ── LEFT: REFINED TITLE ── */}
       <div className="flex items-center gap-2.5">
-        <div className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400" />
+        <div className="w-2 h-2 rounded-full bg-[#004b79] dark:bg-[#dfb74a]" />
         <h2 className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 tracking-tight">
           {getPageTitle()}
         </h2>

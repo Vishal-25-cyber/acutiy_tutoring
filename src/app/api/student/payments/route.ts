@@ -16,33 +16,20 @@ export async function GET(req: NextRequest) {
     }
 
     await connectToDatabase();
-    let payments = await Payment.find({ studentId: session.userId }).sort({ createdAt: -1, dueDate: -1 });
 
-    const now = new Date();
-    const currentMonthStr = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(now);
+    const [settings, profile] = await Promise.all([
+      SystemSettings.findOne().lean(),
+      StudentProfile.findOne({ userId: session.userId }).lean(),
+    ]);
 
-    // If no payments created yet, generate current active invoice dynamically
-    if (payments.length === 0) {
-      const [settings, profile] = await Promise.all([
-        SystemSettings.findOne().lean(),
-        StudentProfile.findOne({ userId: session.userId }).lean(),
-      ]);
+    const monthlyFee = (settings as any)?.monthlyTuitionFee || 2500;
+    const companyName = (settings as any)?.companyName || "Acuity Tutoring";
+    const upiId = "acuity.tutoring@upi";
 
-      const monthlyFee = (settings as any)?.monthlyTuitionFee || 2500;
-      const classLevel = (profile as any)?.currentClass || "Class 10";
-      const board = (profile as any)?.board || "CBSE";
-
-      const currentInvoice = await Payment.create({
-        studentId: session.userId,
-        amount: monthlyFee,
-        billingMonth: currentMonthStr,
-        courseName: `${classLevel} ${board} — All Subjects Comprehensive Bundle (${currentMonthStr})`,
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        status: "PAID",
-        receiptNumber: `REC-${now.getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`,
-      });
-      payments = [currentInvoice];
-    }
+    // Strictly fetch payments belonging ONLY to this specific student
+    const payments = await Payment.find({ studentId: session.userId })
+      .sort({ createdAt: -1, dueDate: -1 })
+      .lean();
 
     const pendingVerification = payments.find((p) => p.status === "PENDING_VERIFICATION");
     const currentFee = payments.find((p) => p.status === "PENDING" || p.status === "OVERDUE");
@@ -52,8 +39,13 @@ export async function GET(req: NextRequest) {
       {
         currentFee: currentFee || null,
         pendingVerification: pendingVerification || null,
-        history,
+        history, // strictly this student's real payment receipts alone
         allPayments: payments,
+        settings: {
+          companyName,
+          upiId,
+          monthlyFee,
+        },
       },
       {
         headers: {
@@ -74,34 +66,49 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { paymentId, paymentMethod, transactionId, upiId, courseName, courseId } = await req.json();
-    if (!paymentId) {
-      return NextResponse.json({ error: "Payment ID is required" }, { status: 400 });
-    }
+    const { paymentId, paymentMethod, transactionId, upiId, courseName, courseId, amount } = await req.json();
 
     await connectToDatabase();
-    const payment = await Payment.findOne({ _id: paymentId, studentId: session.userId });
-    if (!payment) {
-      return NextResponse.json({ error: "Payment invoice not found" }, { status: 404 });
+
+    let payment = null;
+    if (paymentId && paymentId !== "direct-pay") {
+      payment = await Payment.findOne({ _id: paymentId, studentId: session.userId });
     }
 
-    payment.status = "PENDING_VERIFICATION";
-    payment.paidDate = undefined;
-    payment.paymentMethod = paymentMethod || "Online UPI Transfer";
-    payment.transactionId =
-      transactionId && transactionId.trim()
-        ? transactionId.trim()
-        : `UPI-${Date.now().toString().slice(-8)}`;
-    if (upiId) payment.upiId = upiId;
-    if (courseName) payment.courseName = courseName;
-    if (courseId) payment.courseId = courseId;
+    const now = new Date();
+    const currentMonthStr = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(now);
+
+    if (!payment) {
+      // Create fresh payment submission record
+      payment = new Payment({
+        studentId: session.userId,
+        amount: Number(amount) || 2500,
+        billingMonth: currentMonthStr,
+        courseName: courseName || `Tuition Fee (${currentMonthStr})`,
+        dueDate: now,
+        receiptNumber: `REC-${now.getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`,
+        status: "PENDING_VERIFICATION",
+        paymentMethod: paymentMethod || "Online UPI Transfer",
+        transactionId: transactionId && transactionId.trim() ? transactionId.trim() : `UPI-${Date.now().toString().slice(-8)}`,
+      });
+    } else {
+      payment.status = "PENDING_VERIFICATION";
+      payment.paidDate = undefined;
+      payment.paymentMethod = paymentMethod || "Online UPI Transfer";
+      payment.transactionId =
+        transactionId && transactionId.trim()
+          ? transactionId.trim()
+          : `UPI-${Date.now().toString().slice(-8)}`;
+      if (upiId) payment.upiId = upiId;
+      if (courseName) payment.courseName = courseName;
+      if (courseId) payment.courseId = courseId;
+    }
+
     await payment.save();
 
     emitPaymentStatusUpdate({
       paymentId: payment._id.toString(),
       studentId: session.userId,
-      courseId: payment.courseId,
-      courseName: payment.courseName || payment.billingMonth,
       status: "PENDING_VERIFICATION",
       amount: payment.amount,
       transactionId: payment.transactionId,
@@ -111,12 +118,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      status: "PENDING_VERIFICATION",
-      message: "Tuition payment submitted successfully! It is now Under Review and awaiting confirmation by the administrator.",
+      message: "Payment reference submitted. Verification in progress.",
       payment,
     });
   } catch (error: any) {
-    console.error("Process Payment Error:", error);
+    console.error("Submit Payment Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

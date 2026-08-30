@@ -36,6 +36,29 @@ export async function PUT(
     liveClass.actualStartTime = new Date();
     await liveClass.save();
 
+    // Automatically ensure Teacher's StaffAttendance is logged as PRESENT today
+    try {
+      const StaffAttendance = (await import("@/models/StaffAttendance")).default;
+      const todayDateStr = new Date().toISOString().split("T")[0];
+      const teacherUserId = liveClass.teacherId || session.userId;
+      await StaffAttendance.findOneAndUpdate(
+        { teacherId: teacherUserId, date: todayDateStr },
+        {
+          $setOnInsert: {
+            teacherId: teacherUserId,
+            date: todayDateStr,
+            loginTime: new Date(),
+          },
+          $set: {
+            status: "PRESENT",
+          },
+        },
+        { upsert: true, new: true }
+      );
+    } catch (attErr) {
+      console.warn("Auto staff attendance recording on class start:", attErr);
+    }
+
     // Notify enrolled batch students that class is LIVE now
     if (liveClass.batchId) {
       const students = await StudentProfile.find({ batchId: liveClass.batchId }).select("userId");

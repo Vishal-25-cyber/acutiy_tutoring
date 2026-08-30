@@ -19,7 +19,7 @@ export function Modal({
   title,
   description,
   children,
-  maxWidth = "md",
+  maxWidth = "2xl",
 }: ModalProps) {
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -48,29 +48,42 @@ export function Modal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 select-none">
+      {/* ── Soft Blurred Backdrop ── */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-150"
         onClick={onClose}
       />
+
+      {/* ── Sleek Rectangle Card Modal Container ── */}
       <div
         className={cn(
-          "relative w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-10 max-h-[90vh] overflow-y-auto p-6 sm:p-7 transition-all",
+          "relative w-full rounded-lg bg-white dark:bg-[#0c1427] border border-slate-200 dark:border-slate-800 shadow-2xl z-10 max-h-[92vh] overflow-y-auto p-6 sm:p-7 transition-all animate-in fade-in zoom-in-98 duration-150",
           maxWidthClasses[maxWidth]
         )}
       >
+
+
+        {/* Crisp Rectangular Close Button */}
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 cursor-pointer"
+          className="absolute right-5 top-5 w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-100 transition-all border border-slate-200/80 dark:border-slate-700/80 cursor-pointer shadow-2xs"
         >
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>
         </button>
 
+        {/* Modal Title & Description Header */}
         {title && (
-          <div className="pb-3 mb-4 border-b border-slate-200 dark:border-slate-800">
-            <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
-            {description && <p className="text-xs text-slate-500 mt-0.5">{description}</p>}
+          <div className="pb-3.5 mb-4 border-b border-slate-200 dark:border-slate-800 pr-8">
+            <h3 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
+              {title}
+            </h3>
+            {description && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                {description}
+              </p>
+            )}
           </div>
         )}
 

@@ -262,8 +262,11 @@ export default function StudentAssignmentsPage() {
   };
 
   const openSubmissionModal = (assignment: any) => {
+    if (assignment.submission?.status === "EVALUATED" || assignment.submission?.marksObtained !== undefined) {
+      return;
+    }
     setSelectedAssignment(assignment);
-    // Pre-populate if resubmitting
+    // Pre-populate if editing pending submission
     setSubmissionText(assignment.submission?.submissionText || "");
     if (assignment.submission?.fileUrl) {
       setSelectedFile({
@@ -477,7 +480,7 @@ export default function StudentAssignmentsPage() {
                 {/* Column 4: Status & Actions */}
                 <div className="col-span-2 flex flex-col md:items-end justify-center gap-1.5">
                   <span
-                    className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                    className={`inline-block text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
                       isEvaluated
                         ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300"
                         : isSubmitted
@@ -490,17 +493,19 @@ export default function StudentAssignmentsPage() {
                     {isEvaluated ? "Evaluated" : isSubmitted ? "Submitted" : isClosed ? "Closed" : "Pending"}
                   </span>
 
-                  <button
-                    onClick={() => openSubmissionModal(item)}
-                    className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                      isSubmitted
-                        ? "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 dark:hover:bg-indigo-900 border border-indigo-200 dark:border-indigo-800"
-                        : "bg-indigo-600 hover:bg-indigo-500 text-white"
-                    }`}
-                  >
-                    {isSubmitted ? <RefreshCw className="w-3 h-3" /> : <Upload className="w-3 h-3" />}
-                    <span>{isSubmitted ? "Resubmit" : "Turn In"}</span>
-                  </button>
+                  {!isEvaluated && !isClosed && (
+                    <button
+                      onClick={() => openSubmissionModal(item)}
+                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                        isSubmitted
+                          ? "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 dark:hover:bg-indigo-900 border border-indigo-200 dark:border-indigo-800"
+                          : "bg-[#004b79] hover:bg-[#003b60] text-white shadow-2xs"
+                      }`}
+                    >
+                      {isSubmitted ? <RefreshCw className="w-3 h-3" /> : <Upload className="w-3 h-3" />}
+                      <span>{isSubmitted ? "Edit Solution" : "Turn In"}</span>
+                    </button>
+                  )}
                 </div>
               </div>
             );

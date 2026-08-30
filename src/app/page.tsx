@@ -1,642 +1,789 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Sparkles,
-  ArrowRight,
-  User,
-  Lock,
-  Eye,
-  EyeOff,
-  AlertCircle,
-  CheckCircle2,
-  BookOpen,
-  UserCheck,
-  Video,
-  X,
-  Flame,
-  Award,
-  Zap,
-  Activity,
+  AlertCircle, CheckCircle2, ArrowRight, ArrowLeft,
+  Loader2, ChevronRight, BookOpen, GraduationCap,
+  Award, Shield, Users, Clock, Check
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+
+type Mode = "SIGNIN" | "SIGNUP";
+type SignupRole = "STUDENT" | "TEACHER";
+type Step = 1 | 2 | 3;
+type LoginRole = "STUDENT" | "TEACHER" | "ADMIN";
 
 export default function HomePage() {
   const router = useRouter();
 
-  // Floating Auth Panel visibility
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  // Mode & Role State
+  const [mode, setMode] = useState<Mode>("SIGNIN");
+  const [loginRole, setLoginRole] = useState<LoginRole>("STUDENT");
+  const [uid, setUid] = useState("");
+  const [pw, setPw] = useState("");
+  const [showPw, setShowPw] = useState(false);
 
-  // Auth Mode: "LOGIN" vs "SIGNUP"
-  const [authMode, setAuthMode] = useState<"LOGIN" | "SIGNUP">("LOGIN");
+  // Sign up state
+  const [batches, setBatches] = useState<any[]>([]);
+  const [signupRole, setSignupRole] = useState<SignupRole>("STUDENT");
+  const [step, setStep] = useState<Step>(1);
+  const [sName, setSName] = useState("");
+  const [sEmail, setSEmail] = useState("");
+  const [sPhone, setSPhone] = useState("");
+  const [sPw, setSPw] = useState("");
+  const [sCPw, setSCPw] = useState("");
+  const [showSPw, setShowSPw] = useState(false);
 
-  // Login State
-  const [loginRole, setLoginRole] = useState<"STUDENT" | "TEACHER" | "ADMIN">("STUDENT");
-  const [identifier, setIdentifier] = useState("aravind.class10@acuity.edu");
-  const [password, setPassword] = useState("Student@123");
-  const [showPassword, setShowPassword] = useState(false);
-  const [selectedBatchId, setSelectedBatchId] = useState("");
-  const [availableBatches, setAvailableBatches] = useState<any[]>([]);
+  const [sSchool, setSSchool] = useState("");
+  const [sBoard, setSBoard] = useState<"CBSE" | "State Board">("CBSE");
+  const [sClass, setSClass] = useState("Class 10");
+  const [sBatch, setSBatch] = useState("");
 
-  // Sign Up State
-  const [signupRole, setSignupRole] = useState<"STUDENT" | "TEACHER">("STUDENT");
-  const [signupName, setSignupName] = useState("");
-  const [signupClass, setSignupClass] = useState("Class 10");
-  const [signupBoard, setSignupBoard] = useState("CBSE");
+  const [tQual, setTQual] = useState("");
+  const [tSpec, setTSpec] = useState("");
+  const [tExp, setTExp] = useState("0");
+  const [tCity, setTCity] = useState("");
 
-  // Loading & Error States
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [spName, setSpName] = useState("");
+  const [spPhone, setSpPhone] = useState("");
+  const [sGender, setSGender] = useState<"MALE" | "FEMALE" | "OTHER">("OTHER");
+  const [sDob, setSdob] = useState("");
 
-  // Fetch batches on mount
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const [ok, setOk] = useState("");
+
   useEffect(() => {
     fetch("/api/batches")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.batches && data.batches.length > 0) {
-          setAvailableBatches(data.batches);
-          const defaultBatch =
-            data.batches.find((b: any) => b.name.includes("7:00")) || data.batches[0];
-          setSelectedBatchId(defaultBatch._id);
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.batches?.length) {
+          setBatches(d.batches);
+          setSBatch(d.batches[0]._id);
         }
       })
       .catch(() => {});
   }, []);
 
-  // Update credentials when login tab changes
-  const handleRoleTabChange = (role: "STUDENT" | "TEACHER" | "ADMIN") => {
-    setLoginRole(role);
-    setErrorMessage("");
-    setSuccessMessage("");
-    if (role === "STUDENT") {
-      setIdentifier("aravind.class10@acuity.edu");
-      setPassword("Student@123");
-    } else if (role === "TEACHER") {
-      setIdentifier("sarah.maths@acuity.edu");
-      setPassword("Teacher@123");
-    } else {
-      setIdentifier("admin@acuity.edu");
-      setPassword("Admin@123");
-    }
-  };
+  const clear = () => { setErr(""); setOk(""); };
+  const sw = (m: Mode) => { setMode(m); clear(); setStep(1); };
+  const switchRole = (r: LoginRole) => { setLoginRole(r); setUid(""); setPw(""); clear(); };
 
-  // Open auth card in specific mode
-  const openAuth = (mode: "LOGIN" | "SIGNUP", role?: "STUDENT" | "TEACHER" | "ADMIN") => {
-    setAuthMode(mode);
-    setErrorMessage("");
-    setSuccessMessage("");
-    if (role) {
-      if (mode === "LOGIN") {
-        handleRoleTabChange(role);
-      } else {
-        setSignupRole(role === "ADMIN" ? "STUDENT" : role);
-      }
-    }
-    setShowAuthModal(true);
-  };
-
-  // Direct Sign In Form Submission
-  const handleLoginSubmit = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMessage("");
-    setSuccessMessage("");
-    setIsLoading(true);
-
+    clear();
+    setLoading(true);
     try {
-      let body: any = { role: loginRole, password };
+      const body: any = { role: loginRole, password: pw };
       if (loginRole === "STUDENT") {
-        body.identifier = identifier;
-        body.batchId = selectedBatchId || availableBatches[0]?._id;
+        body.identifier = uid;
       } else {
-        body.email = identifier;
+        body.email = uid;
       }
-
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-
       const data = await res.json();
       if (!res.ok) {
-        if (data.error && data.error.includes("Invalid")) {
-          await fetch("/api/seed", { method: "POST" });
-          const res2 = await fetch("/api/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          });
-          const data2 = await res2.json();
-          if (!res2.ok) {
-            setErrorMessage(data2.error || "Authentication failed.");
-            return;
-          }
-        } else {
-          setErrorMessage(data.error || "Authentication failed.");
-          return;
-        }
+        setErr(data.error || "Invalid login credentials.");
+        return;
       }
-
-      setSuccessMessage("Authentication successful! Redirecting...");
+      setOk("Login verified. Redirecting…");
       setTimeout(() => {
         if (loginRole === "STUDENT") router.push("/student/dashboard");
         else if (loginRole === "TEACHER") router.push("/teacher/dashboard");
         else router.push("/admin/dashboard");
-      }, 200);
-    } catch (err: any) {
-      setErrorMessage(err.message || "An unexpected error occurred.");
+      }, 300);
+    } catch (e: any) {
+      setErr(e.message || "Network connection error.");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  // Direct Quick Sign Up Form Submission
-  const handleSignupSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage("");
-    setSuccessMessage("");
-
-    if (signupRole === "TEACHER") {
-      router.push("/register/teacher");
-      return;
-    }
-
-    router.push("/register/student");
+  const v1 = () => {
+    if (!sName.trim()) { setErr("Please enter full name."); return false; }
+    if (!sEmail.includes("@")) { setErr("Please enter a valid email."); return false; }
+    if (sPhone.replace(/\D/g, "").length < 10) { setErr("Please enter 10-digit phone number."); return false; }
+    if (sPw.length < 6) { setErr("Password must be at least 6 characters."); return false; }
+    if (sPw !== sCPw) { setErr("Passwords do not match."); return false; }
+    return true;
   };
 
-  // Instant 1-Click Demo Login
-  const handleInstantDemo = async (role: "STUDENT" | "TEACHER" | "ADMIN") => {
-    setIsLoading(true);
-    setErrorMessage("");
+  const v2s = () => {
+    if (!sSchool.trim()) { setErr("Please enter your school name."); return false; }
+    if (!sBatch) { setErr("Please select a batch."); return false; }
+    return true;
+  };
+
+  const v2t = () => {
+    if (!tQual.trim()) { setErr("Please enter your qualification."); return false; }
+    if (!tSpec.trim()) { setErr("Please enter your specialization."); return false; }
+    return true;
+  };
+
+  const v3 = () => {
+    if (!spName.trim()) { setErr("Please enter parent/guardian name."); return false; }
+    if (spPhone.replace(/\D/g, "").length < 10) { setErr("Please enter valid parent phone number."); return false; }
+    return true;
+  };
+
+  const next = () => {
+    clear();
+    if (step === 1 && !v1()) return;
+    if (step === 2 && signupRole === "STUDENT" && !v2s()) return;
+    if (step === 2 && signupRole === "TEACHER" && !v2t()) return;
+    setStep((s) => ((s < 3 ? s + 1 : s) as Step));
+  };
+
+  const handleSignUp = async () => {
+    clear();
+    if (signupRole === "STUDENT" && !v3()) return;
+    setLoading(true);
     try {
-      let body: any = {};
-      if (role === "STUDENT") {
-        const batch2 =
-          availableBatches.find((b: any) => b.name.includes("7:00")) ||
-          availableBatches[1] ||
-          availableBatches[0];
-        body = {
-          role: "STUDENT",
-          identifier: "aravind.class10@acuity.edu",
-          password: "Student@123",
-          batchId: batch2?._id,
-        };
-      } else if (role === "TEACHER") {
-        body = {
-          role: "TEACHER",
-          email: "sarah.maths@acuity.edu",
-          password: "Teacher@123",
-        };
+      const body: any = {
+        role: signupRole,
+        name: sName,
+        email: sEmail,
+        phone: sPhone,
+        password: sPw,
+      };
+      if (signupRole === "STUDENT") {
+        Object.assign(body, {
+          schoolName: sSchool,
+          board: sBoard,
+          currentClass: sClass,
+          batchId: sBatch,
+          parentName: spName,
+          parentPhone: spPhone,
+          gender: sGender,
+          dob: sDob,
+        });
       } else {
-        body = {
-          role: "ADMIN",
-          email: "admin@acuity.edu",
-          password: "Admin@123",
-        };
+        Object.assign(body, {
+          qualification: tQual,
+          specialization: tSpec,
+          experienceYears: tExp,
+          address: tCity,
+        });
       }
-
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-
-      if (res.ok) {
-        if (role === "STUDENT") router.push("/student/dashboard");
-        else if (role === "TEACHER") router.push("/teacher/dashboard");
-        else router.push("/admin/dashboard");
-      } else {
-        await fetch("/api/seed", { method: "POST" });
-        const res2 = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        if (res2.ok) {
-          if (role === "STUDENT") router.push("/student/dashboard");
-          else if (role === "TEACHER") router.push("/teacher/dashboard");
-          else router.push("/admin/dashboard");
-        } else {
-          setErrorMessage("Failed to launch demo. Please try regular login.");
-        }
+      const data = await res.json();
+      if (!res.ok) {
+        setErr(data.error || "Registration failed.");
+        return;
       }
+      setOk(data.message || "Account registered successfully!");
+      setTimeout(() => sw("SIGNIN"), 2000);
     } catch (e: any) {
-      setErrorMessage(e.message || "Failed to launch demo.");
+      setErr(e.message || "Registration failed.");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
+  const totalSteps = signupRole === "STUDENT" ? 3 : 2;
+  const stepLabels = signupRole === "STUDENT" ? ["Account", "School", "Parent"] : ["Account", "Profile"];
+
   return (
-    <div className="h-screen max-h-screen bg-slate-50 dark:bg-[#00101a] text-slate-900 dark:text-slate-100 flex flex-col justify-between overflow-hidden selection:bg-[#002137] selection:text-white no-scrollbar">
-      {/* ── TOP HEADER (Official Logo at Left Top) ── */}
-      <header className="w-full pt-3 sm:pt-4 px-6 sm:px-10 lg:px-14 flex items-center justify-between z-20 shrink-0">
-        <Link href="/" className="flex items-center gap-3.5 group">
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white dark:bg-[#002137] p-1.5 shadow-md border border-slate-200/80 dark:border-[#b89047]/30 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
-            <img
-              src="/images/acuity_logo.png"
-              alt="Acuity Logo"
-              className="w-full h-full object-contain"
-            />
+    <div
+      className="fixed inset-0 flex flex-col justify-between overflow-hidden bg-white text-slate-900 select-none"
+      style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}
+    >
+      {/* ── TOP NAVBAR ── */}
+      <header className="w-full px-8 lg:px-16 py-4 flex items-center justify-between border-b border-slate-100 shrink-0">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-[#004b79] flex items-center justify-center text-white font-black text-lg shadow-sm">
+            A
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="font-black text-xl sm:text-2xl tracking-tight text-[#002137] dark:text-white block leading-none">
-                ACUITY
-              </span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#b89047]/15 text-[#8f6d2b] dark:text-[#dfb74a] border border-[#b89047]/30">
-                Classes 1–10
-              </span>
-            </div>
-            <p className="text-xs font-semibold text-[#b89047] dark:text-[#dfb74a] mt-1 leading-none tracking-tight">
-              Where Accuracy Meets Knowledge
-            </p>
+            <span className="font-extrabold text-xl tracking-tight text-[#002137] leading-none block">
+              ACUITY
+            </span>
+            <p className="text-[11px] font-medium text-slate-400 mt-0.5">Where Accuracy Meets Knowledge</p>
           </div>
-        </Link>
+        </div>
+
+        {/* Auth Toggle */}
+        <div className="flex items-center gap-6 text-sm font-bold">
+          <button
+            type="button"
+            onClick={() => sw("SIGNIN")}
+            className={`pb-1 transition-all cursor-pointer ${
+              mode === "SIGNIN"
+                ? "text-[#004b79] border-b-2 border-[#004b79]"
+                : "text-slate-400 hover:text-slate-800"
+            }`}
+          >
+            Sign In
+          </button>
+          <button
+            type="button"
+            onClick={() => sw("SIGNUP")}
+            className={`pb-1 transition-all cursor-pointer ${
+              mode === "SIGNUP"
+                ? "text-[#004b79] border-b-2 border-[#004b79]"
+                : "text-slate-400 hover:text-slate-800"
+            }`}
+          >
+            Sign Up
+          </button>
+        </div>
       </header>
 
-      {/* ── MAIN HERO STATIC SPLIT CONTAINER ── */}
-      <main className="relative flex-1 flex items-center px-6 sm:px-10 lg:px-14 py-2 sm:py-3 max-w-7xl mx-auto w-full overflow-hidden">
-        {/* Subtle Background Glows matching Deep Navy & Gold */}
-        <div className="absolute top-1/4 left-1/10 w-96 h-96 bg-[#002137]/10 dark:bg-[#002137]/40 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/10 w-96 h-96 bg-[#b89047]/10 dark:bg-[#b89047]/15 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center w-full">
-          {/* LEFT COLUMN: Brand, Headlines & Action Buttons */}
-          <div className="lg:col-span-6 space-y-5 sm:space-y-6">
-            {/* Pill Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#002137]/5 dark:bg-[#002842] border border-[#b89047]/30 text-[#002137] dark:text-[#dfb74a] text-xs font-bold shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 text-[#b89047] dark:text-[#dfb74a]" />
-              <span>Next-Gen Live Tuition Platform • Classes 1 to 10</span>
-            </div>
-
-            {/* Headline */}
-            <div className="space-y-2.5">
-              <h1 className="text-4xl sm:text-5xl lg:text-[50px] font-black tracking-tight leading-[1.08] text-[#002137] dark:text-white">
-                Where Accuracy <br />
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#002137] via-[#004b79] to-[#b89047] dark:from-[#fdf8e6] dark:via-[#dfb74a] dark:to-[#b89047]">
-                  Meets Knowledge.
-                </span>
+      {/* ── FULL VIEWPORT CONTENT (55% / 45% SPLIT WITH NO EMPTY VOIDS) ── */}
+      <main className="flex-1 w-full grid grid-cols-1 lg:grid-cols-12 min-h-0 overflow-hidden">
+        
+        {/* ══════════════════════════════════════════════════
+            LEFT SIDE (7 COLS): ABOUT ACUITY & CURRICULUM
+        ══════════════════════════════════════════════════ */}
+        <div className="lg:col-span-7 h-full flex flex-col justify-center px-8 sm:px-14 lg:px-20 py-8 border-r border-slate-100 bg-[#fafcff] overflow-y-auto">
+          <div className="space-y-8 max-w-2xl">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-xs font-bold text-[#004b79] uppercase tracking-wider">
+                <Shield className="w-3.5 h-3.5" />
+                <span>4+ Years of Trusted Offline Coaching</span>
+              </div>
+              
+              <h1 className="text-4xl sm:text-5xl font-black text-[#002137] tracking-tight leading-[1.12]">
+                Quality tutoring for Classes 1 to 10.
               </h1>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed">
-                Premium online tutoring built for academic mastery from <strong className="font-semibold text-[#002137] dark:text-white">Class 1 to Class 10</strong>. Experience high-definition interactive live classes, automated attendance, structured formula sheets, and verified master faculty.
+
+              <p className="text-slate-600 text-base sm:text-lg leading-relaxed">
+                Having successfully mentored students in offline coaching for over 4 years, Acuity brings structured subject mastery, personal attention, and board exam preparation to CBSE and State Board students.
               </p>
             </div>
 
-            {/* Metrics Bar */}
-            <div className="grid grid-cols-3 gap-3 max-w-lg">
-              <div className="p-3 rounded-2xl bg-white dark:bg-[#001726] border border-slate-200/90 dark:border-slate-800 shadow-xs">
-                <p className="text-xl sm:text-2xl font-black text-[#002137] dark:text-[#dfb74a] leading-tight">
-                  1,200+
-                </p>
-                <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
-                  Enrolled Students
-                </p>
+            {/* 4 Feature Pillars */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
+                <div className="flex items-center gap-2 text-sm font-bold text-[#002137]">
+                  <BookOpen className="w-4 h-4 text-[#004b79]" />
+                  <span>Classes 1 to 10</span>
+                </div>
+                <p className="text-xs text-slate-500">Comprehensive CBSE &amp; State Board Syllabus</p>
               </div>
-              <div className="p-3 rounded-2xl bg-white dark:bg-[#001726] border border-slate-200/90 dark:border-slate-800 shadow-xs">
-                <p className="text-xl sm:text-2xl font-black text-[#b89047] dark:text-[#dfb74a] leading-tight">
-                  98.4%
-                </p>
-                <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
-                  Exam Pass Rate
-                </p>
+
+              <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
+                <div className="flex items-center gap-2 text-sm font-bold text-[#002137]">
+                  <Award className="w-4 h-4 text-emerald-600" />
+                  <span>Core Subjects</span>
+                </div>
+                <p className="text-xs text-slate-500">Mathematics, Science, English &amp; Social Studies</p>
               </div>
-              <div className="p-3 rounded-2xl bg-white dark:bg-[#001726] border border-slate-200/90 dark:border-slate-800 shadow-xs">
-                <p className="text-xl sm:text-2xl font-black text-[#004b79] dark:text-sky-400 leading-tight">
-                  1–10
-                </p>
-                <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
-                  CBSE & State
-                </p>
+
+              <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
+                <div className="flex items-center gap-2 text-sm font-bold text-[#002137]">
+                  <Clock className="w-4 h-4 text-indigo-600" />
+                  <span>4+ Years Experience</span>
+                </div>
+                <p className="text-xs text-slate-500">Proven offline coaching methodology and track record</p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
+                <div className="flex items-center gap-2 text-sm font-bold text-[#002137]">
+                  <Users className="w-4 h-4 text-amber-600" />
+                  <span>Daily Batches</span>
+                </div>
+                <p className="text-xs text-slate-500">Personalized attention and regular assessment tests</p>
               </div>
             </div>
 
-            {/* CTA ACTION BUTTONS: "Get Started" & "Faculty Sign Up" */}
-            <div className="flex flex-wrap items-center gap-3.5 pt-1.5">
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={() => openAuth("LOGIN", "STUDENT")}
-                className="bg-[#002137] hover:bg-[#083353] dark:bg-[#dfb74a] dark:text-[#002137] dark:hover:bg-[#f7d87c] text-white font-bold px-6 py-3.5 rounded-2xl shadow-lg shadow-[#002137]/25 flex items-center gap-2 text-sm transition-all cursor-pointer hover:scale-[1.02]"
-              >
-                <span>Get Started</span>
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => openAuth("LOGIN", "TEACHER")}
-                className="bg-white dark:bg-[#001726] border border-slate-300 dark:border-slate-700 text-[#002137] dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold px-6 py-3.5 rounded-2xl text-sm shadow-xs transition-all cursor-pointer hover:scale-[1.02]"
-              >
-                <span>Faculty Sign Up</span>
-              </Button>
+            <div className="pt-2 flex items-center gap-2 text-xs font-semibold text-slate-500">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span>Dedicated faculty mentorship • Regular mock tests • Comprehensive board preparation</span>
             </div>
           </div>
+        </div>
 
-          {/* RIGHT COLUMN: Interactive Educational Animation / Floating Auth Portal */}
-          <div className="lg:col-span-6 relative">
-            {/* ───────────────────────────────────────────────────────────── */}
-            {/* STATE 1: EDUCATIONAL LIVE LEARNING ANIMATION SHOWCASE */}
-            {/* ───────────────────────────────────────────────────────────── */}
-            {!showAuthModal ? (
-              <div
-                onClick={() => openAuth("LOGIN")}
-                className="group relative bg-white/95 dark:bg-[#001726]/95 p-5 sm:p-6 rounded-3xl shadow-2xl border border-slate-200/90 dark:border-[#b89047]/30 backdrop-blur-xl overflow-hidden cursor-pointer transition-all hover:border-[#b89047]/60 hover:shadow-2xl"
-              >
-                {/* Floating ambient glow bubbles */}
-                <div className="absolute top-0 right-0 w-48 h-48 bg-[#b89047]/10 rounded-full blur-2xl pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#002137]/10 rounded-full blur-2xl pointer-events-none" />
+        {/* ══════════════════════════════════════════════════
+            RIGHT SIDE (5 COLS): AUTHENTICATION WORKSPACE
+        ══════════════════════════════════════════════════ */}
+        <div className="lg:col-span-5 h-full flex flex-col justify-center px-8 sm:px-14 lg:px-16 py-8 overflow-y-auto">
+          <div className="max-w-md w-full mx-auto space-y-6">
+            
+            <div className="space-y-1.5">
+              <h2 className="text-2xl sm:text-3xl font-black text-[#002137] tracking-tight">
+                {mode === "SIGNIN" ? "Sign in to portal" : "Create an account"}
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 font-medium">
+                {mode === "SIGNIN" ? "Select your role and enter your details." : "Register student or faculty account."}
+              </p>
+            </div>
 
-                {/* Showcase Header */}
-                <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-2.5">
-                    <span className="relative flex h-3 w-3">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
-                    </span>
-                    <div>
-                      <h3 className="font-bold text-xs sm:text-sm text-[#002137] dark:text-white flex items-center gap-1.5">
-                        <Video className="w-4 h-4 text-rose-500" />
-                        <span>Interactive Live Class in Session</span>
-                      </h3>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                        Class 1 to 10 • Mathematics & Sciences
-                      </p>
-                    </div>
-                  </div>
-
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                    <Activity className="w-3 h-3" />
-                    <span>28 Students Active</span>
-                  </span>
+            {/* ─────────────────────────────────────────────────────────────
+                SIGN IN FORM (NO BATCH DROPDOWN)
+            ───────────────────────────────────────────────────────────── */}
+            {mode === "SIGNIN" && (
+              <div className="space-y-5">
+                
+                {/* Role Select Bar */}
+                <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold">
+                  {[
+                    { key: "STUDENT", label: "Student" },
+                    { key: "TEACHER", label: "Faculty" },
+                    { key: "ADMIN", label: "Admin" },
+                  ].map((item) => (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => switchRole(item.key as LoginRole)}
+                      className={`py-2 rounded-lg transition-all cursor-pointer text-center ${
+                        loginRole === item.key
+                          ? "bg-white text-[#004b79] shadow-2xs font-extrabold"
+                          : "text-slate-500 hover:text-slate-900"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
                 </div>
 
-                {/* 3D Student Studying Animation Stage */}
-                <div className="relative rounded-2xl overflow-hidden shadow-md border border-[#b89047]/20 group-hover:scale-[1.01] transition-transform">
-                  <img
-                    src="/images/student_study_hero.jpg"
-                    alt="Student Studying Online"
-                    className="w-full h-64 sm:h-72 object-cover object-center rounded-2xl"
-                  />
-
-                  {/* Gradient Overlay for Contrast */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#002137]/80 via-transparent to-black/20 rounded-2xl" />
-
-                  {/* Floating Micro-Animation Badge 1 (Top Left) */}
-                  <div className="absolute top-3 left-3 px-2.5 py-1.5 rounded-xl bg-white/90 dark:bg-[#002137]/90 backdrop-blur-md border border-[#b89047]/40 text-[#002137] dark:text-[#dfb74a] text-[11px] font-bold shadow-md animate-float-slow flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-[#b89047] dark:text-[#dfb74a]" />
-                    <span>Live 1:1 Doubt Clearing</span>
+                {/* Alerts */}
+                {err && (
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-600">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{err}</span>
                   </div>
-
-                  {/* Floating Micro-Animation Badge 2 (Top Right) */}
-                  <div className="absolute top-3 right-3 px-2.5 py-1.5 rounded-xl bg-white/90 dark:bg-[#002137]/90 backdrop-blur-md border border-[#b89047]/40 text-[#002137] dark:text-[#dfb74a] text-[11px] font-bold shadow-md animate-float-delayed flex items-center gap-1.5">
-                    <Award className="w-3.5 h-3.5 text-[#b89047] dark:text-[#dfb74a]" />
-                    <span>98.4% Top Scores</span>
-                  </div>
-
-                  {/* Bottom Image Floating Info */}
-                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-                    <div className="px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md text-white text-[10px] font-medium flex items-center gap-1.5 border border-white/10">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Curriculum: Classes 1 to 10</span>
-                    </div>
-
-                    <div className="px-2.5 py-1 rounded-lg bg-[#b89047]/90 text-white text-[10px] font-bold flex items-center gap-1 shadow-sm">
-                      <Flame className="w-3.5 h-3.5 text-amber-200" />
-                      <span>Daily Study Streak 🔥</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Floating Click-to-Open Callout Banner */}
-                <div className="mt-3.5 p-3 rounded-2xl bg-gradient-to-r from-[#002137] to-[#003b60] text-white flex items-center justify-between text-xs shadow-md group-hover:scale-[1.01] transition-transform">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-[#dfb74a] animate-pulse" />
-                    <span className="font-bold text-xs">Ready to Learn? Click to Sign In & Access Portal</span>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-[#dfb74a] group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-            ) : (
-              /* ───────────────────────────────────────────────────────────── */
-              /* STATE 2: FLOATING AUTH MODAL / PORTAL CARD */
-              /* ───────────────────────────────────────────────────────────── */
-              <div className="relative bg-white dark:bg-[#001726] p-7 sm:p-8 rounded-3xl shadow-2xl border border-slate-200/80 dark:border-slate-800 backdrop-blur-xl animate-in zoom-in-95 fade-in duration-200">
-                {/* Close Button */}
-                <button
-                  type="button"
-                  onClick={() => setShowAuthModal(false)}
-                  className="absolute right-5 top-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-                  title="Close"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-
-                {/* Clean Header */}
-                <div className="mb-5">
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-                    Sign in to Acuity
-                  </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Select your account role to access your dashboard
-                  </p>
-                </div>
-
-                {/* Status Alerts */}
-                {errorMessage && (
-                  <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
-                    <span>{errorMessage}</span>
+                )}
+                {ok && (
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-700">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{ok}</span>
                   </div>
                 )}
 
-                {successMessage && (
-                  <div className="mb-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
-                    <span>{successMessage}</span>
-                  </div>
-                )}
-
-                {/* Sleek Segmented Role Switcher */}
-                <div className="p-1 bg-slate-100 dark:bg-[#00101a] rounded-xl flex items-center mb-5">
-                  <button
-                    type="button"
-                    onClick={() => handleRoleTabChange("STUDENT")}
-                    className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-                      loginRole === "STUDENT"
-                        ? "bg-white dark:bg-[#002137] text-[#002137] dark:text-[#dfb74a] shadow-xs"
-                        : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
-                    }`}
-                  >
-                    Student
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleRoleTabChange("TEACHER")}
-                    className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-                      loginRole === "TEACHER"
-                        ? "bg-white dark:bg-[#002137] text-[#002137] dark:text-[#dfb74a] shadow-xs"
-                        : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
-                    }`}
-                  >
-                    Faculty
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleRoleTabChange("ADMIN")}
-                    className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-                      loginRole === "ADMIN"
-                        ? "bg-white dark:bg-[#002137] text-[#002137] dark:text-[#dfb74a] shadow-xs"
-                        : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
-                    }`}
-                  >
-                    Admin
-                  </button>
-                </div>
-
-                {/* Clean Form */}
-                <form onSubmit={handleLoginSubmit} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                      {loginRole === "STUDENT" ? "Email or Mobile Number" : "Email Address"}
+                {/* Form without password autofill overlays & without batch dropdown */}
+                <form onSubmit={handleSignIn} autoComplete="off" className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-700">
+                      {loginRole === "STUDENT" ? "Phone Number or Email" : "Staff Email Address"}
                     </label>
-                    <Input
-                      type="text"
+                    <input
                       required
-                      value={identifier}
-                      onChange={(e) => setIdentifier(e.target.value)}
-                      placeholder={
-                        loginRole === "STUDENT"
-                          ? "aravind.class10@acuity.edu"
-                          : "name@acuity.edu"
-                      }
-                      className="h-11 text-sm rounded-xl bg-white dark:bg-[#00101a] border-slate-200 dark:border-slate-700"
+                      type="text"
+                      name="auth_user_login_field_manual"
+                      autoComplete="off"
+                      data-lpignore="true"
+                      value={uid}
+                      onChange={(e) => setUid(e.target.value)}
+                      placeholder={loginRole === "STUDENT" ? "Enter registered phone or email" : "e.g. staff@gmail.com"}
+                      className="w-full px-4 py-3 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] focus:ring-1 focus:ring-[#004b79] font-medium transition-all"
                     />
                   </div>
 
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
-                        Password
-                      </label>
-                    </div>
-                    <div className="relative">
-                      <Input
-                        type={showPassword ? "text" : "password"}
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter password"
-                        className="h-11 text-sm rounded-xl pr-10 bg-white dark:bg-[#00101a] border-slate-200 dark:border-slate-700"
-                      />
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold text-slate-700">Password</label>
                       <button
                         type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                        onClick={() => setShowPw(!showPw)}
+                        className="text-xs font-semibold text-slate-400 hover:text-slate-700 cursor-pointer"
                       >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showPw ? "Hide" : "Show"}
+                      </button>
+                    </div>
+                    <input
+                      required
+                      type={showPw ? "text" : "password"}
+                      name="auth_user_pw_field_manual"
+                      autoComplete="new-password"
+                      data-lpignore="true"
+                      value={pw}
+                      onChange={(e) => setPw(e.target.value)}
+                      placeholder="••••••••••••"
+                      className="w-full px-4 py-3 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] focus:ring-1 focus:ring-[#004b79] font-medium transition-all"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3.5 rounded-xl font-bold text-sm bg-[#004b79] hover:bg-[#003b60] text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-60 mt-2"
+                  >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><span>Sign In to Portal</span><ArrowRight className="w-4 h-4" /></>}
+                  </button>
+                </form>
+
+                <div className="text-xs sm:text-sm text-slate-500">
+                  New to Acuity?{" "}
+                  <button
+                    type="button"
+                    onClick={() => sw("SIGNUP")}
+                    className="text-[#004b79] font-bold hover:underline cursor-pointer ml-1"
+                  >
+                    Create an account →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ─────────────────────────────────────────────────────────────
+                SIGN UP FORM
+            ───────────────────────────────────────────────────────────── */}
+            {mode === "SIGNUP" && (
+              <div className="space-y-4">
+                
+                {/* Role Switcher */}
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { key: "STUDENT", label: "Student", icon: BookOpen },
+                    { key: "TEACHER", label: "Faculty", icon: GraduationCap },
+                  ].map((item) => (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => {
+                        setSignupRole(item.key as SignupRole);
+                        setStep(1);
+                        clear();
+                      }}
+                      className={`py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer border ${
+                        signupRole === item.key
+                          ? "bg-blue-50 border-[#004b79] text-[#004b79] font-extrabold shadow-2xs"
+                          : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                      }`}
+                    >
+                      <item.icon className="w-4 h-4" />
+                      <span>{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Step indicator */}
+                <div className="flex items-center justify-between text-xs font-bold text-slate-500 py-1">
+                  <span>Step {step} of {totalSteps}: <strong className="text-[#004b79]">{stepLabels[step - 1]}</strong></span>
+                  <span className="text-[11px] text-slate-400">All data saved to MongoDB</span>
+                </div>
+
+                {/* Alerts */}
+                {err && (
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-600">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{err}</span>
+                  </div>
+                )}
+                {ok && (
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-700">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{ok}</span>
+                  </div>
+                )}
+
+                {/* Step 1: Base Information */}
+                {step === 1 && (
+                  <div className="space-y-3.5">
+                    <div className="space-y-1">
+                      <label className="block text-xs font-bold text-slate-700">Full Legal Name *</label>
+                      <input
+                        type="text"
+                        autoComplete="off"
+                        data-lpignore="true"
+                        value={sName}
+                        onChange={(e) => setSName(e.target.value)}
+                        placeholder="e.g. Rahul Sharma"
+                        className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div className="space-y-1">
+                        <label className="block text-xs font-bold text-slate-700">Email *</label>
+                        <input
+                          type="email"
+                          autoComplete="off"
+                          data-lpignore="true"
+                          value={sEmail}
+                          onChange={(e) => setSEmail(e.target.value)}
+                          placeholder="name@email.com"
+                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-xs font-bold text-slate-700">Mobile *</label>
+                        <input
+                          type="tel"
+                          autoComplete="off"
+                          data-lpignore="true"
+                          value={sPhone}
+                          onChange={(e) => setSPhone(e.target.value)}
+                          placeholder="9876543210"
+                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div className="space-y-1">
+                        <label className="block text-xs font-bold text-slate-700">Password *</label>
+                        <input
+                          type="password"
+                          autoComplete="new-password"
+                          data-lpignore="true"
+                          value={sPw}
+                          onChange={(e) => setSPw(e.target.value)}
+                          placeholder="Min 6 chars"
+                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-xs font-bold text-slate-700">Confirm *</label>
+                        <input
+                          type="password"
+                          autoComplete="new-password"
+                          data-lpignore="true"
+                          value={sCPw}
+                          onChange={(e) => setSCPw(e.target.value)}
+                          placeholder="Re-enter"
+                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={next}
+                      className="w-full py-3 rounded-xl font-bold text-sm bg-[#004b79] hover:bg-[#003b60] text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-2 shadow-xs"
+                    >
+                      <span>Next: {signupRole === "STUDENT" ? "School Details" : "Teaching Profile"}</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Step 2: Student Academic Info */}
+                {step === 2 && signupRole === "STUDENT" && (
+                  <div className="space-y-3.5">
+                    <div className="space-y-1">
+                      <label className="block text-xs font-bold text-slate-700">School Name *</label>
+                      <input
+                        type="text"
+                        value={sSchool}
+                        onChange={(e) => setSSchool(e.target.value)}
+                        placeholder="Enter school name"
+                        className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div className="space-y-1">
+                        <label className="block text-xs font-bold text-slate-700">Curriculum *</label>
+                        <select
+                          value={sBoard}
+                          onChange={(e) => setSBoard(e.target.value as any)}
+                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium cursor-pointer"
+                        >
+                          <option value="CBSE">CBSE Board</option>
+                          <option value="State Board">State Board</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-xs font-bold text-slate-700">Class *</label>
+                        <select
+                          value={sClass}
+                          onChange={(e) => setSClass(e.target.value)}
+                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium cursor-pointer"
+                        >
+                          {["Class 1", "Class 2", "Class 3", "Class 4", "Class 5", "Class 6", "Class 7", "Class 8", "Class 9", "Class 10"].map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-xs font-bold text-slate-700">Batch Timing *</label>
+                      {batches.length === 0 ? (
+                        <p className="text-xs text-slate-500 font-medium">Batch will be assigned by Administrator.</p>
+                      ) : (
+                        <select
+                          value={sBatch}
+                          onChange={(e) => setSBatch(e.target.value)}
+                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium cursor-pointer"
+                        >
+                          {batches.map((b) => (
+                            <option key={b._id} value={b._id}>{b.name} ({b.classLevel || "All Classes"})</option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => { setStep(1); clear(); }}
+                        className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-xs font-bold flex items-center gap-1 cursor-pointer transition-all"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5" /> Back
+                      </button>
+                      <button
+                        type="button"
+                        onClick={next}
+                        className="flex-1 py-2.5 rounded-xl font-bold text-sm bg-[#004b79] hover:bg-[#003b60] text-white transition-all flex items-center justify-center gap-1 cursor-pointer"
+                      >
+                        <span>Next: Parent Info</span>
+                        <ChevronRight className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
+                )}
 
-                  {/* Role Specific Scope Selector (Keeps constant height across roles) */}
-                  <div>
-                    {loginRole === "STUDENT" ? (
-                      <>
-                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                          Assigned Batch
-                        </label>
+                {/* Step 2: Teacher Qualifications */}
+                {step === 2 && signupRole === "TEACHER" && (
+                  <div className="space-y-3.5">
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div className="space-y-1">
+                        <label className="block text-xs font-bold text-slate-700">Degree *</label>
+                        <input
+                          type="text"
+                          value={tQual}
+                          onChange={(e) => setTQual(e.target.value)}
+                          placeholder="e.g. B.Ed, M.Sc"
+                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-xs font-bold text-slate-700">Specialization *</label>
+                        <input
+                          type="text"
+                          value={tSpec}
+                          onChange={(e) => setTSpec(e.target.value)}
+                          placeholder="e.g. Mathematics"
+                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div className="space-y-1">
+                        <label className="block text-xs font-bold text-slate-700">Experience (Yrs)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={tExp}
+                          onChange={(e) => setTExp(e.target.value)}
+                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-xs font-bold text-slate-700">City</label>
+                        <input
+                          type="text"
+                          value={tCity}
+                          onChange={(e) => setTCity(e.target.value)}
+                          placeholder="Your city"
+                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                        />
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-amber-700 font-medium">Faculty accounts undergo admin approval before login access.</p>
+
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => { setStep(1); clear(); }}
+                        className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-xs font-bold flex items-center gap-1 cursor-pointer transition-all"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5" /> Back
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSignUp}
+                        disabled={loading}
+                        className="flex-1 py-2.5 rounded-xl font-bold text-sm bg-[#004b79] hover:bg-[#003b60] text-white transition-all flex items-center justify-center gap-1 cursor-pointer disabled:opacity-60"
+                      >
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit Registration"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 3: Student Guardian */}
+                {step === 3 && signupRole === "STUDENT" && (
+                  <div className="space-y-3.5">
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div className="space-y-1">
+                        <label className="block text-xs font-bold text-slate-700">Parent Name *</label>
+                        <input
+                          type="text"
+                          value={spName}
+                          onChange={(e) => setSpName(e.target.value)}
+                          placeholder="Parent full name"
+                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-xs font-bold text-slate-700">Parent Mobile *</label>
+                        <input
+                          type="tel"
+                          value={spPhone}
+                          onChange={(e) => setSpPhone(e.target.value)}
+                          placeholder="Parent phone"
+                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div className="space-y-1">
+                        <label className="block text-xs font-bold text-slate-700">Gender</label>
                         <select
-                          value={selectedBatchId}
-                          onChange={(e) => setSelectedBatchId(e.target.value)}
-                          className="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#00101a] px-3.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#002137] text-slate-900 dark:text-slate-100"
+                          value={sGender}
+                          onChange={(e) => setSGender(e.target.value as any)}
+                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium cursor-pointer"
                         >
-                          {availableBatches.length > 0 ? (
-                            availableBatches.map((b) => (
-                              <option key={b._id} value={b._id}>
-                                {b.name} ({b.startTime} - {b.endTime})
-                              </option>
-                            ))
-                          ) : (
-                            <option value="">6:00 PM – 7:00 PM (Batch A)</option>
-                          )}
+                          <option value="OTHER">Prefer not to say</option>
+                          <option value="MALE">Male</option>
+                          <option value="FEMALE">Female</option>
                         </select>
-                      </>
-                    ) : loginRole === "TEACHER" ? (
-                      <>
-                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                          Teaching Scope
-                        </label>
-                        <div className="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#00101a] px-3.5 flex items-center text-xs font-medium text-slate-700 dark:text-slate-300">
-                          Mathematics & Sciences (Classes 1–10)
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                          Admin Authorization
-                        </label>
-                        <div className="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#00101a] px-3.5 flex items-center text-xs font-medium text-slate-700 dark:text-slate-300">
-                          Super Administrator (Full System Access)
-                        </div>
-                      </>
-                    )}
-                  </div>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-xs font-bold text-slate-700">Date of Birth</label>
+                        <input
+                          type="date"
+                          value={sDob}
+                          onChange={(e) => setSdob(e.target.value)}
+                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium cursor-pointer"
+                        />
+                      </div>
+                    </div>
 
-                  {/* Submit Button */}
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    isLoading={isLoading}
-                    className="w-full h-11 text-sm font-semibold rounded-xl bg-[#002137] hover:bg-[#083353] dark:bg-[#dfb74a] dark:text-[#002137] dark:hover:bg-[#f7d87c] text-white shadow-md shadow-[#002137]/15 transition-all cursor-pointer pt-0"
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => { setStep(2); clear(); }}
+                        className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-xs font-bold flex items-center gap-1 cursor-pointer transition-all"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5" /> Back
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSignUp}
+                        disabled={loading}
+                        className="flex-1 py-2.5 rounded-xl font-bold text-sm bg-[#004b79] hover:bg-[#003b60] text-white transition-all flex items-center justify-center gap-1 cursor-pointer disabled:opacity-60"
+                      >
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Complete Registration"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="text-xs sm:text-sm text-slate-500">
+                  Already registered?{" "}
+                  <button
+                    type="button"
+                    onClick={() => sw("SIGNIN")}
+                    className="text-[#004b79] font-bold hover:underline cursor-pointer ml-1"
                   >
-                    <span>Sign In</span>
-                    <ArrowRight className="w-4 h-4 ml-1.5" />
-                  </Button>
-                </form>
-
-                {/* Clean Onboarding Guide */}
-                <div className="pt-3 text-center text-xs text-slate-500 dark:text-slate-400">
-                  <span>New to Acuity? </span>
-                  <span className="font-semibold text-[#002137] dark:text-[#dfb74a]">
-                    Select your role above to enter the portal
-                  </span>
-                </div>
-
-                {/* Instant Demo Quick Access */}
-                <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
-                  <span>Quick Demo:</span>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => handleInstantDemo("STUDENT")}
-                      className="px-2 py-0.5 rounded-md font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                    >
-                      Student
-                    </button>
-                    <span>•</span>
-                    <button
-                      type="button"
-                      onClick={() => handleInstantDemo("TEACHER")}
-                      className="px-2 py-0.5 rounded-md font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                    >
-                      Faculty
-                    </button>
-                    <span>•</span>
-                    <button
-                      type="button"
-                      onClick={() => handleInstantDemo("ADMIN")}
-                      className="px-2 py-0.5 rounded-md font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                    >
-                      Admin
-                    </button>
-                  </div>
+                    Sign in here →
+                  </button>
                 </div>
               </div>
             )}
@@ -644,9 +791,10 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* ── MINIMAL CLEAN FOOTER NOTE (Non-intrusive) ── */}
-      <footer className="w-full py-2.5 px-6 text-center text-[11px] text-slate-400 dark:text-slate-500">
-        © {new Date().getFullYear()} Acuity Tutoring Management Platform • Where Accuracy Meets Knowledge
+      {/* ── FOOTER ── */}
+      <footer className="w-full px-8 lg:px-16 py-3 flex items-center justify-between text-slate-400 text-xs border-t border-slate-100 shrink-0">
+        <p>Acuity Tutoring • CBSE &amp; State Board (Classes 1–10)</p>
+        <p>© 2026 Acuity</p>
       </footer>
     </div>
   );

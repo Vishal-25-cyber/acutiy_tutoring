@@ -100,9 +100,31 @@ export default function StudentClassesPage() {
       ? data.weeklySchedule.map((s: any) => ({ ...s, roomId: timing.permanentRoomId }))
       : defaultWeeklySchedule;
 
-  const todayScheduleItem = weeklySchedule.find(
-    (s: any) => s.day.toLowerCase() === currentDay.toLowerCase()
-  ) || weeklySchedule[0];
+  const todayScheduleItem =
+    weeklySchedule.find((s: any) => s.day.toLowerCase() === currentDay.toLowerCase()) ||
+    weeklySchedule[0];
+
+  const liveOrTodayDbClass =
+    data?.classes?.find((c: any) => c.status === "LIVE") ||
+    data?.classes?.find(
+      (c: any) =>
+        c.date === new Date().toISOString().split("T")[0] &&
+        (c.status === "PUBLISHED" || c.status === "SCHEDULED")
+    );
+
+  const activeSubject = liveOrTodayDbClass?.subject || todayScheduleItem?.subject || "Mathematics";
+  const activeTopic =
+    liveOrTodayDbClass?.topic ||
+    liveOrTodayDbClass?.title ||
+    todayScheduleItem?.topic ||
+    "Quadratic Equations";
+  const activeFaculty =
+    (typeof liveOrTodayDbClass?.teacherId === "object" && liveOrTodayDbClass?.teacherId?.name) ||
+    todayScheduleItem?.faculty ||
+    "Faculty Specialist";
+  const activeRoomId =
+    liveOrTodayDbClass?.livekitRoomId || liveOrTodayDbClass?.meetingId || timing.permanentRoomId;
+  const isClassCurrentlyLive = liveOrTodayDbClass?.status === "LIVE" || timing.canJoin;
 
   const getSubjectAccent = (subject?: string) => {
     switch (subject?.toLowerCase()) {
@@ -175,7 +197,7 @@ export default function StudentClassesPage() {
           
           <div className="space-y-2 max-w-3xl">
             <div className="flex items-center gap-2.5 flex-wrap">
-              {timing.canJoin ? (
+              {isClassCurrentlyLive ? (
                 <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                   CLASS IS LIVE NOW
@@ -183,7 +205,7 @@ export default function StudentClassesPage() {
               ) : (
                 <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
                   <Clock className="w-3.5 h-3.5 text-amber-500" />
-                  TIMED ENTRY LOCK
+                  {liveOrTodayDbClass ? "SCHEDULED FOR TODAY" : "TIMED ENTRY LOCK"}
                 </span>
               )}
 
@@ -193,25 +215,25 @@ export default function StudentClassesPage() {
               </span>
               <span className="text-slate-300 dark:text-slate-700">•</span>
               <span className="text-xs font-mono text-slate-400">
-                Room: {timing.permanentRoomId}
+                Room: {activeRoomId}
               </span>
             </div>
 
             <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-              {todayScheduleItem?.subject}: {todayScheduleItem?.topic}
+              {activeSubject}: {activeTopic}
             </h2>
 
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-              Instructor: <span className="font-medium text-slate-800 dark:text-slate-200">{todayScheduleItem?.faculty}</span> • Single Permanent Meet Link (Same Daily)
+              Instructor: <span className="font-medium text-slate-800 dark:text-slate-200">{activeFaculty}</span> • Direct Interactive Live Classroom
             </p>
           </div>
 
           <div className="shrink-0">
-            {timing.canJoin ? (
-              <Link href={`/classroom/${timing.permanentRoomId}`}>
+            {isClassCurrentlyLive ? (
+              <Link href={`/classroom/${activeRoomId}`}>
                 <Button
                   size="lg"
-                  className="font-bold text-sm px-6 py-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white gap-2 shadow-sm cursor-pointer"
+                  className="font-bold text-sm px-6 py-5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white gap-2 shadow-sm cursor-pointer"
                 >
                   <Video className="w-4 h-4" />
                   <span>Join Live Classroom</span>
@@ -222,10 +244,10 @@ export default function StudentClassesPage() {
               <div className="space-y-1 text-left lg:text-right">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-semibold">
                   <Lock className="w-3.5 h-3.5 text-slate-400" />
-                  <span>{timing.countdownText}</span>
+                  <span>{liveOrTodayDbClass ? `Starts at ${liveOrTodayDbClass.startTime}` : timing.countdownText}</span>
                 </div>
                 <p className="text-[11px] text-slate-400">
-                  Opens automatically during {batchName}
+                  {liveOrTodayDbClass ? `Live session for ${batchName}` : `Opens automatically during ${batchName}`}
                 </p>
               </div>
             )}

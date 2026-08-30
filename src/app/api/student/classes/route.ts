@@ -49,11 +49,18 @@ export async function GET() {
 
     const batchId = (profile.batchId as any)?._id || profile.batchId;
 
-    // Query published/scheduled/live/completed classes for this student's registered batch timing
-    const rawClasses = await LiveSession.find({
-      batchId,
+    // Query published/scheduled/live/completed classes for this student's batch or class level
+    const sessionQuery: any = {
       status: { $in: ["PUBLISHED", "SCHEDULED", "LIVE", "COMPLETED", "CANCELLED"] },
-    })
+    };
+
+    if (batchId) {
+      sessionQuery.$or = [{ batchId }, { classLevel: profile.currentClass }];
+    } else {
+      sessionQuery.classLevel = profile.currentClass;
+    }
+
+    const rawClasses = await LiveSession.find(sessionQuery)
       .populate("teacherId", "name avatarUrl email phone")
       .populate("batchId")
       .lean();

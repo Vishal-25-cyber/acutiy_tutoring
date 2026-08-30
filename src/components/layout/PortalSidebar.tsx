@@ -88,22 +88,17 @@ export function PortalSidebar({ role }: SidebarProps) {
   const teacherPendingBadge = pendingTeacherCount > 0 ? `${pendingTeacherCount} Pending` : undefined;
 
   const adminLinks: SidebarLink[] = [
-    { href: "/admin/dashboard", label: "Command Center", icon: LayoutDashboard, api: "/api/admin/dashboard" },
+    { href: "/admin/dashboard", label: "Admin Overview", icon: LayoutDashboard, api: "/api/admin/dashboard" },
     { href: "/admin/students", label: "Student Management", icon: Users2, api: "/api/admin/students" },
     {
       href: "/admin/teachers",
       label: "Teacher Approvals & Staff",
       icon: UserCheck,
-      badge: teacherPendingBadge,
-      badgeVariant: "warning",
       api: "/api/admin/teachers?status=ALL",
     },
-    { href: "/admin/batches", label: "Dynamic Batch Manager", icon: Layers, api: "/api/admin/batches" },
-    { href: "/admin/classes", label: "Live Session Monitor", icon: Video, api: "/api/admin/classes" },
     { href: "/admin/attendance", label: "Student Attendance", icon: CalendarCheck2, api: "/api/admin/attendance?classLevel=ALL&status=ALL" },
     { href: "/admin/staff-attendance", label: "Staff Attendance", icon: Clock, api: "/api/admin/staff-attendance" },
     { href: "/admin/finance", label: "Monthly Income & Fees", icon: DollarSign, api: "/api/admin/finance" },
-    { href: "/admin/analytics", label: "Advanced Analytics", icon: Activity, api: "/api/admin/analytics" },
     { href: "/admin/settings", label: "System Settings", icon: Settings, api: "/api/admin/settings" },
   ];
 

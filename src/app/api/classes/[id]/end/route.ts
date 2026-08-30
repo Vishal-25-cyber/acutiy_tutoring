@@ -26,6 +26,32 @@ export async function PUT(
     liveClass.actualEndTime = new Date();
     await liveClass.save();
 
+    // Automatically increment classes conducted for Teacher in StaffAttendance
+    try {
+      const StaffAttendance = (await import("@/models/StaffAttendance")).default;
+      const todayDateStr = new Date().toISOString().split("T")[0];
+      const teacherUserId = liveClass.teacherId || session.userId;
+      await StaffAttendance.findOneAndUpdate(
+        { teacherId: teacherUserId, date: todayDateStr },
+        {
+          $setOnInsert: {
+            teacherId: teacherUserId,
+            date: todayDateStr,
+            loginTime: new Date(),
+          },
+          $set: {
+            status: "PRESENT",
+          },
+          $inc: {
+            classesConducted: 1,
+          },
+        },
+        { upsert: true, new: true }
+      );
+    } catch (attErr) {
+      console.warn("Auto staff attendance recording on class end:", attErr);
+    }
+
     await recordAuditLog({
       actorId: session.userId,
       action: "CLASS_ENDED",

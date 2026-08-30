@@ -16,7 +16,6 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { useFastFetch, invalidateCache } from "@/lib/api-cache";
@@ -35,7 +34,7 @@ const CLASS_OPTIONS = [
   "Class 10",
 ];
 
-const BOARD_OPTIONS = ["CBSE", "State Board", "ICSE", "Matriculation"];
+const BOARD_OPTIONS = ["CBSE", "State Board"];
 
 export default function AdminStudentsPage() {
   const [search, setSearch] = useState("");
@@ -87,7 +86,7 @@ export default function AdminStudentsPage() {
     name: "",
     email: "",
     phone: "",
-    schoolName: "National Public School",
+    schoolName: "",
     board: "CBSE",
     currentClass: "Class 10",
     batchId: "",
@@ -181,15 +180,14 @@ export default function AdminStudentsPage() {
         method: "DELETE",
       });
 
-      const resData = await res.json();
       if (!res.ok) {
-        alert(resData.error || "Failed to delete student");
+        const d = await res.json();
+        alert(d.error || "Failed to delete student");
         return;
       }
 
       setDeleteStudent(null);
       invalidateCache(studentsApiUrl);
-      invalidateCache("/api/admin/students");
       invalidateCache("/api/admin/dashboard");
       refetchStudents();
     } catch (err: any) {
@@ -202,16 +200,15 @@ export default function AdminStudentsPage() {
 
   const handleAddStudent = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!isValidAcuityOrGmail(newStudent.email)) {
-      alert("Email address must end with @acuity.edu or @gmail.com.");
+    if (newStudent.email && !isValidAcuityOrGmail(newStudent.email)) {
+      alert("Student email must end with @acuity.edu or @gmail.com.");
       return;
     }
-    if (!isValid10DigitPhone(newStudent.phone)) {
+    if (newStudent.phone && !isValid10DigitPhone(newStudent.phone)) {
       alert("Student mobile number must be exactly 10 digits and cannot start with 0.");
       return;
     }
-    if (!isValid10DigitPhone(newStudent.parentPhone)) {
+    if (newStudent.parentPhone && !isValid10DigitPhone(newStudent.parentPhone)) {
       alert("Parent mobile number must be exactly 10 digits and cannot start with 0.");
       return;
     }
@@ -235,7 +232,7 @@ export default function AdminStudentsPage() {
         name: "",
         email: "",
         phone: "",
-        schoolName: "National Public School",
+        schoolName: "",
         board: "CBSE",
         currentClass: "Class 10",
         batchId: batches[0]?._id || "",
@@ -269,19 +266,25 @@ export default function AdminStudentsPage() {
   });
 
   return (
-    <main className="w-full min-h-full bg-transparent p-6 sm:p-8 lg:p-10 space-y-8 animate-in fade-in duration-150">
-      {/* ── HEADER ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            Student Directory & Management
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
+    <main className="w-full max-w-7xl mx-auto p-6 sm:p-8 space-y-6 sm:space-y-8 animate-in fade-in duration-150 select-none">
+      {/* ── 1. CLEAN CARDLESS HEADER ── */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+              Student Directory &amp; Records
+            </h1>
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+              {filtered.length} Enrolled
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             Filter, edit student profiles, update live batch schedules, and manage database records.
           </p>
         </div>
+
         <button
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer self-start sm:self-auto"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#004b79] hover:bg-[#003b60] text-white transition-all cursor-pointer shadow-sm self-start sm:self-auto shrink-0"
           onClick={() => setIsAddModal(true)}
         >
           <Plus className="w-3.5 h-3.5" />
@@ -289,16 +292,16 @@ export default function AdminStudentsPage() {
         </button>
       </div>
 
-      {/* Search & Filters */}
+      {/* ── 2. CARDLESS SEARCH & FILTERS BAR ── */}
       <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
         <div className="sm:col-span-2 relative">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
           <input
             type="text"
-            placeholder="Search by student name, email, phone, school..."
+            placeholder="Search by name, email, phone, school..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex h-10 w-full rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-10 pr-4 text-xs font-medium focus:outline-none focus:border-indigo-500"
+            className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-10 pr-4 text-xs font-medium focus:outline-none focus:border-[#004b79] shadow-xs"
           />
         </div>
 
@@ -306,7 +309,7 @@ export default function AdminStudentsPage() {
           <select
             value={selectedClass}
             onChange={(e) => setSelectedClass(e.target.value)}
-            className="flex h-10 w-full rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium focus:outline-none focus:border-indigo-500"
+            className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79] shadow-xs cursor-pointer"
           >
             <option value="ALL">All Classes (1-10)</option>
             {CLASS_OPTIONS.map((c) => (
@@ -319,7 +322,7 @@ export default function AdminStudentsPage() {
           <select
             value={selectedBoard}
             onChange={(e) => setSelectedBoard(e.target.value)}
-            className="flex h-10 w-full rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium focus:outline-none focus:border-indigo-500"
+            className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79] shadow-xs cursor-pointer"
           >
             <option value="ALL">All Boards</option>
             {BOARD_OPTIONS.map((b) => (
@@ -332,246 +335,283 @@ export default function AdminStudentsPage() {
           <select
             value={selectedRisk}
             onChange={(e) => setSelectedRisk(e.target.value)}
-            className="flex h-10 w-full rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium focus:outline-none focus:border-indigo-500"
+            className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79] shadow-xs cursor-pointer"
           >
-            <option value="ALL">All Risk Levels</option>
-            <option value="LOW">Low Risk</option>
+            <option value="ALL">All Turnout Risks</option>
+            <option value="LOW">Low Risk (Regular)</option>
             <option value="MEDIUM">Medium Risk</option>
-            <option value="HIGH">High Risk</option>
+            <option value="HIGH">High Risk (&lt;75%)</option>
           </select>
         </div>
       </div>
 
-      {/* Student Table */}
-      <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 border-b border-slate-200 dark:border-slate-800">
-              <tr>
-                <th className="p-4 font-bold">Student Name</th>
-                <th className="p-4 font-bold">Contact Info</th>
-                <th className="p-4 font-bold">Grade & Board</th>
-                <th className="p-4 font-bold">Batch Time</th>
-                <th className="p-4 font-bold">Parent Contact</th>
-                <th className="p-4 font-bold">Risk Level</th>
-                <th className="p-4 font-bold">Status</th>
-                <th className="p-4 font-bold text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="p-8 text-center text-slate-400">
-                    No students matching the selected filters.
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((st: any) => {
-                  const u = st.userId || {};
-                  return (
-                    <tr key={st._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                      <td className="p-4">
-                        <p className="font-bold text-slate-900 dark:text-slate-100">{u.name}</p>
-                        <p className="text-[11px] text-slate-400">{st.schoolName}</p>
-                      </td>
-                      <td className="p-4 text-slate-500 font-mono">
-                        <p>{u.email}</p>
-                        <p className="text-[10px]">{u.phone}</p>
-                      </td>
-                      <td className="p-4 font-semibold text-slate-700 dark:text-slate-300">
-                        {st.currentClass} • {st.board}
-                      </td>
-                      <td className="p-4 text-slate-500">{st.batchId?.name || "7:00 PM – 8:00 PM"}</td>
-                      <td className="p-4 text-slate-500">
-                        <p className="font-medium text-slate-700 dark:text-slate-300">{st.parentName || "Parent"}</p>
-                        <p className="font-mono text-[10px]">{st.parentPhone}</p>
-                      </td>
-                      <td className="p-4">
-                        <Badge
-                          variant={
-                            st.attendanceRiskLevel === "LOW"
-                              ? "riskLow"
-                              : st.attendanceRiskLevel === "MEDIUM"
-                              ? "riskMedium"
-                              : "riskHigh"
-                          }
-                        >
-                          {st.attendanceRiskLevel || "LOW"}
-                        </Badge>
-                      </td>
-                      <td className="p-4">
-                        <Badge variant={u.status === "ACTIVE" ? "success" : "destructive"}>
-                          {u.status}
-                        </Badge>
-                      </td>
-                      <td className="p-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-xs h-8 gap-1"
-                            onClick={() => openEditModal(st)}
-                          >
-                            <Edit2 className="w-3 h-3 text-indigo-600" />
-                            <span>Edit</span>
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-xs h-8 gap-1 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40 border-rose-200 dark:border-rose-800"
-                            onClick={() => setDeleteStudent(st)}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                            <span>Delete</span>
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+      {/* ── 3. CARDLESS 12-COLUMN MASTER STUDENT TABLE ── */}
+      <div className="space-y-2 pt-2">
+        <div className="hidden md:grid grid-cols-12 gap-4 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-850">
+          <div className="col-span-3">Student &amp; School</div>
+          <div className="col-span-3">Contact Details</div>
+          <div className="col-span-2">Grade &amp; Batch</div>
+          <div className="col-span-2">Parent Contact</div>
+          <div className="col-span-2 text-right">Account Actions</div>
+        </div>
+
+        <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+          {filtered.length === 0 ? (
+            <div className="p-10 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl space-y-2">
+              <Users2 className="w-8 h-8 text-slate-400 mx-auto" />
+              <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No students match your filter</p>
+              <p className="text-xs text-slate-400">Try changing your search query or class selection.</p>
+            </div>
+          ) : (
+            filtered.map((st: any) => {
+              const u = st.userId || {};
+              return (
+                <div
+                  key={st._id}
+                  className="py-3.5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-900/30 px-1"
+                >
+                  {/* Col 1: Student Name & School */}
+                  <div className="col-span-3 space-y-0.5">
+                    <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100">
+                      {u.name || "Student"}
+                    </p>
+                    <p className="text-[11px] text-slate-400 truncate">
+                      {st.schoolName || "Enrolled Student"}
+                    </p>
+                  </div>
+
+                  {/* Col 2: Email & Phone */}
+                  <div className="col-span-3 space-y-0.5 text-xs text-slate-600 dark:text-slate-400 font-mono">
+                    <p className="truncate text-slate-800 dark:text-slate-200">{u.email}</p>
+                    <p className="text-[11px] text-slate-400">{u.phone || "—"}</p>
+                  </div>
+
+                  {/* Col 3: Grade & Batch */}
+                  <div className="col-span-2 space-y-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#dfb74a] border border-blue-200 dark:border-[#004b79]/60">
+                        {st.currentClass || "Class 10"}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-medium">({st.board || "CBSE"})</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 truncate">{st.batchId?.name || "7:00 PM – 8:00 PM"}</p>
+                  </div>
+
+                  {/* Col 4: Parent Contact */}
+                  <div className="col-span-2 space-y-0.5 text-xs">
+                    <p className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                      {st.parentName || "Parent"}
+                    </p>
+                    <p className="font-mono text-[11px] text-slate-400">{st.parentPhone || "—"}</p>
+                  </div>
+
+                  {/* Col 5: Actions */}
+                  <div className="col-span-2 flex items-center justify-start md:justify-end gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(st)}
+                      className="px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                    >
+                      <Edit2 className="w-3 h-3 text-[#004b79] dark:text-[#dfb74a]" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteStudent(st)}
+                      className="px-2.5 py-1 rounded-lg text-xs font-bold border border-rose-200 dark:border-rose-800/60 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Delete</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 
-      {/* ── Comprehensive Edit Student Modal ── */}
+      {/* ── Edit Student Modal ── */}
       {editStudent && (
         <Modal
           isOpen={!!editStudent}
           onClose={() => setEditStudent(null)}
           title={`Edit Student: ${editStudent.userId?.name}`}
           description="Update personal information, academic grade, batch assignment, or reset password."
+          maxWidth="lg"
         >
-          <form onSubmit={handleUpdateStudent} className="space-y-4 pt-2 text-xs">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold mb-1">Student Full Name *</label>
-                <Input
-                  required
-                  value={editForm.name}
-                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                />
+          <form onSubmit={handleUpdateStudent} className="space-y-4 pt-1 text-xs">
+            {/* Section 1: Personal Details */}
+            <div className="space-y-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#004b79] dark:text-[#dfb74a]">
+                1. Student Profile &amp; Contact
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Student Full Name *</label>
+                  <Input
+                    required
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Email Address *</label>
+                  <Input
+                    required
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  />
+                </div>
               </div>
               <div>
-                <label className="block font-bold mb-1">Email Address *</label>
+                <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Phone Number (10 Digits) *</label>
                 <Input
                   required
-                  type="email"
-                  value={editForm.email}
-                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold mb-1">Phone Number *</label>
-                <Input
-                  required
+                  type="tel"
+                  maxLength={10}
                   value={editForm.phone}
-                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block font-bold mb-1">School Name</label>
-                <Input
-                  value={editForm.schoolName}
-                  onChange={(e) => setEditForm({ ...editForm, schoolName: e.target.value })}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, phone: sanitize10DigitPhone(e.target.value) })
+                  }
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold mb-1">Grade Level *</label>
-                <select
-                  value={editForm.currentClass}
-                  onChange={(e) => setEditForm({ ...editForm, currentClass: e.target.value })}
-                  className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium"
-                >
-                  {CLASS_OPTIONS.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+            {/* Section 2: Academic & Batch */}
+            <div className="space-y-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#004b79] dark:text-[#dfb74a]">
+                2. Academic Grade &amp; Batch Slot
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Class Level *</label>
+                  <select
+                    value={editForm.currentClass}
+                    onChange={(e) => setEditForm({ ...editForm, currentClass: e.target.value })}
+                    className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79]"
+                  >
+                    {CLASS_OPTIONS.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Education Board *</label>
+                  <select
+                    value={editForm.board}
+                    onChange={(e) => setEditForm({ ...editForm, board: e.target.value })}
+                    className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79]"
+                  >
+                    {BOARD_OPTIONS.map((b) => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="block font-bold mb-1">Education Board *</label>
-                <select
-                  value={editForm.board}
-                  onChange={(e) => setEditForm({ ...editForm, board: e.target.value })}
-                  className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium"
-                >
-                  {BOARD_OPTIONS.map((b) => (
-                    <option key={b} value={b}>{b}</option>
-                  ))}
-                </select>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">School Name</label>
+                  <Input
+                    value={editForm.schoolName}
+                    onChange={(e) => setEditForm({ ...editForm, schoolName: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Batch Schedule Slot *</label>
+                  <select
+                    value={editForm.batchId}
+                    onChange={(e) => setEditForm({ ...editForm, batchId: e.target.value })}
+                    className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79]"
+                  >
+                    {batches.map((b: any) => (
+                      <option key={b._id} value={b._id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold mb-1">Reassign Batch Time</label>
-                <select
-                  value={editForm.batchId}
-                  onChange={(e) => setEditForm({ ...editForm, batchId: e.target.value })}
-                  className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium"
-                >
-                  {batches.map((b: any) => (
-                    <option key={b._id} value={b._id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-bold mb-1">Account Status</label>
-                <select
-                  value={editForm.status}
-                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                  className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium"
-                >
-                  <option value="ACTIVE">ACTIVE (Can Access Portal)</option>
-                  <option value="SUSPENDED">SUSPENDED (Access Blocked)</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold mb-1">Parent / Guardian Name</label>
-                <Input
-                  value={editForm.parentName}
-                  onChange={(e) => setEditForm({ ...editForm, parentName: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block font-bold mb-1">Parent Contact Phone</label>
-                <Input
-                  value={editForm.parentPhone}
-                  onChange={(e) => setEditForm({ ...editForm, parentPhone: e.target.value })}
-                />
+            {/* Section 3: Parent Info */}
+            <div className="space-y-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#004b79] dark:text-[#dfb74a]">
+                3. Parent / Guardian Contact
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Parent Name *</label>
+                  <Input
+                    required
+                    value={editForm.parentName}
+                    onChange={(e) => setEditForm({ ...editForm, parentName: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Parent Phone (10 Digits) *</label>
+                  <Input
+                    required
+                    type="tel"
+                    maxLength={10}
+                    value={editForm.parentPhone}
+                    onChange={(e) =>
+                      setEditForm({
+                        ...editForm,
+                        parentPhone: sanitize10DigitPhone(e.target.value),
+                      })
+                    }
+                  />
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="block font-bold mb-1">Reset Password (Optional)</label>
-              <Input
-                type="password"
-                placeholder="Leave blank to keep existing password"
-                value={editForm.resetPassword}
-                onChange={(e) => setEditForm({ ...editForm, resetPassword: e.target.value })}
-              />
+            {/* Section 4: Security & Status */}
+            <div className="space-y-3">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#004b79] dark:text-[#dfb74a]">
+                4. Account Status &amp; Password
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Student Account Status</label>
+                  <select
+                    value={editForm.status}
+                    onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                    className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79]"
+                  >
+                    <option value="ACTIVE">ACTIVE (Enrolled &amp; Enabled)</option>
+                    <option value="SUSPENDED">SUSPENDED (Access Disabled)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Reset Password (Optional)</label>
+                  <Input
+                    type="password"
+                    placeholder="Leave blank to keep password"
+                    value={editForm.resetPassword}
+                    onChange={(e) => setEditForm({ ...editForm, resetPassword: e.target.value })}
+                  />
+                </div>
+              </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
-              <Button type="button" variant="ghost" onClick={() => setEditStudent(null)}>
+            <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-200 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setEditStudent(null)}
+                className="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+              >
                 Cancel
-              </Button>
-              <Button type="submit" variant="primary" disabled={isSaving} className="font-bold">
+              </button>
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="px-5 py-2 rounded-xl text-xs font-bold bg-[#004b79] hover:bg-[#003b60] text-white transition-all cursor-pointer shadow-sm disabled:opacity-60"
+              >
                 {isSaving ? "Saving..." : "Save Student Changes"}
-              </Button>
+              </button>
             </div>
           </form>
         </Modal>
@@ -584,8 +624,9 @@ export default function AdminStudentsPage() {
           onClose={() => setDeleteStudent(null)}
           title="Permanently Delete Student"
           description="This action cannot be undone."
+          maxWidth="md"
         >
-          <div className="space-y-4 pt-2 text-xs">
+          <div className="space-y-4 pt-1 text-xs">
             <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300 flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 shrink-0 text-rose-600 mt-0.5" />
               <div className="space-y-1">
@@ -598,18 +639,22 @@ export default function AdminStudentsPage() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="ghost" onClick={() => setDeleteStudent(null)}>
+            <div className="flex justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeleteStudent(null)}
+                className="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+              >
                 Cancel
-              </Button>
-              <Button
-                variant="destructive"
+              </button>
+              <button
+                type="button"
                 disabled={isDeleting}
                 onClick={handleDeleteStudent}
-                className="font-bold bg-rose-600 hover:bg-rose-700 text-white"
+                className="px-5 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white transition-all cursor-pointer shadow-sm disabled:opacity-60"
               >
                 {isDeleting ? "Deleting from DB..." : "Confirm & Permanently Delete"}
-              </Button>
+              </button>
             </div>
           </div>
         </Modal>
@@ -622,141 +667,174 @@ export default function AdminStudentsPage() {
           onClose={() => setIsAddModal(false)}
           title="Enroll New Student"
           description="Create verified student account and assign live batch."
+          maxWidth="lg"
         >
-          <form onSubmit={handleAddStudent} className="space-y-4 pt-2 text-xs">
-            <div>
-              <label className="block font-bold mb-1">Student Full Name *</label>
-              <Input
-                required
-                placeholder="e.g. Priya Sharma"
-                value={newStudent.name}
-                onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <form onSubmit={handleAddStudent} className="space-y-4 pt-1 text-xs">
+            {/* Section 1: Student Information */}
+            <div className="space-y-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#004b79] dark:text-[#dfb74a]">
+                1. Student Profile &amp; Contact
+              </span>
               <div>
-                <label className="block font-bold mb-1">Email Address *</label>
+                <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Student Full Name *</label>
                 <Input
                   required
-                  type="email"
-                  placeholder="priya@acuity.edu"
-                  value={newStudent.email}
-                  onChange={(e) => setNewStudent({ ...newStudent, email: e.target.value })}
+                  placeholder="e.g. Priya Sharma"
+                  value={newStudent.name}
+                  onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
                 />
               </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Email Address *</label>
+                  <Input
+                    required
+                    type="email"
+                    placeholder="priya@acuity.edu"
+                    value={newStudent.email}
+                    onChange={(e) => setNewStudent({ ...newStudent, email: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Phone Number (10 Digits) *</label>
+                  <Input
+                    required
+                    type="tel"
+                    maxLength={10}
+                    placeholder="9876543221"
+                    value={newStudent.phone}
+                    onChange={(e) =>
+                      setNewStudent({ ...newStudent, phone: sanitize10DigitPhone(e.target.value) })
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 2: Academic Details */}
+            <div className="space-y-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#004b79] dark:text-[#dfb74a]">
+                2. Academic Grade &amp; Batch Routine
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Class Level *</label>
+                  <select
+                    value={newStudent.currentClass}
+                    onChange={(e) => setNewStudent({ ...newStudent, currentClass: e.target.value })}
+                    className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79]"
+                  >
+                    {CLASS_OPTIONS.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Board *</label>
+                  <select
+                    value={newStudent.board}
+                    onChange={(e) => setNewStudent({ ...newStudent, board: e.target.value })}
+                    className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79]"
+                  >
+                    {BOARD_OPTIONS.map((b) => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">School Name</label>
+                  <Input
+                    placeholder="e.g. DAV Senior Secondary"
+                    value={newStudent.schoolName}
+                    onChange={(e) => setNewStudent({ ...newStudent, schoolName: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Batch Schedule Slot *</label>
+                  <select
+                    value={newStudent.batchId}
+                    onChange={(e) => setNewStudent({ ...newStudent, batchId: e.target.value })}
+                    className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79]"
+                  >
+                    {batches.map((b: any) => (
+                      <option key={b._id} value={b._id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 3: Parent Information */}
+            <div className="space-y-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#004b79] dark:text-[#dfb74a]">
+                3. Parent / Guardian Contact
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Parent Name *</label>
+                  <Input
+                    required
+                    placeholder="e.g. Ramesh Sharma"
+                    value={newStudent.parentName}
+                    onChange={(e) => setNewStudent({ ...newStudent, parentName: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Parent Phone (10 Digits) *</label>
+                  <Input
+                    required
+                    type="tel"
+                    maxLength={10}
+                    placeholder="e.g. 9876543292"
+                    value={newStudent.parentPhone}
+                    onChange={(e) =>
+                      setNewStudent({
+                        ...newStudent,
+                        parentPhone: sanitize10DigitPhone(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 4: Credentials */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#004b79] dark:text-[#dfb74a]">
+                4. Temporary Login Credentials
+              </span>
               <div>
-                <label className="block font-bold mb-1">Phone Number (10 Digits) *</label>
+                <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Temporary Password</label>
                 <Input
-                  required
-                  type="tel"
-                  maxLength={10}
-                  placeholder="9876543221"
-                  value={newStudent.phone}
-                  onChange={(e) =>
-                    setNewStudent({ ...newStudent, phone: sanitize10DigitPhone(e.target.value) })
-                  }
+                  type="text"
+                  value={newStudent.password}
+                  onChange={(e) => setNewStudent({ ...newStudent, password: e.target.value })}
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold mb-1">Class Level *</label>
-                <select
-                  value={newStudent.currentClass}
-                  onChange={(e) => setNewStudent({ ...newStudent, currentClass: e.target.value })}
-                  className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium"
-                >
-                  {CLASS_OPTIONS.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-bold mb-1">Board *</label>
-                <select
-                  value={newStudent.board}
-                  onChange={(e) => setNewStudent({ ...newStudent, board: e.target.value })}
-                  className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium"
-                >
-                  {BOARD_OPTIONS.map((b) => (
-                    <option key={b} value={b}>{b}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold mb-1">School Name</label>
-                <Input
-                  placeholder="e.g. DAV Senior Secondary"
-                  value={newStudent.schoolName}
-                  onChange={(e) => setNewStudent({ ...newStudent, schoolName: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block font-bold mb-1">Batch Schedule Slot *</label>
-                <select
-                  value={newStudent.batchId}
-                  onChange={(e) => setNewStudent({ ...newStudent, batchId: e.target.value })}
-                  className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium"
-                >
-                  {batches.map((b: any) => (
-                    <option key={b._id} value={b._id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold mb-1">Parent Name *</label>
-                <Input
-                  required
-                  placeholder="e.g. Ramesh Sharma"
-                  value={newStudent.parentName}
-                  onChange={(e) => setNewStudent({ ...newStudent, parentName: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block font-bold mb-1">Parent Phone (10 Digits) *</label>
-                <Input
-                  required
-                  type="tel"
-                  maxLength={10}
-                  placeholder="e.g. 9876543292"
-                  value={newStudent.parentPhone}
-                  onChange={(e) =>
-                    setNewStudent({
-                      ...newStudent,
-                      parentPhone: sanitize10DigitPhone(e.target.value),
-                    })
-                  }
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block font-bold mb-1">Temporary Login Password</label>
-              <Input
-                type="text"
-                value={newStudent.password}
-                onChange={(e) => setNewStudent({ ...newStudent, password: e.target.value })}
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
-              <Button type="button" variant="ghost" onClick={() => setIsAddModal(false)}>
+            <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-200 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setIsAddModal(false)}
+                className="px-4 py-2 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+              >
                 Cancel
-              </Button>
-              <Button type="submit" variant="primary" disabled={isSaving} className="font-bold">
+              </button>
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="px-5 py-2 rounded-lg text-xs font-bold bg-[#004b79] hover:bg-[#003b60] text-white transition-all cursor-pointer shadow-sm disabled:opacity-60"
+              >
                 {isSaving ? "Enrolling..." : "Enroll Student"}
-              </Button>
+              </button>
             </div>
           </form>
         </Modal>

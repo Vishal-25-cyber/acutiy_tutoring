@@ -33,7 +33,7 @@ export const studentRegisterSchema = z.object({
   confirmPassword: z.string().min(6, "Confirm password is required"),
   // Academic
   schoolName: z.string().min(2, "School name is required"),
-  board: z.enum(["CBSE", "Matriculation", "ICSE", "State Board", "Other"]),
+  board: z.enum(["CBSE", "State Board"]),
   currentClass: z.enum([
     "Class 1",
     "Class 2",
