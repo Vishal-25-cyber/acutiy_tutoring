@@ -1,64 +1,36 @@
 "use client";
 
 import React, { useState } from "react";
-import { Clock, UserCheck, CheckCircle2, ShieldCheck, Users, Search, AlertCircle } from "lucide-react";
-import { useFastFetch } from "@/lib/api-cache";
+import {
+  Clock,
+  UserCheck,
+  CheckCircle2,
+  ShieldCheck,
+  Users,
+  Search,
+  AlertCircle,
+  XCircle,
+  Calendar,
+  Check,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useFastFetch, invalidateCache } from "@/lib/api-cache";
 
 const INITIAL_STATS = {
-  totalTeachers: 3,
-  todayPresent: 3,
+  totalTeachers: 1,
+  todayPresent: 1,
   attendancePercentage: 100,
-  monthlyAverage: 96,
+  monthlyAverage: 100,
 };
 
-const INITIAL_ROSTER = [
-  {
-    teacherId: "t1",
-    name: "Dr. Sarah Jenkins",
-    email: "sarah.maths@acuity.edu",
-    qualification: "M.Sc. Mathematics, Ph.D, B.Ed",
-    specialization: "Class 8-10 CBSE & ICSE Mathematics",
-    approvalStatus: "ACTIVE",
-    loginTime: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-    classesConducted: 2,
-    workingHours: 4,
-    status: "PRESENT",
-  },
-  {
-    teacherId: "t2",
-    name: "Prof. Rajesh Kumar",
-    email: "rajesh.science@acuity.edu",
-    qualification: "M.Sc. Physics, M.Ed",
-    specialization: "Experimental Physics & Chemistry",
-    approvalStatus: "ACTIVE",
-    loginTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    classesConducted: 1,
-    workingHours: 3,
-    status: "PRESENT",
-  },
-  {
-    teacherId: "t3",
-    name: "Ms. Anita Desai",
-    email: "anita.english@acuity.edu",
-    qualification: "M.A. English Literature",
-    specialization: "Creative Writing and Grammar",
-    approvalStatus: "PENDING_APPROVAL",
-    loginTime: null,
-    classesConducted: 0,
-    workingHours: 0,
-    status: "ABSENT",
-  },
-];
-
 export default function AdminStaffAttendancePage() {
-  const { data } = useFastFetch("/api/admin/staff-attendance", {
-    stats: INITIAL_STATS,
-    staffRoster: INITIAL_ROSTER,
-  });
+  const { data, refetch } = useFastFetch("/api/admin/staff-attendance");
   const [search, setSearch] = useState("");
+  const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const [localStatusMap, setLocalStatusMap] = useState<Record<string, string>>({});
 
   const stats = data?.stats || INITIAL_STATS;
-  const staffRoster = Array.isArray(data?.staffRoster) ? data.staffRoster : INITIAL_ROSTER;
+  const staffRoster = Array.isArray(data?.staffRoster) ? data.staffRoster : [];
 
   const filtered = staffRoster.filter(
     (st: any) =>
@@ -73,6 +45,67 @@ export default function AdminStaffAttendancePage() {
     day: "numeric",
     year: "numeric",
   }).format(new Date());
+
+  const handleMarkTeacherAttendance = async (teacherId: string, status: "PRESENT" | "ABSENT" | "LEAVE") => {
+    setIsUpdating(teacherId);
+    // Instant optimistic update on UI
+    setLocalStatusMap((prev) => ({ ...prev, [teacherId]: status }));
+
+    try {
+      const res = await fetch("/api/admin/staff-attendance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          teacherId,
+          status,
+          date: new Date().toISOString().split("T")[0],
+        }),
+      });
+
+      if (res.ok) {
+        invalidateCache("/api/admin/staff-attendance");
+        invalidateCache("/api/admin/dashboard");
+        await refetch();
+      }
+    } catch (err) {
+      console.error("Failed to mark teacher attendance:", err);
+    } finally {
+      setIsUpdating(null);
+    }
+  };
+
+  const handleMarkAllPresent = async () => {
+    if (!staffRoster.length) return;
+    setIsUpdating("ALL");
+    const optimistic: Record<string, string> = {};
+    staffRoster.forEach((st: any) => {
+      optimistic[st.id] = "PRESENT";
+    });
+    setLocalStatusMap(optimistic);
+
+    try {
+      await Promise.all(
+        staffRoster.map((st: any) =>
+          fetch("/api/admin/staff-attendance", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              teacherId: st.id,
+              status: "PRESENT",
+              date: new Date().toISOString().split("T")[0],
+            }),
+          })
+        )
+      );
+      invalidateCache("/api/admin/staff-attendance");
+      invalidateCache("/api/admin/dashboard");
+      await refetch();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsUpdating(null);
+    }
+  };
 
   return (
     <main className="w-full min-h-full bg-transparent p-6 sm:p-8 lg:p-10 space-y-8 animate-in fade-in duration-150">
@@ -93,18 +126,31 @@ export default function AdminStaffAttendancePage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-          <Clock className="w-3.5 h-3.5" />
-          <span>{todayFormatted}</span>
+        <div className="flex items-center gap-3">
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-xs font-bold gap-1.5 h-9 cursor-pointer"
+            disabled={isUpdating === "ALL"}
+            onClick={handleMarkAllPresent}
+          >
+            <Check className="w-3.5 h-3.5 text-emerald-600" />
+            <span>{isUpdating === "ALL" ? "Updating..." : "Mark All Present"}</span>
+          </Button>
+
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium bg-white dark:bg-slate-900 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800">
+            <Clock className="w-3.5 h-3.5" />
+            <span>{todayFormatted}</span>
+          </div>
         </div>
       </div>
 
-      {/* ── METRIC SUMMARY (CARDLESS) ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* ── METRICS GRID ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Present Today</span>
-            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
               {stats.todayPresent} <span className="text-xs font-normal text-slate-400">of {stats.totalTeachers}</span>
             </p>
           </div>
@@ -162,11 +208,11 @@ export default function AdminStaffAttendancePage() {
         />
       </div>
 
-      {/* ── STAFF ATTENDANCE TABLE (CARDLESS) ── */}
+      {/* ── STAFF ATTENDANCE TABLE ── */}
       <div className="space-y-3">
         <div className="pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <h2 className="font-semibold text-sm text-slate-800 dark:text-slate-200">
-            Faculty Attendance Log (Today)
+            Faculty Attendance Log & Quick Override (Today)
           </h2>
           <span className="text-[11px] font-mono text-slate-400">{filtered.length} Teachers</span>
         </div>
@@ -179,7 +225,11 @@ export default function AdminStaffAttendancePage() {
         ) : (
           <div className="border border-slate-200 dark:border-slate-800 rounded-lg divide-y divide-slate-200 dark:divide-slate-800 overflow-hidden bg-white dark:bg-slate-900/50">
             {filtered.map((st: any) => {
-              const isPresent = st.status === "PRESENT";
+              const currentStatus = localStatusMap[st.id] || st.status || "PENDING_LOGIN";
+              const isPresent = currentStatus === "PRESENT";
+              const isLeave = currentStatus === "LEAVE";
+              const isAbsent = currentStatus === "ABSENT";
+              const isLoading = isUpdating === st.id;
 
               return (
                 <div
@@ -188,16 +238,12 @@ export default function AdminStaffAttendancePage() {
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-sm sm:text-base text-slate-900 dark:text-slate-100">
-                        {st.name}
-                      </h3>
-                      <span className="text-[11px] font-mono text-slate-400">
-                        ({st.email})
-                      </span>
+                      <p className="font-bold text-sm text-slate-900 dark:text-slate-100">{st.name}</p>
+                      <span className="text-xs text-slate-400 font-mono">({st.email})</span>
                     </div>
 
-                    <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 flex-wrap">
-                      <span>Login Timestamp: <strong className="font-mono text-slate-700 dark:text-slate-300">{st.loginTime}</strong></span>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                      <span>Login Timestamp: <strong className="text-slate-700 dark:text-slate-300 font-mono">{st.loginTime}</strong></span>
                       <span>·</span>
                       <span>Lectures Conducted: <strong className="text-slate-700 dark:text-slate-300">{st.classesConducted}</strong></span>
                       <span>·</span>
@@ -205,17 +251,80 @@ export default function AdminStaffAttendancePage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex flex-wrap items-center gap-3 shrink-0">
+                    {/* Status Badge */}
                     <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                         isPresent
-                          ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60"
-                          : "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60"
+                          ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shadow-2xs"
+                          : isLeave
+                          ? "bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700 shadow-2xs"
+                          : isAbsent
+                          ? "bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-700 shadow-2xs"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
                       }`}
                     >
-                      {isPresent ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <AlertCircle className="w-3.5 h-3.5 text-amber-600" />}
-                      <span>{isPresent ? "PRESENT (Logged In)" : "PENDING LOGIN"}</span>
+                      {isPresent ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      ) : isLeave ? (
+                        <Clock className="w-3.5 h-3.5 text-amber-600" />
+                      ) : isAbsent ? (
+                        <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                      ) : (
+                        <AlertCircle className="w-3.5 h-3.5 text-slate-500" />
+                      )}
+                      <span>
+                        {isPresent
+                          ? "PRESENT"
+                          : isLeave
+                          ? "ON LEAVE"
+                          : isAbsent
+                          ? "ABSENT"
+                          : "PENDING LOGIN"}
+                      </span>
                     </span>
+
+                    {/* Quick Admin Mark Action Buttons */}
+                    <div className="flex items-center gap-1.5 border-l border-slate-200 dark:border-slate-800 pl-3">
+                      <button
+                        type="button"
+                        disabled={isLoading}
+                        onClick={() => handleMarkTeacherAttendance(st.id, "PRESENT")}
+                        className={`h-8 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                          isPresent
+                            ? "bg-emerald-600 text-white border-emerald-600 shadow-xs ring-2 ring-emerald-500/20"
+                            : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                        }`}
+                      >
+                        Present
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={isLoading}
+                        onClick={() => handleMarkTeacherAttendance(st.id, "ABSENT")}
+                        className={`h-8 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                          isAbsent
+                            ? "bg-rose-600 text-white border-rose-600 shadow-xs ring-2 ring-rose-500/20"
+                            : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                        }`}
+                      >
+                        Absent
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={isLoading}
+                        onClick={() => handleMarkTeacherAttendance(st.id, "LEAVE")}
+                        className={`h-8 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                          isLeave
+                            ? "bg-amber-600 text-white border-amber-600 shadow-xs ring-2 ring-amber-500/20"
+                            : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                        }`}
+                      >
+                        Leave
+                      </button>
+                    </div>
                   </div>
                 </div>
               );

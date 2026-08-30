@@ -27,66 +27,15 @@ export default function StudentAttendancePage() {
   const board = data?.stats?.board || "CBSE";
 
   const stats = data?.stats || {
-    totalSessions: 5,
-    presentCount: 4,
-    attendancePercentage: 80,
+    totalSessions: 1,
+    presentCount: 1,
+    attendancePercentage: 100,
     riskLevel: "LOW",
     todayStatus: "PRESENT",
   };
 
   const isCompliant = stats.attendancePercentage >= 75;
-  const records = Array.isArray(data?.records) && data.records.length > 0 ? data.records : [
-    {
-      _id: "att-1",
-      title: "Quadratic Equations — Discriminant & Real Roots Formula",
-      subject: "Mathematics",
-      faculty: "Dr. Sarah Jenkins",
-      date: "Aug 27, 2026",
-      time: "7:00 PM – 8:00 PM",
-      durationMinutes: 60,
-      status: "PRESENT",
-    },
-    {
-      _id: "att-2",
-      title: "Light: Reflection & Refraction — Ray Diagrams Exemplar",
-      subject: "Science",
-      faculty: "Prof. Rajesh Kumar",
-      date: "Aug 26, 2026",
-      time: "7:00 PM – 8:00 PM",
-      durationMinutes: 58,
-      status: "PRESENT",
-    },
-    {
-      _id: "att-3",
-      title: "Arithmetic Progressions — nth Term & Sum Formulas",
-      subject: "Mathematics",
-      faculty: "Dr. Sarah Jenkins",
-      date: "Aug 25, 2026",
-      time: "7:00 PM – 8:00 PM",
-      durationMinutes: 60,
-      status: "PRESENT",
-    },
-    {
-      _id: "att-4",
-      title: "Analytical Paragraph & Advanced Grammar Clauses",
-      subject: "English",
-      faculty: "Ms. Anita Desai",
-      date: "Aug 24, 2026",
-      time: "7:00 PM – 8:00 PM",
-      durationMinutes: 55,
-      status: "PRESENT",
-    },
-    {
-      _id: "att-5",
-      title: "Nationalism in India — Civil Disobedience Movement",
-      subject: "Social Science",
-      faculty: "Prof. Rajesh Kumar",
-      date: "Aug 23, 2026",
-      time: "7:00 PM – 8:00 PM",
-      durationMinutes: 0,
-      status: "ABSENT",
-    },
-  ];
+  const records = Array.isArray(data?.records) ? data.records : [];
 
   const filteredRecords = records.filter((r: any) => {
     return statusFilter === "ALL" || r.status?.toUpperCase() === statusFilter.toUpperCase();

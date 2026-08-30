@@ -1,7 +1,17 @@
 "use client";
 
 import React, { useState } from "react";
-import { DollarSign, CheckCircle2, Clock, Download, TrendingUp, CreditCard, Filter } from "lucide-react";
+import {
+  DollarSign,
+  CheckCircle2,
+  Clock,
+  Download,
+  TrendingUp,
+  CreditCard,
+  Filter,
+  AlertCircle,
+  Calendar,
+} from "lucide-react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -14,53 +24,28 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { useFastFetch } from "@/lib/api-cache";
-
-const INITIAL_SUMMARY = {
-  totalCollected: 248500,
-  totalPending: 32000,
-  collectionRate: 88,
-  totalTransactions: 104,
-};
-
-const INITIAL_PAYMENTS = [
-  {
-    _id: "pay-1",
-    studentId: { _id: "u1", name: "Aravind Swaminathan", email: "aravind.class10@acuity.edu" },
-    amount: 2500,
-    month: "October 2025",
-    type: "TUITION_FEE",
-    status: "PAID",
-    paidAt: new Date(Date.now() - 2 * 86400000).toISOString(),
-    receiptNumber: "REC-2025-00189",
-  },
-  {
-    _id: "pay-2",
-    studentId: { _id: "u2", name: "Priya Sharma", email: "priya.class9@acuity.edu" },
-    amount: 2500,
-    month: "October 2025",
-    type: "TUITION_FEE",
-    status: "PAID",
-    paidAt: new Date(Date.now() - 5 * 86400000).toISOString(),
-    receiptNumber: "REC-2025-00174",
-  },
-  {
-    _id: "pay-3",
-    studentId: { _id: "u3", name: "Rohit Verma", email: "rohit.class8@acuity.edu" },
-    amount: 2500,
-    month: "October 2025",
-    type: "TUITION_FEE",
-    status: "PENDING",
-    paidAt: null,
-    receiptNumber: null,
-  },
-];
+import { useFastFetch, invalidateCache } from "@/lib/api-cache";
 
 export default function AdminFinancePage() {
-  const { data, refetch } = useFastFetch("/api/admin/finance", {
-    summary: INITIAL_SUMMARY,
-    payments: INITIAL_PAYMENTS,
-  });
+  const { data, refetch } = useFastFetch("/api/admin/finance");
+
+  const summary = data?.summary || {
+    totalCollected: 0,
+    totalPending: 0,
+    collectionRate: 100,
+    totalTransactions: 0,
+    paidStudentsCount: 0,
+    pendingVerificationCount: 0,
+  };
+
+  const payments = Array.isArray(data?.payments) ? data.payments : [];
+  const monthlyTrend = Array.isArray(data?.monthlyTrend) && data.monthlyTrend.length > 0
+    ? data.monthlyTrend
+    : [
+        { month: "Jan", collected: 0, pending: 0 },
+        { month: "Feb", collected: 0, pending: 0 },
+        { month: "Mar", collected: 0, pending: 0 },
+      ];
 
   const handleMarkPaid = async (paymentId: string) => {
     try {
@@ -71,6 +56,8 @@ export default function AdminFinancePage() {
       });
 
       if (res.ok) {
+        invalidateCache("/api/admin/finance");
+        invalidateCache("/api/admin/dashboard");
         refetch();
       }
     } catch (err) {
@@ -78,16 +65,35 @@ export default function AdminFinancePage() {
     }
   };
 
-  const summary = data?.summary || INITIAL_SUMMARY;
-  const payments = data?.payments || INITIAL_PAYMENTS;
+  // Format currency cleanly
+  const formatCurrency = (val?: number) => {
+    if (typeof val !== "number" || isNaN(val)) return "₹0";
+    return `₹${val.toLocaleString("en-IN")}`;
+  };
 
-  const chartData = [
-    { month: "Aug", collected: 180000, pending: 25000 },
-    { month: "Sep", collected: 210000, pending: 20000 },
-    { month: "Oct", collected: 235000, pending: 30000 },
-    { month: "Nov", collected: 242000, pending: 28000 },
-    { month: "Dec", collected: 248500, pending: 32000 },
-  ];
+  // Format date and time
+  const formatDateTime = (dateStr?: string | Date) => {
+    if (!dateStr) return null;
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return null;
+      return {
+        date: d.toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+        time: d.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+      };
+    } catch {
+      return null;
+    }
+  };
 
   return (
     <main className="p-6 sm:p-8 space-y-6 max-w-7xl animate-in fade-in duration-150">
@@ -96,168 +102,205 @@ export default function AdminFinancePage() {
           Tuition Ledger & Financial Operations
         </h1>
         <p className="text-xs text-slate-500 mt-1">
-          Monthly tuition fees, revenue collection rates, and reconciliation records.
+          Live monthly tuition fees, timestamped transaction records, and payment reconciliation.
         </p>
       </div>
 
-      {/* 4 Financial Stat Cards */}
+      {/* 4 Financial Stat Cards (100% Live DB Metrics) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-5">
-          <span className="text-xs font-bold text-slate-500 uppercase">Total Collected</span>
-          <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
-            ₹{(summary.totalCollected / 1000).toFixed(1)}k
+        <Card className="p-5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Collected</span>
+          <p className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1 tracking-tight">
+            {formatCurrency(summary.totalCollected)}
           </p>
-          <p className="text-xs text-slate-500 mt-1">Cleared this cycle</p>
+          <p className="text-xs text-slate-400 mt-1">Cleared in database</p>
         </Card>
 
-        <Card className="p-5">
-          <span className="text-xs font-bold text-slate-500 uppercase">Pending Invoices</span>
-          <p className="text-3xl font-black text-amber-500 mt-1">
-            ₹{(summary.totalPending / 1000).toFixed(1)}k
+        <Card className="p-5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Pending Invoices</span>
+          <p className="text-2xl sm:text-3xl font-black text-amber-500 mt-1 tracking-tight">
+            {formatCurrency(summary.totalPending)}
           </p>
-          <p className="text-xs text-slate-500 mt-1">Awaiting online UPI transfer</p>
+          <p className="text-xs text-slate-400 mt-1">
+            {summary.pendingVerificationCount > 0
+              ? `${summary.pendingVerificationCount} Awaiting Verification`
+              : "Awaiting student payment"}
+          </p>
         </Card>
 
-        <Card className="p-5">
-          <span className="text-xs font-bold text-slate-500 uppercase">Collection Efficiency</span>
-          <p className="text-3xl font-black text-indigo-600 dark:text-indigo-400 mt-1">
+        <Card className="p-5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Collection Efficiency</span>
+          <p className="text-2xl sm:text-3xl font-black text-indigo-600 dark:text-indigo-400 mt-1 tracking-tight">
             {summary.collectionRate}%
           </p>
-          <p className="text-xs text-emerald-600 font-semibold mt-1">+3% vs last month</p>
+          <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-semibold">
+            {summary.paidStudentsCount} Settled Payments
+          </p>
         </Card>
 
-        <Card className="p-5">
-          <span className="text-xs font-bold text-slate-500 uppercase">Total Receipts Issued</span>
-          <p className="text-3xl font-black text-slate-900 dark:text-slate-100 mt-1">
+        <Card className="p-5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Records Tracked</span>
+          <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 mt-1 tracking-tight">
             {summary.totalTransactions}
           </p>
-          <p className="text-xs text-slate-500 mt-1">Class 1 to 10 receipts</p>
+          <p className="text-xs text-slate-400 mt-1">Live fee invoices</p>
         </Card>
       </div>
 
-      {/* Revenue Chart */}
-      <Card className="p-6">
-        <h2 className="font-bold text-sm text-slate-900 dark:text-slate-100 mb-1">
-          Monthly Fee Revenue & Pending Dues
-        </h2>
-        <p className="text-xs text-slate-500 mb-6">Historical trends over the academic session</p>
+      {/* Revenue Trend Chart */}
+      <Card className="p-6 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 space-y-4">
+        <div>
+          <h2 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+            Monthly Fee Revenue & Pending Dues
+          </h2>
+          <p className="text-xs text-slate-500">Live distribution based on registered student invoices</p>
+        </div>
 
-        <div className="h-64 w-full">
+        <div className="h-64 w-full pt-2">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.5} />
+            <BarChart data={monthlyTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
               <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip />
-              <Bar dataKey="collected" fill="#10b981" radius={[4, 4, 0, 0]} name="Collected (₹)" />
-              <Bar dataKey="pending" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Pending (₹)" />
+              <YAxis tick={{ fontSize: 11 }} tickFormatter={(val) => `₹${val}`} />
+              <Tooltip
+                formatter={(value: any) => [`₹${Number(value).toLocaleString("en-IN")}`, ""]}
+                contentStyle={{ borderRadius: "8px", fontSize: "12px" }}
+              />
+              <Bar dataKey="collected" fill="#10b981" name="Collected" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="pending" fill="#f59e0b" name="Pending" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </Card>
 
-      {/* Transactions Table */}
-      <Card className="overflow-hidden border border-slate-200 dark:border-slate-800">
-        <div className="p-5 border-b border-slate-100 dark:border-slate-800">
-          <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
-            Student Invoices & Transactions
-          </h3>
+      {/* Transactions & Invoices Table */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+            Student Invoices & Receipts ({payments.length})
+          </h2>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 border-b border-slate-200 dark:border-slate-800">
-              <tr>
-                <th className="p-4 font-bold">Student</th>
-                <th className="p-4 font-bold">Billing Month / Course</th>
-                <th className="p-4 font-bold">Amount</th>
-                <th className="p-4 font-bold">Method & UTR</th>
-                <th className="p-4 font-bold">Status</th>
-                <th className="p-4 font-bold text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {payments.length === 0 ? (
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 overflow-hidden shadow-xs">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 border-b border-slate-200 dark:border-slate-800">
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-400">
-                    No transactions recorded.
-                  </td>
+                  <th className="p-4 font-bold">Student</th>
+                  <th className="p-4 font-bold">Amount</th>
+                  <th className="p-4 font-bold">Billing Cycle</th>
+                  <th className="p-4 font-bold">Date & Time Paid</th>
+                  <th className="p-4 font-bold">Status</th>
+                  <th className="p-4 font-bold">Receipt / Ref</th>
+                  <th className="p-4 font-bold text-right">Actions</th>
                 </tr>
-              ) : (
-                payments.map((p: any) => {
-                  const isPendingVerification = p.status === "PENDING_VERIFICATION";
-                  const isPaid = p.status === "PAID";
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {payments.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-slate-400">
+                      No invoices currently logged. Invoices generated for enrolled students will appear here.
+                    </td>
+                  </tr>
+                ) : (
+                  payments.map((p: any) => {
+                    const paidDateTime = formatDateTime(p.paidDate || (p.status === "PAID" ? p.updatedAt || p.createdAt : null));
+                    const dueDateTime = formatDateTime(p.dueDate);
 
-                  return (
-                    <tr
-                      key={p._id}
-                      className={
-                        isPendingVerification
-                          ? "bg-amber-500/10 dark:bg-amber-500/5 hover:bg-amber-500/15"
-                          : "hover:bg-slate-50/50 dark:hover:bg-slate-800/30"
-                      }
-                    >
-                      <td className="p-4 font-bold text-slate-900 dark:text-slate-100">
-                        <div>
-                          <span>{p.studentId?.name || "Student"}</span>
-                          {p.studentId?.email && (
-                            <span className="block text-[10px] text-slate-400 font-normal">
-                              {p.studentId.email}
+                    return (
+                      <tr key={p._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                        <td className="p-4">
+                          <p className="font-bold text-slate-900 dark:text-slate-100">{p.studentId?.name || "Student"}</p>
+                          <p className="text-[11px] text-slate-400 font-mono">{p.studentId?.email}</p>
+                        </td>
+
+                        <td className="p-4 font-black text-sm text-slate-900 dark:text-slate-100 font-mono">
+                          {formatCurrency(p.amount)}
+                        </td>
+
+                        <td className="p-4 text-slate-600 dark:text-slate-300 font-medium">
+                          <p>{p.billingMonth || p.month || "Current Term"}</p>
+                          {p.courseName && (
+                            <p className="text-[10px] text-slate-400 truncate max-w-[180px]">{p.courseName}</p>
+                          )}
+                        </td>
+
+                        {/* DATE & TIME PAID COLUMN */}
+                        <td className="p-4">
+                          {paidDateTime ? (
+                            <div className="space-y-0.5">
+                              <div className="flex items-center gap-1.5 font-medium text-slate-900 dark:text-slate-100">
+                                <Calendar className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                <span>{paidDateTime.date}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 font-mono text-[11px] text-slate-500">
+                                <Clock className="w-3 h-3 text-emerald-500 shrink-0" />
+                                <span>{paidDateTime.time}</span>
+                              </div>
+                            </div>
+                          ) : p.status === "PENDING_VERIFICATION" ? (
+                            <span className="text-amber-600 dark:text-amber-400 text-[11px] font-semibold flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              <span>Verification in progress</span>
+                            </span>
+                          ) : dueDateTime ? (
+                            <span className="text-slate-400 text-[11px]">
+                              Due: {dueDateTime.date}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 text-[11px]">—</span>
+                          )}
+                        </td>
+
+                        <td className="p-4">
+                          <Badge
+                            variant={
+                              p.status === "PAID"
+                                ? "success"
+                                : p.status === "PENDING_VERIFICATION"
+                                ? "warning"
+                                : "destructive"
+                            }
+                          >
+                            {p.status === "PENDING_VERIFICATION" ? "VERIFYING UPI" : p.status}
+                          </Badge>
+                        </td>
+
+                        <td className="p-4 text-slate-500 font-mono text-[11px]">
+                          <p className="font-semibold text-slate-700 dark:text-slate-300">
+                            {p.receiptNumber || p.transactionId || "—"}
+                          </p>
+                          {p.paymentMethod && (
+                            <p className="text-[10px] text-slate-400">{p.paymentMethod}</p>
+                          )}
+                        </td>
+
+                        <td className="p-4 text-right">
+                          {p.status !== "PAID" ? (
+                            <Button
+                              size="sm"
+                              variant="primary"
+                              className="text-xs h-7 font-bold"
+                              onClick={() => handleMarkPaid(p._id)}
+                            >
+                              Mark Paid
+                            </Button>
+                          ) : (
+                            <span className="text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center justify-end gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Paid</span>
                             </span>
                           )}
-                        </div>
-                      </td>
-                      <td className="p-4 text-slate-600 dark:text-slate-400 font-medium">
-                        {p.courseName || p.billingMonth}
-                      </td>
-                      <td className="p-4 font-bold text-slate-900 dark:text-slate-100 text-sm">
-                        ₹{p.amount}
-                      </td>
-                      <td className="p-4 text-slate-500">
-                        <span className="block font-medium text-slate-700 dark:text-slate-300">
-                          {p.paymentMethod || "Online UPI"}
-                        </span>
-                        {p.transactionId && (
-                          <span className="block font-mono text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">
-                            UTR: {p.transactionId}
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-4">
-                        {isPendingVerification ? (
-                          <Badge variant="warning" className="bg-amber-500/20 text-amber-600 dark:text-amber-300 border-amber-500/40 animate-pulse font-bold">
-                            ⏳ VERIFICATION PENDING
-                          </Badge>
-                        ) : (
-                          <Badge variant={isPaid ? "success" : "warning"}>
-                            {p.status}
-                          </Badge>
-                        )}
-                      </td>
-                      <td className="p-4 text-right">
-                        {!isPaid && (
-                          <Button
-                            size="sm"
-                            variant="success"
-                            className={`text-xs font-bold ${
-                              isPendingVerification
-                                ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-500/25"
-                                : ""
-                            }`}
-                            onClick={() => handleMarkPaid(p._id)}
-                          >
-                            {isPendingVerification ? "✓ Verify & Approve" : "Mark Paid"}
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </Card>
+      </div>
     </main>
   );
 }

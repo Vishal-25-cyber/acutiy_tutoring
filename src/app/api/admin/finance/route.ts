@@ -17,54 +17,77 @@ export async function GET() {
     }
 
     await connectToDatabase();
-    const payments = await Payment.find()
+    const rawPayments = await Payment.find()
       .populate("studentId", "name email phone")
       .sort({ createdAt: -1 })
       .lean();
 
+    // Only keep payments belonging to existing students
+    const payments = rawPayments.filter((p: any) => p.studentId != null);
+
     const totalCollected = payments
       .filter((p: any) => p.status === "PAID")
-      .reduce((sum: number, p: any) => sum + p.amount, 0);
+      .reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
 
     const totalPending = payments
       .filter((p: any) => p.status === "PENDING" || p.status === "PENDING_VERIFICATION" || p.status === "OVERDUE")
-      .reduce((sum: number, p: any) => sum + p.amount, 0);
+      .reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
 
     const paidCount = payments.filter((p: any) => p.status === "PAID").length;
     const pendingVerificationCount = payments.filter((p: any) => p.status === "PENDING_VERIFICATION").length;
     const unpaidCount = payments.filter((p: any) => p.status === "PENDING" || p.status === "PENDING_VERIFICATION" || p.status === "OVERDUE").length;
 
-    // Monthly revenue trend for charts
-    const monthlyTrend = [
-      { month: "Sep", collected: 185000, pending: 22000 },
-      { month: "Oct", collected: 198000, pending: 18000 },
-      { month: "Nov", collected: 215000, pending: 25000 },
-      { month: "Dec", collected: 232000, pending: 28000 },
-      { month: "Jan", collected: 248500, pending: 32000 },
-    ];
+    // Build dynamic monthly trend from real payments
+    const monthMap: Record<string, { collected: number; pending: number }> = {};
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const now = new Date();
 
-    const batchBreakdown = [
-      { batch: "6:00 PM – 7:00 PM", amount: 82500 },
-      { batch: "7:00 PM – 8:00 PM", amount: 95000 },
-      { batch: "8:00 PM – 9:00 PM", amount: 71000 },
-    ];
+    // Initialize last 5 months
+    for (let i = 4; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const mName = months[d.getMonth()];
+      monthMap[mName] = { collected: 0, pending: 0 };
+    }
+
+    // Populate from real payments
+    payments.forEach((p: any) => {
+      const pDate = p.paidDate ? new Date(p.paidDate) : p.createdAt ? new Date(p.createdAt) : new Date();
+      const mName = months[pDate.getMonth()];
+      if (!monthMap[mName]) {
+        monthMap[mName] = { collected: 0, pending: 0 };
+      }
+      if (p.status === "PAID") {
+        monthMap[mName].collected += p.amount || 0;
+      } else {
+        monthMap[mName].pending += p.amount || 0;
+      }
+    });
+
+    const monthlyTrend = Object.entries(monthMap).map(([month, data]) => ({
+      month,
+      collected: data.collected,
+      pending: data.pending,
+    }));
 
     return NextResponse.json({
       payments,
       summary: {
         totalRevenue: totalCollected + totalPending,
-        totalCollected: totalCollected || 216500,
-        totalPending: totalPending || 32000,
-        paidStudentsCount: paidCount || 78,
+        totalCollected,
+        totalPending,
+        paidStudentsCount: paidCount,
         pendingVerificationCount,
-        unpaidStudentsCount: unpaidCount || 12,
+        unpaidStudentsCount: unpaidCount,
         collectionRate: totalCollected + totalPending > 0
           ? Math.round((totalCollected / (totalCollected + totalPending)) * 100)
-          : 88,
+          : 100,
         totalTransactions: payments.length,
       },
       monthlyTrend,
-      batchBreakdown,
+    }, {
+      headers: {
+        "Cache-Control": "no-store, max-age=0, must-revalidate",
+      },
     });
   } catch (error: any) {
     console.error("Admin Finance Error:", error);

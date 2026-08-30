@@ -1,7 +1,5 @@
-"use client";
-
-import React, { useState, useEffect, use } from "react";
-import Link from "next/link";
+import React, { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
 import {
   CalendarCheck2,
   Clock,
@@ -21,7 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { useParams } from "react-router-dom";
+import { invalidateCache } from "@/lib/api-cache";
 
 export default function TeacherClassAttendanceDetailPage(props?: {
   params?: Promise<{ classId: string }> | { classId: string };
@@ -100,6 +98,8 @@ export default function TeacherClassAttendanceDetailPage(props?: {
       });
 
       if (res.ok) {
+        invalidateCache("/api/teacher");
+        invalidateCache("/api/classes");
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
       } else {
@@ -207,7 +207,7 @@ export default function TeacherClassAttendanceDetailPage(props?: {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-3">
-          <Link href="/teacher/attendance">
+          <Link to="/teacher/attendance">
             <Button variant="ghost" size="sm" className="rounded-xl">
               <ArrowLeft className="w-4 h-4" />
             </Button>

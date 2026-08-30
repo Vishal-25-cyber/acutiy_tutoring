@@ -13,56 +13,60 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 dark:border-slate-800/80 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         {/* Brand Logo */}
-        <Link href="/" prefetch={true} className="flex items-center gap-3 group">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-700 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition-transform">
-            <GraduationCap className="w-6 h-6" />
+        <Link href="/" prefetch={true} className="flex items-center gap-3.5 group">
+          <div className="w-11 h-11 rounded-2xl bg-white dark:bg-[#002137] p-1.5 shadow-sm border border-slate-200/80 dark:border-[#b89047]/30 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
+            <img
+              src="/images/acuity_logo.png"
+              alt="Acuity Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">
+              <span className="font-extrabold text-xl tracking-tight text-[#002137] dark:text-white">
                 ACUITY
               </span>
-              <Badge variant="default" className="text-[10px] px-2 py-0 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800">
+              <Badge variant="gold" className="text-[10px] px-2 py-0">
                 Classes 1–10
               </Badge>
             </div>
-            <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-              Live Interactive Tutoring
+            <p className="text-[11px] font-medium text-[#b89047] dark:text-[#dfb74a]">
+              Where Accuracy Meets Knowledge
             </p>
           </div>
         </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600 dark:text-slate-300">
-          <Link href="#how-it-works" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+          <Link href="#how-it-works" className="hover:text-[#002137] dark:hover:text-[#dfb74a] transition-colors">
             How It Works
           </Link>
-          <Link href="#classes" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+          <Link href="#classes" className="hover:text-[#002137] dark:hover:text-[#dfb74a] transition-colors">
             Curriculum 1–10
           </Link>
-          <Link href="#live-learning" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+          <Link href="#live-learning" className="hover:text-[#002137] dark:hover:text-[#dfb74a] transition-colors">
             Live Classes
           </Link>
-          <Link href="#features" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+          <Link href="#features" className="hover:text-[#002137] dark:hover:text-[#dfb74a] transition-colors">
             Learning Hub
           </Link>
-          <Link href="#parent-benefits" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+          <Link href="#parent-benefits" className="hover:text-[#002137] dark:hover:text-[#dfb74a] transition-colors">
             Parents
           </Link>
-          <Link href="#pricing" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+          <Link href="#pricing" className="hover:text-[#002137] dark:hover:text-[#dfb74a] transition-colors">
             Fee Structure
           </Link>
         </nav>
 
         {/* Auth CTA Buttons */}
         <div className="hidden md:flex items-center gap-3">
-          <Link href="/login" prefetch={true}>
+          <Link href="/" prefetch={true}>
             <Button variant="ghost" size="md" className="font-semibold text-slate-700 dark:text-slate-200">
               Sign In
             </Button>
           </Link>
-          <Link href="/register/student" prefetch={true}>
-            <Button variant="primary" size="md" className="shadow-lg shadow-indigo-500/20 font-semibold gap-2">
+          <Link href="/" prefetch={true}>
+            <Button variant="primary" size="md" className="bg-[#002137] hover:bg-[#083353] dark:bg-[#dfb74a] dark:text-[#002137] dark:hover:bg-[#f7d87c] shadow-lg shadow-[#002137]/20 font-semibold gap-2">
               <span>Enroll Student</span>
               <ArrowRight className="w-4 h-4" />
             </Button>
@@ -112,12 +116,12 @@ export function Navbar() {
             </Link>
           </div>
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2.5">
-            <Link href="/login" onClick={() => setIsOpen(false)}>
+            <Link href="/" onClick={() => setIsOpen(false)}>
               <Button variant="outline" className="w-full justify-center">
                 Sign In
               </Button>
             </Link>
-            <Link href="/register/student" onClick={() => setIsOpen(false)}>
+            <Link href="/" onClick={() => setIsOpen(false)}>
               <Button variant="primary" className="w-full justify-center">
                 Student Registration
               </Button>

@@ -263,8 +263,8 @@ export function ClassroomRoom({
       {/* Top Classroom Bar */}
       <header className="h-16 px-6 bg-slate-900/80 backdrop-blur-md border-b border-slate-800/80 flex items-center justify-between shrink-0 z-20">
         <div className="flex items-center gap-4">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-black text-white text-sm shadow-md shadow-indigo-500/20">
-            A
+          <div className="w-9 h-9 rounded-xl bg-white p-1 border border-slate-700 shadow-sm flex items-center justify-center shrink-0">
+            <img src="/images/acuity_logo.png" alt="Acuity" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="flex items-center gap-2">

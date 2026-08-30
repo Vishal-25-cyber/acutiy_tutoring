@@ -49,13 +49,71 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Invalid credentials. Please check your password." }, { status: 401 });
       }
 
-      // Resolve Student Profile & Assigned Batch
+      // Resolve Student Profile & Assigned Batch Timing
       const studentProfile = await StudentProfile.findOne({ userId: user._id });
       if (!studentProfile) {
         return NextResponse.json({ error: "Student profile not found." }, { status: 404 });
       }
 
-      const assignedBatchId = studentProfile.batchId ? studentProfile.batchId.toString() : batchId || "";
+      const assignedBatchId = studentProfile.batchId ? studentProfile.batchId.toString() : "";
+
+      // Lookup assigned batch details
+      let assignedBatchDoc: any = null;
+      if (assignedBatchId) {
+        assignedBatchDoc = await Batch.findById(assignedBatchId).lean();
+      }
+      const assignedBatchName = assignedBatchDoc?.name || "7:00 PM – 8:00 PM";
+
+      // ── STRICT BATCH TIMING ENFORCEMENT ──
+      // Student can only log in if they select their registered timing
+      if (batchId && assignedBatchId) {
+        const requestedBatchIdStr = batchId.toString();
+        const isDirectIdMatch = requestedBatchIdStr === assignedBatchId;
+
+        let isNameOrTimeMatch = false;
+        if (!isDirectIdMatch) {
+          let reqName = requestedBatchIdStr;
+          try {
+            const requestedBatchDoc = await Batch.findById(batchId).lean();
+            if (requestedBatchDoc) reqName = (requestedBatchDoc as any).name || requestedBatchIdStr;
+          } catch {
+            // Not a valid ObjectId, reqName stays as requestedBatchIdStr (e.g. 'batch-7pm')
+          }
+
+          const normalize = (s: string) => s.toLowerCase().replace(/[^0-9a-z]/g, "");
+          const normReq = normalize(reqName);
+          const normAssigned = normalize(assignedBatchName);
+
+          if (
+            (normReq.includes("600") || normReq.includes("6pm") || normReq.includes("1800")) &&
+            (normAssigned.includes("600") || normAssigned.includes("6pm") || normAssigned.includes("1800"))
+          ) {
+            isNameOrTimeMatch = true;
+          } else if (
+            (normReq.includes("700") || normReq.includes("7pm") || normReq.includes("1900")) &&
+            (normAssigned.includes("700") || normAssigned.includes("7pm") || normAssigned.includes("1900"))
+          ) {
+            isNameOrTimeMatch = true;
+          } else if (
+            (normReq.includes("800") || normReq.includes("8pm") || normReq.includes("2000")) &&
+            (normAssigned.includes("800") || normAssigned.includes("8pm") || normAssigned.includes("2000"))
+          ) {
+            isNameOrTimeMatch = true;
+          }
+        }
+
+        if (!isDirectIdMatch && !isNameOrTimeMatch) {
+          return NextResponse.json(
+            {
+              error: `Timing Mismatch: You are registered for the "${assignedBatchName}" batch. You can only log in using your registered timing.`,
+              detail: `Registered Batch: ${assignedBatchName}`,
+              assignedBatchId,
+              assignedBatchName,
+            },
+            { status: 403 }
+          );
+        }
+      }
 
       // Generate Session Token
       const token = await signToken({
@@ -76,7 +134,8 @@ export async function POST(req: NextRequest) {
           email: user.email,
           role: user.role,
           currentClass: studentProfile.currentClass,
-          batchId: studentProfile.batchId,
+          batchId: assignedBatchId,
+          batchName: assignedBatchName,
         },
       });
 
@@ -95,7 +154,7 @@ export async function POST(req: NextRequest) {
         action: "STUDENT_LOGIN",
         entityType: "USER",
         entityId: user._id.toString(),
-        details: { batchId: assignedBatchId },
+        details: { batchId: assignedBatchId, batchName: assignedBatchName },
       });
 
       return response;

@@ -1,51 +1,185 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  GraduationCap,
   Sparkles,
-  Video,
-  BookOpen,
-  CheckCircle2,
-  Users,
-  Award,
-  Flame,
-  ShieldCheck,
-  PhoneCall,
-  Clock,
   ArrowRight,
-  ChevronRight,
-  TrendingUp,
-  BrainCircuit,
-  MessageSquare,
+  User,
   Lock,
-  Layers,
-  Star,
-  Play,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  CheckCircle2,
+  BookOpen,
+  UserCheck,
+  Video,
+  X,
+  Flame,
+  Award,
+  Zap,
+  Activity,
 } from "lucide-react";
-import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export default function HomePage() {
   const router = useRouter();
-  const [selectedDemoRole, setSelectedDemoRole] = useState<"STUDENT" | "TEACHER" | "ADMIN">("STUDENT");
-  const [isDemoLoading, setIsDemoLoading] = useState(false);
 
-  // Quick One-Click Demo Login handler
-  const handleQuickDemoLogin = async (role: "STUDENT" | "TEACHER" | "ADMIN") => {
-    setIsDemoLoading(true);
+  // Floating Auth Panel visibility
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // Auth Mode: "LOGIN" vs "SIGNUP"
+  const [authMode, setAuthMode] = useState<"LOGIN" | "SIGNUP">("LOGIN");
+
+  // Login State
+  const [loginRole, setLoginRole] = useState<"STUDENT" | "TEACHER" | "ADMIN">("STUDENT");
+  const [identifier, setIdentifier] = useState("aravind.class10@acuity.edu");
+  const [password, setPassword] = useState("Student@123");
+  const [showPassword, setShowPassword] = useState(false);
+  const [selectedBatchId, setSelectedBatchId] = useState("");
+  const [availableBatches, setAvailableBatches] = useState<any[]>([]);
+
+  // Sign Up State
+  const [signupRole, setSignupRole] = useState<"STUDENT" | "TEACHER">("STUDENT");
+  const [signupName, setSignupName] = useState("");
+  const [signupClass, setSignupClass] = useState("Class 10");
+  const [signupBoard, setSignupBoard] = useState("CBSE");
+
+  // Loading & Error States
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  // Fetch batches on mount
+  useEffect(() => {
+    fetch("/api/batches")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.batches && data.batches.length > 0) {
+          setAvailableBatches(data.batches);
+          const defaultBatch =
+            data.batches.find((b: any) => b.name.includes("7:00")) || data.batches[0];
+          setSelectedBatchId(defaultBatch._id);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Update credentials when login tab changes
+  const handleRoleTabChange = (role: "STUDENT" | "TEACHER" | "ADMIN") => {
+    setLoginRole(role);
+    setErrorMessage("");
+    setSuccessMessage("");
+    if (role === "STUDENT") {
+      setIdentifier("aravind.class10@acuity.edu");
+      setPassword("Student@123");
+    } else if (role === "TEACHER") {
+      setIdentifier("sarah.maths@acuity.edu");
+      setPassword("Teacher@123");
+    } else {
+      setIdentifier("admin@acuity.edu");
+      setPassword("Admin@123");
+    }
+  };
+
+  // Open auth card in specific mode
+  const openAuth = (mode: "LOGIN" | "SIGNUP", role?: "STUDENT" | "TEACHER" | "ADMIN") => {
+    setAuthMode(mode);
+    setErrorMessage("");
+    setSuccessMessage("");
+    if (role) {
+      if (mode === "LOGIN") {
+        handleRoleTabChange(role);
+      } else {
+        setSignupRole(role === "ADMIN" ? "STUDENT" : role);
+      }
+    }
+    setShowAuthModal(true);
+  };
+
+  // Direct Sign In Form Submission
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsLoading(true);
+
+    try {
+      let body: any = { role: loginRole, password };
+      if (loginRole === "STUDENT") {
+        body.identifier = identifier;
+        body.batchId = selectedBatchId || availableBatches[0]?._id;
+      } else {
+        body.email = identifier;
+      }
+
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.error && data.error.includes("Invalid")) {
+          await fetch("/api/seed", { method: "POST" });
+          const res2 = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          const data2 = await res2.json();
+          if (!res2.ok) {
+            setErrorMessage(data2.error || "Authentication failed.");
+            return;
+          }
+        } else {
+          setErrorMessage(data.error || "Authentication failed.");
+          return;
+        }
+      }
+
+      setSuccessMessage("Authentication successful! Redirecting...");
+      setTimeout(() => {
+        if (loginRole === "STUDENT") router.push("/student/dashboard");
+        else if (loginRole === "TEACHER") router.push("/teacher/dashboard");
+        else router.push("/admin/dashboard");
+      }, 200);
+    } catch (err: any) {
+      setErrorMessage(err.message || "An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Direct Quick Sign Up Form Submission
+  const handleSignupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    if (signupRole === "TEACHER") {
+      router.push("/register/teacher");
+      return;
+    }
+
+    router.push("/register/student");
+  };
+
+  // Instant 1-Click Demo Login
+  const handleInstantDemo = async (role: "STUDENT" | "TEACHER" | "ADMIN") => {
+    setIsLoading(true);
+    setErrorMessage("");
     try {
       let body: any = {};
       if (role === "STUDENT") {
-        // Fetch batches to get valid batchId for aravind
-        const bRes = await fetch("/api/batches");
-        const bData = await bRes.json();
-        const batch2 = bData.batches?.find((b: any) => b.name.includes("7:00")) || bData.batches?.[1] || bData.batches?.[0];
-
+        const batch2 =
+          availableBatches.find((b: any) => b.name.includes("7:00")) ||
+          availableBatches[1] ||
+          availableBatches[0];
         body = {
           role: "STUDENT",
           identifier: "aravind.class10@acuity.edu",
@@ -72,13 +206,11 @@ export default function HomePage() {
         body: JSON.stringify(body),
       });
 
-      const data = await res.json();
       if (res.ok) {
         if (role === "STUDENT") router.push("/student/dashboard");
         else if (role === "TEACHER") router.push("/teacher/dashboard");
         else router.push("/admin/dashboard");
       } else {
-        // Fallback: seed and retry
         await fetch("/api/seed", { method: "POST" });
         const res2 = await fetch("/api/auth/login", {
           method: "POST",
@@ -89,531 +221,432 @@ export default function HomePage() {
           if (role === "STUDENT") router.push("/student/dashboard");
           else if (role === "TEACHER") router.push("/teacher/dashboard");
           else router.push("/admin/dashboard");
+        } else {
+          setErrorMessage("Failed to launch demo. Please try regular login.");
         }
       }
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      setErrorMessage(e.message || "Failed to launch demo.");
     } finally {
-      setIsDemoLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col">
-      <Navbar />
+    <div className="h-screen max-h-screen bg-slate-50 dark:bg-[#00101a] text-slate-900 dark:text-slate-100 flex flex-col justify-between overflow-hidden selection:bg-[#002137] selection:text-white no-scrollbar">
+      {/* ── TOP HEADER (Official Logo at Left Top) ── */}
+      <header className="w-full pt-3 sm:pt-4 px-6 sm:px-10 lg:px-14 flex items-center justify-between z-20 shrink-0">
+        <Link href="/" className="flex items-center gap-3.5 group">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white dark:bg-[#002137] p-1.5 shadow-md border border-slate-200/80 dark:border-[#b89047]/30 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
+            <img
+              src="/images/acuity_logo.png"
+              alt="Acuity Logo"
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-black text-xl sm:text-2xl tracking-tight text-[#002137] dark:text-white block leading-none">
+                ACUITY
+              </span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#b89047]/15 text-[#8f6d2b] dark:text-[#dfb74a] border border-[#b89047]/30">
+                Classes 1–10
+              </span>
+            </div>
+            <p className="text-xs font-semibold text-[#b89047] dark:text-[#dfb74a] mt-1 leading-none tracking-tight">
+              Where Accuracy Meets Knowledge
+            </p>
+          </div>
+        </Link>
+      </header>
 
-      {/* 1. HERO SECTION WITH SPLIT SCREEN CONCEPT */}
-      <section className="relative overflow-hidden pt-6 pb-16 lg:py-20 border-b border-slate-200/80 dark:border-slate-800/80">
-        {/* Subtle Background Glows */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* ── MAIN HERO STATIC SPLIT CONTAINER ── */}
+      <main className="relative flex-1 flex items-center px-6 sm:px-10 lg:px-14 py-2 sm:py-3 max-w-7xl mx-auto w-full overflow-hidden">
+        {/* Subtle Background Glows matching Deep Navy & Gold */}
+        <div className="absolute top-1/4 left-1/10 w-96 h-96 bg-[#002137]/10 dark:bg-[#002137]/40 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/10 w-96 h-96 bg-[#b89047]/10 dark:bg-[#b89047]/15 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* LEFT SIDE (50% Desktop): Brand Experience */}
-            <div className="lg:col-span-7 space-y-8">
-              {/* Trust Badge */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs font-bold">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Next-Gen Live Tuition Platform • Classes 1 to 10</span>
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center w-full">
+          {/* LEFT COLUMN: Brand, Headlines & Action Buttons */}
+          <div className="lg:col-span-6 space-y-5 sm:space-y-6">
+            {/* Pill Badge */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#002137]/5 dark:bg-[#002842] border border-[#b89047]/30 text-[#002137] dark:text-[#dfb74a] text-xs font-bold shadow-xs">
+              <Sparkles className="w-3.5 h-3.5 text-[#b89047] dark:text-[#dfb74a]" />
+              <span>Next-Gen Live Tuition Platform • Classes 1 to 10</span>
+            </div>
 
-              {/* Headline */}
-              <div className="space-y-4">
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1]">
-                  Learn • Practice <br />
-                  <span className="gradient-text">Improve • Succeed</span>
-                </h1>
-                <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed">
-                  Premium online tuition tailored for school students from <strong>Class 1 to Class 10</strong>.
-                  Experience high-definition live interactive classes, automated attendance, curated learning hub materials, and expert master faculty.
+            {/* Headline */}
+            <div className="space-y-2.5">
+              <h1 className="text-4xl sm:text-5xl lg:text-[50px] font-black tracking-tight leading-[1.08] text-[#002137] dark:text-white">
+                Where Accuracy <br />
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#002137] via-[#004b79] to-[#b89047] dark:from-[#fdf8e6] dark:via-[#dfb74a] dark:to-[#b89047]">
+                  Meets Knowledge.
+                </span>
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed">
+                Premium online tutoring built for academic mastery from <strong className="font-semibold text-[#002137] dark:text-white">Class 1 to Class 10</strong>. Experience high-definition interactive live classes, automated attendance, structured formula sheets, and verified master faculty.
+              </p>
+            </div>
+
+            {/* Metrics Bar */}
+            <div className="grid grid-cols-3 gap-3 max-w-lg">
+              <div className="p-3 rounded-2xl bg-white dark:bg-[#001726] border border-slate-200/90 dark:border-slate-800 shadow-xs">
+                <p className="text-xl sm:text-2xl font-black text-[#002137] dark:text-[#dfb74a] leading-tight">
+                  1,200+
+                </p>
+                <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+                  Enrolled Students
                 </p>
               </div>
-
-              {/* Trust Metrics Bar */}
-              <div className="grid grid-cols-3 gap-4 pt-2 max-w-lg">
-                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-                  <p className="text-2xl sm:text-3xl font-black text-indigo-600 dark:text-indigo-400">1,200+</p>
-                  <p className="text-xs font-semibold text-slate-500 mt-0.5">Enrolled Students</p>
-                </div>
-                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-                  <p className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">98.4%</p>
-                  <p className="text-xs font-semibold text-slate-500 mt-0.5">Exam Pass Rate</p>
-                </div>
-                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-                  <p className="text-2xl sm:text-3xl font-black text-purple-600 dark:text-purple-400">1–10</p>
-                  <p className="text-xs font-semibold text-slate-500 mt-0.5">CBSE & State Board</p>
-                </div>
+              <div className="p-3 rounded-2xl bg-white dark:bg-[#001726] border border-slate-200/90 dark:border-slate-800 shadow-xs">
+                <p className="text-xl sm:text-2xl font-black text-[#b89047] dark:text-[#dfb74a] leading-tight">
+                  98.4%
+                </p>
+                <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+                  Exam Pass Rate
+                </p>
               </div>
-
-              {/* CTA Action Buttons */}
-              <div className="flex flex-wrap items-center gap-4 pt-2">
-                <Link href="/register/student">
-                  <Button variant="primary" size="lg" className="gap-2 font-bold shadow-xl shadow-indigo-500/25">
-                    <span>Enroll as Student</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </Link>
-                <Link href="/register/teacher">
-                  <Button variant="outline" size="lg" className="font-semibold">
-                    Apply as Teacher
-                  </Button>
-                </Link>
+              <div className="p-3 rounded-2xl bg-white dark:bg-[#001726] border border-slate-200/90 dark:border-slate-800 shadow-xs">
+                <p className="text-xl sm:text-2xl font-black text-[#004b79] dark:text-sky-400 leading-tight">
+                  1–10
+                </p>
+                <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+                  CBSE & State
+                </p>
               </div>
             </div>
 
-            {/* RIGHT SIDE (50% Desktop): SaaS Quick Access & Demo Launcher */}
-            <div className="lg:col-span-5">
-              <div className="glass-panel p-6 sm:p-8 rounded-3xl shadow-2xl border border-slate-200/80 dark:border-slate-800 relative">
-                <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200 dark:border-slate-800">
-                  <div>
-                    <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100">Live Platform Access</h3>
-                    <p className="text-xs text-slate-500">Select a portal to enter or register</p>
+            {/* CTA ACTION BUTTONS: "Get Started" & "Faculty Sign Up" */}
+            <div className="flex flex-wrap items-center gap-3.5 pt-1.5">
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={() => openAuth("LOGIN", "STUDENT")}
+                className="bg-[#002137] hover:bg-[#083353] dark:bg-[#dfb74a] dark:text-[#002137] dark:hover:bg-[#f7d87c] text-white font-bold px-6 py-3.5 rounded-2xl shadow-lg shadow-[#002137]/25 flex items-center gap-2 text-sm transition-all cursor-pointer hover:scale-[1.02]"
+              >
+                <span>Get Started</span>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => openAuth("LOGIN", "TEACHER")}
+                className="bg-white dark:bg-[#001726] border border-slate-300 dark:border-slate-700 text-[#002137] dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold px-6 py-3.5 rounded-2xl text-sm shadow-xs transition-all cursor-pointer hover:scale-[1.02]"
+              >
+                <span>Faculty Sign Up</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN: Interactive Educational Animation / Floating Auth Portal */}
+          <div className="lg:col-span-6 relative">
+            {/* ───────────────────────────────────────────────────────────── */}
+            {/* STATE 1: EDUCATIONAL LIVE LEARNING ANIMATION SHOWCASE */}
+            {/* ───────────────────────────────────────────────────────────── */}
+            {!showAuthModal ? (
+              <div
+                onClick={() => openAuth("LOGIN")}
+                className="group relative bg-white/95 dark:bg-[#001726]/95 p-5 sm:p-6 rounded-3xl shadow-2xl border border-slate-200/90 dark:border-[#b89047]/30 backdrop-blur-xl overflow-hidden cursor-pointer transition-all hover:border-[#b89047]/60 hover:shadow-2xl"
+              >
+                {/* Floating ambient glow bubbles */}
+                <div className="absolute top-0 right-0 w-48 h-48 bg-[#b89047]/10 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#002137]/10 rounded-full blur-2xl pointer-events-none" />
+
+                {/* Showcase Header */}
+                <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-2.5">
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+                    </span>
+                    <div>
+                      <h3 className="font-bold text-xs sm:text-sm text-[#002137] dark:text-white flex items-center gap-1.5">
+                        <Video className="w-4 h-4 text-rose-500" />
+                        <span>Interactive Live Class in Session</span>
+                      </h3>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                        Class 1 to 10 • Mathematics & Sciences
+                      </p>
+                    </div>
                   </div>
-                  <Badge variant="live" className="text-[10px]">
-                    ONLINE
-                  </Badge>
+
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                    <Activity className="w-3 h-3" />
+                    <span>28 Students Active</span>
+                  </span>
                 </div>
 
-                {/* Role Switcher */}
-                <div className="grid grid-cols-3 gap-2 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl mb-6">
+                {/* 3D Student Studying Animation Stage */}
+                <div className="relative rounded-2xl overflow-hidden shadow-md border border-[#b89047]/20 group-hover:scale-[1.01] transition-transform">
+                  <img
+                    src="/images/student_study_hero.jpg"
+                    alt="Student Studying Online"
+                    className="w-full h-64 sm:h-72 object-cover object-center rounded-2xl"
+                  />
+
+                  {/* Gradient Overlay for Contrast */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#002137]/80 via-transparent to-black/20 rounded-2xl" />
+
+                  {/* Floating Micro-Animation Badge 1 (Top Left) */}
+                  <div className="absolute top-3 left-3 px-2.5 py-1.5 rounded-xl bg-white/90 dark:bg-[#002137]/90 backdrop-blur-md border border-[#b89047]/40 text-[#002137] dark:text-[#dfb74a] text-[11px] font-bold shadow-md animate-float-slow flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#b89047] dark:text-[#dfb74a]" />
+                    <span>Live 1:1 Doubt Clearing</span>
+                  </div>
+
+                  {/* Floating Micro-Animation Badge 2 (Top Right) */}
+                  <div className="absolute top-3 right-3 px-2.5 py-1.5 rounded-xl bg-white/90 dark:bg-[#002137]/90 backdrop-blur-md border border-[#b89047]/40 text-[#002137] dark:text-[#dfb74a] text-[11px] font-bold shadow-md animate-float-delayed flex items-center gap-1.5">
+                    <Award className="w-3.5 h-3.5 text-[#b89047] dark:text-[#dfb74a]" />
+                    <span>98.4% Top Scores</span>
+                  </div>
+
+                  {/* Bottom Image Floating Info */}
+                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                    <div className="px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md text-white text-[10px] font-medium flex items-center gap-1.5 border border-white/10">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Curriculum: Classes 1 to 10</span>
+                    </div>
+
+                    <div className="px-2.5 py-1 rounded-lg bg-[#b89047]/90 text-white text-[10px] font-bold flex items-center gap-1 shadow-sm">
+                      <Flame className="w-3.5 h-3.5 text-amber-200" />
+                      <span>Daily Study Streak 🔥</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating Click-to-Open Callout Banner */}
+                <div className="mt-3.5 p-3 rounded-2xl bg-gradient-to-r from-[#002137] to-[#003b60] text-white flex items-center justify-between text-xs shadow-md group-hover:scale-[1.01] transition-transform">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[#dfb74a] animate-pulse" />
+                    <span className="font-bold text-xs">Ready to Learn? Click to Sign In & Access Portal</span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-[#dfb74a] group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            ) : (
+              /* ───────────────────────────────────────────────────────────── */
+              /* STATE 2: FLOATING AUTH MODAL / PORTAL CARD */
+              /* ───────────────────────────────────────────────────────────── */
+              <div className="relative bg-white dark:bg-[#001726] p-7 sm:p-8 rounded-3xl shadow-2xl border border-slate-200/80 dark:border-slate-800 backdrop-blur-xl animate-in zoom-in-95 fade-in duration-200">
+                {/* Close Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowAuthModal(false)}
+                  className="absolute right-5 top-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                  title="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                {/* Clean Header */}
+                <div className="mb-5">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+                    Sign in to Acuity
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Select your account role to access your dashboard
+                  </p>
+                </div>
+
+                {/* Status Alerts */}
+                {errorMessage && (
+                  <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+
+                {successMessage && (
+                  <div className="mb-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+                    <span>{successMessage}</span>
+                  </div>
+                )}
+
+                {/* Sleek Segmented Role Switcher */}
+                <div className="p-1 bg-slate-100 dark:bg-[#00101a] rounded-xl flex items-center mb-5">
                   <button
-                    onClick={() => setSelectedDemoRole("STUDENT")}
-                    className={`py-2 text-xs font-bold rounded-xl transition-all ${
-                      selectedDemoRole === "STUDENT"
-                        ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs"
-                        : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
+                    type="button"
+                    onClick={() => handleRoleTabChange("STUDENT")}
+                    className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                      loginRole === "STUDENT"
+                        ? "bg-white dark:bg-[#002137] text-[#002137] dark:text-[#dfb74a] shadow-xs"
+                        : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
                     }`}
                   >
                     Student
                   </button>
                   <button
-                    onClick={() => setSelectedDemoRole("TEACHER")}
-                    className={`py-2 text-xs font-bold rounded-xl transition-all ${
-                      selectedDemoRole === "TEACHER"
-                        ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs"
-                        : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
+                    type="button"
+                    onClick={() => handleRoleTabChange("TEACHER")}
+                    className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                      loginRole === "TEACHER"
+                        ? "bg-white dark:bg-[#002137] text-[#002137] dark:text-[#dfb74a] shadow-xs"
+                        : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
                     }`}
                   >
-                    Teacher
+                    Faculty
                   </button>
                   <button
-                    onClick={() => setSelectedDemoRole("ADMIN")}
-                    className={`py-2 text-xs font-bold rounded-xl transition-all ${
-                      selectedDemoRole === "ADMIN"
-                        ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs"
-                        : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
+                    type="button"
+                    onClick={() => handleRoleTabChange("ADMIN")}
+                    className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                      loginRole === "ADMIN"
+                        ? "bg-white dark:bg-[#002137] text-[#002137] dark:text-[#dfb74a] shadow-xs"
+                        : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
                     }`}
                   >
                     Admin
                   </button>
                 </div>
 
-                {/* Selected Role Card Info */}
-                <div className="bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 space-y-3 mb-6">
-                  {selectedDemoRole === "STUDENT" && (
-                    <>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
-                          10
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold">Class 10 Student Portal</p>
-                          <p className="text-xs text-slate-500">Aravind • Batch: 7:00 PM – 8:00 PM</p>
-                        </div>
-                      </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                        Access live interactive class, download formula sheets, submit homework, view streak & attendance.
-                      </p>
-                    </>
-                  )}
-
-                  {selectedDemoRole === "TEACHER" && (
-                    <>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold">
-                          SJ
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold">Teacher Workspace</p>
-                          <p className="text-xs text-slate-500">Dr. Sarah Jenkins • Mathematics</p>
-                        </div>
-                      </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                        Host live WebRTC classroom, broadcast notifications, launch live concept quizzes, grade student submissions.
-                      </p>
-                    </>
-                  )}
-
-                  {selectedDemoRole === "ADMIN" && (
-                    <>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
-                          ERP
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold">Admin Command Center</p>
-                          <p className="text-xs text-slate-500">Full Academic & Finance ERP</p>
-                        </div>
-                      </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                        Manage 1-10 students, approve teachers, configure dynamic batches, track attendance risk, monitor monthly revenue.
-                      </p>
-                    </>
-                  )}
-                </div>
-
-                {/* Instant One-Click Login Button */}
-                <Button
-                  variant="primary"
-                  size="lg"
-                  className="w-full font-bold shadow-lg shadow-indigo-500/25 mb-3"
-                  isLoading={isDemoLoading}
-                  onClick={() => handleQuickDemoLogin(selectedDemoRole)}
-                >
-                  <span>Launch {selectedDemoRole} Dashboard</span>
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-
-                <div className="flex items-center justify-between text-xs text-slate-500 pt-2">
-                  <Link href="/login" className="hover:text-indigo-600 font-semibold underline">
-                    Regular Login
-                  </Link>
-                  <Link href="/register/student" className="hover:text-indigo-600 font-semibold underline">
-                    New Student Signup
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. HOW IT WORKS */}
-      <section id="how-it-works" className="py-16 lg:py-24 bg-white dark:bg-slate-900/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-            <Badge variant="default">Simple 4-Step Process</Badge>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-              How Acuity Tutoring Works
-            </h2>
-            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">
-              Designed for effortless learning from the comfort of your home with structured accountability.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {[
-              { step: "01", title: "Enroll in Class & Batch", desc: "Select student's class (1–10), school board, and convenient evening batch time." },
-              { step: "02", title: "Join Live Batch Classes", desc: "Enter on-time with our 5-minute smart access system and learn directly from top faculty." },
-              { step: "03", title: "Practice with Learning Hub", desc: "Download curated notes, Ray Diagrams, formula cheat sheets, and solve assignments." },
-              { step: "04", title: "Track Progress & Excel", desc: "Monitor test scores, maintain learning streaks, and receive weekly teacher feedback." },
-            ].map((item, idx) => (
-              <div key={idx} className="relative p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
-                <span className="text-4xl font-black text-indigo-600/30 dark:text-indigo-400/30">{item.step}</span>
-                <h4 className="font-bold text-base mt-2 mb-1 text-slate-900 dark:text-slate-100">{item.title}</h4>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 3. CLASSES 1 TO 10 CURRICULUM */}
-      <section id="classes" className="py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
-            <div>
-              <Badge variant="default" className="mb-2">All Grades Covered</Badge>
-              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-                Curriculum from Class 1 to Class 10
-              </h2>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                Customized curriculum supporting CBSE (NCERT) and State Board (Samacheer Kalvi).
-              </p>
-            </div>
-            <Link href="/register/student">
-              <Button variant="primary" size="md">Enroll Your Child</Button>
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((cls) => (
-              <Card key={cls} className="hover:border-indigo-500/50 hover:shadow-lg transition-all text-center p-5 group cursor-pointer">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-extrabold text-lg flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                  {cls}
-                </div>
-                <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">Class {cls}</h4>
-                <p className="text-[11px] text-slate-500 mt-1">
-                  {cls >= 8 ? "Maths • Science • Eng • Social" : "Foundational Math & Science"}
-                </p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 4. LIVE INTERACTIVE CLASSROOM FEATURES */}
-      <section id="live-learning" className="py-16 lg:py-24 bg-slate-900 text-white relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <Badge variant="live">Production WebRTC livekit</Badge>
-              <h2 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight">
-                Live Video Classrooms Built for Real Education
-              </h2>
-              <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-                Clear audio, high-definition teacher streams, screen sharing, and real-time interactive polls make online learning as engaging as a private tutor sitting right beside you.
-              </p>
-
-              <div className="space-y-3 pt-2">
-                {[
-                  "Active Speaker Highlighting & Echo Cancellation",
-                  "5-Minute Late Entry Grace Period & Auto Lockout",
-                  "Live Teacher Quizzes & Concept MCQs with Instant Results",
-                  "Automated Attendance Tracking logged directly to MongoDB",
-                ].map((feat, i) => (
-                  <div key={i} className="flex items-center gap-3 text-xs sm:text-sm text-slate-200">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span>{feat}</span>
+                {/* Clean Form */}
+                <form onSubmit={handleLoginSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                      {loginRole === "STUDENT" ? "Email or Mobile Number" : "Email Address"}
+                    </label>
+                    <Input
+                      type="text"
+                      required
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value)}
+                      placeholder={
+                        loginRole === "STUDENT"
+                          ? "aravind.class10@acuity.edu"
+                          : "name@acuity.edu"
+                      }
+                      className="h-11 text-sm rounded-xl bg-white dark:bg-[#00101a] border-slate-200 dark:border-slate-700"
+                    />
                   </div>
-                ))}
-              </div>
-            </div>
 
-            {/* Video Mockup Visual */}
-            <div className="rounded-3xl bg-slate-950 border border-slate-800 p-6 shadow-2xl space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-                  <span className="font-bold">Class 10 Mathematics Live</span>
-                </div>
-                <Badge variant="secondary" className="bg-slate-800 text-slate-300">
-                  Batch: 7:00 PM – 8:00 PM
-                </Badge>
-              </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                        Password
+                      </label>
+                    </div>
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter password"
+                        className="h-11 text-sm rounded-xl pr-10 bg-white dark:bg-[#00101a] border-slate-200 dark:border-slate-700"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
 
-              <div className="h-64 rounded-2xl bg-gradient-to-tr from-slate-900 to-indigo-950/60 border border-slate-800 flex flex-col items-center justify-center relative">
-                <div className="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-xl text-white shadow-lg">
-                  SJ
-                </div>
-                <p className="text-sm font-bold text-slate-200 mt-2">Dr. Sarah Jenkins</p>
-                <span className="text-[10px] text-indigo-400">Explaining Quadratic Formula</span>
+                  {/* Role Specific Scope Selector (Keeps constant height across roles) */}
+                  <div>
+                    {loginRole === "STUDENT" ? (
+                      <>
+                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                          Assigned Batch
+                        </label>
+                        <select
+                          value={selectedBatchId}
+                          onChange={(e) => setSelectedBatchId(e.target.value)}
+                          className="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#00101a] px-3.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#002137] text-slate-900 dark:text-slate-100"
+                        >
+                          {availableBatches.length > 0 ? (
+                            availableBatches.map((b) => (
+                              <option key={b._id} value={b._id}>
+                                {b.name} ({b.startTime} - {b.endTime})
+                              </option>
+                            ))
+                          ) : (
+                            <option value="">6:00 PM – 7:00 PM (Batch A)</option>
+                          )}
+                        </select>
+                      </>
+                    ) : loginRole === "TEACHER" ? (
+                      <>
+                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                          Teaching Scope
+                        </label>
+                        <div className="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#00101a] px-3.5 flex items-center text-xs font-medium text-slate-700 dark:text-slate-300">
+                          Mathematics & Sciences (Classes 1–10)
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                          Admin Authorization
+                        </label>
+                        <div className="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#00101a] px-3.5 flex items-center text-xs font-medium text-slate-700 dark:text-slate-300">
+                          Super Administrator (Full System Access)
+                        </div>
+                      </>
+                    )}
+                  </div>
 
-                <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded-lg text-[10px] text-emerald-400 font-semibold flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  Auto-Attendance: Active
+                  {/* Submit Button */}
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    isLoading={isLoading}
+                    className="w-full h-11 text-sm font-semibold rounded-xl bg-[#002137] hover:bg-[#083353] dark:bg-[#dfb74a] dark:text-[#002137] dark:hover:bg-[#f7d87c] text-white shadow-md shadow-[#002137]/15 transition-all cursor-pointer pt-0"
+                  >
+                    <span>Sign In</span>
+                    <ArrowRight className="w-4 h-4 ml-1.5" />
+                  </Button>
+                </form>
+
+                {/* Clean Onboarding Guide */}
+                <div className="pt-3 text-center text-xs text-slate-500 dark:text-slate-400">
+                  <span>New to Acuity? </span>
+                  <span className="font-semibold text-[#002137] dark:text-[#dfb74a]">
+                    Select your role above to enter the portal
+                  </span>
+                </div>
+
+                {/* Instant Demo Quick Access */}
+                <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+                  <span>Quick Demo:</span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleInstantDemo("STUDENT")}
+                      className="px-2 py-0.5 rounded-md font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                    >
+                      Student
+                    </button>
+                    <span>•</span>
+                    <button
+                      type="button"
+                      onClick={() => handleInstantDemo("TEACHER")}
+                      className="px-2 py-0.5 rounded-md font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                    >
+                      Faculty
+                    </button>
+                    <span>•</span>
+                    <button
+                      type="button"
+                      onClick={() => handleInstantDemo("ADMIN")}
+                      className="px-2 py-0.5 rounded-md font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                    >
+                      Admin
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
-      </section>
+      </main>
 
-      {/* 5. DEDICATED LEARNING HUB */}
-      <section id="features" className="py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-            <Badge variant="default">Learning Hub</Badge>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-              Curated Materials for Every Subject
-            </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Students get access to notes, formula sheets, ray diagrams, and test model question papers filtered strictly for their class level.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="p-6 space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 flex items-center justify-center font-bold">
-                <BookOpen className="w-6 h-6" />
-              </div>
-              <h4 className="font-bold text-lg">Revision Notes & PDFs</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Comprehensive chapter summaries and step-by-step solved exemplar problems ready for offline review.
-              </p>
-            </Card>
-
-            <Card className="p-6 space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center font-bold">
-                <BrainCircuit className="w-6 h-6" />
-              </div>
-              <h4 className="font-bold text-lg">AI Study Assistant</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Curriculum-scoped AI tutor that explains complex concepts step-by-step strictly based on the student's enrolled grade.
-              </p>
-            </Card>
-
-            <Card className="p-6 space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950 text-purple-600 flex items-center justify-center font-bold">
-                <Flame className="w-6 h-6" />
-              </div>
-              <h4 className="font-bold text-lg">Learning Streaks & Badges</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Gamified streaks (3-day, 7-day, 30-day 🔥) and badges to build strong daily study habits.
-              </p>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* 6. PARENT BENEFITS */}
-      <section id="parent-benefits" className="py-16 lg:py-24 bg-white dark:bg-slate-900/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <Badge variant="default">Parent Transparency</Badge>
-              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-                Complete Peace of Mind for Parents
-              </h2>
-              <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
-                Track your child's daily class presence, view teacher remarks, check assignment scores, and receive instant support from our dedicated helpline numbers.
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
-                  <p className="font-bold text-sm text-slate-900 dark:text-slate-100">Live Attendance Sync</p>
-                  <p className="text-xs text-slate-500 mt-1">Real-time alerts if a student misses a class or joins late.</p>
-                </div>
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
-                  <p className="font-bold text-sm text-slate-900 dark:text-slate-100">3 Official Hotlines</p>
-                  <p className="text-xs text-slate-500 mt-1">Direct contact with academic counselors anytime.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="glass-panel p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                <span className="font-bold text-sm">Parent Portal Preview</span>
-                <Badge variant="success" className="text-[10px]">VERIFIED RECORD</Badge>
-              </div>
-
-              <div className="space-y-3 text-xs">
-                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                  <span>Overall Attendance</span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400">96% (Low Risk)</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                  <span>Mathematics Unit Score</span>
-                  <span className="font-bold text-indigo-600 dark:text-indigo-400">88% (Excellent)</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                  <span>Tuition Fee Status</span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400">Paid • Receipt #REC-00189</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 7. PRICING & FEE STRUCTURE */}
-      <section id="pricing" className="py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-            <Badge variant="default">Transparent Pricing</Badge>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-              Simple, Affordable Tuition Plans
-            </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              High quality education accessible for every student with no hidden charges.
-            </p>
-          </div>
-
-          <div className="max-w-md mx-auto rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-500 shadow-2xl p-8 text-center relative">
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-xs uppercase tracking-wider shadow-md">
-              Most Popular
-            </div>
-
-            <h3 className="font-extrabold text-2xl mt-2 text-slate-900 dark:text-slate-100">Class 1 to 10 Tuition</h3>
-            <p className="text-xs text-slate-500 mt-1">All Core Subjects Included</p>
-
-            <div className="my-6">
-              <span className="text-5xl font-black text-slate-900 dark:text-slate-100">₹2,500</span>
-              <span className="text-slate-500 text-sm font-semibold"> / month</span>
-            </div>
-
-            <div className="space-y-3 text-left text-xs text-slate-600 dark:text-slate-300 mb-8">
-              {[
-                "Daily 1-Hour Interactive Live Batch",
-                "Full Access to Learning Hub Notes & Ray Diagrams",
-                "Weekly Graded Assignments & Teacher Feedback",
-                "AI Study Buddy Access 24/7",
-                "Automated Attendance Tracking & Parent View",
-              ].map((feat, i) => (
-                <div key={i} className="flex items-center gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                  <span>{feat}</span>
-                </div>
-              ))}
-            </div>
-
-            <Link href="/register/student">
-              <Button variant="primary" size="lg" className="w-full font-bold shadow-lg shadow-indigo-500/25">
-                Register Student Now
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* 8. FOOTER WITH HOTLINES */}
-      <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-sm">
-                  A
-                </div>
-                <span className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-slate-100">
-                  ACUITY TUTORING
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Premium Online Live Learning Platform for Classes 1 to 10. Building solid educational foundations.
-              </p>
-            </div>
-
-            <div>
-              <h5 className="font-bold text-xs uppercase tracking-wider text-slate-400 mb-3">Academic Batches</h5>
-              <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-400">
-                <li>6:00 PM – 7:00 PM Evening</li>
-                <li>7:00 PM – 8:00 PM Prime</li>
-                <li>8:00 PM – 9:00 PM Night</li>
-              </ul>
-            </div>
-
-            <div>
-              <h5 className="font-bold text-xs uppercase tracking-wider text-slate-400 mb-3">Quick Portals</h5>
-              <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-400">
-                <li><Link href="/login" className="hover:text-indigo-600">Student Sign In</Link></li>
-                <li><Link href="/register/student" className="hover:text-indigo-600">Student Registration</Link></li>
-                <li><Link href="/register/teacher" className="hover:text-indigo-600">Teacher Application</Link></li>
-                <li><Link href="/login" className="hover:text-indigo-600">Admin Login</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h5 className="font-bold text-xs uppercase tracking-wider text-slate-400 mb-3">24/7 Official Support</h5>
-              <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400 font-mono">
-                <p>Line 1: +91 98765 43210</p>
-                <p>Line 2: +91 98765 43211</p>
-                <p>Line 3: +91 98765 43212</p>
-                <p className="font-sans text-[11px] text-indigo-600 dark:text-indigo-400 pt-1">support@acuity.edu</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-8 border-t border-slate-100 dark:border-slate-900 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-4">
-            <p>© {new Date().getFullYear()} Acuity Tutoring Management & Live Learning. All rights reserved.</p>
-            <div className="flex items-center gap-6">
-              <span>Privacy Policy</span>
-              <span>Terms of Service</span>
-              <span>Security</span>
-            </div>
-          </div>
-        </div>
+      {/* ── MINIMAL CLEAN FOOTER NOTE (Non-intrusive) ── */}
+      <footer className="w-full py-2.5 px-6 text-center text-[11px] text-slate-400 dark:text-slate-500">
+        © {new Date().getFullYear()} Acuity Tutoring Management Platform • Where Accuracy Meets Knowledge
       </footer>
     </div>
   );

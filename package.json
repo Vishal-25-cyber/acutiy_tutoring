@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently -k -p \"[{name}]\" -n \"Vite,API\" -c \"cyan.bold,green.bold\" \"npx vite --port 3000\" \"npx tsx server/index.ts\"",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"Vite,API\" -c \"cyan.bold,green.bold\" \"npx vite --port 3000\" \"npx tsx watch server/index.ts\"",
     "dev:client": "npx vite --port 3000",
-    "dev:server": "npx tsx server/index.ts",
+    "dev:server": "npx tsx watch server/index.ts",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "seed": "npx tsx src/scripts/seed.ts"
@@ -13,7 +13,8 @@
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
     "@livekit/components-react": "^2.6.8",
-    "@vitejs/plugin-react": "^6.1.0",
+    "@rolldown/binding-win32-x64-msvc": "^1.2.6",
+    "@vitejs/plugin-react": "4.7.0",
     "bcryptjs": "^2.4.3",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
@@ -38,7 +39,7 @@
     "react-router-dom": "^7.18.2",
     "recharts": "^2.14.1",
     "tailwind-merge": "^2.5.5",
-    "vite": "^8.2.2",
+    "vite": "6.4.3",
     "zod": "^3.24.1"
   },
   "devDependencies": {

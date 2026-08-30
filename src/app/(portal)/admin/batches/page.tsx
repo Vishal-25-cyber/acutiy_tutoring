@@ -145,8 +145,8 @@ export default function AdminBatchesPage() {
       {/* Batches Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {batches.map((b: any) => {
-          const occupancy = b.enrolledCount || 18;
-          const percentage = Math.round((occupancy / b.capacity) * 100);
+          const occupancy = typeof b.enrolledCount === "number" ? b.enrolledCount : 0;
+          const percentage = b.capacity > 0 ? Math.round((occupancy / b.capacity) * 100) : 0;
 
           return (
             <Card key={b._id} className="p-6 space-y-4 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">

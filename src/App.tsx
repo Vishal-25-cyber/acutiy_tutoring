@@ -1,11 +1,8 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
-// Public / Auth Pages
+// Public / Landing Page
 import LandingPage from "./app/page";
-import LoginPage from "./app/(auth)/login/page";
-import RegisterStudentPage from "./app/(auth)/register/student/page";
-import RegisterTeacherPage from "./app/(auth)/register/teacher/page";
 
 // Student Portal
 import StudentLayout from "./app/(portal)/student/layout";
@@ -39,7 +36,6 @@ import AdminStaffAttendancePage from "./app/(portal)/admin/staff-attendance/page
 import AdminFinancePage from "./app/(portal)/admin/finance/page";
 import AdminAnalyticsPage from "./app/(portal)/admin/analytics/page";
 import AdminSettingsPage from "./app/(portal)/admin/settings/page";
-import AdminAuditLogsPage from "./app/(portal)/admin/audit-logs/page";
 
 // Live Classroom
 import ClassroomPage from "./app/classroom/[classId]/page";
@@ -47,11 +43,12 @@ import ClassroomPage from "./app/classroom/[classId]/page";
 export default function App() {
   return (
     <Routes>
-      {/* ── Public & Auth Routes ── */}
+      {/* ── Public Landing Page & Auth Redirects ── */}
       <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register/student" element={<RegisterStudentPage />} />
-      <Route path="/register/teacher" element={<RegisterTeacherPage />} />
+      <Route path="/login" element={<Navigate to="/" replace />} />
+      <Route path="/register" element={<Navigate to="/" replace />} />
+      <Route path="/register/student" element={<Navigate to="/" replace />} />
+      <Route path="/register/teacher" element={<Navigate to="/" replace />} />
 
       {/* ── Student Portal Routes ── */}
       <Route
@@ -247,14 +244,6 @@ export default function App() {
         element={
           <AdminLayout>
             <AdminSettingsPage />
-          </AdminLayout>
-        }
-      />
-      <Route
-        path="/admin/audit-logs"
-        element={
-          <AdminLayout>
-            <AdminAuditLogsPage />
           </AdminLayout>
         }
       />

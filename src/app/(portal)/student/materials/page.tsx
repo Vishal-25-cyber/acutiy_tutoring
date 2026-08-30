@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import {
   BookOpen,
   Download,
@@ -18,6 +19,8 @@ import {
   Printer,
   ChevronRight,
   Layers,
+  Lock,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,64 +48,9 @@ export default function StudentMaterialsPage() {
     { id: "QUESTION_PAPER", label: "Model Papers" },
   ];
 
-  const defaultCurriculumMaterials: DownloadableMaterial[] = [
-    {
-      _id: "mat-1",
-      title: `${studentClass} Mathematics — Quadratic Equations Formulas & Derivations`,
-      subject: "Mathematics",
-      classLevel: studentClass,
-      category: "NOTES",
-      fileUrl: "https://acuity.edu/materials/class10-maths-sample.pdf",
-      fileName: `${studentClass}_Mathematics_Formulas.pdf`,
-      fileSize: "2.1 MB",
-      description: "Comprehensive formula sheet with step-by-step solved derivation problems and discriminant rules.",
-      uploadedBy: { name: "Dr. Sarah Jenkins" },
-      createdAt: new Date().toISOString(),
-    },
-    {
-      _id: "mat-2",
-      title: `${studentClass} Science — Light: Reflection & Refraction Ray Diagrams`,
-      subject: "Science",
-      classLevel: studentClass,
-      category: "WORKSHEET",
-      fileUrl: "https://acuity.edu/materials/class10-science-sample.pdf",
-      fileName: `${studentClass}_Science_Ray_Diagrams.pdf`,
-      fileSize: "3.4 MB",
-      description: "Concave and convex lens ray diagram workbook with solved NCERT exemplar questions.",
-      uploadedBy: { name: "Prof. Rajesh Kumar" },
-      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      _id: "mat-3",
-      title: `${studentClass} English — Grammar, Clauses & Formal Letter Writing Templates`,
-      subject: "English",
-      classLevel: studentClass,
-      category: "PDF",
-      fileUrl: "https://acuity.edu/materials/class10-english-sample.pdf",
-      fileName: `${studentClass}_English_Grammar_Templates.pdf`,
-      fileSize: "1.2 MB",
-      description: "High-scoring formal letter and analytical paragraph writing templates with examiner tips.",
-      uploadedBy: { name: "Ms. Anita Desai" },
-      createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      _id: "mat-4",
-      title: `${studentClass} Social Science — Nationalism in India Map & Timeline Guide`,
-      subject: "Social Science",
-      classLevel: studentClass,
-      category: "NOTES",
-      fileUrl: "https://acuity.edu/materials/class10-social-sample.pdf",
-      fileName: `${studentClass}_SocialScience_Timeline.pdf`,
-      fileSize: "2.8 MB",
-      description: "Key dates, Congress sessions, Satyagraha movements and map pointing questions.",
-      uploadedBy: { name: "Prof. Rajesh Kumar" },
-      createdAt: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
-    },
-  ];
-
-  const rawMaterials: DownloadableMaterial[] = Array.isArray(data?.materials) && data.materials.length > 0
+  const rawMaterials: DownloadableMaterial[] = Array.isArray(data?.materials)
     ? data.materials
-    : defaultCurriculumMaterials;
+    : [];
 
   // Filter strictly by student's class
   const classMaterials = rawMaterials.filter((m: any) => {
@@ -230,35 +178,47 @@ export default function StudentMaterialsPage() {
         </div>
       </div>
 
-      {/* 2. SEARCH & FORMAT/SUBJECT FILTERS */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
-            <input
-              type="text"
-              placeholder={`Search ${studentClass} materials by title, topic, or keywords...`}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="flex h-11 w-full rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 pl-11 pr-4 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-2xs"
-            />
+      {/* ── TUITION FEE LOCK PAYWALL (WHEN FEE UNPAID OR UNDER REVIEW) ── */}
+      {data?.locked ? (
+        <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-amber-500/10 via-slate-900/5 to-transparent border-2 border-amber-500/30 text-center space-y-6 shadow-xl shadow-amber-500/5">
+          <div className="w-16 h-16 rounded-3xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto ring-8 ring-amber-500/10">
+            {data.isUnderReview ? <Clock className="w-8 h-8 animate-spin text-amber-600" /> : <Lock className="w-8 h-8 text-amber-600" />}
           </div>
-
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-            {categories.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => setCategory(c.id)}
-                className={`px-3.5 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${category === c.id
-                    ? "bg-indigo-600 text-white shadow-xs"
-                    : "bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
-                  }`}
-              >
-                {c.label}
-              </button>
-            ))}
+          <div className="space-y-2 max-w-lg mx-auto">
+            <span className="text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 inline-block">
+              {data.isUnderReview ? "Payment Under Review" : "Tuition Payment Required"}
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+              {data.isUnderReview ? "Awaiting Administrator Confirmation" : "Study Notes & Learning Hub Locked"}
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              {data.isUnderReview
+                ? `Your tuition payment of ₹${data.pendingVerification?.amount || 2500} for ${data.pendingVerification?.billingMonth || "August 2026"} (Ref: ${data.pendingVerification?.transactionId || "Submitted"}) has been received and is currently under review by the administrator. Full access to download notes and study materials will be unlocked once confirmed.`
+                : `Your monthly tuition fee of ₹${data.unpaidFee?.amount || 2500} for ${data.unpaidFee?.billingMonth || "Current Month"} is pending. Please complete fee payment to submit for admin confirmation and unlock materials.`}
+            </p>
+          </div>
+          <div className="pt-2">
+            <Link href="/student/fees">
+              <Button size="lg" className="font-extrabold text-sm bg-amber-600 hover:bg-amber-500 text-white shadow-lg shadow-amber-500/30 px-8 py-3 rounded-2xl cursor-pointer">
+                {data.isUnderReview ? "View Payment Status & Invoice →" : `Pay Tuition Fee (₹${data.unpaidFee?.amount || 2500}) to Unlock Materials →`}
+              </Button>
+            </Link>
           </div>
         </div>
+      ) : (
+        <>
+          {/* 2. SEARCH & SUBJECT FILTERS */}
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
+              <input
+                type="text"
+                placeholder={`Search ${studentClass} materials by title, topic, or keywords...`}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="flex h-11 w-full rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 pl-11 pr-4 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-2xs"
+              />
+            </div>
 
         {/* Clean Syllabus Subject Filter Chips */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -396,48 +356,168 @@ export default function StudentMaterialsPage() {
         </div>
       </div>
 
-      {/* 4. INTERACTIVE PREVIEW MODAL */}
+      {/* 4. FULL DOCUMENT & NOTES INTERACTIVE PREVIEW READER MODAL */}
       {previewMaterial && (
         <Modal
           isOpen={!!previewMaterial}
-          maxWidth="2xl"
+          maxWidth="4xl"
           onClose={() => setPreviewMaterial(null)}
           title={previewMaterial.title}
           description={`Subject: ${previewMaterial.subject} • Class: ${studentClass} • Format: ${previewMaterial.category || "NOTES"}`}
         >
           <div className="space-y-4 pt-2 text-xs">
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-3">
-              <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-100">Document Overview</h4>
-              <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
-                {previewMaterial.description || `Official syllabus study material and structured reference notes designed for ${studentClass} Acuity Tutoring students.`}
-              </p>
-              <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-slate-400 text-xs">
-                <span>File Size: <strong className="font-mono text-slate-700 dark:text-slate-300">{previewMaterial.fileSize || "1.8 MB"}</strong></span>
-                <span>
-                  Faculty: <strong className="text-slate-700 dark:text-slate-300">{typeof previewMaterial.uploadedBy === "object" ? previewMaterial.uploadedBy?.name : previewMaterial.uploadedBy || "Faculty Specialist"}</strong>
+            {/* Header actions */}
+            <div className="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800/80 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <span className={`text-xs font-bold px-2.5 py-0.5 rounded-md border ${getSubjectBadge(previewMaterial.subject)}`}>
+                  {previewMaterial.subject}
                 </span>
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  By {typeof previewMaterial.uploadedBy === "object" ? previewMaterial.uploadedBy?.name : previewMaterial.uploadedBy || "Faculty Specialist"}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    if (previewMaterial.fileUrl && previewMaterial.fileUrl.startsWith("data:")) {
+                      const win = window.open();
+                      if (win) win.document.write(`<iframe src="${previewMaterial.fileUrl}" style="width:100%; height:100vh; border:none;"></iframe>`);
+                    } else {
+                      handleDownload(previewMaterial);
+                    }
+                  }}
+                  className="text-xs font-bold gap-1.5 h-8 rounded-xl bg-white dark:bg-slate-900 shadow-2xs"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Open Full Window ↗</span>
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="glow"
+                  onClick={() => {
+                    handleDownload(previewMaterial);
+                  }}
+                  className="text-xs font-bold gap-1.5 h-8 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download Note</span>
+                </Button>
               </div>
             </div>
 
-            <div className="flex justify-end gap-2.5 pt-2">
-              <Button variant="ghost" size="sm" onClick={() => setPreviewMaterial(null)} className="rounded-xl">
-                Close
-              </Button>
+            {/* Document Content View */}
+            {previewMaterial.fileUrl && previewMaterial.fileUrl.startsWith("data:application/pdf") ? (
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-900 shadow-inner">
+                <iframe
+                  src={previewMaterial.fileUrl}
+                  title="PDF Note Preview"
+                  className="w-full h-[540px] rounded-2xl"
+                />
+              </div>
+            ) : previewMaterial.fileUrl && previewMaterial.fileUrl.startsWith("data:image") ? (
+              <div className="max-h-[540px] overflow-auto p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 text-center">
+                <img
+                  src={previewMaterial.fileUrl}
+                  alt={previewMaterial.title}
+                  className="max-w-full h-auto mx-auto rounded-xl shadow-md"
+                />
+              </div>
+            ) : (
+              /* Rich Formatted Interactive Notes Reader */
+              <div className="p-6 sm:p-8 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 max-h-[540px] overflow-y-auto space-y-6 shadow-xs font-sans">
+                <div className="border-b border-slate-200 dark:border-slate-800 pb-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+                      ACUITY TUTORING • VERIFIED STUDY PACK
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      Grade: {studentClass} ({studentBoard})
+                    </span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100">
+                    {previewMaterial.title}
+                  </h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                    {previewMaterial.description || `Official reference study material compiled for ${studentClass} curriculum.`}
+                  </p>
+                </div>
+
+                {/* Section 1: Core Concepts */}
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60 space-y-2">
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <span>1. Core Concepts & Theoretical Foundations</span>
+                  </h4>
+                  <ul className="list-disc pl-5 space-y-1 text-xs text-slate-700 dark:text-slate-300">
+                    <li>Comprehensive syllabus definitions and standard terminology.</li>
+                    <li>Step-by-step conceptual breakdowns with NCERT guideline mapping.</li>
+                    <li>Highlighted examination marking criteria and key definitions.</li>
+                  </ul>
+                </div>
+
+                {/* Section 2: Formulas & Important Rules */}
+                <div className="p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 space-y-2">
+                  <h4 className="font-bold text-sm text-emerald-800 dark:text-emerald-300">
+                    2. Formulas, Derivations & Key Examination Rules
+                  </h4>
+                  <div className="p-3 bg-white dark:bg-slate-950 rounded-lg border border-emerald-200 dark:border-emerald-900 font-mono text-xs text-emerald-700 dark:text-emerald-300">
+                    • Standard Form: Ax + By = C | ax² + bx + c = 0<br />
+                    • Discriminant Formula: D = b² - 4ac (D &gt; 0: Real & Distinct, D = 0: Equal roots)<br />
+                    • Verification Rule: Always verify dimensional units and step substitutions before final values.
+                  </div>
+                </div>
+
+                {/* Section 3: Solved Exemplar Practice Questions */}
+                <div className="p-4 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/50 space-y-2">
+                  <h4 className="font-bold text-sm text-purple-800 dark:text-purple-300">
+                    3. Solved Step-by-Step Exemplar Practice Problems
+                  </h4>
+                  <div className="space-y-2 text-xs text-slate-700 dark:text-slate-300">
+                    <p><strong>Example 1 (Direct Application):</strong> Substituting standard parameters into general boundary condition formulas.</p>
+                    <p><strong>Example 2 (Board Exam Style HOTS):</strong> Multi-step derivation problem with full breakdown.</p>
+                  </div>
+                </div>
+
+                {/* Section 4: Home Revision Checklist */}
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60 space-y-2">
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                    4. Student Self-Study & Revision Checklist
+                  </h4>
+                  <ul className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
+                    <li className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Review classroom live lecture recording notes before tests.</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Solve practice questions in the Assignments section.</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Ask any doubts directly in the upcoming live interactive batch session.</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
               <Button
-                variant="glow"
+                variant="ghost"
                 size="sm"
-                onClick={() => {
-                  handleDownload(previewMaterial);
-                  setPreviewMaterial(null);
-                }}
-                className="font-bold gap-1.5 rounded-xl bg-indigo-600 text-white"
+                onClick={() => setPreviewMaterial(null)}
+                className="rounded-xl"
               >
-                <Download className="w-3.5 h-3.5" />
-                <span>Download Document</span>
+                Close Preview
               </Button>
             </div>
           </div>
         </Modal>
+      )}
+      </>
       )}
     </main>
   );

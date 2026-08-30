@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Users2,
@@ -14,44 +14,113 @@ import {
   Layers,
   Activity,
   CheckCircle2,
+  Calendar,
+  Hourglass,
+  Sparkles,
+  Eye,
 } from "lucide-react";
 import { useFastFetch } from "@/lib/api-cache";
 
-const INITIAL_METRICS = {
-  totalStudents: 3,
-  activeStudents: 3,
-  totalTeachers: 3,
-  activeTeachers: 3,
-  pendingApprovals: 1,
-  todayClasses: 2,
-  activeLiveSessions: 0,
-  monthlyRevenue: 15000,
-  pendingRevenue: 2500,
-  averageAttendance: 95,
-};
-
-const INITIAL_ACTIVITY = [
-  { id: "1", type: "STUDENT", title: "Student enrolled in Class 10 CBSE batch", time: "10 mins ago" },
-  { id: "2", type: "LIVE", title: "Class 10 Mathematics Live Classroom session scheduled", time: "35 mins ago" },
-  { id: "3", type: "PAYMENT", title: "Tuition fee received (₹2,500) for Class 10", time: "1 hour ago" },
-  { id: "4", type: "TEACHER", title: "Faculty profile verified for Class 8-10 Science", time: "2 hours ago" },
-];
-
 export default function AdminDashboardPage() {
-  const { data } = useFastFetch("/api/admin/dashboard", {
-    metrics: INITIAL_METRICS,
-    recentActivity: INITIAL_ACTIVITY,
-  });
+  const { data } = useFastFetch("/api/admin/dashboard");
+  const [currentDateTime, setCurrentDateTime] = useState<Date>(new Date());
 
-  const metrics = data?.metrics || INITIAL_METRICS;
-  const recentActivity = data?.recentActivity || INITIAL_ACTIVITY;
+  // Ticking real-time clock every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-  const todayFormatted = new Intl.DateTimeFormat("en-US", {
+  const metrics = data?.metrics || {
+    totalStudents: 0,
+    activeStudents: 0,
+    totalTeachers: 0,
+    activeTeachers: 0,
+    pendingApprovals: 0,
+    todayClasses: 0,
+    activeLiveSessions: 0,
+    monthlyRevenue: 0,
+    pendingRevenue: 0,
+    averageAttendance: 100,
+  };
+
+  const recentActivity = Array.isArray(data?.recentActivity) ? data.recentActivity : [];
+  const upcomingClasses = Array.isArray(data?.upcomingClasses) ? data.upcomingClasses : [];
+
+  const formattedDate = currentDateTime.toLocaleDateString("en-US", {
     weekday: "long",
     month: "short",
     day: "numeric",
     year: "numeric",
-  }).format(new Date());
+  });
+
+  const formattedTime = currentDateTime.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+
+  // Calculate days/hours/minutes to go for upcoming classes
+  const calculateClassTimeToGo = (cls: any) => {
+    if (cls.status === "LIVE") {
+      return { label: "🔴 LIVE NOW", isLive: true, color: "bg-rose-500 text-white font-bold animate-pulse" };
+    }
+    if (!cls.date || !cls.startTime) {
+      return { label: "Upcoming", isLive: false, color: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300" };
+    }
+
+    try {
+      const [y, m, d] = cls.date.split("-").map(Number);
+      const [sh, sm] = cls.startTime.split(":").map(Number);
+      const [eh, em] = (cls.endTime || "20:00").split(":").map(Number);
+
+      const startDateTime = new Date(y, m - 1, d, sh, sm);
+      const endDateTime = new Date(y, m - 1, d, eh, em);
+
+      const diffMs = startDateTime.getTime() - currentDateTime.getTime();
+      const endDiffMs = endDateTime.getTime() - currentDateTime.getTime();
+
+      if (diffMs <= 0 && endDiffMs > 0) {
+        return { label: "🔴 LIVE NOW", isLive: true, color: "bg-rose-500 text-white font-bold animate-pulse" };
+      }
+
+      if (endDiffMs <= 0) {
+        return { label: "Concluded", isLive: false, color: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400" };
+      }
+
+      const totalMinutes = Math.floor(diffMs / (1000 * 60));
+      const totalHours = Math.floor(totalMinutes / 60);
+      const days = Math.floor(totalHours / 24);
+      const hours = totalHours % 24;
+      const minutes = totalMinutes % 60;
+
+      if (days > 0) {
+        return {
+          label: `Starts in ${days}d ${hours}h`,
+          isLive: false,
+          color: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800",
+        };
+      }
+
+      if (hours > 0) {
+        return {
+          label: `Starts in ${hours}h ${minutes}m`,
+          isLive: false,
+          color: "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+        };
+      }
+
+      return {
+        label: `Starts in ${minutes} mins`,
+        isLive: false,
+        color: "bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 font-bold",
+      };
+    } catch {
+      return { label: "Scheduled", isLive: false, color: "bg-indigo-50 text-indigo-700" };
+    }
+  };
 
   return (
     <main className="w-full min-h-full bg-transparent p-6 sm:p-8 lg:p-10 space-y-8 animate-in fade-in duration-150">
@@ -68,17 +137,21 @@ export default function AdminDashboardPage() {
             </span>
           </div>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Real-time operations, enrolled students, faculty roster, and tuition fee records.
+            Real-time live operations, enrolled students, faculty roster, and tuition fee records.
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium self-start md:self-auto">
-          <Clock className="w-3.5 h-3.5" />
-          <span>{todayFormatted}</span>
+        {/* Live Clock with Date and Time */}
+        <div className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 font-medium self-start md:self-auto bg-slate-100 dark:bg-slate-800/80 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xs">
+          <Calendar className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+          <span>{formattedDate}</span>
+          <span className="text-slate-300 dark:text-slate-600 font-mono">|</span>
+          <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{formattedTime}</span>
         </div>
       </div>
 
-      {/* ── ESSENTIAL METRICS (CARDLESS HAIRLINE SUMMARY) ── */}
+      {/* ── ESSENTIAL METRICS (LIVE DATABASE VALUES) ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Link href="/admin/students" prefetch={true} className="block group">
           <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:border-indigo-400 dark:hover:border-indigo-700 transition-colors flex items-center justify-between">
@@ -169,6 +242,12 @@ export default function AdminDashboardPage() {
             <span>Batch Manager</span>
           </button>
         </Link>
+        <Link href="/admin/classes" prefetch={true}>
+          <button className="px-3.5 py-2 rounded-md text-xs font-medium border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer">
+            <Video className="w-3.5 h-3.5 text-rose-600" />
+            <span>Live Session Monitor</span>
+          </button>
+        </Link>
         <Link href="/admin/staff-attendance" prefetch={true}>
           <button className="px-3.5 py-2 rounded-md text-xs font-medium border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer">
             <CalendarCheck2 className="w-3.5 h-3.5 text-blue-600" />
@@ -183,7 +262,65 @@ export default function AdminDashboardPage() {
         </Link>
       </div>
 
-      {/* ── RECENT PLATFORM ACTIVITY (CARDLESS TABLE) ── */}
+      {/* ── UPCOMING LIVE LECTURES WITH COUNTDOWN ── */}
+      {upcomingClasses.length > 0 && (
+        <div className="space-y-3">
+          <div className="pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Video className="w-4 h-4 text-indigo-600" />
+              <h2 className="font-semibold text-sm text-slate-800 dark:text-slate-200">
+                Scheduled & Upcoming Live Lectures
+              </h2>
+            </div>
+            <Link href="/admin/classes" prefetch={true} className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+              <span>View All Sessions</span>
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {upcomingClasses.map((cls: any) => {
+              const countdown = calculateClassTimeToGo(cls);
+              return (
+                <div
+                  key={cls.id}
+                  className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all space-y-2.5"
+                >
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                        {cls.subject}
+                      </span>
+                      <span className="text-xs text-slate-500 font-medium">{cls.classLevel}</span>
+                    </div>
+
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${countdown.color}`}>
+                      <Hourglass className="w-2.5 h-2.5" />
+                      <span>{countdown.label}</span>
+                    </span>
+                  </div>
+
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">
+                    {cls.title}
+                  </h3>
+
+                  <div className="flex items-center justify-between text-xs text-slate-500 pt-1 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-1.5 font-mono">
+                      <Calendar className="w-3 h-3 text-indigo-500" />
+                      <span>{cls.date} • {cls.startTime}</span>
+                    </div>
+                    <span className="text-slate-700 dark:text-slate-300 font-medium truncate max-w-[140px]">
+                      {cls.teacher}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── RECENT PLATFORM ACTIVITY (LIVE REAL LOGS) ── */}
       <div className="space-y-3">
         <div className="pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">

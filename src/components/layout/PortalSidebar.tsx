@@ -82,10 +82,22 @@ export function PortalSidebar({ role }: SidebarProps) {
     { href: "/teacher/attendance", label: "Attendance Log", icon: Clock },
   ];
 
+  const { data: dashboardData } = useFastFetch(role === "ADMIN" ? "/api/admin/dashboard" : "");
+
+  const pendingTeacherCount = dashboardData?.metrics?.pendingApprovals ?? 0;
+  const teacherPendingBadge = pendingTeacherCount > 0 ? `${pendingTeacherCount} Pending` : undefined;
+
   const adminLinks: SidebarLink[] = [
     { href: "/admin/dashboard", label: "Command Center", icon: LayoutDashboard, api: "/api/admin/dashboard" },
     { href: "/admin/students", label: "Student Management", icon: Users2, api: "/api/admin/students" },
-    { href: "/admin/teachers", label: "Teacher Approvals & Staff", icon: UserCheck, badge: "Pending", api: "/api/admin/teachers?status=ALL" },
+    {
+      href: "/admin/teachers",
+      label: "Teacher Approvals & Staff",
+      icon: UserCheck,
+      badge: teacherPendingBadge,
+      badgeVariant: "warning",
+      api: "/api/admin/teachers?status=ALL",
+    },
     { href: "/admin/batches", label: "Dynamic Batch Manager", icon: Layers, api: "/api/admin/batches" },
     { href: "/admin/classes", label: "Live Session Monitor", icon: Video, api: "/api/admin/classes" },
     { href: "/admin/attendance", label: "Student Attendance", icon: CalendarCheck2, api: "/api/admin/attendance?classLevel=ALL&status=ALL" },
@@ -93,7 +105,6 @@ export function PortalSidebar({ role }: SidebarProps) {
     { href: "/admin/finance", label: "Monthly Income & Fees", icon: DollarSign, api: "/api/admin/finance" },
     { href: "/admin/analytics", label: "Advanced Analytics", icon: Activity, api: "/api/admin/analytics" },
     { href: "/admin/settings", label: "System Settings", icon: Settings, api: "/api/admin/settings" },
-    { href: "/admin/audit-logs", label: "Admin Audit Logs", icon: History, api: "/api/admin/audit-logs" },
   ];
 
   const links = role === "STUDENT" ? studentLinks : role === "TEACHER" ? teacherLinks : adminLinks;
@@ -128,32 +139,37 @@ export function PortalSidebar({ role }: SidebarProps) {
     } catch (e) {
       console.error(e);
     }
-    router.push("/login");
+    router.push("/");
   };
 
   return (
-    <aside className="w-60 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-screen sticky top-0 shrink-0 select-none z-30 transition-colors">
+    <aside className="w-64 border-r border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#001726] flex flex-col h-screen sticky top-0 shrink-0 select-none z-30 transition-colors">
       {/* Sidebar Header */}
-      <div className="h-16 px-5 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800">
-        <div className="w-9 h-9 rounded-xl bg-white p-1 shadow-xs flex items-center justify-center shrink-0">
+      <div className="h-20 px-4 flex items-center gap-3 border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#00121e]/50">
+        <div className="w-11 h-11 rounded-2xl bg-white dark:bg-[#002137] p-1.5 shadow-sm border border-slate-200/80 dark:border-[#b89047]/30 flex items-center justify-center shrink-0">
           <img
             src="/images/acuity_logo.png"
             alt="Acuity Logo"
             className="w-full h-full object-contain"
           />
         </div>
-        <div>
-          <span className="font-bold text-sm tracking-tight text-slate-800 dark:text-slate-200">
-            ACUITY
-          </span>
-          <p className="text-[10px] font-semibold text-[#dfb74a] uppercase tracking-wider">
-            {role} Portal
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className="font-black text-base tracking-tight text-[#002137] dark:text-white">
+              ACUITY
+            </span>
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-[#b89047]/15 text-[#8f6d2b] dark:text-[#dfb74a] uppercase tracking-wider border border-[#b89047]/30">
+              {role}
+            </span>
+          </div>
+          <p className="text-[10px] font-medium text-[#b89047] dark:text-[#dfb74a] truncate tracking-tight">
+            Where Accuracy Meets Knowledge
           </p>
         </div>
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 py-3 px-2.5 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 py-3.5 px-3 space-y-1 overflow-y-auto">
         {links.map((item) => {
           const Icon = item.icon;
           const isActive =
@@ -170,20 +186,20 @@ export function PortalSidebar({ role }: SidebarProps) {
               onMouseEnter={() => handleHoverPrefetch(item)}
               onFocus={() => handleHoverPrefetch(item)}
               className={cn(
-                "flex items-center justify-between px-3 py-2 rounded-xl text-[13px] font-semibold transition-colors group",
+                "flex items-center justify-between px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all group",
                 isActive
-                  ? "bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#fde047] border border-blue-200 dark:border-[#004b79]/70"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-800 dark:hover:text-slate-200"
+                  ? "bg-[#002137] text-white dark:bg-[#002842] dark:text-[#dfb74a] shadow-sm border border-[#002137] dark:border-[#b89047]/40"
+                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100"
               )}
             >
               <div className="flex items-center gap-2.5">
                 <Icon
                   className={cn(
-                    "w-4 h-4",
-                    isActive ? "text-[#004b79] dark:text-[#dfb74a]" : "text-slate-400 dark:text-slate-500"
+                    "w-4 h-4 transition-colors",
+                    isActive ? "text-[#dfb74a]" : "text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300"
                   )}
                 />
-                <span>{item.label}</span>
+                <span className="truncate">{item.label}</span>
               </div>
               {item.badge && (
                 <span

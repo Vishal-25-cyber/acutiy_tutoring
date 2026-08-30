@@ -452,27 +452,35 @@ export async function runSeed() {
 
   // 11. Payments
   await Payment.deleteMany({});
+  const currentMonthStr = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date());
+  const prevMonthDate = new Date();
+  prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
+  const prevMonthStr = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(prevMonthDate);
+
+  const prevPaidDate = new Date();
+  prevPaidDate.setDate(prevPaidDate.getDate() - 20);
+
   await Payment.insertMany([
     {
       studentId: studentAravind._id,
       amount: 2500,
-      billingMonth: "January 2025",
-      courseName: "Class 10 CBSE — Mathematics & Science Term 1",
-      dueDate: new Date("2025-01-10"),
-      paidDate: new Date("2025-01-08"),
+      billingMonth: prevMonthStr,
+      courseName: `Class 10 CBSE — Mathematics & Science (${prevMonthStr})`,
+      dueDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+      paidDate: prevPaidDate,
       status: "PAID",
-      receiptNumber: "REC-2025-00189",
+      receiptNumber: `REC-${prevMonthDate.getFullYear()}-00189`,
       paymentMethod: "Online UPI (Razorpay)",
       transactionId: "pay_Rzp10982348",
     },
     {
       studentId: studentAravind._id,
       amount: 2500,
-      billingMonth: "February 2025",
-      courseName: "Class 10 CBSE — All Subjects Comprehensive Bundle",
+      billingMonth: currentMonthStr,
+      courseName: `Class 10 CBSE — All Subjects Comprehensive Bundle (${currentMonthStr})`,
       dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
       status: "PENDING",
-      receiptNumber: "REC-2025-00244",
+      receiptNumber: `REC-${new Date().getFullYear()}-00244`,
     },
   ]);
 

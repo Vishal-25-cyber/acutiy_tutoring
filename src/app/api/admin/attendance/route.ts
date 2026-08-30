@@ -23,21 +23,25 @@ export async function GET(req: NextRequest) {
     if (batchId && batchId !== "ALL") filter.batchId = batchId;
     if (status && status !== "ALL") filter.status = status;
 
-    const records = await Attendance.find(filter)
+    const rawRecords = await Attendance.find(filter)
       .populate("studentId", "name email phone")
       .populate("sessionId", "title subject topic date startTime")
       .populate("batchId", "name")
       .sort({ createdAt: -1 })
-      .limit(200);
+      .limit(200)
+      .lean();
+
+    // Only keep records that belong to existing students
+    const records = rawRecords.filter((r: any) => r.studentId != null);
 
     // Aggregate statistics
     const totalCount = records.length;
-    const presentCount = records.filter((r) => r.status === "PRESENT").length;
-    const lateCount = records.filter((r) => r.status === "LATE").length;
-    const partialCount = records.filter((r) => r.status === "PARTIAL").length;
-    const absentCount = records.filter((r) => r.status === "ABSENT").length;
+    const presentCount = records.filter((r: any) => r.status === "PRESENT").length;
+    const lateCount = records.filter((r: any) => r.status === "LATE").length;
+    const partialCount = records.filter((r: any) => r.status === "PARTIAL").length;
+    const absentCount = records.filter((r: any) => r.status === "ABSENT").length;
 
-    const attendanceRate = totalCount > 0 ? Math.round(((presentCount + lateCount) / totalCount) * 100) : 95;
+    const attendanceRate = totalCount > 0 ? Math.round(((presentCount + lateCount) / totalCount) * 100) : 100;
 
     // High risk students
     const highRiskStudents = await StudentProfile.find({ attendanceRiskLevel: "HIGH" })

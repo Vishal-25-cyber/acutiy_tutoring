@@ -4,6 +4,7 @@ import { cn } from "./button";
 export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?:
     | "default"
+    | "gold"
     | "secondary"
     | "outline"
     | "destructive"
@@ -18,7 +19,8 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function Badge({ className, variant = "default", ...props }: BadgeProps) {
   const variants = {
-    default: "bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800",
+    default: "bg-[#002137]/10 dark:bg-[#dfb74a]/15 text-[#002137] dark:text-[#dfb74a] border-[#002137]/20 dark:border-[#dfb74a]/30",
+    gold: "bg-[#b89047]/15 text-[#8f6d2b] dark:text-[#dfb74a] border-[#b89047]/30",
     secondary: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700",
     outline: "border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300",
     destructive: "bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800",

@@ -7,6 +7,7 @@ import StudentProfile from "@/models/StudentProfile";
 import Batch from "@/models/Batch";
 import User from "@/models/User";
 import { recordAuditLog } from "@/lib/audit";
+import { getStudentFeeAccessStatus } from "@/lib/fee-guard";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,21 @@ export async function POST(
     const userSession = await getSession();
     if (!userSession) {
       return NextResponse.json({ error: "Unauthorized. Please log in to join the class." }, { status: 401 });
+    }
+
+    // 0. Tuition Fee Gate: Student cannot join live classes if monthly tuition fee is unpaid
+    if (userSession.role === "STUDENT") {
+      const feeStatus = await getStudentFeeAccessStatus(userSession.userId);
+      if (feeStatus.isLocked && feeStatus.unpaidFee) {
+        return NextResponse.json(
+          {
+            error: `Class Access Denied: Monthly tuition fee for ${feeStatus.unpaidFee.billingMonth} (₹${feeStatus.unpaidFee.amount}) is unpaid. Please complete fee payment at /student/fees to enter live sessions.`,
+            feeLocked: true,
+            unpaidFee: feeStatus.unpaidFee,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     const { id } = await params;

@@ -274,7 +274,15 @@ export default function StudentAssignmentsPage() {
         }),
       });
 
-      const data = await res.json();
+      let data: any = {};
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        throw new Error(text || `Submission failed with status ${res.status}`);
+      }
+
       if (!res.ok) {
         throw new Error(data.error || "Failed to submit assignment.");
       }
@@ -464,7 +472,7 @@ export default function StudentAssignmentsPage() {
                   {/* Column 4: Status & Action (col-span-3 text-right) */}
                   <div className="col-span-3 flex items-center justify-start md:justify-end gap-3 pt-2 md:pt-0">
                     <span
-                      className={`text-[11px] font-extrabold px-2.5 py-1 rounded-full border ${
+                      className={`text-[11px] font-extrabold px-2.5 py-1 rounded-full border flex items-center gap-1 ${
                         isEvaluated
                           ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300"
                           : isSubmitted
@@ -476,15 +484,18 @@ export default function StudentAssignmentsPage() {
                           : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300"
                       }`}
                     >
-                      {isEvaluated
-                        ? "EVALUATED"
-                        : isSubmitted
-                        ? isClosed
-                          ? "SUBMITTED (LOCKED)"
-                          : "SUBMITTED"
-                        : isClosed
-                        ? "DEADLINE CLOSED"
-                        : "PENDING"}
+                      {isEvaluated ? (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>COMPLETED & EVALUATED</span>
+                        </>
+                      ) : isSubmitted ? (
+                        isClosed ? "SUBMITTED (LOCKED)" : "SUBMITTED"
+                      ) : isClosed ? (
+                        "DEADLINE CLOSED"
+                      ) : (
+                        "PENDING"
+                      )}
                     </span>
 
                     {/* Action Button: Active vs Locked */}
@@ -509,7 +520,9 @@ export default function StudentAssignmentsPage() {
                         }`}
                       >
                         <Upload className="w-3.5 h-3.5" />
-                        <span>{isSubmitted ? "Resubmit / Update" : "Submit Solution"}</span>
+                        <span>
+                          {isEvaluated ? "Resubmit / Update" : isSubmitted ? "Resubmit / Update" : "Submit Solution"}
+                        </span>
                       </Button>
                     )}
                   </div>

@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 const memoryCache = new Map<string, { data: any; timestamp: number }>();
 const inflightRequests = new Map<string, Promise<any>>();
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes TTL for ultra-fast navigation
+const CACHE_STALE_MS = 2000; // 2 seconds stale time: gives instant UI on transitions but revalidates immediately
+
+// Global event bus for instant cache invalidation across tabs / components
+const cacheListeners = new Set<(urlPrefix: string) => void>();
 
 /**
  * Prefetches and caches an API endpoint in the background with deduplication.
@@ -13,11 +16,10 @@ export async function prefetchApi(url: string): Promise<any> {
   if (!url || typeof window === "undefined") return null;
 
   const cached = memoryCache.get(url);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+  if (cached && Date.now() - cached.timestamp < CACHE_STALE_MS) {
     return cached.data;
   }
 
-  // Deduplicate inflight requests to prevent duplicate network calls
   if (inflightRequests.has(url)) {
     return inflightRequests.get(url);
   }
@@ -31,7 +33,7 @@ export async function prefetchApi(url: string): Promise<any> {
         return data;
       }
     } catch (e) {
-      // ignore background prefetch error
+      // ignore prefetch errors
     } finally {
       inflightRequests.delete(url);
     }
@@ -84,27 +86,25 @@ export function warmupPortalCache(role: string = "STUDENT") {
         "/api/admin/finance",
         "/api/admin/analytics",
         "/api/admin/settings",
-        "/api/admin/audit-logs",
         "/api/notifications",
       ];
 
-  // Stagger prefetch calls to avoid flooding the server
   endpoints.forEach((ep, i) => {
-    setTimeout(() => prefetchApi(ep), i * 50);
+    setTimeout(() => prefetchApi(ep), i * 30);
   });
 }
 
 /**
- * High-performance Stale-While-Revalidate (SWR) hook with instant zero-millisecond memory caching.
- * Returns cached data immediately on mount, then updates seamlessly in background.
+ * High-performance Stale-While-Revalidate (SWR) hook.
+ * Returns cached data immediately on mount, then always fetches real fresh data from the server in background.
+ * Also supports auto-revalidation on window focus and auto-polling.
  */
 export function useFastFetch<T = any>(
   url: string | null,
-  initialFallback?: T
+  initialFallback?: T,
+  options: { pollIntervalMs?: number; disableAutoRevalidate?: boolean } = {}
 ): { data: T | null; isLoading: boolean; error: any; refetch: () => Promise<void> } {
-  // Check memory cache synchronously
   const cachedEntry = url ? memoryCache.get(url) : null;
-  const isFresh = Boolean(cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_TTL_MS);
   const hasCachedData = Boolean(cachedEntry && cachedEntry.data);
 
   const [data, setData] = useState<T | null>(
@@ -112,40 +112,82 @@ export function useFastFetch<T = any>(
   );
   const [isLoading, setIsLoading] = useState<boolean>(!hasCachedData);
   const [error, setError] = useState<any>(null);
+  const isMountedRef = useRef(true);
 
-  const executeFetch = async (isManualRefetch = false) => {
-    if (!url) return;
+  const executeFetch = useCallback(
+    async (isManual = false) => {
+      if (!url) return;
 
-    if (!isManualRefetch && hasCachedData) {
-      // Data is already displayed instantly from cache; revalidate silently in background
-      setIsLoading(false);
-      // If cache is still fresh and not a manual refetch, avoid unnecessary network calls
-      if (isFresh) return;
-    } else {
-      setIsLoading(!hasCachedData);
-    }
-
-    try {
-      const res = await fetch(url, { credentials: "include" });
-      if (res.ok) {
-        const json = await res.json();
-        memoryCache.set(url, { data: json, timestamp: Date.now() });
-        setData(json);
-        setError(null);
-      } else {
-        throw new Error(`Request failed with status ${res.status}`);
+      if (!isManual && hasCachedData) {
+        setIsLoading(false);
+      } else if (!hasCachedData) {
+        setIsLoading(true);
       }
-    } catch (err) {
-      console.warn(`FastFetch error for ${url}:`, err);
-      setError(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
+      try {
+        const res = await fetch(url, {
+          credentials: "include",
+          headers: { "Cache-Control": "no-cache" },
+        });
+
+        if (res.ok) {
+          const json = await res.json();
+          memoryCache.set(url, { data: json, timestamp: Date.now() });
+          if (isMountedRef.current) {
+            setData(json);
+            setError(null);
+          }
+        } else {
+          throw new Error(`Request failed with status ${res.status}`);
+        }
+      } catch (err) {
+        if (isMountedRef.current) {
+          console.warn(`FastFetch error for ${url}:`, err);
+          setError(err);
+        }
+      } finally {
+        if (isMountedRef.current) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [url, hasCachedData]
+  );
 
   useEffect(() => {
+    isMountedRef.current = true;
     executeFetch();
-  }, [url]);
+
+    // Revalidate on window focus so updates in other tabs/windows reflect immediately
+    const handleFocus = () => {
+      executeFetch();
+    };
+    window.addEventListener("focus", handleFocus);
+
+    // Listen for global cache invalidations
+    const handleInvalidation = (prefix: string) => {
+      if (url && url.startsWith(prefix)) {
+        executeFetch(true);
+      }
+    };
+    cacheListeners.add(handleInvalidation);
+
+    // Optional polling interval (default every 6 seconds for live real-time sync)
+    const pollInterval = options.pollIntervalMs || 6000;
+    let timer: any = null;
+    if (!options.disableAutoRevalidate) {
+      timer = setInterval(() => {
+        executeFetch();
+      }, pollInterval);
+    }
+
+    return () => {
+      isMountedRef.current = false;
+      window.removeEventListener("focus", handleFocus);
+      cacheListeners.delete(handleInvalidation);
+      if (timer) clearInterval(timer);
+    };
+  }, [url, executeFetch, options.pollIntervalMs, options.disableAutoRevalidate]);
 
   return {
     data,
@@ -160,15 +202,17 @@ export function useFastFetch<T = any>(
  */
 export function setCachedData(url: string, data: any) {
   memoryCache.set(url, { data, timestamp: Date.now() });
+  cacheListeners.forEach((listener) => listener(url));
 }
 
 /**
- * Invalidate cache key
+ * Invalidate cache key prefix and notify all active listeners to refresh immediately
  */
-export function invalidateCache(urlPrefix: string) {
+export function invalidateCache(urlPrefix: string = "") {
   for (const key of memoryCache.keys()) {
-    if (key.startsWith(urlPrefix)) {
+    if (!urlPrefix || key.startsWith(urlPrefix)) {
       memoryCache.delete(key);
     }
   }
+  cacheListeners.forEach((listener) => listener(urlPrefix));
 }

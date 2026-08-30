@@ -6,6 +6,8 @@ import StudentProfile from "@/models/StudentProfile";
 import Notification from "@/models/Notification";
 import { recordAuditLog } from "@/lib/audit";
 
+import { sortClassesByPriority } from "@/lib/class-timing";
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
@@ -21,10 +23,17 @@ export async function GET(req: NextRequest) {
 
     const query: any = {};
 
+    const todayDateStr = new Date().toISOString().split("T")[0];
+
     if (session.role === "TEACHER") {
       query.teacherId = session.userId;
       if (status) {
-        query.status = status.toUpperCase();
+        if (status.toUpperCase() === "UPCOMING") {
+          query.status = { $in: ["PUBLISHED", "SCHEDULED"] };
+          query.date = { $gte: todayDateStr };
+        } else {
+          query.status = status.toUpperCase();
+        }
       }
     } else if (session.role === "STUDENT") {
       const studentProfile = await StudentProfile.findOne({ userId: session.userId });
@@ -35,12 +44,24 @@ export async function GET(req: NextRequest) {
       query.classLevel = studentProfile.currentClass;
       // Students should only see published, live or completed classes (never drafts)
       if (status) {
-        query.status = status.toUpperCase();
+        if (status.toUpperCase() === "UPCOMING") {
+          query.status = { $in: ["PUBLISHED", "SCHEDULED"] };
+          query.date = { $gte: todayDateStr };
+        } else {
+          query.status = status.toUpperCase();
+        }
       } else {
         query.status = { $in: ["PUBLISHED", "SCHEDULED", "LIVE", "COMPLETED", "CANCELLED"] };
       }
     } else if (session.role === "ADMIN") {
-      if (status) query.status = status.toUpperCase();
+      if (status) {
+        if (status.toUpperCase() === "UPCOMING") {
+          query.status = { $in: ["PUBLISHED", "SCHEDULED"] };
+          query.date = { $gte: todayDateStr };
+        } else {
+          query.status = status.toUpperCase();
+        }
+      }
       if (batchId) query.batchId = batchId;
     }
 
@@ -48,11 +69,12 @@ export async function GET(req: NextRequest) {
       query.date = date;
     }
 
-    const classes = await LiveSession.find(query)
+    const rawClasses = await LiveSession.find(query)
       .populate("batchId")
       .populate("teacherId", "name email avatarUrl")
-      .sort({ date: -1, startTime: 1 })
       .lean();
+
+    const classes = sortClassesByPriority(rawClasses as any[]);
 
     return NextResponse.json({ classes });
   } catch (error: any) {

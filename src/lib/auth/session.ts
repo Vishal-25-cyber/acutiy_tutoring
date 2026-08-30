@@ -2,26 +2,63 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { verifyToken, TokenPayload } from "./jwt";
 import { UserRole } from "@/types";
+import { requestContextStorage } from "./session-storage";
 
 export const AUTH_COOKIE_NAME = "acuity_auth_token";
 
-export async function getSession(): Promise<TokenPayload | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+export async function getSession(req?: any): Promise<TokenPayload | null> {
+  let token: string | undefined = undefined;
+
+  // 1. Direct request parameter cookies
+  if (req) {
+    if (typeof req.cookies?.get === "function") {
+      token = req.cookies.get(AUTH_COOKIE_NAME)?.value;
+    } else if (req.headers) {
+      const cookieHeader =
+        typeof req.headers.get === "function"
+          ? req.headers.get("cookie")
+          : req.headers.cookie;
+      if (cookieHeader) {
+        const matches = cookieHeader.match(
+          new RegExp(`(?:^|;\\s*)${AUTH_COOKIE_NAME}=([^;]+)`)
+        );
+        if (matches) token = decodeURIComponent(matches[1]);
+      }
+    }
+  }
+
+  // 2. Async Local Storage from express adapter
+  if (!token) {
+    const store = requestContextStorage.getStore();
+    if (store && store.cookies && store.cookies[AUTH_COOKIE_NAME]) {
+      token = store.cookies[AUTH_COOKIE_NAME];
+    }
+  }
+
+  // 3. Fallback to next/headers cookies() if in Next.js environment
+  if (!token) {
+    try {
+      const cookieStore = await cookies();
+      token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+    } catch {
+      // Outside Next request store
+    }
+  }
+
   if (!token) return null;
   return verifyToken(token);
 }
 
-export async function requireAuth(): Promise<TokenPayload> {
-  const session = await getSession();
+export async function requireAuth(req?: any): Promise<TokenPayload> {
+  const session = await getSession(req);
   if (!session) {
     throw new Error("UNAUTHORIZED");
   }
   return session;
 }
 
-export async function requireRole(allowedRoles: UserRole[]): Promise<TokenPayload> {
-  const session = await requireAuth();
+export async function requireRole(allowedRoles: UserRole[], req?: any): Promise<TokenPayload> {
+  const session = await requireAuth(req);
   if (!allowedRoles.includes(session.role)) {
     throw new Error("FORBIDDEN");
   }

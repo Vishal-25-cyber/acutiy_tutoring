@@ -6,6 +6,11 @@ import AssignmentSubmission from "@/models/AssignmentSubmission";
 import StudentProfile from "@/models/StudentProfile";
 import Notification from "@/models/Notification";
 
+import TeacherProfile from "@/models/TeacherProfile";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const session = await getSession();
@@ -14,16 +19,69 @@ export async function GET() {
     }
 
     await connectToDatabase();
-    const assignments = await Assignment.find({ teacherId: session.userId })
+
+    let query: any = {};
+    if (session.role === "TEACHER") {
+      const teacherProfile = await TeacherProfile.findOne({ userId: session.userId }).lean();
+      const teacherSubjects = teacherProfile?.subjects && teacherProfile.subjects.length > 0
+        ? teacherProfile.subjects
+        : [];
+      const classesTaught = teacherProfile?.classesTaught && teacherProfile.classesTaught.length > 0
+        ? teacherProfile.classesTaught
+        : [];
+
+      const orConditions: any[] = [
+        { teacherId: session.userId },
+        { teacherId: { $exists: false } },
+        { teacherId: null },
+      ];
+
+      if (teacherSubjects.length > 0) {
+        orConditions.push({ subject: { $in: teacherSubjects } });
+      }
+
+      if (classesTaught.length > 0 && teacherSubjects.length > 0) {
+        orConditions.push({
+          classLevel: { $in: classesTaught },
+          subject: { $in: teacherSubjects },
+        });
+      }
+
+      query = { $or: orConditions };
+    }
+
+    const assignments = await Assignment.find(query)
       .populate("batchId")
+      .populate("teacherId", "name email avatarUrl")
       .sort({ createdAt: -1 });
 
     const assignmentIds = assignments.map((a) => a._id);
     const submissions = await AssignmentSubmission.find({ assignmentId: { $in: assignmentIds } })
-      .populate("studentId", "name email")
-      .populate("assignmentId");
+      .populate("studentId", "name email avatarUrl")
+      .populate("assignmentId")
+      .sort({ createdAt: -1 });
 
-    return NextResponse.json({ assignments, submissions });
+    const submissionCounts: Record<string, number> = {};
+    submissions.forEach((sub: any) => {
+      const aId = sub.assignmentId?._id?.toString() || sub.assignmentId?.toString();
+      if (aId) {
+        submissionCounts[aId] = (submissionCounts[aId] || 0) + 1;
+      }
+    });
+
+    const enrichedAssignments = assignments.map((asg: any) => {
+      const doc = asg.toObject ? asg.toObject() : asg;
+      return {
+        ...doc,
+        submissionCount: submissionCounts[doc._id.toString()] || 0,
+      };
+    });
+
+    return NextResponse.json({ assignments: enrichedAssignments, submissions }, {
+      headers: {
+        "Cache-Control": "no-store, max-age=0, must-revalidate",
+      },
+    });
   } catch (error: any) {
     console.error("Get Assignments Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

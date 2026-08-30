@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  phone10DigitSchema,
+  optionalPhone10DigitSchema,
+  emailDomainSchema,
+} from "./phone";
 
 export const studentLoginSchema = z.object({
   identifier: z.string().min(3, "Email or phone is required"),
@@ -7,12 +12,12 @@ export const studentLoginSchema = z.object({
 });
 
 export const teacherLoginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: emailDomainSchema,
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export const adminLoginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: emailDomainSchema,
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
@@ -21,9 +26,9 @@ export const studentRegisterSchema = z.object({
   name: z.string().min(2, "Full name is required"),
   dob: z.string().optional(),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).default("OTHER"),
-  phone: z.string().min(10, "Phone number must be at least 10 digits"),
-  altPhone: z.string().optional(),
-  email: z.string().email("Invalid email address"),
+  phone: phone10DigitSchema,
+  altPhone: optionalPhone10DigitSchema,
+  email: emailDomainSchema,
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(6, "Confirm password is required"),
   // Academic
@@ -46,8 +51,8 @@ export const studentRegisterSchema = z.object({
   batchId: z.string().min(1, "Please select your preferred batch"),
   // Emergency
   parentName: z.string().min(2, "Parent/Guardian name is required"),
-  parentPhone: z.string().min(10, "Parent phone number must be at least 10 digits"),
-  altEmergencyPhone: z.string().optional(),
+  parentPhone: phone10DigitSchema,
+  altEmergencyPhone: optionalPhone10DigitSchema,
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -55,9 +60,9 @@ export const studentRegisterSchema = z.object({
 
 export const teacherRegisterSchema = z.object({
   name: z.string().min(2, "Full name is required"),
-  phone: z.string().min(10, "Phone number is required"),
-  altPhone: z.string().optional(),
-  email: z.string().email("Invalid email address"),
+  phone: phone10DigitSchema,
+  altPhone: optionalPhone10DigitSchema,
+  email: emailDomainSchema,
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(6, "Confirm password is required"),
   address: z.string().optional(),

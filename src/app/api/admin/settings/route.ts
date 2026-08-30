@@ -7,14 +7,14 @@ import { recordAuditLog } from "@/lib/audit";
 export async function GET() {
   try {
     await connectToDatabase();
-    let settings = await SystemSettings.findOne();
+    let settings: any = await SystemSettings.findOne().lean();
 
     if (!settings) {
       settings = await SystemSettings.create({
         companyName: "Acuity Tutoring & Live Learning",
-        supportPhone1: "+91 98765 43210",
-        supportPhone2: "+91 98765 43211",
-        supportPhone3: "+91 98765 43212",
+        supportPhone1: "9876543210",
+        supportPhone2: "9876543211",
+        supportPhone3: "9876543212",
         supportEmail: "support@acuity.edu",
         defaultGracePeriodMinutes: 5,
         minAttendanceThresholdPercent: 75,
@@ -24,7 +24,11 @@ export async function GET() {
       });
     }
 
-    return NextResponse.json({ settings });
+    return NextResponse.json({ settings }, {
+      headers: {
+        "Cache-Control": "no-store, max-age=0, must-revalidate",
+      },
+    });
   } catch (error: any) {
     console.error("Settings GET Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -40,6 +44,35 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     await connectToDatabase();
+
+    // Extract the 10 digits
+    const cleanPhone1 = (body.supportPhone1 || "").replace(/\D/g, "").slice(-10);
+    const cleanPhone2 = (body.supportPhone2 || "").replace(/\D/g, "").slice(-10);
+    const cleanPhone3 = (body.supportPhone3 || "").replace(/\D/g, "").slice(-10);
+
+    const phoneRegex = /^[1-9]\d{9}$/;
+    if (cleanPhone1 && !phoneRegex.test(cleanPhone1)) {
+      return NextResponse.json(
+        { error: "Primary Hotline (Phone 1) must be a valid 10-digit number." },
+        { status: 400 }
+      );
+    }
+    if (cleanPhone2 && !phoneRegex.test(cleanPhone2)) {
+      return NextResponse.json(
+        { error: "Batch Coordinator (Phone 2) must be a valid 10-digit number." },
+        { status: 400 }
+      );
+    }
+    if (cleanPhone3 && !phoneRegex.test(cleanPhone3)) {
+      return NextResponse.json(
+        { error: "Emergency Escalation (Phone 3) must be a valid 10-digit number." },
+        { status: 400 }
+      );
+    }
+
+    body.supportPhone1 = cleanPhone1 || "9876543210";
+    body.supportPhone2 = cleanPhone2 || "9876543211";
+    body.supportPhone3 = cleanPhone3 || "9876543212";
 
     let settings = await SystemSettings.findOne();
     if (!settings) {

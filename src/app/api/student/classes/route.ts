@@ -3,6 +3,8 @@ import connectToDatabase from "@/lib/db/mongoose";
 import { getSession } from "@/lib/auth/session";
 import StudentProfile from "@/models/StudentProfile";
 import LiveSession from "@/models/LiveSession";
+import { getStudentFeeAccessStatus } from "@/lib/fee-guard";
+import { sortClassesByPriority } from "@/lib/class-timing";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +18,23 @@ export async function GET() {
     }
 
     await connectToDatabase();
+
+    // 1. Fee Lock Enforcement: Student cannot access classes if monthly tuition is unpaid or awaiting admin approval
+    const feeStatus = await getStudentFeeAccessStatus(session.userId);
+    if (feeStatus.isLocked) {
+      return NextResponse.json({
+        locked: true,
+        reason: feeStatus.reason,
+        isUnderReview: feeStatus.isUnderReview,
+        message: feeStatus.message,
+        unpaidFee: feeStatus.unpaidFee,
+        pendingVerification: feeStatus.pendingVerification,
+        classes: [],
+        todayClasses: [],
+        weeklySchedule: [],
+      });
+    }
+
     const profile: any = await StudentProfile.findOne({ userId: session.userId }).populate("batchId").lean();
     if (!profile) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
@@ -28,15 +47,18 @@ export async function GET() {
     const batchStart = (profile.batchId as any)?.startTime || "19:00";
     const batchEnd = (profile.batchId as any)?.endTime || "20:00";
 
-    // Query published/scheduled/live/completed classes for this student's batch & class
-    const dbClasses = await LiveSession.find({
-      batchId: profile.batchId,
+    const batchId = (profile.batchId as any)?._id || profile.batchId;
+
+    // Query published/scheduled/live/completed classes for this student's registered batch timing
+    const rawClasses = await LiveSession.find({
+      batchId,
       status: { $in: ["PUBLISHED", "SCHEDULED", "LIVE", "COMPLETED", "CANCELLED"] },
     })
       .populate("teacherId", "name avatarUrl email phone")
       .populate("batchId")
-      .sort({ date: -1, startTime: 1 })
       .lean();
+
+    const dbClasses = sortClassesByPriority(rawClasses as any[]);
 
     const todayClasses = dbClasses.filter(
       (c: any) => c.status === "LIVE"

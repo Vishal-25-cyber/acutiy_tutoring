@@ -153,7 +153,7 @@ export default function StudentFeesPage() {
               </Badge>
               <h2 className="text-2xl font-extrabold">Billing for {currentFee.billingMonth}</h2>
               <p className="text-xs text-slate-300">
-                Due Date: {new Date(currentFee.dueDate).toLocaleDateString()} • Invoice #{currentFee.receiptNumber}
+                Due Date: {new Date(currentFee.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} • Invoice #{currentFee.receiptNumber}
               </p>
               <p className="text-3xl font-black text-white pt-2">₹{currentFee.amount}</p>
             </div>
@@ -224,7 +224,7 @@ export default function StudentFeesPage() {
                     <td className="p-4 font-bold text-slate-900 dark:text-slate-100">₹{p.amount}</td>
                     <td className="p-4 text-slate-500">{p.paymentMethod || "Online UPI"}</td>
                     <td className="p-4 text-slate-500">
-                      {p.paidDate ? new Date(p.paidDate).toLocaleDateString() : "Just now"}
+                      {p.paidDate ? new Date(p.paidDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Just now"}
                     </td>
                     <td className="p-4">
                       <Badge variant="success">PAID</Badge>

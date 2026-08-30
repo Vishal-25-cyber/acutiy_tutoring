@@ -21,6 +21,87 @@ import {
 import { Button } from "@/components/ui/button";
 import { useFastFetch } from "@/lib/api-cache";
 import { ScheduleSwapModal } from "@/components/classroom/ScheduleSwapModal";
+import { useClassLiveTimer } from "@/lib/class-timing";
+
+function TeacherLiveClassRow({ cls, onSwap }: { cls: any; onSwap: (cls: any) => void }) {
+  const batchData = {
+    ...(cls.batchId || {}),
+    date: cls.date,
+    startTime: cls.startTime || cls.batchId?.startTime,
+    endTime: cls.endTime || cls.batchId?.endTime,
+    days: cls.batchId?.days || ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+    gracePeriodMinutes: cls.gracePeriodMinutes || cls.batchId?.gracePeriodMinutes || 10,
+  };
+
+  const timing = useClassLiveTimer(batchData);
+  const targetRoomId = timing.permanentRoomId || cls.livekitRoomId || cls._id;
+
+  return (
+    <div className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="space-y-1.5 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#dfb74a] border border-blue-200 dark:border-[#004b79]/60">
+            {cls.subject}
+          </span>
+          <span className="text-xs font-mono font-semibold text-slate-600 dark:text-slate-400">
+            {cls.startTime} – {cls.endTime}
+          </span>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+            {cls.classLevel || "Class 10"}
+          </span>
+          {timing.isLiveNow ? (
+            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+              ● Live Now ({timing.countdownText})
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+              <Clock className="w-3 h-3 text-amber-500 animate-spin" />
+              {timing.countdownText}
+            </span>
+          )}
+        </div>
+        <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100">
+          {cls.title}
+        </h3>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          {cls.topic || timing.detailedCountdown}
+        </p>
+      </div>
+
+      <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+        {/* Reschedule / Day Swap Tool Button */}
+        <button
+          type="button"
+          onClick={() => onSwap(cls)}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+        >
+          <Shuffle className="w-3.5 h-3.5 text-[#004b79] dark:text-[#dfb74a]" />
+          <span>Swap / Reschedule</span>
+        </button>
+
+        {timing.canJoin ? (
+          <Link href={`/classroom/${targetRoomId}`}>
+            <button className="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all cursor-pointer shadow-md shadow-emerald-500/25 animate-pulse">
+              <Video className="w-4 h-4" />
+              <span>Start Live Classroom</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          </Link>
+        ) : (
+          <button
+            disabled
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-200 dark:border-slate-700"
+            title={timing.detailedCountdown}
+          >
+            <Clock className="w-3.5 h-3.5" />
+            <span>Opens at {cls.startTime} ({timing.countdownText})</span>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function TeacherDashboardPage() {
   const { data, refetch } = useFastFetch("/api/teacher/dashboard");
@@ -35,11 +116,11 @@ export default function TeacherDashboardPage() {
   };
 
   const stats = data?.stats || {
-    totalStudents: 3,
+    totalStudents: 0,
     todayClassesCount: 0,
     pendingEvaluations: 0,
-    totalMaterials: 4,
-    averageAttendance: 94,
+    totalMaterials: 0,
+    averageAttendance: 100,
   };
 
   const todayClasses = Array.isArray(data?.todayClasses) ? data.todayClasses : [];
@@ -83,7 +164,7 @@ export default function TeacherDashboardPage() {
         </div>
       </div>
 
-      {/* ── METRICS (CARDLESS HAIRLINE SUMMARY) ── */}
+      {/* ── METRICS (LIVE DATABASE METRICS) ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex items-center justify-between">
           <div className="space-y-1">
@@ -134,59 +215,23 @@ export default function TeacherDashboardPage() {
         </div>
       </div>
 
-      {/* ── TODAY'S LIVE CLASS SCHEDULE (IF ANY) ── */}
+      {/* ── TODAY'S LIVE CLASS SCHEDULE (WITH REAL-TIME COUNTDOWN) ── */}
       {todayClasses.length > 0 && (
         <div className="space-y-3">
           <div className="pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <h2 className="font-semibold text-sm text-slate-800 dark:text-slate-200">
               Today&apos;s Active Lecture Schedule
             </h2>
-            <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400">Live Session Ready</span>
+            <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400">Live Timing Synced</span>
           </div>
 
           <div className="border border-slate-200 dark:border-slate-800 rounded-2xl divide-y divide-slate-200 dark:divide-slate-800 overflow-hidden bg-white dark:bg-slate-900/50 shadow-xs">
             {todayClasses.map((cls: any) => (
-              <div key={cls._id} className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="space-y-1.5 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#dfb74a] border border-blue-200 dark:border-[#004b79]/60">
-                      {cls.subject}
-                    </span>
-                    <span className="text-xs font-mono font-semibold text-slate-600 dark:text-slate-400">
-                      {cls.startTime} – {cls.endTime}
-                    </span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
-                      {cls.classLevel || "Class 10"}
-                    </span>
-                  </div>
-                  <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100">
-                    {cls.title}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {cls.topic}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2.5 shrink-0">
-                  {/* Reschedule / Day Swap Tool Button */}
-                  <button
-                    type="button"
-                    onClick={() => setSwapModalSession(cls)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
-                  >
-                    <Shuffle className="w-3.5 h-3.5 text-[#004b79] dark:text-[#dfb74a]" />
-                    <span>Swap / Reschedule</span>
-                  </button>
-
-                  <Link href={`/classroom/${cls._id || "acuity-live-classroom"}`}>
-                    <button className="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer shadow-sm">
-                      <Video className="w-4 h-4" />
-                      <span>Start Live Classroom</span>
-                      <ArrowRight className="w-3 h-3" />
-                    </button>
-                  </Link>
-                </div>
-              </div>
+              <TeacherLiveClassRow
+                key={cls._id}
+                cls={cls}
+                onSwap={(target) => setSwapModalSession(target)}
+              />
             ))}
           </div>
         </div>
