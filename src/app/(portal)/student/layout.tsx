@@ -4,7 +4,7 @@ import React from "react";
 import { usePathname } from "next/navigation";
 import { PortalSidebar } from "@/components/layout/PortalSidebar";
 import { LivePaymentListener } from "@/components/payment/LivePaymentListener";
-import { PortalHeader } from "@/components/layout/PortalHeader";
+
 
 export default function StudentLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -20,8 +20,6 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       <LivePaymentListener />
 
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-        {/* ── TOP NAVBAR ── */}
-        <PortalHeader userRole="STUDENT" />
 
         <div className="flex-1 transition-opacity duration-150 ease-out">
           {children}

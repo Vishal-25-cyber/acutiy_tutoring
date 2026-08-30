@@ -19,6 +19,8 @@ import {
   Hash,
 } from "lucide-react";
 import { useFastFetch } from "@/lib/api-cache";
+import { PortalHeader } from "@/components/layout/PortalHeader";
+
 
 export default function StudentDashboardPage() {
   const { data: authData } = useFastFetch("/api/auth/me");
@@ -89,7 +91,11 @@ export default function StudentDashboardPage() {
   ];
 
   return (
-    <main className="w-full max-w-7xl mx-auto p-6 sm:p-8 space-y-6 sm:space-y-8 animate-in fade-in duration-150 select-none">
+    <>
+      {/* ── DASHBOARD NAVBAR ── */}
+      <PortalHeader userRole="STUDENT" />
+
+      <main className="w-full max-w-7xl mx-auto p-6 sm:p-8 space-y-6 sm:space-y-8 animate-in fade-in duration-150 select-none">
       
       {/* ── 1. CLEAN HEADER (PERFECT ALIGNMENT) ── */}
       <div className="flex flex-row items-center justify-between gap-4 pb-5 border-b border-slate-200 dark:border-slate-800">
@@ -325,5 +331,6 @@ export default function StudentDashboardPage() {
       </div>
 
     </main>
+    </>
   );
 }
