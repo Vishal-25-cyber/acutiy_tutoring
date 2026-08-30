@@ -105,7 +105,6 @@ export function PortalSidebar({ role }: SidebarProps) {
     { href: "/admin/attendance", label: "Student Attendance", icon: CalendarCheck2, api: "/api/admin/attendance?classLevel=ALL&status=ALL" },
     { href: "/admin/staff-attendance", label: "Faculty Attendance", icon: Clock, api: "/api/admin/staff-attendance" },
     { href: "/admin/finance", label: "Fee Accounts & Income", icon: DollarSign, api: "/api/admin/finance" },
-    { href: "/admin/analytics", label: "Platform Analytics", icon: Activity, api: "/api/admin/analytics" },
     { href: "/admin/settings", label: "Institute Settings", icon: Settings, api: "/api/admin/settings" },
   ];
 
