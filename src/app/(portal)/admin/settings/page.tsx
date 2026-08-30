@@ -330,12 +330,12 @@ export default function AdminSettingsPage() {
           </div>
         </div>
 
-        {/* ── Section 3: Tuition Fee Policy ── */}
+        {/* ── Section 3: Tuition Fee Policy & QR Code ── */}
         <div className="space-y-4 pb-4">
           <div className="flex items-center gap-2">
             <DollarSign className="w-4 h-4 text-[#004b79] dark:text-[#dfb74a]" />
             <h2 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100">
-              Tuition Fee Structure (₹ INR)
+              Tuition Fee Structure &amp; Official UPI QR
             </h2>
           </div>
 
@@ -368,7 +368,7 @@ export default function AdminSettingsPage() {
               </label>
               <Input
                 required
-                placeholder="e.g. acuity.tutoring@upi or yourname@oksbi"
+                placeholder="e.g. acuity.tutoring@upi, yourname@okaxis, yourphone@paytm"
                 value={settings.upiId}
                 onChange={(e) =>
                   setSettings({
@@ -378,9 +378,85 @@ export default function AdminSettingsPage() {
                 }
               />
               <p className="text-[11px] text-slate-400 mt-1">
-                Students scan the live QR code encoded with this UPI ID to send tuition directly to your bank.
+                Used for auto-generating dynamic QR with pre-filled amounts.
               </p>
             </div>
+          </div>
+
+          {/* ── Custom GPay / PhonePe QR Image Upload ── */}
+          <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                  Custom GPay / PhonePe / Paytm QR Code Image
+                </label>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Upload or paste your personal/shop GPay QR image. Students will scan this exact QR to pay directly to your account.
+                </p>
+              </div>
+              {settings.qrCodeImageUrl && (
+                <button
+                  type="button"
+                  onClick={() => setSettings({ ...settings, qrCodeImageUrl: "" })}
+                  className="text-xs font-semibold text-rose-600 hover:text-rose-700 self-start sm:self-auto cursor-pointer"
+                >
+                  Remove Custom QR
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 text-xs font-bold text-slate-800 dark:text-slate-200 cursor-pointer shadow-xs transition-colors">
+                <span>📁 Upload GPay / PhonePe QR Image</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        if (typeof reader.result === "string") {
+                          setSettings({ ...settings, qrCodeImageUrl: reader.result });
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+              </label>
+
+              <span className="text-xs text-slate-400">or paste image URL:</span>
+
+              <input
+                type="text"
+                placeholder="https://example.com/my-gpay-qr.png"
+                value={settings.qrCodeImageUrl.startsWith("data:") ? "Custom Image Uploaded (Base64)" : settings.qrCodeImageUrl}
+                onChange={(e) => setSettings({ ...settings, qrCodeImageUrl: e.target.value })}
+                className="flex-1 h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#004b79]"
+              />
+            </div>
+
+            {settings.qrCodeImageUrl && (
+              <div className="pt-2 flex items-center gap-3">
+                <div className="w-24 h-24 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-white p-1 shadow-xs">
+                  <img
+                    src={settings.qrCodeImageUrl}
+                    alt="Custom GPay QR Preview"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                    ✓ Custom QR Preview Active
+                  </span>
+                  <p className="text-[10px] text-slate-400">
+                    Students will see this exact QR image when paying tuition fees.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </form>

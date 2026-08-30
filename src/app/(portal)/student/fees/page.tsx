@@ -42,16 +42,20 @@ export default function StudentFeesPage() {
   const upiId = data?.settings?.upiId || "acuity.tutoring@upi";
   const companyName = data?.settings?.companyName || "Acuity Tutoring";
   const monthlyFee = Number(data?.settings?.monthlyFee || 2500);
+  const customQrImage = data?.settings?.qrCodeImageUrl;
 
   // Genuine UPI Deep Link URI with pre-filled exact amount
   const upiUri = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(
     companyName
-  )}&am=${monthlyFee.toFixed(2)}&cu=INR&tn=${encodeURIComponent("Tuition Fee August 2026")}`;
+  )}&am=${monthlyFee.toFixed(2)}&cu=INR&tn=${encodeURIComponent("Tuition Fee")}`;
 
-  // High-Resolution Scannable Real QR Code Image
-  const realQrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(
-    upiUri
-  )}&margin=8`;
+  // High-Resolution Scannable Real QR Code Image (uses custom uploaded QR if set, otherwise auto-generates dynamic UPI QR)
+  const displayQrCodeUrl =
+    customQrImage && customQrImage.trim()
+      ? customQrImage
+      : `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(
+          upiUri
+        )}&margin=8`;
 
   const handleCopyUpi = () => {
     navigator.clipboard.writeText(upiId);
@@ -335,7 +339,7 @@ export default function StudentFeesPage() {
               <div className="md:col-span-5 flex flex-col items-center text-center space-y-2.5">
                 <div className="relative p-2.5 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center">
                   <img
-                    src={realQrCodeUrl}
+                    src={displayQrCodeUrl}
                     alt="Official UPI QR Code"
                     className="w-48 h-48 sm:w-52 sm:h-52 object-contain rounded-lg"
                   />

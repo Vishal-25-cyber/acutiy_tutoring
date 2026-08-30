@@ -24,7 +24,8 @@ export async function GET(req: NextRequest) {
 
     const monthlyFee = (settings as any)?.monthlyTuitionFee || 2500;
     const companyName = (settings as any)?.companyName || "Acuity Tutoring";
-    const upiId = "acuity.tutoring@upi";
+    const upiId = (settings as any)?.upiId || "acuity.tutoring@upi";
+    const qrCodeImageUrl = (settings as any)?.qrCodeImageUrl || "";
 
     // Strictly fetch payments belonging ONLY to this specific student
     const payments = await Payment.find({ studentId: session.userId })
@@ -44,6 +45,7 @@ export async function GET(req: NextRequest) {
         settings: {
           companyName,
           upiId,
+          qrCodeImageUrl,
           monthlyFee,
         },
       },
