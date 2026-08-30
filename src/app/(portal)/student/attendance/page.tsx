@@ -8,15 +8,17 @@ import {
   UserCheck,
   Calendar,
   GraduationCap,
-  User,
   ShieldCheck,
-  XCircle,
+  Download,
+  Search,
+  FileSpreadsheet,
 } from "lucide-react";
 import { useFastFetch } from "@/lib/api-cache";
 
 export default function StudentAttendancePage() {
   const { data, isLoading } = useFastFetch("/api/student/attendance");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [dateFilter, setDateFilter] = useState<string>("");
 
   const currentClass = data?.stats?.currentClass || "Class 10";
   const board = data?.stats?.board || "CBSE";
@@ -84,7 +86,9 @@ export default function StudentAttendancePage() {
     : defaultRecords;
 
   const filteredRecords = records.filter((r: any) => {
-    return statusFilter === "ALL" || r.status?.toUpperCase() === statusFilter.toUpperCase();
+    const matchesStatus = statusFilter === "ALL" || r.status?.toUpperCase() === statusFilter.toUpperCase();
+    const matchesDate = !dateFilter || r.date?.includes(dateFilter) || r.date === dateFilter;
+    return matchesStatus && matchesDate;
   });
 
   const getSubjectColor = (subject?: string) => {
@@ -94,6 +98,7 @@ export default function StudentAttendancePage() {
       case "science":
       case "physics":
       case "chemistry":
+      case "biology":
         return "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/70 border-emerald-200 dark:border-emerald-800";
       case "english":
         return "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/70 border-amber-200 dark:border-amber-800";
@@ -104,23 +109,52 @@ export default function StudentAttendancePage() {
     }
   };
 
-  const todayStatus = stats.todayStatus || "PRESENT";
+  const downloadStatementCSV = () => {
+    if (!filteredRecords.length) return;
+    const headers = ["Date", "Time", "Subject", "Topic", "Faculty", "Attendance Status"];
+    const rows = filteredRecords.map((r: any) => [
+      `"${r.date || ""}"`,
+      `"${r.time || ""}"`,
+      `"${r.subject || ""}"`,
+      `"${(r.title || "").replace(/"/g, '""')}"`,
+      `"${r.faculty || ""}"`,
+      `"${r.status || "PRESENT"}"`,
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((row: any) => row.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Student_Attendance_Statement_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <main className="w-full max-w-7xl mx-auto p-6 sm:p-8 space-y-6 sm:space-y-8 animate-in fade-in duration-150 select-none">
-      
       {/* ── 1. CLEAN HEADER (NO CARDS) ── */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-slate-200 dark:border-slate-800">
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-            Attendance & Streak
+            Attendance &amp; Streak Dossier
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Verified classroom turnout marked by faculty and live session participation for <span className="font-semibold text-slate-700 dark:text-slate-300">{currentClass} ({board})</span>.
+            Verified classroom turnout marked by faculty and live session participation for{" "}
+            <span className="font-semibold text-slate-700 dark:text-slate-300">
+              {currentClass} ({board})
+            </span>.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
+          <button
+            onClick={downloadStatementCSV}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5 text-[#004b79] dark:text-[#dfb74a]" />
+            <span>Download Statement (CSV)</span>
+          </button>
+
           <span
             className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
               isCompliant
@@ -129,17 +163,16 @@ export default function StudentAttendancePage() {
             }`}
           >
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>{isCompliant ? "Compliant (≥ 75% CBSE Rule)" : "Turnout Below 75%"}</span>
+            <span>{isCompliant ? "Compliant (≥ 75% Rule)" : "Turnout Below 75%"}</span>
           </span>
         </div>
       </div>
 
       {/* ── 2. CARDLESS 3-METRIC HAIRLINE STRIP ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-200 dark:divide-slate-800 pb-2">
-        {/* Metric 1: Overall Attendance Rate */}
         <div className="py-2 sm:px-6 first:pl-0 space-y-1">
           <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Attendance Turnout</span>
-          <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100">
+          <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 font-mono">
             {stats.attendancePercentage}%
           </p>
           <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
@@ -147,68 +180,81 @@ export default function StudentAttendancePage() {
           </p>
         </div>
 
-        {/* Metric 2: Sessions Attended */}
         <div className="py-2 sm:px-6 space-y-1">
           <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Sessions Attended</span>
-          <p className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">
+          <p className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
             {stats.presentCount} <span className="text-sm font-semibold text-slate-400">/ {stats.totalSessions} Total</span>
           </p>
-          <p className="text-xs text-slate-500 font-medium">
-            Active batch participation
-          </p>
+          <p className="text-xs text-slate-500 font-medium">Active batch participation</p>
         </div>
 
-        {/* Metric 3: Today's Status */}
         <div className="py-2 sm:px-6 space-y-1">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Today's Live Status</span>
-          <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Today&apos;s Live Status</span>
+          <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2 font-mono">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
             Present
           </p>
-          <p className="text-xs text-slate-500 font-medium">
-            Verified by faculty roll call
-          </p>
+          <p className="text-xs text-slate-500 font-medium">Verified by faculty attendance log</p>
         </div>
       </div>
 
-      {/* ── 3. SESSION HISTORY (CARDLESS TABLE) ── */}
+      {/* ── 3. DATE-WISE FILTER & SESSION HISTORY LOG ── */}
       <div className="space-y-3 pt-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            <Calendar className="w-4 h-4 text-[#004b79] dark:text-[#dfb74a]" />
             <h2 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100 tracking-tight">
-              Class Session History Log
+              Date-Wise Session Attendance Log ({filteredRecords.length})
             </h2>
           </div>
 
-          {/* Quick Filter Chips */}
-          <div className="flex items-center gap-1.5 overflow-x-auto">
-            {["ALL", "PRESENT", "LATE", "ABSENT"].map((st) => (
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Date Picker Filter */}
+            <input
+              type="text"
+              placeholder="Filter by date (e.g. 27 Aug)..."
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#004b79]"
+            />
+            {dateFilter && (
               <button
-                key={st}
-                onClick={() => setStatusFilter(st)}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                  statusFilter === st
-                    ? "bg-indigo-600 text-white"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
-                }`}
+                onClick={() => setDateFilter("")}
+                className="h-9 px-2 text-xs font-bold text-rose-500 hover:underline"
               >
-                {st === "ALL" ? "All Sessions" : st}
+                Clear
               </button>
-            ))}
+            )}
+
+            {/* Quick Filter Chips */}
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60">
+              {["ALL", "PRESENT", "LATE", "ABSENT"].map((st) => (
+                <button
+                  key={st}
+                  onClick={() => setStatusFilter(st)}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                    statusFilter === st
+                      ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs"
+                      : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                  }`}
+                >
+                  {st === "ALL" ? "All" : st}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Table Headers */}
         <div className="hidden md:grid grid-cols-12 gap-4 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-850">
-          <div className="col-span-3">Date & Time</div>
-          <div className="col-span-5">Subject & Lecture Topic</div>
+          <div className="col-span-3">Date &amp; Timing</div>
+          <div className="col-span-5">Subject &amp; Lecture Topic</div>
           <div className="col-span-2">Faculty Instructor</div>
           <div className="col-span-2 text-right">Attendance Status</div>
         </div>
 
         {/* History Rows */}
-        <div className="divide-y divide-slate-100 dark:divide-slate-850">
+        <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
           {filteredRecords.map((r: any) => {
             const isPresent = r.status === "PRESENT";
             const isLate = r.status === "LATE";
@@ -216,25 +262,25 @@ export default function StudentAttendancePage() {
             return (
               <div
                 key={r._id}
-                className="py-3.5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-900/30"
+                className="py-3.5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-900/30 px-1"
               >
                 {/* Col 1: Date & Time */}
                 <div className="col-span-3 space-y-0.5">
-                  <p className="font-bold text-xs text-slate-800 dark:text-slate-200">{r.date}</p>
+                  <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100">{r.date}</p>
                   <p className="text-[11px] text-slate-400 font-mono">{r.time}</p>
                 </div>
 
                 {/* Col 2: Subject & Topic */}
-                <div className="col-span-5 space-y-0.5">
+                <div className="col-span-5 space-y-1">
                   <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded border ${getSubjectColor(r.subject)}`}>
                     {r.subject}
                   </span>
-                  <p className="font-semibold text-xs text-slate-900 dark:text-slate-100">{r.title}</p>
+                  <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100">{r.title}</p>
                 </div>
 
                 {/* Col 3: Faculty */}
                 <div className="col-span-2">
-                  <p className="font-medium text-xs text-slate-800 dark:text-slate-200 truncate">
+                  <p className="font-semibold text-xs text-slate-800 dark:text-slate-200 truncate">
                     {r.faculty || "Faculty Specialist"}
                   </p>
                   <p className="text-[10px] text-slate-400">Staff Faculty</p>
@@ -259,7 +305,6 @@ export default function StudentAttendancePage() {
           })}
         </div>
       </div>
-
     </main>
   );
 }

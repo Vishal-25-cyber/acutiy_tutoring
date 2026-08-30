@@ -5,6 +5,7 @@ import LiveSession from "@/models/LiveSession";
 import Attendance from "@/models/Attendance";
 import StudentProfile from "@/models/StudentProfile";
 import TeacherProfile from "@/models/TeacherProfile";
+import StaffAttendance from "@/models/StaffAttendance";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -81,7 +82,6 @@ export async function GET(req: NextRequest) {
       const lateCount = classAtts.filter((a) => a.status === "LATE").length;
       const absentCount = classAtts.filter((a) => a.status === "ABSENT").length || Math.max(0, totalEnrolled - presentCount);
 
-      // A session is conducted if it is LIVE, COMPLETED, held in the past (live date/time), or has attendance records
       const isConducted =
         cls.status === "COMPLETED" ||
         cls.status === "LIVE" ||
@@ -133,6 +133,33 @@ export async function GET(req: NextRequest) {
       averageRate = Math.round((totalPresentInAll / allAttendances.length) * 100);
     }
 
+    // 4. Fetch Faculty Staff Attendance Logs
+    let staffRecords: any[] = await StaffAttendance.find({ teacherId: session.userId })
+      .sort({ date: -1 })
+      .limit(30)
+      .lean();
+
+    // Auto-seed today's record if teacher has conducted classes or logged in
+    let todayStaffRecord: any = staffRecords.find((r) => r.date === todayDateStr);
+    if (!todayStaffRecord) {
+      const todayConducted = sessionStats.filter((s) => s.date === todayDateStr && s.isConducted).length;
+      if (todayConducted > 0) {
+        todayStaffRecord = await StaffAttendance.create({
+          teacherId: session.userId,
+          date: todayDateStr,
+          loginTime: new Date(),
+          classesConducted: todayConducted,
+          workingHours: Math.round(todayConducted * 1.5 * 10) / 10,
+          status: "PRESENT",
+        });
+        staffRecords = [todayStaffRecord, ...staffRecords];
+      }
+    }
+
+    const totalDutyDays = staffRecords.length || 1;
+    const presentDutyDays = staffRecords.filter((r) => r.status === "PRESENT" || r.status === "HALF_DAY").length;
+    const staffAttendanceRate = Math.round((presentDutyDays / totalDutyDays) * 100);
+
     return NextResponse.json({
       sessions: sessionStats,
       summary: {
@@ -141,6 +168,17 @@ export async function GET(req: NextRequest) {
         averageAttendance: averageRate,
         totalStudentsAssigned: assignedStudentsCount || studentProfiles.length,
       },
+      staffAttendance: {
+        records: staffRecords,
+        todayRecord: todayStaffRecord || null,
+        totalDutyDays,
+        presentDutyDays,
+        staffAttendanceRate,
+      },
+    }, {
+      headers: {
+        "Cache-Control": "no-store, max-age=0, must-revalidate",
+      },
     });
   } catch (error: any) {
     console.error("GET /api/teacher/attendance error:", error);
@@ -148,3 +186,58 @@ export async function GET(req: NextRequest) {
   }
 }
 
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getSession();
+    if (!session || (session.role !== "TEACHER" && session.role !== "ADMIN")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { action } = await req.json(); // "CHECK_IN" or "CHECK_OUT"
+    await connectToDatabase();
+
+    const todayDateStr = new Date().toISOString().split("T")[0];
+
+    if (action === "CHECK_IN") {
+      const record = await StaffAttendance.findOneAndUpdate(
+        { teacherId: session.userId, date: todayDateStr },
+        {
+          loginTime: new Date(),
+          status: "PRESENT",
+          $inc: { classesConducted: 0 },
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: "Staff Attendance: Check-in recorded successfully!",
+        record,
+      });
+    } else if (action === "CHECK_OUT") {
+      const existing = await StaffAttendance.findOne({ teacherId: session.userId, date: todayDateStr });
+      const loginTime = existing?.loginTime ? new Date(existing.loginTime).getTime() : Date.now() - 3600000;
+      const hours = Math.round(((Date.now() - loginTime) / (1000 * 60 * 60)) * 10) / 10;
+
+      const record = await StaffAttendance.findOneAndUpdate(
+        { teacherId: session.userId, date: todayDateStr },
+        {
+          logoutTime: new Date(),
+          workingHours: Math.max(1, hours),
+        },
+        { upsert: true, new: true }
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: "Staff Attendance: Check-out recorded successfully!",
+        record,
+      });
+    }
+
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  } catch (error: any) {
+    console.error("POST /api/teacher/attendance error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

@@ -49,10 +49,10 @@ function TeacherScheduleClassRow({
   const targetRoomId = timing.permanentRoomId || cls.livekitRoomId || cls._id;
 
   return (
-    <div className="p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+    <div className="py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors px-1">
       <div className="space-y-1.5 min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+          <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#dfb74a] border border-blue-200 dark:border-[#004b79]/60">
             {cls.subject}
           </span>
 
@@ -73,10 +73,22 @@ function TeacherScheduleClassRow({
               <Clock className="w-3 h-3 text-amber-500 animate-spin" />
               {timing.countdownText}
             </span>
+          ) : isCompleted ? (
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">
+              Completed
+            </span>
+          ) : isCancelled ? (
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
+              Cancelled
+            </span>
+          ) : isDraft ? (
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+              Draft
+            </span>
           ) : null}
         </div>
 
-        <h3 className="font-semibold text-sm sm:text-base text-slate-900 dark:text-slate-100">
+        <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100">
           {cls.title || `${cls.subject} — ${cls.topic}`}
         </h3>
 
@@ -91,7 +103,7 @@ function TeacherScheduleClassRow({
           timing.canJoin ? (
             <Link href={`/classroom/${targetRoomId}`}>
               <button
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all cursor-pointer shadow-md shadow-emerald-500/25 animate-pulse"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all cursor-pointer shadow-md shadow-emerald-500/25 animate-pulse"
               >
                 <Video className="w-3.5 h-3.5" />
                 <span>Enter Live Class</span>
@@ -100,15 +112,15 @@ function TeacherScheduleClassRow({
           ) : isCompleted ? (
             <button
               disabled
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-200 dark:border-slate-700"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-200 dark:border-slate-700"
             >
               <Clock className="w-3.5 h-3.5" />
-              <span>Session Concluded</span>
+              <span>Concluded</span>
             </button>
           ) : (
             <button
               disabled
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-200 dark:border-slate-700"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-200 dark:border-slate-700"
               title={timing.detailedCountdown}
             >
               <Clock className="w-3.5 h-3.5" />
@@ -120,7 +132,7 @@ function TeacherScheduleClassRow({
         {isDraft && (
           <button
             onClick={() => handlePublishClass(cls._id)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#004b79] hover:bg-[#003b60] text-white transition-colors cursor-pointer"
           >
             <Send className="w-3.5 h-3.5" />
             <span>Publish</span>
@@ -129,8 +141,8 @@ function TeacherScheduleClassRow({
 
         {!isDraft && (
           <Link href={`/teacher/attendance/${cls._id}`}>
-            <button className="px-3 py-1.5 rounded-md text-xs font-medium border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer">
-              <FileCheck2 className="w-3.5 h-3.5 text-indigo-600" />
+            <button className="px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer">
+              <FileCheck2 className="w-3.5 h-3.5 text-[#004b79] dark:text-[#dfb74a]" />
               <span>Attendance</span>
             </button>
           </Link>
@@ -139,7 +151,7 @@ function TeacherScheduleClassRow({
         {!isCancelled && !isCompleted && !isDraft && (
           <button
             onClick={() => setSwapModalClass(cls)}
-            className="px-3 py-1.5 rounded-md text-xs font-semibold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer"
             title="Swap Subject Days or Change Slot"
           >
             <Shuffle className="w-3.5 h-3.5 text-[#004b79] dark:text-[#dfb74a]" />
@@ -150,7 +162,7 @@ function TeacherScheduleClassRow({
         {!isCancelled && !isCompleted && !isDraft && (
           <button
             onClick={() => setCancelModalClass(cls)}
-            className="px-2.5 py-1.5 rounded-md text-xs font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+            className="px-2.5 py-1.5 rounded-xl text-xs font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
             title="Cancel Class"
           >
             <Ban className="w-3.5 h-3.5" />
@@ -160,7 +172,7 @@ function TeacherScheduleClassRow({
         {isDraft && (
           <button
             onClick={() => setDeleteModalClass(cls)}
-            className="px-2.5 py-1.5 rounded-md text-xs font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+            className="px-2.5 py-1.5 rounded-xl text-xs font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
             title="Delete Draft"
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -274,20 +286,20 @@ export default function TeacherSchedulePage() {
   );
 
   return (
-    <main className="w-full min-h-full bg-transparent p-6 sm:p-8 lg:p-10 space-y-8 animate-in fade-in duration-150">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
+    <main className="w-full max-w-7xl mx-auto p-6 sm:p-8 space-y-6 sm:space-y-8 animate-in fade-in duration-150 select-none">
+      {/* ── 1. CLEAN HEADER (NO CARDS) ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200 dark:border-slate-800">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
             Teaching Timetable & Schedule
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             View live teaching sessions, swap subject days, manage weekly schedule and monitor classroom status.
           </p>
         </div>
 
         <Link href="/teacher/live-class/create">
-          <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer shadow-sm">
+          <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-[#004b79] hover:bg-[#003b60] text-white transition-colors cursor-pointer shadow-sm">
             <Plus className="w-3.5 h-3.5" />
             <span>Create New Class</span>
           </button>
@@ -295,19 +307,19 @@ export default function TeacherSchedulePage() {
       </div>
 
       {actionMessage && (
-        <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-medium animate-in fade-in">
+        <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-semibold animate-in fade-in">
           {actionMessage}
         </div>
       )}
 
-      {/* Filter Tabs */}
-      <div className="flex items-center justify-between gap-4 flex-wrap pb-2 border-b border-slate-200 dark:border-slate-800">
-        <div className="flex items-center gap-1 flex-wrap">
+      {/* ── 2. FILTER TABS & SEARCH (FLAT, NO CARDS) ── */}
+      <div className="flex items-center justify-between gap-4 flex-wrap pb-3 border-b border-slate-200 dark:border-slate-800">
+        <div className="flex items-center gap-1.5 flex-wrap">
           {(["ALL", "LIVE", "UPCOMING", "COMPLETED", "DRAFT", "CANCELLED"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setSelectedTab(tab)}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                 selectedTab === tab
                   ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs"
                   : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -325,23 +337,23 @@ export default function TeacherSchedulePage() {
             placeholder="Search classes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-500"
+            className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:border-[#004b79]"
           />
         </div>
       </div>
 
-      {/* Classes List */}
+      {/* ── 3. CLASSES LIST (CARDLESS HAIRLINE TABLE) ── */}
       <div className="space-y-3">
         {isLoading ? (
           <div className="p-12 text-center text-xs text-slate-500">Loading schedule...</div>
         ) : filteredClasses.length === 0 ? (
           <div className="p-12 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-lg space-y-2">
             <Calendar className="w-8 h-8 text-slate-400 mx-auto" />
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">No classes found</p>
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">No classes found</p>
             <p className="text-xs text-slate-400">No scheduled sessions match your filter criteria.</p>
           </div>
         ) : (
-          <div className="border border-slate-200 dark:border-slate-800 rounded-lg divide-y divide-slate-200 dark:divide-slate-800 overflow-hidden bg-white dark:bg-slate-900/50">
+          <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
             {filteredClasses.map((cls: any) => (
               <TeacherScheduleClassRow
                 key={cls._id}

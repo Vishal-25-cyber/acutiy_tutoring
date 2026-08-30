@@ -28,6 +28,23 @@ const MaterialSchema = new Schema(
   { _id: false }
 );
 
+const AdmissionEntrySchema = new Schema(
+  {
+    userId:      { type: String, required: true },
+    name:        { type: String, default: "Student" },
+    requestedAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
+const AdmittedEntrySchema = new Schema(
+  {
+    userId:     { type: String, required: true },
+    admittedAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
 const LiveSessionSchema = new Schema<ILiveSessionDocument>(
   {
     title: { type: String, required: true, trim: true },
@@ -72,11 +89,16 @@ const LiveSessionSchema = new Schema<ILiveSessionDocument>(
     allowLateJoinManually: { type: Boolean, default: false },
     recordingUrl: { type: String, default: "" },
     activePoll: { type: ClassroomPollSchema },
+    // ── Admission queue ────────────────────────────────────────────
+    pendingAdmissions: { type: [AdmissionEntrySchema], default: [] },
+    admittedStudents:  { type: [AdmittedEntrySchema],  default: [] },
+    deniedStudents:    { type: [{ userId: String }],   default: [] },
   },
   {
     timestamps: true,
   }
 );
+
 
 // Pre-save hook to ensure meetingId and livekitRoomId are populated
 LiveSessionSchema.pre("save", function (next) {

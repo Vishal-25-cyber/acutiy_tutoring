@@ -44,7 +44,11 @@ export function adaptRoute(handler: (req: any, ctx?: any) => Promise<any>) {
       return await requestContextStorage.run(
         { cookies: parsedCookies, headers },
         async () => {
-          const nextResponse = await handler(webReq, { params: req.params });
+          const paramsObj = req.params || {};
+          const paramsPromise = Promise.resolve(paramsObj);
+          Object.assign(paramsPromise, paramsObj);
+
+          const nextResponse = await handler(webReq, { params: paramsPromise });
 
           if (nextResponse) {
             res.status(nextResponse.status || 200);

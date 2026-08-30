@@ -133,6 +133,9 @@ export interface ILiveSession {
   allowLateJoinManually?: boolean;
   recordingUrl?: string;
   activePoll?: IClassroomPoll;
+  pendingAdmissions?: Array<{ userId: string; name: string; requestedAt: Date }>;
+  admittedStudents?:  Array<{ userId: string; admittedAt: Date }>;
+  deniedStudents?:    Array<{ userId: string }>;
   createdAt?: Date;
   updatedAt?: Date;
 }

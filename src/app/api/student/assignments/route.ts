@@ -21,10 +21,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    // Query real assignments for the student's class
-    const assignments = await Assignment.find({
-      classLevel: profile.currentClass,
-    })
+    // Query real assignments for the student's class or assigned batch
+    const orConditions: any[] = [{ classLevel: profile.currentClass }];
+    if (profile.batchId) {
+      orConditions.push({ batchId: profile.batchId });
+    }
+
+    const assignments = await Assignment.find({ $or: orConditions })
       .populate("teacherId", "name email avatarUrl")
       .sort({ createdAt: -1 })
       .lean();
@@ -74,7 +77,7 @@ export async function GET(req: NextRequest) {
       board: profile.board || "CBSE",
     }, {
       headers: {
-        "Cache-Control": "private, max-age=10, stale-while-revalidate=30",
+        "Cache-Control": "no-store, max-age=0, must-revalidate",
       },
     });
   } catch (error: any) {

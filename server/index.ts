@@ -58,6 +58,7 @@ app.post("/api/student/ai-assistant", adaptRoute(StudentAiAssistant.POST));
 // ── TEACHER ROUTES ──
 import * as TeacherDashboard from "../src/app/api/teacher/dashboard/route";
 import * as TeacherMaterials from "../src/app/api/teacher/materials/route";
+import * as TeacherMaterialDetail from "../src/app/api/teacher/materials/[id]/route";
 import * as TeacherAssignments from "../src/app/api/teacher/assignments/route";
 import * as TeacherStudents from "../src/app/api/teacher/students/route";
 import * as TeacherScheduleSwap from "../src/app/api/teacher/schedule/swap/route";
@@ -70,6 +71,9 @@ import * as TeacherLiveSession from "../src/app/api/teacher/live-session/route";
 app.get("/api/teacher/dashboard", adaptRoute(TeacherDashboard.GET));
 app.get("/api/teacher/materials", adaptRoute(TeacherMaterials.GET));
 app.post("/api/teacher/materials", adaptRoute(TeacherMaterials.POST));
+app.delete("/api/teacher/materials", adaptRoute(TeacherMaterials.DELETE));
+app.get("/api/teacher/materials/:id", adaptRoute(TeacherMaterialDetail.GET));
+app.delete("/api/teacher/materials/:id", adaptRoute(TeacherMaterialDetail.DELETE));
 app.get("/api/teacher/assignments", adaptRoute(TeacherAssignments.GET));
 app.post("/api/teacher/assignments", adaptRoute(TeacherAssignments.POST));
 app.get("/api/teacher/students", adaptRoute(TeacherStudents.GET));
@@ -79,6 +83,7 @@ app.patch("/api/teacher/schedule/reschedule", adaptRoute(TeacherScheduleReschedu
 app.post("/api/teacher/evaluate", adaptRoute(TeacherEvaluate.POST));
 app.get("/api/teacher/classes", adaptRoute(TeacherClasses.GET));
 app.get("/api/teacher/attendance", adaptRoute(TeacherAttendance.GET));
+app.post("/api/teacher/attendance", adaptRoute(TeacherAttendance.POST));
 app.post("/api/teacher/live-session", adaptRoute(TeacherLiveSession.POST));
 
 // ── ADMIN ROUTES ──
@@ -127,6 +132,7 @@ import * as ClassCancelRoute from "../src/app/api/classes/[id]/cancel/route";
 import * as ClassJoinRoute from "../src/app/api/classes/[id]/join/route";
 import * as ClassEndRoute from "../src/app/api/classes/[id]/end/route";
 import * as ClassParticipantsRoute from "../src/app/api/classes/[id]/participants/route";
+import * as ClassAdmitRoute from "../src/app/api/classes/[id]/admit/route";
 import * as BatchesRoute from "../src/app/api/batches/route";
 import * as SeedRoute from "../src/app/api/seed/route";
 import * as NotificationsRoute from "../src/app/api/notifications/route";
@@ -146,6 +152,9 @@ app.put("/api/classes/:id/cancel", adaptRoute(ClassCancelRoute.PUT));
 app.post("/api/classes/:id/join", adaptRoute(ClassJoinRoute.POST));
 app.put("/api/classes/:id/end", adaptRoute(ClassEndRoute.PUT));
 app.get("/api/classes/:id/participants", adaptRoute(ClassParticipantsRoute.GET));
+app.get("/api/classes/:id/admit", adaptRoute(ClassAdmitRoute.GET));
+app.post("/api/classes/:id/admit", adaptRoute(ClassAdmitRoute.POST));
+app.put("/api/classes/:id/admit", adaptRoute(ClassAdmitRoute.PUT));
 app.get("/api/batches", adaptRoute(BatchesRoute.GET));
 app.get("/api/seed", adaptRoute(SeedRoute.GET));
 app.post("/api/seed", adaptRoute(SeedRoute.POST));
