@@ -3,8 +3,8 @@
 import React from "react";
 import { usePathname } from "next/navigation";
 import { PortalSidebar } from "@/components/layout/PortalSidebar";
-import { PortalHeader } from "@/components/layout/PortalHeader";
 import { LivePaymentListener } from "@/components/payment/LivePaymentListener";
+import { PortalHeader } from "@/components/layout/PortalHeader";
 
 export default function StudentLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -15,11 +15,12 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans overflow-hidden">
       <PortalSidebar role="STUDENT" />
       <LivePaymentListener />
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+        {/* ── TOP NAVBAR ── */}
         <PortalHeader userRole="STUDENT" />
 
         <div className="flex-1 transition-opacity duration-150 ease-out">
@@ -29,3 +30,4 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     </div>
   );
 }
+

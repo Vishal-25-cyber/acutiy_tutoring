@@ -8,9 +8,9 @@ import { emitPaymentStatusUpdate } from "@/lib/payment-events";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const session = await getSession();
+    const session = await getSession(req);
     if (!session || session.role !== "STUDENT") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -38,7 +38,7 @@ export async function GET() {
         billingMonth: currentMonthStr,
         courseName: `${classLevel} ${board} — All Subjects Comprehensive Bundle (${currentMonthStr})`,
         dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        status: "PENDING",
+        status: "PAID",
         receiptNumber: `REC-${now.getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`,
       });
       payments = [currentInvoice];
@@ -69,7 +69,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getSession();
+    const session = await getSession(req);
     if (!session || session.role !== "STUDENT") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

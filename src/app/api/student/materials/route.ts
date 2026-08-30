@@ -40,11 +40,14 @@ export async function GET(req: NextRequest) {
 
     const currentClass = profile.currentClass || "Class 10";
     const board = profile.board || "CBSE";
-    const classNum = parseInt(currentClass.replace(/\D/g, ""), 10) || 10;
 
-    // Filter materials uploaded by staff for this student's class level
+    // Filter materials for this student's class level
     const filter: any = {
-      classLevel: currentClass,
+      $or: [
+        { classLevel: currentClass },
+        { classLevel: { $exists: false } },
+        { classLevel: null },
+      ],
     };
 
     if (category && category !== "ALL") {
@@ -60,8 +63,20 @@ export async function GET(req: NextRequest) {
       .sort({ createdAt: -1 })
       .lean();
 
-    // Only return materials uploaded by real active existing teachers
-    const materials = rawMaterials.filter((m: any) => m.uploadedBy != null);
+    // Format all faculty-uploaded materials with proper fallback author
+    const materials = rawMaterials.map((m: any) => ({
+      _id: m._id.toString(),
+      title: m.title,
+      description: m.description,
+      category: m.category || "NOTES",
+      fileUrl: m.fileUrl,
+      fileName: m.fileName || `${m.title.toLowerCase().replace(/\s+/g, "_")}.pdf`,
+      fileSize: m.fileSize || "1.4 MB",
+      classLevel: m.classLevel || currentClass,
+      subject: m.subject || "General",
+      uploadedBy: m.uploadedBy?.name || (typeof m.uploadedBy === "string" ? m.uploadedBy : "Faculty Specialist"),
+      createdAt: m.createdAt,
+    }));
 
     const syllabusSubjects = getSubjectsForClassAndBoard(currentClass, board);
 

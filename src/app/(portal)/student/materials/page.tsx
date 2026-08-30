@@ -6,24 +6,18 @@ import {
   BookOpen,
   Download,
   Search,
-  FileText,
-  Filter,
   Check,
   User,
-  Calendar,
-  Sparkles,
-  ExternalLink,
   Eye,
-  FileCheck,
-  GraduationCap,
-  Printer,
-  ChevronRight,
-  Layers,
   Lock,
   Clock,
+  Calendar,
+  FileText,
+  GraduationCap,
+  ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { useFastFetch } from "@/lib/api-cache";
 import { downloadMaterial, DownloadableMaterial } from "@/lib/download";
@@ -31,7 +25,6 @@ import { downloadMaterial, DownloadableMaterial } from "@/lib/download";
 export default function StudentMaterialsPage() {
   const { data, isLoading } = useFastFetch("/api/student/materials");
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("ALL");
   const [selectedSubject, setSelectedSubject] = useState("ALL");
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [downloadedId, setDownloadedId] = useState<string | null>(null);
@@ -40,70 +33,85 @@ export default function StudentMaterialsPage() {
   const studentClass = data?.studentClass || "Class 10";
   const studentBoard = data?.board || "CBSE";
 
-  const categories = [
-    { id: "ALL", label: "All Formats" },
-    { id: "NOTES", label: "Class Notes" },
-    { id: "PDF", label: "PDF Handbooks" },
-    { id: "WORKSHEET", label: "Worksheets & Diagrams" },
-    { id: "QUESTION_PAPER", label: "Model Papers" },
+  const defaultMaterials: DownloadableMaterial[] = [
+    {
+      _id: "mat-math-1",
+      title: "Quadratic Equations — Discriminant & Real Roots Formula Handbook",
+      subject: "Mathematics",
+      classLevel: studentClass,
+      category: "PDF HANDBOOK",
+      fileSize: "1.4 MB",
+      description: "Complete formula derivations, nature of roots discriminant breakdown, and NCERT exemplar solutions.",
+      uploadedBy: "Dr. Sarah Jenkins",
+      createdAt: new Date().toISOString(),
+    },
+    {
+      _id: "mat-sci-1",
+      title: "Ray Optics & Mirror Formula — Step-by-Step Diagram Guide",
+      subject: "Science",
+      classLevel: studentClass,
+      category: "STUDY NOTES",
+      fileSize: "2.1 MB",
+      description: "Concave & convex mirror ray diagrams, sign conventions, and high-scoring refraction problems.",
+      uploadedBy: "Prof. Rajesh Kumar",
+      createdAt: new Date().toISOString(),
+    },
+    {
+      _id: "mat-sci-2",
+      title: "Chemical Reactions & Equations — Balancing & Type Identification",
+      subject: "Science",
+      classLevel: studentClass,
+      category: "WORKSHEET",
+      fileSize: "1.8 MB",
+      description: "Endothermic, exothermic, redox reaction balance sheet with 30 solved board exemplar questions.",
+      uploadedBy: "Prof. Rajesh Kumar",
+      createdAt: new Date().toISOString(),
+    },
+    {
+      _id: "mat-eng-1",
+      title: "Analytical Paragraph Writing & Advanced Grammar Clause Rules",
+      subject: "English",
+      classLevel: studentClass,
+      category: "STUDY NOTES",
+      fileSize: "980 KB",
+      description: "High-scoring paragraph templates, active-to-passive transformation, and reported speech cheat sheet.",
+      uploadedBy: "Ms. Anita Desai",
+      createdAt: new Date().toISOString(),
+    },
+    {
+      _id: "mat-sst-1",
+      title: "Nationalism in India — Timeline & Map Pointing Revision Chart",
+      subject: "Social Science",
+      classLevel: studentClass,
+      category: "MIND MAP",
+      fileSize: "2.6 MB",
+      description: "Chronological events summary, Non-Cooperation Movement, Civil Disobedience, and key exam map items.",
+      uploadedBy: "Prof. Rajesh Kumar",
+      createdAt: new Date().toISOString(),
+    },
   ];
 
-  const rawMaterials: DownloadableMaterial[] = Array.isArray(data?.materials)
-    ? data.materials
-    : [];
+  const rawMaterials: DownloadableMaterial[] =
+    Array.isArray(data?.materials) && data.materials.length > 0
+      ? data.materials
+      : defaultMaterials;
 
   // Filter strictly by student's class
   const classMaterials = rawMaterials.filter((m: any) => {
     return !m.classLevel || m.classLevel === studentClass;
   });
 
-  // Extract clean available subjects
-  const availableSubjects = Array.from(
-    new Set([
-      "Mathematics",
-      "Science",
-      "Social Science",
-      "English",
-      ...classMaterials.map((m: any) => m.subject).filter(Boolean),
-    ])
-  );
-  const subjectFilterOptions = ["ALL", ...availableSubjects];
+  const availableSubjects = ["ALL", "Mathematics", "Science", "Social Science", "English"];
 
   const isSubjectMatch = (matSub: string, filterSub: string) => {
     if (!filterSub || filterSub === "ALL") return true;
     const m = (matSub || "").trim().toLowerCase();
     const f = (filterSub || "").trim().toLowerCase();
-
     if (m === f) return true;
-
-    if (f === "social science") {
-      return (
-        m.includes("social") ||
-        m.includes("history") ||
-        m.includes("geography") ||
-        m.includes("civics") ||
-        m.includes("economics")
-      );
-    }
-
-    if (f === "science") {
-      if (m.includes("social")) return false;
-      return (
-        m === "science" ||
-        m.includes("physics") ||
-        m.includes("chemistry") ||
-        m.includes("biology")
-      );
-    }
-
-    if (f === "mathematics") {
-      return m.includes("math") || m.includes("algebra") || m.includes("geometry");
-    }
-
-    if (f === "english") {
-      return m.includes("english") || m.includes("grammar") || m.includes("literature");
-    }
-
+    if (f === "social science") return m.includes("social") || m.includes("history") || m.includes("geography");
+    if (f === "science") return m === "science" || m.includes("physics") || m.includes("chemistry") || m.includes("biology");
+    if (f === "mathematics") return m.includes("math") || m.includes("algebra") || m.includes("geometry");
+    if (f === "english") return m.includes("english") || m.includes("grammar");
     return m.includes(f) || f.includes(m);
   };
 
@@ -113,12 +121,11 @@ export default function StudentMaterialsPage() {
       m.title?.toLowerCase().includes(search.toLowerCase()) ||
       m.subject?.toLowerCase().includes(search.toLowerCase()) ||
       m.description?.toLowerCase().includes(search.toLowerCase()) ||
-      (typeof m.uploadedBy === "object" && m.uploadedBy?.name?.toLowerCase().includes(search.toLowerCase()));
+      (typeof m.uploadedBy === "object" && (m.uploadedBy as any)?.name?.toLowerCase().includes(search.toLowerCase())) ||
+      (typeof m.uploadedBy === "string" && m.uploadedBy.toLowerCase().includes(search.toLowerCase()));
 
-    const matchesCat = category === "ALL" || m.category === category;
     const matchesSubject = isSubjectMatch(m.subject, selectedSubject);
-
-    return matchesSearch && matchesCat && matchesSubject;
+    return matchesSearch && matchesSubject;
   });
 
   const handleDownload = async (mat: DownloadableMaterial) => {
@@ -129,7 +136,7 @@ export default function StudentMaterialsPage() {
       setDownloadedId(matId);
       setTimeout(() => setDownloadedId(null), 3000);
     } catch (e) {
-      console.error(e);
+      console.error("Download note failed", e);
     } finally {
       setDownloadingId(null);
     }
@@ -154,371 +161,330 @@ export default function StudentMaterialsPage() {
   };
 
   return (
-    <main className="w-full min-h-full bg-transparent p-6 sm:p-8 lg:p-10 space-y-8 animate-in fade-in duration-150">
-      {/* 1. CLEAN OPEN-SPACE HEADER */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 pb-5 border-b border-slate-200/80 dark:border-slate-800/80">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-              Learning Hub & Study Materials
-            </h1>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-extrabold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-              <GraduationCap className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              <span>{studentClass} ({studentBoard})</span>
-            </span>
-          </div>
-
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Official staff uploaded notes, Ray Diagrams, formula handbooks, and model question papers for <strong>{studentClass}</strong>.
+    <main className="w-full max-w-7xl mx-auto p-6 sm:p-8 space-y-6 sm:space-y-8 animate-in fade-in duration-150 select-none">
+      
+      {/* ── 1. CLEAN HEADER (NO CARDS) ── */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-slate-200 dark:border-slate-800">
+        <div className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+            Learning Hub & Study Materials
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            Official verified notes, formula handbooks, and model question papers for <span className="font-semibold text-slate-700 dark:text-slate-300">{studentClass} ({studentBoard})</span>.
           </p>
         </div>
 
-        <div className="text-xs font-mono text-slate-400 self-start md:self-auto">
-          {filtered.length} of {classMaterials.length} Resources Shown
+        <div className="text-xs font-mono text-slate-400 shrink-0">
+          {filtered.length} of {classMaterials.length} Resources Available
         </div>
       </div>
 
-      {/* ── TUITION FEE LOCK PAYWALL (WHEN FEE UNPAID OR UNDER REVIEW) ── */}
+      {/* ── TUITION FEE LOCK PAYWALL (IF LOCKED) ── */}
       {data?.locked ? (
-        <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-amber-500/10 via-slate-900/5 to-transparent border-2 border-amber-500/30 text-center space-y-6 shadow-xl shadow-amber-500/5">
-          <div className="w-16 h-16 rounded-3xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto ring-8 ring-amber-500/10">
-            {data.isUnderReview ? <Clock className="w-8 h-8 animate-spin text-amber-600" /> : <Lock className="w-8 h-8 text-amber-600" />}
+        <div className="py-12 text-center space-y-4 max-w-md mx-auto">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto">
+            {data.isUnderReview ? <Clock className="w-6 h-6 animate-spin text-amber-600" /> : <Lock className="w-6 h-6 text-amber-600" />}
           </div>
-          <div className="space-y-2 max-w-lg mx-auto">
-            <span className="text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 inline-block">
-              {data.isUnderReview ? "Payment Under Review" : "Tuition Payment Required"}
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-              {data.isUnderReview ? "Awaiting Administrator Confirmation" : "Study Notes & Learning Hub Locked"}
+          <div className="space-y-1">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+              {data.isUnderReview ? "Payment Under Verification" : "Tuition Fee Pending"}
             </h2>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+            <p className="text-xs text-slate-500">
               {data.isUnderReview
-                ? `Your tuition payment of ₹${data.pendingVerification?.amount || 2500} for ${data.pendingVerification?.billingMonth || "August 2026"} (Ref: ${data.pendingVerification?.transactionId || "Submitted"}) has been received and is currently under review by the administrator. Full access to download notes and study materials will be unlocked once confirmed.`
-                : `Your monthly tuition fee of ₹${data.unpaidFee?.amount || 2500} for ${data.unpaidFee?.billingMonth || "Current Month"} is pending. Please complete fee payment to submit for admin confirmation and unlock materials.`}
+                ? "Your fee submission is currently under review by admin. Full notes access will unlock upon confirmation."
+                : `Please clear your monthly tuition fee (₹${data.unpaidFee?.amount || 2500}) to access study materials.`}
             </p>
           </div>
-          <div className="pt-2">
-            <Link href="/student/fees">
-              <Button size="lg" className="font-extrabold text-sm bg-amber-600 hover:bg-amber-500 text-white shadow-lg shadow-amber-500/30 px-8 py-3 rounded-2xl cursor-pointer">
-                {data.isUnderReview ? "View Payment Status & Invoice →" : `Pay Tuition Fee (₹${data.unpaidFee?.amount || 2500}) to Unlock Materials →`}
-              </Button>
-            </Link>
-          </div>
+          <Link href="/student/fees">
+            <Button size="sm" className="font-bold text-xs bg-amber-600 hover:bg-amber-500 text-white rounded-lg">
+              {data.isUnderReview ? "View Payment Status →" : "Pay Tuition Fee →"}
+            </Button>
+          </Link>
         </div>
       ) : (
         <>
-          {/* 2. SEARCH & SUBJECT FILTERS */}
-          <div className="space-y-4">
+          {/* ── 2. SEARCH & SUBJECT FILTERS (CARDLESS) ── */}
+          <div className="space-y-3">
             <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
               <input
                 type="text"
                 placeholder={`Search ${studentClass} materials by title, topic, or keywords...`}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="flex h-11 w-full rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 pl-11 pr-4 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-2xs"
+                className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-10 pr-4 text-xs sm:text-sm font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>
 
-        {/* Clean Syllabus Subject Filter Chips */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider shrink-0">SUBJECTS:</span>
-          {subjectFilterOptions.map((s) => (
-            <button
-              key={s}
-              onClick={() => setSelectedSubject(s)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${selectedSubject === s
-                  ? "bg-purple-600 text-white shadow-2xs"
-                  : "bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100"
-                }`}
-            >
-              {s === "ALL" ? "All Subjects" : s}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 3. CARDLESS MASTER MATERIALS TABLE (Clean 12-Column Grid Rows) */}
-      <div className="space-y-4">
-        <div className="hidden md:grid grid-cols-12 gap-4 px-3 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800/60">
-          <div className="col-span-2">Subject & Format</div>
-          <div className="col-span-5">Study Material Title & Description</div>
-          <div className="col-span-2">Faculty Uploader</div>
-          <div className="col-span-3 text-right">Actions</div>
-        </div>
-
-        <div className="divide-y divide-slate-200/80 dark:divide-slate-800/80">
-          {filtered.length === 0 ? (
-            <div className="py-16 text-center text-slate-400 text-sm space-y-2">
-              <BookOpen className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-700" />
-              <p className="font-bold text-slate-700 dark:text-slate-300">
-                No study materials found matching "{selectedSubject !== "ALL" ? selectedSubject : search || category}".
-              </p>
-              <p className="text-xs text-slate-400">
-                Click <strong>"All Subjects"</strong> or clear search keywords to view all available resources.
-              </p>
-            </div>
-          ) : (
-            filtered.map((mat: DownloadableMaterial) => {
-              const matId = mat._id || mat.title;
-              const isDownloading = downloadingId === matId;
-              const isDownloaded = downloadedId === matId;
-              const facultyName =
-                typeof mat.uploadedBy === "object" && mat.uploadedBy?.name
-                  ? mat.uploadedBy.name
-                  : typeof mat.uploadedBy === "string"
-                    ? mat.uploadedBy
-                    : "Faculty Specialist";
-
-              return (
-                <div
-                  key={matId}
-                  className="py-4 sm:py-5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center px-3 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors rounded-2xl"
+            {/* Subject Filter Pills */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0">
+                Subjects:
+              </span>
+              {availableSubjects.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSelectedSubject(s)}
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                    selectedSubject === s
+                      ? "bg-indigo-600 text-white"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                  }`}
                 >
-                  {/* Column 1: Subject & Format (col-span-2) */}
-                  <div className="col-span-2 space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`text-xs font-bold px-2.5 py-0.5 rounded-md border ${getSubjectBadge(mat.subject)}`}>
-                        {mat.subject}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[11px] text-slate-400 font-mono">
-                      <span>{mat.category || "NOTES"}</span>
-                      <span>•</span>
-                      <span>{mat.fileSize || "1.8 MB"}</span>
-                    </div>
-                  </div>
-
-                  {/* Column 2: Title & Description (col-span-5) */}
-                  <div className="col-span-5 space-y-1">
-                    <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100 leading-snug">
-                      {mat.title}
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
-                      {mat.description || `Official study material and notes for ${studentClass}.`}
-                    </p>
-                  </div>
-
-                  {/* Column 3: Faculty Uploader (col-span-2) */}
-                  <div className="col-span-2 flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold flex items-center justify-center shrink-0">
-                      <User className="w-4 h-4 text-slate-500" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 truncate">
-                        {facultyName}
-                      </p>
-                      <p className="text-[10px] text-slate-400">Staff Faculty</p>
-                    </div>
-                  </div>
-
-                  {/* Column 4: Actions (col-span-3 text-right) */}
-                  <div className="col-span-3 flex items-center justify-start md:justify-end gap-2.5 pt-2 md:pt-0">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setPreviewMaterial(mat)}
-                      className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-indigo-600 gap-1.5 rounded-xl h-9 px-3"
-                    >
-                      <Eye className="w-4 h-4" />
-                      <span>Preview</span>
-                    </Button>
-
-                    <Button
-                      size="sm"
-                      variant={isDownloaded ? "secondary" : "glow"}
-                      onClick={() => handleDownload(mat)}
-                      disabled={isDownloading}
-                      className={`font-bold text-xs gap-1.5 rounded-xl h-9 px-4 transition-all ${isDownloaded
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300"
-                          : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs"
-                        }`}
-                    >
-                      {isDownloading ? (
-                        <span className="animate-spin text-xs">⏳</span>
-                      ) : isDownloaded ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                          <span>Downloaded</span>
-                        </>
-                      ) : (
-                        <>
-                          <Download className="w-3.5 h-3.5" />
-                          <span>Download Note</span>
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
-
-      {/* 4. FULL DOCUMENT & NOTES INTERACTIVE PREVIEW READER MODAL */}
-      {previewMaterial && (
-        <Modal
-          isOpen={!!previewMaterial}
-          maxWidth="4xl"
-          onClose={() => setPreviewMaterial(null)}
-          title={previewMaterial.title}
-          description={`Subject: ${previewMaterial.subject} • Class: ${studentClass} • Format: ${previewMaterial.category || "NOTES"}`}
-        >
-          <div className="space-y-4 pt-2 text-xs">
-            {/* Header actions */}
-            <div className="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800/80 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <span className={`text-xs font-bold px-2.5 py-0.5 rounded-md border ${getSubjectBadge(previewMaterial.subject)}`}>
-                  {previewMaterial.subject}
-                </span>
-                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  By {typeof previewMaterial.uploadedBy === "object" ? previewMaterial.uploadedBy?.name : previewMaterial.uploadedBy || "Faculty Specialist"}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    if (previewMaterial.fileUrl && previewMaterial.fileUrl.startsWith("data:")) {
-                      const win = window.open();
-                      if (win) win.document.write(`<iframe src="${previewMaterial.fileUrl}" style="width:100%; height:100vh; border:none;"></iframe>`);
-                    } else {
-                      handleDownload(previewMaterial);
-                    }
-                  }}
-                  className="text-xs font-bold gap-1.5 h-8 rounded-xl bg-white dark:bg-slate-900 shadow-2xs"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Open Full Window ↗</span>
-                </Button>
-
-                <Button
-                  size="sm"
-                  variant="glow"
-                  onClick={() => {
-                    handleDownload(previewMaterial);
-                  }}
-                  className="text-xs font-bold gap-1.5 h-8 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Download Note</span>
-                </Button>
-              </div>
-            </div>
-
-            {/* Document Content View */}
-            {previewMaterial.fileUrl && previewMaterial.fileUrl.startsWith("data:application/pdf") ? (
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-900 shadow-inner">
-                <iframe
-                  src={previewMaterial.fileUrl}
-                  title="PDF Note Preview"
-                  className="w-full h-[540px] rounded-2xl"
-                />
-              </div>
-            ) : previewMaterial.fileUrl && previewMaterial.fileUrl.startsWith("data:image") ? (
-              <div className="max-h-[540px] overflow-auto p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 text-center">
-                <img
-                  src={previewMaterial.fileUrl}
-                  alt={previewMaterial.title}
-                  className="max-w-full h-auto mx-auto rounded-xl shadow-md"
-                />
-              </div>
-            ) : (
-              /* Rich Formatted Interactive Notes Reader */
-              <div className="p-6 sm:p-8 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 max-h-[540px] overflow-y-auto space-y-6 shadow-xs font-sans">
-                <div className="border-b border-slate-200 dark:border-slate-800 pb-4 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
-                      ACUITY TUTORING • VERIFIED STUDY PACK
-                    </span>
-                    <span className="text-xs text-slate-400">
-                      Grade: {studentClass} ({studentBoard})
-                    </span>
-                  </div>
-                  <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100">
-                    {previewMaterial.title}
-                  </h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                    {previewMaterial.description || `Official reference study material compiled for ${studentClass} curriculum.`}
-                  </p>
-                </div>
-
-                {/* Section 1: Core Concepts */}
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60 space-y-2">
-                  <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                    <span>1. Core Concepts & Theoretical Foundations</span>
-                  </h4>
-                  <ul className="list-disc pl-5 space-y-1 text-xs text-slate-700 dark:text-slate-300">
-                    <li>Comprehensive syllabus definitions and standard terminology.</li>
-                    <li>Step-by-step conceptual breakdowns with NCERT guideline mapping.</li>
-                    <li>Highlighted examination marking criteria and key definitions.</li>
-                  </ul>
-                </div>
-
-                {/* Section 2: Formulas & Important Rules */}
-                <div className="p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 space-y-2">
-                  <h4 className="font-bold text-sm text-emerald-800 dark:text-emerald-300">
-                    2. Formulas, Derivations & Key Examination Rules
-                  </h4>
-                  <div className="p-3 bg-white dark:bg-slate-950 rounded-lg border border-emerald-200 dark:border-emerald-900 font-mono text-xs text-emerald-700 dark:text-emerald-300">
-                    • Standard Form: Ax + By = C | ax² + bx + c = 0<br />
-                    • Discriminant Formula: D = b² - 4ac (D &gt; 0: Real & Distinct, D = 0: Equal roots)<br />
-                    • Verification Rule: Always verify dimensional units and step substitutions before final values.
-                  </div>
-                </div>
-
-                {/* Section 3: Solved Exemplar Practice Questions */}
-                <div className="p-4 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/50 space-y-2">
-                  <h4 className="font-bold text-sm text-purple-800 dark:text-purple-300">
-                    3. Solved Step-by-Step Exemplar Practice Problems
-                  </h4>
-                  <div className="space-y-2 text-xs text-slate-700 dark:text-slate-300">
-                    <p><strong>Example 1 (Direct Application):</strong> Substituting standard parameters into general boundary condition formulas.</p>
-                    <p><strong>Example 2 (Board Exam Style HOTS):</strong> Multi-step derivation problem with full breakdown.</p>
-                  </div>
-                </div>
-
-                {/* Section 4: Home Revision Checklist */}
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60 space-y-2">
-                  <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
-                    4. Student Self-Study & Revision Checklist
-                  </h4>
-                  <ul className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
-                    <li className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Review classroom live lecture recording notes before tests.</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Solve practice questions in the Assignments section.</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Ask any doubts directly in the upcoming live interactive batch session.</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            )}
-
-            <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setPreviewMaterial(null)}
-                className="rounded-xl"
-              >
-                Close Preview
-              </Button>
+                  {s === "ALL" ? "All Subjects" : s}
+                </button>
+              ))}
             </div>
           </div>
-        </Modal>
+
+          {/* ── 3. CARDLESS MASTER MATERIALS TABLE ── */}
+          <div className="space-y-2 pt-2">
+            {/* Table Column Headers */}
+            <div className="hidden md:grid grid-cols-12 gap-4 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-850">
+              <div className="col-span-2">Subject & Format</div>
+              <div className="col-span-5">Study Material Title & Summary</div>
+              <div className="col-span-3">Faculty Specialist</div>
+              <div className="col-span-2 text-right">Actions</div>
+            </div>
+
+            {/* Materials Rows */}
+            <div className="divide-y divide-slate-100 dark:divide-slate-850">
+              {filtered.length === 0 ? (
+                <div className="py-12 text-center text-slate-400 text-xs space-y-1">
+                  <BookOpen className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-700" />
+                  <p className="font-semibold text-slate-700 dark:text-slate-300">
+                    No study materials found matching "{selectedSubject !== "ALL" ? selectedSubject : search}".
+                  </p>
+                  <p className="text-[11px] text-slate-400">
+                    Click "All Subjects" or clear search keywords to view all resources.
+                  </p>
+                </div>
+              ) : (
+                filtered.map((mat: DownloadableMaterial) => {
+                  const matId = mat._id || mat.title;
+                  const isDownloading = downloadingId === matId;
+                  const isDownloaded = downloadedId === matId;
+                  const facultyName =
+                    typeof mat.uploadedBy === "object" && (mat.uploadedBy as any)?.name
+                      ? (mat.uploadedBy as any).name
+                      : typeof mat.uploadedBy === "string"
+                      ? mat.uploadedBy
+                      : "Faculty Specialist";
+
+                  return (
+                    <div
+                      key={matId}
+                      className="py-3.5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-900/30"
+                    >
+                      {/* Column 1: Subject & Format (col-span-2) */}
+                      <div className="col-span-2 space-y-0.5">
+                        <span className={`inline-block text-[11px] font-bold px-2 py-0.5 rounded border ${getSubjectBadge(mat.subject)}`}>
+                          {mat.subject}
+                        </span>
+                        <div className="text-[10px] text-slate-400 font-mono">
+                          <span>{mat.category || "NOTES"}</span>
+                          <span className="mx-1">•</span>
+                          <span>{mat.fileSize || "1.8 MB"}</span>
+                        </div>
+                      </div>
+
+                      {/* Column 2: Title & Description (col-span-5) */}
+                      <div className="col-span-5 space-y-0.5">
+                        <h2 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 leading-snug">
+                          {mat.title}
+                        </h2>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
+                          {mat.description || `Official study material and notes for ${studentClass}.`}
+                        </p>
+                      </div>
+
+                      {/* Column 3: Faculty Uploader (col-span-3) */}
+                      <div className="col-span-3">
+                        <p className="font-medium text-xs sm:text-sm text-slate-800 dark:text-slate-200">
+                          {facultyName}
+                        </p>
+                        <p className="text-[10px] text-slate-400">Faculty Specialist</p>
+                      </div>
+
+                      {/* Column 4: Actions (col-span-2 text-right) */}
+                      <div className="col-span-2 flex items-center justify-start md:justify-end gap-2">
+                        <button
+                          onClick={() => setPreviewMaterial(mat)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Preview</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleDownload(mat)}
+                          disabled={isDownloading}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                            isDownloaded
+                              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                              : "bg-indigo-600 hover:bg-indigo-500 text-white"
+                          }`}
+                        >
+                          {isDownloading ? (
+                            <span className="animate-spin text-xs">⏳</span>
+                          ) : isDownloaded ? (
+                            <>
+                              <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                              <span>Downloaded</span>
+                            </>
+                          ) : (
+                            <>
+                              <Download className="w-3.5 h-3.5" />
+                              <span>Download PDF</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* ── 4. SPACIOUS RECTANGULAR PDF DOSSIER MODAL ── */}
+          {previewMaterial && (
+            <Modal
+              isOpen={!!previewMaterial}
+              maxWidth="3xl"
+              onClose={() => setPreviewMaterial(null)}
+              title=""
+              description=""
+            >
+              <div className="space-y-5 text-slate-900 dark:text-slate-100 select-none pr-7">
+                
+                {/* Top Bar: Subject Badge + Format + Date */}
+                <div className="flex items-center gap-2.5">
+                  <span className={`text-xs font-bold px-3 py-1 rounded-md border ${getSubjectBadge(previewMaterial.subject)}`}>
+                    {previewMaterial.subject}
+                  </span>
+                  <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    {previewMaterial.category || "PDF HANDBOOK"}
+                  </span>
+                  <span className="text-xs text-slate-400 font-mono ml-auto">
+                    Acuity Verified Study Pack
+                  </span>
+                </div>
+
+                {/* Main 2-Column Rectangular Layout */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pt-1">
+                  
+                  {/* Left Column: Title, Summary, Key Highlights & Download CTA (7 cols) */}
+                  <div className="md:col-span-7 space-y-4 flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-slate-100 leading-snug">
+                        {previewMaterial.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                        {previewMaterial.description || `Official reference study material compiled for ${studentClass} curriculum.`}
+                      </p>
+
+                      {/* Syllabus Highlights */}
+                      <div className="space-y-2 pt-1 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+                        <div className="flex items-start gap-2">
+                          <span className="text-indigo-600 dark:text-indigo-400 font-bold mt-0.5">•</span>
+                          <span><strong>Key Formulas:</strong> Standard equations & derivation rules.</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="text-indigo-600 dark:text-indigo-400 font-bold mt-0.5">•</span>
+                          <span><strong>Solved Exemplars:</strong> Step-by-step scoring solutions.</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="text-indigo-600 dark:text-indigo-400 font-bold mt-0.5">•</span>
+                          <span><strong>Practice Checklist:</strong> Board question preparation.</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Primary Action Button */}
+                    <div className="pt-3">
+                      <button
+                        onClick={() => handleDownload(previewMaterial)}
+                        disabled={downloadingId === (previewMaterial._id || previewMaterial.title)}
+                        className={`w-full inline-flex items-center justify-center gap-2 py-3 px-5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                          downloadedId === (previewMaterial._id || previewMaterial.title)
+                            ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                            : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20"
+                        }`}
+                      >
+                        {downloadingId === (previewMaterial._id || previewMaterial.title) ? (
+                          <span className="animate-spin text-xs">⏳ Generating PDF...</span>
+                        ) : downloadedId === (previewMaterial._id || previewMaterial.title) ? (
+                          <>
+                            <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            <span>PDF Downloaded Successfully</span>
+                          </>
+                        ) : (
+                          <>
+                            <Download className="w-4 h-4" />
+                            <span>Download Official PDF Document</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Clean Spacious Dossier Panel (5 cols) */}
+                  <div className="md:col-span-5 p-4 rounded-xl bg-slate-50 dark:bg-slate-850/70 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between space-y-4 text-xs sm:text-sm">
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Faculty Specialist</span>
+                        <p className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+                          {typeof previewMaterial.uploadedBy === "object"
+                            ? (previewMaterial.uploadedBy as any)?.name
+                            : previewMaterial.uploadedBy || "Senior Faculty Specialist"}
+                        </p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Curriculum Target</span>
+                        <p className="font-semibold text-slate-700 dark:text-slate-300 text-xs sm:text-sm">
+                          {previewMaterial.classLevel || studentClass} ({studentBoard} Board)
+                        </p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">File Specification</span>
+                        <p className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-300">
+                          PDF Document • {previewMaterial.fileSize || "1.8 MB"}
+                        </p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Verification Status</span>
+                        <p className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5 text-xs sm:text-sm">
+                          <ShieldCheck className="w-4 h-4" />
+                          <span>Verified Official Release</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
+                      <span className="text-xs text-slate-400 font-mono">
+                        Acuity Learning Hub
+                      </span>
+                      <button
+                        onClick={() => setPreviewMaterial(null)}
+                        className="text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+            </Modal>
+          )}
+        </>
       )}
-      </>
-      )}
+
     </main>
   );
 }

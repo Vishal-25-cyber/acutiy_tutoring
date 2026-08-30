@@ -8,9 +8,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "next/link": path.resolve(__dirname, "./src/lib/router-compat-link.tsx"),
+      "next/link": path.resolve(__dirname, "./src/lib/router-compat-link.ts"),
       "next/navigation": path.resolve(__dirname, "./src/lib/router-compat-nav.ts"),
-      "next/image": path.resolve(__dirname, "./src/lib/router-compat-image.tsx"),
+      "next/image": path.resolve(__dirname, "./src/lib/router-compat-image.ts"),
     },
   },
   server: {

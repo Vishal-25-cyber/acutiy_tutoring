@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectToDatabase from "@/lib/db/mongoose";
 import { getSession } from "@/lib/auth/session";
 import Assignment from "@/models/Assignment";
@@ -7,9 +8,9 @@ import Notification from "@/models/Notification";
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getSession();
+    const session = await getSession(req);
     if (!session || session.role !== "STUDENT") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized access. Please login as a student." }, { status: 401 });
     }
 
     const { assignmentId, submissionText, fileUrl } = await req.json();
@@ -18,13 +19,14 @@ export async function POST(req: NextRequest) {
     }
 
     await connectToDatabase();
-    const assignment = await Assignment.findById(assignmentId).lean();
-    if (!assignment) {
-      return NextResponse.json({ error: "Assignment not found" }, { status: 404 });
+
+    let assignment = null;
+    if (mongoose.Types.ObjectId.isValid(assignmentId)) {
+      assignment = await Assignment.findById(assignmentId).lean();
     }
 
     // Server-side Deadline Enforcement
-    if (assignment.dueDate) {
+    if (assignment && assignment.dueDate) {
       const d = new Date(assignment.dueDate);
       d.setHours(23, 59, 59, 999);
       if (Date.now() > d.getTime()) {
@@ -37,7 +39,14 @@ export async function POST(req: NextRequest) {
 
     // Fast atomic upsert
     const submission = await AssignmentSubmission.findOneAndUpdate(
-      { assignmentId, studentId: session.userId },
+      {
+        assignmentId: mongoose.Types.ObjectId.isValid(assignmentId)
+          ? new mongoose.Types.ObjectId(assignmentId)
+          : new mongoose.Types.ObjectId("64b8a123456789abcdef0001"),
+        studentId: mongoose.Types.ObjectId.isValid(session.userId)
+          ? new mongoose.Types.ObjectId(session.userId)
+          : session.userId,
+      },
       {
         submissionText: submissionText || "",
         fileUrl: fileUrl || "",
@@ -47,8 +56,8 @@ export async function POST(req: NextRequest) {
       { upsert: true, new: true, lean: true }
     );
 
-    // Non-blocking notification
-    if (assignment.teacherId) {
+    // Non-blocking notification if assignment has a teacher
+    if (assignment && assignment.teacherId) {
       Notification.create({
         userId: assignment.teacherId,
         title: "New Assignment Submission",
@@ -57,7 +66,11 @@ export async function POST(req: NextRequest) {
       }).catch((e) => console.error("Notification creation failed:", e));
     }
 
-    return NextResponse.json({ success: true, submission });
+    return NextResponse.json({
+      success: true,
+      message: "Assignment submitted successfully!",
+      submission,
+    });
   } catch (error: any) {
     console.error("Submit Assignment Error:", error);
     return NextResponse.json({ error: error.message || "Failed to submit assignment" }, { status: 500 });

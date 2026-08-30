@@ -10,7 +10,7 @@ interface ModalProps {
   title?: string;
   description?: string;
   children: React.ReactNode;
-  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "4xl";
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
 }
 
 export function Modal({
@@ -43,6 +43,7 @@ export function Modal({
     lg: "max-w-lg",
     xl: "max-w-xl",
     "2xl": "max-w-2xl",
+    "3xl": "max-w-3xl",
     "4xl": "max-w-4xl",
   };
 
@@ -54,7 +55,7 @@ export function Modal({
       />
       <div
         className={cn(
-          "relative w-full rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl z-10 max-h-[90vh] overflow-y-auto p-6 transition-all",
+          "relative w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-10 max-h-[90vh] overflow-y-auto p-6 sm:p-7 transition-all",
           maxWidthClasses[maxWidth]
         )}
       >

@@ -1,7 +1,10 @@
 /**
- * Acuity Tutoring — Client-Side Material Download & Document Generation Engine
- * Handles direct file downloads, base64 data URLs, and dynamic printable study guides.
+ * Acuity Tutoring — Client-Side Material Download & PDF Generation Engine
+ * Handles direct file downloads, base64 data URLs, and dynamic printable study guides/timetables.
  */
+
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export interface DownloadableMaterial {
   _id?: string;
@@ -18,57 +21,66 @@ export interface DownloadableMaterial {
 }
 
 /**
+ * Bulletproof PDF trigger that forces the exact filename and .pdf extension across all browsers.
+ */
+function triggerPdfDownload(doc: jsPDF, fileName: string): boolean {
+  const cleanName = fileName.toLowerCase().endsWith(".pdf") ? fileName : `${fileName}.pdf`;
+  try {
+    // Primary: jsPDF standard save which properly sets content-disposition & filename
+    doc.save(cleanName);
+    return true;
+  } catch (err) {
+    console.warn("doc.save failed, trying DataURI fallback:", err);
+    try {
+      // Fallback: Base64 Data URI with explicit download attribute
+      const dataUri = doc.output("datauristring");
+      const link = document.createElement("a");
+      link.href = dataUri;
+      link.setAttribute("download", cleanName);
+      link.download = cleanName;
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+      }, 500);
+      return true;
+    } catch (fallbackErr) {
+      console.error("PDF download fallback error:", fallbackErr);
+      return false;
+    }
+  }
+}
+
+/**
  * Downloads a material file to the user's computer.
- * If fileUrl is a data URL or real downloadable link, it downloads directly.
- * If fileUrl is a placeholder/sample link, it dynamically generates an educational study guide PDF/document blob.
+ * Always ensures the output is an authentic .pdf file.
  */
 export async function downloadMaterial(material: DownloadableMaterial): Promise<boolean> {
   try {
     const rawFileName =
       material.fileName ||
-      `${material.subject}_${material.title.replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`;
-    const cleanFileName = rawFileName.endsWith(".pdf") || rawFileName.endsWith(".html") || rawFileName.endsWith(".doc")
-      ? rawFileName
-      : `${rawFileName}.pdf`;
+      `${material.subject || "Study"}_${material.title.replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`;
+    const cleanFileName = rawFileName.toLowerCase().endsWith(".pdf") ? rawFileName : `${rawFileName}.pdf`;
 
-    // 1. If it's a data URL (e.g. uploaded file in base64)
-    if (material.fileUrl && material.fileUrl.startsWith("data:")) {
+    // 1. If it's a direct PDF data URL
+    if (material.fileUrl && material.fileUrl.startsWith("data:application/pdf")) {
       const link = document.createElement("a");
       link.href = material.fileUrl;
+      link.setAttribute("download", cleanFileName);
       link.download = cleanFileName;
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      setTimeout(() => {
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+      }, 500);
       return true;
     }
 
-    // 2. If it's a valid remote blob or external URL that is directly reachable
-    if (
-      material.fileUrl &&
-      material.fileUrl.startsWith("http") &&
-      !material.fileUrl.includes("sample") &&
-      !material.fileUrl.includes("acuity.edu")
-    ) {
-      try {
-        const res = await fetch(material.fileUrl, { mode: "cors" });
-        if (res.ok) {
-          const blob = await res.blob();
-          const blobUrl = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = blobUrl;
-          link.download = cleanFileName;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(blobUrl);
-          return true;
-        }
-      } catch (e) {
-        // Fall through to rich study doc generator
-      }
-    }
-
-    // 3. Generate a rich, formatted, printable Acuity Study Notes Document
+    // 2. Generate a structured, printable Acuity Study Notes PDF
     const facultyName =
       typeof material.uploadedBy === "object" && material.uploadedBy?.name
         ? material.uploadedBy.name
@@ -88,208 +100,111 @@ export async function downloadMaterial(material: DownloadableMaterial): Promise<
           year: "numeric",
         });
 
-    const docContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>${material.title} — Acuity Tutoring</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      margin: 0;
-      padding: 40px;
-      color: #1e293b;
-      background: #ffffff;
-      line-height: 1.6;
-    }
-    .header {
-      border-bottom: 3px solid #4f46e5;
-      padding-bottom: 20px;
-      margin-bottom: 30px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-    .brand {
-      font-size: 24px;
-      font-weight: 900;
-      color: #312e81;
-      letter-spacing: -0.5px;
-    }
-    .brand span {
-      color: #4f46e5;
-    }
-    .meta-badge {
-      display: inline-block;
-      padding: 4px 12px;
-      background: #eef2ff;
-      color: #4338ca;
-      font-size: 12px;
-      font-weight: 700;
-      border-radius: 9999px;
-      margin-top: 6px;
-    }
-    .doc-info {
-      text-align: right;
-      font-size: 12px;
-      color: #64748b;
-    }
-    h1 {
-      font-size: 22px;
-      color: #0f172a;
-      margin: 0 0 12px 0;
-      font-weight: 800;
-    }
-    .subject-pill {
-      display: inline-block;
-      padding: 3px 10px;
-      background: #f1f5f9;
-      color: #334155;
-      font-size: 11px;
-      font-weight: 700;
-      border-radius: 6px;
-      margin-bottom: 20px;
-    }
-    .card {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 24px;
-    }
-    .card h2 {
-      font-size: 15px;
-      font-weight: 700;
-      color: #1e293b;
-      margin-top: 0;
-      margin-bottom: 10px;
-      border-bottom: 1px solid #cbd5e1;
-      padding-bottom: 6px;
-    }
-    ul, ol {
-      margin: 8px 0;
-      padding-left: 24px;
-      font-size: 14px;
-    }
-    li {
-      margin-bottom: 8px;
-    }
-    .formula-box {
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
-      color: #166534;
-      padding: 14px;
-      border-radius: 8px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 13px;
-      margin: 12px 0;
-    }
-    .footer {
-      margin-top: 40px;
-      padding-top: 20px;
-      border-top: 1px solid #e2e8f0;
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      color: #94a3b8;
-    }
-    .watermark {
-      font-size: 10px;
-      color: #a5b4fc;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      font-weight: 800;
-    }
-    @media print {
-      body { padding: 20px; }
-      .no-print { display: none; }
-    }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div>
-      <div class="brand">ACUITY <span>TUTORING</span></div>
-      <div class="meta-badge">${material.category || "CLASS NOTES"} • ${material.classLevel || "Class 10"}</div>
-    </div>
-    <div class="doc-info">
-      <div><strong>Faculty:</strong> ${facultyName}</div>
-      <div><strong>Date Published:</strong> ${dateStr}</div>
-      <div><strong>Academic Year:</strong> 2025 – 2026</div>
-    </div>
-  </div>
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
 
-  <div class="subject-pill">SUBJECT: ${(material.subject || "General").toUpperCase()}</div>
-  <h1>${material.title}</h1>
-  <p style="color: #475569; font-size: 14px; margin-bottom: 24px;">
-    ${material.description || "Official syllabus study material and structured reference notes designed for Acuity Tutoring students."}
-  </p>
+    // Header bar
+    doc.setFillColor(0, 33, 55); // #002137
+    doc.rect(0, 0, 210, 26, "F");
 
-  <div class="card">
-    <h2>1. Core Concepts & Key Theoretical Foundations</h2>
-    <ul>
-      <li><strong>Standard Definitions:</strong> Comprehensive terminology aligned strictly with the CBSE / State Board curriculum guidelines.</li>
-      <li><strong>Conceptual Breakdown:</strong> Step-by-step conceptual hierarchy starting from fundamental axioms to advanced problem solving.</li>
-      <li><strong>Important Exam Rules:</strong> Key examination points and common pitfalls highlighted for full mark scoring.</li>
-    </ul>
-  </div>
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.setTextColor(255, 255, 255);
+    doc.text("ACUITY TUTORING", 15, 14);
 
-  <div class="card">
-    <h2>2. Key Formulas, Derivations & Theorems</h2>
-    <div class="formula-box">
-      • Standard Form & General Equations: Ax + By = C | ax² + bx + c = 0<br>
-      • Discriminant & Nature of Solutions: D = b² - 4ac (D &gt; 0: Real & Distinct, D = 0: Equal, D &lt; 0: Non-real)<br>
-      • Essential Proportionality & Conversion: Rate = Distance / Time | Work = Power × Time
-    </div>
-    <ul>
-      <li>Always write the general formula before substituting numerical values in board exams.</li>
-      <li>Verify dimensional units (e.g., m/s vs km/h, cm² vs m²) prior to final answer calculation.</li>
-    </ul>
-  </div>
+    doc.setFontSize(9);
+    doc.setTextColor(223, 183, 74); // Gold #dfb74a
+    doc.text(`${(material.category || "STUDY NOTES").toUpperCase()} • ${material.classLevel || "Class 10"}`, 15, 21);
 
-  <div class="card">
-    <h2>3. Step-by-Step Exemplar Practice Problems</h2>
-    <ol>
-      <li><strong>Problem Type A:</strong> Direct application of formula with given standard boundary conditions.</li>
-      <li><strong>Problem Type B:</strong> Multi-step word problem requiring formation of algebraic equations and algebraic solving.</li>
-      <li><strong>Problem Type C:</strong> Higher Order Thinking Skills (HOTS) board exemplar question.</li>
-    </ol>
-  </div>
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(203, 213, 225);
+    doc.text(`Faculty: ${facultyName}`, 145, 12);
+    doc.text(`Date: ${dateStr}`, 145, 18);
 
-  <div class="card">
-    <h2>4. Home Revision & Assignment Checklist</h2>
-    <ul>
-      <li>[ ] Complete the homework worksheet in the Acuity Student Portal under Assignments.</li>
-      <li>[ ] Review video recording / classroom notes before the next scheduled live session.</li>
-      <li>[ ] Clarify any doubts directly with faculty during the live doubt clearing session.</li>
-    </ul>
-  </div>
+    // Subject badge
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(79, 70, 229);
+    doc.text(`SUBJECT: ${(material.subject || "General").toUpperCase()}`, 15, 36);
 
-  <div class="footer">
-    <div class="watermark">Acuity Live Online Tutoring • Verified Learning Hub Document</div>
-    <div>24/7 Helpline: +91 98765 43210 • support@acuity.edu</div>
-  </div>
+    // Title
+    doc.setFontSize(15);
+    doc.setTextColor(15, 23, 42);
+    const splitTitle = doc.splitTextToSize(material.title, 180);
+    doc.text(splitTitle, 15, 44);
 
-  <script>
-    // Auto-trigger print dialog if opened in a dedicated tab
-    if (window.location.search.includes('print=true')) {
-      window.onload = () => window.print();
-    }
-  </script>
-</body>
-</html>`;
+    let currentY = 44 + splitTitle.length * 6;
 
-    // Download as formatted HTML/document or create printable blob
-    const blob = new Blob([docContent], { type: "text/html" });
-    const blobUrl = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = blobUrl;
-    link.download = cleanFileName.replace(/\.pdf$/i, ".html");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(blobUrl);
-    return true;
+    // Description
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(71, 85, 105);
+    const splitDesc = doc.splitTextToSize(
+      material.description || "Official syllabus study material and structured reference notes designed for Acuity Tutoring students.",
+      180
+    );
+    doc.text(splitDesc, 15, currentY);
+    currentY += splitDesc.length * 5 + 6;
+
+    // Content sections table
+    const studySections = [
+      [
+        "1. Core Concepts",
+        "Comprehensive theoretical foundations and standard definitions strictly aligned with the CBSE curriculum guidelines.",
+      ],
+      [
+        "2. Key Formulas & Theorems",
+        "• Standard Form: ax² + bx + c = 0 | Discriminant: D = b² - 4ac\n• Nature of Roots: D > 0 (Real & Distinct), D = 0 (Equal), D < 0 (Complex)\n• Units & Constants: Standard SI units must be maintained.",
+      ],
+      [
+        "3. Step-by-Step Exemplar Practice",
+        "• Problem Type A: Direct formula application\n• Problem Type B: Multi-step word problem with equation modeling\n• Problem Type C: Higher Order Thinking Skills (HOTS) board questions",
+      ],
+      [
+        "4. Home Revision Checklist",
+        "1. Complete the homework worksheet in the Student Portal under Assignments.\n2. Review recorded class notes prior to the next scheduled live session.\n3. Clarify doubts directly with faculty during the doubt clearing session.",
+      ],
+    ];
+
+    autoTable(doc, {
+      startY: currentY,
+      head: [["Section", "Curriculum Content & Study Guidelines"]],
+      body: studySections,
+      theme: "grid",
+      headStyles: {
+        fillColor: [0, 33, 55],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+        fontSize: 10,
+      },
+      styles: {
+        fontSize: 9,
+        cellPadding: 5,
+        valign: "top",
+        textColor: [30, 41, 59],
+        lineColor: [226, 232, 240],
+        lineWidth: 0.2,
+      },
+      columnStyles: {
+        0: { fontStyle: "bold", cellWidth: 50 },
+        1: { cellWidth: 130 },
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252],
+      },
+    });
+
+    // Footer
+    const finalY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 12 : 265;
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text("Acuity Live Online Tutoring • Verified Learning Hub Document • support@acuity.edu", 15, Math.min(finalY, 285));
+
+    return triggerPdfDownload(doc, cleanFileName);
   } catch (error) {
     console.error("Failed to download material:", error);
     return false;
@@ -313,208 +228,215 @@ export interface TimetableDocData {
 }
 
 /**
- * Generates and downloads the clean, formatted Weekly Schedule Timetable table file.
+ * Generates and downloads the clean, formatted Weekly Schedule Timetable directly in PDF format.
  */
 export function downloadTimetableDoc(data: TimetableDocData): boolean {
   try {
-    const rawFileName = `Acuity_Timetable_${data.currentClass.replace(/\s+/g, "_")}_${data.board}.html`;
-    const rowsHtml = data.weeklySchedule
-      .map(
-        (item) => `
-      <tr>
-        <td style="padding: 12px 16px; font-weight: 700; color: #1e293b; border-bottom: 1px solid #e2e8f0;">${item.day}</td>
-        <td style="padding: 12px 16px; font-family: monospace; font-size: 13px; color: #4338ca; border-bottom: 1px solid #e2e8f0;">${item.time || data.batchName}</td>
-        <td style="padding: 12px 16px; font-weight: 600; color: #0f172a; border-bottom: 1px solid #e2e8f0;">${item.subject}</td>
-        <td style="padding: 12px 16px; color: #334155; border-bottom: 1px solid #e2e8f0;">
-          <div style="font-weight: 600; color: #1e293b;">${item.topic}</div>
-          ${item.description ? `<div style="font-size: 12px; color: #64748b; margin-top: 2px;">${item.description}</div>` : ""}
-        </td>
-        <td style="padding: 12px 16px; font-weight: 500; color: #475569; border-bottom: 1px solid #e2e8f0;">${item.faculty}</td>
-        <td style="padding: 12px 16px; font-weight: 700; color: #16a34a; border-bottom: 1px solid #e2e8f0; text-align: center;">
-          <span style="display: inline-block; padding: 3px 8px; background: #dcfce7; color: #15803d; border-radius: 6px; font-size: 11px;">LIVE HD</span>
-        </td>
-      </tr>
-    `
-      )
-      .join("");
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "mm",
+      format: "a4",
+    });
 
-    const docContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Acuity Tutoring — Live Class Timetable (${data.currentClass})</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      margin: 0;
-      padding: 36px;
-      color: #1e293b;
-      background: #ffffff;
-      line-height: 1.5;
-    }
-    .header {
-      border-bottom: 3px solid #4f46e5;
-      padding-bottom: 16px;
-      margin-bottom: 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-    .brand {
-      font-size: 24px;
-      font-weight: 900;
-      color: #312e81;
-      letter-spacing: -0.5px;
-    }
-    .brand span {
-      color: #4f46e5;
-    }
-    .subtitle {
-      font-size: 13px;
-      color: #6366f1;
-      font-weight: 600;
-      margin-top: 2px;
-    }
-    .meta-box {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 16px 20px;
-      margin-bottom: 24px;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
-    .meta-item label {
-      display: block;
-      font-size: 11px;
-      font-weight: 700;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .meta-item .val {
-      display: block;
-      font-size: 14px;
-      font-weight: 700;
-      color: #0f172a;
-      margin-top: 2px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 24px;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      overflow: hidden;
-      font-size: 13px;
-    }
-    th {
-      background: #f1f5f9;
-      color: #475569;
-      font-size: 11px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 12px 16px;
-      text-align: left;
-      border-bottom: 2px solid #cbd5e1;
-    }
-    .info-card {
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
-      border-radius: 8px;
-      padding: 14px 18px;
-      font-size: 12px;
-      color: #166534;
-      margin-bottom: 20px;
-    }
-    .footer {
-      border-top: 1px solid #e2e8f0;
-      padding-top: 16px;
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      color: #94a3b8;
-    }
-    @media print {
-      body { padding: 15px; }
-      .no-print { display: none; }
-    }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div>
-      <div class="brand">ACUITY <span>TUTORING</span></div>
-      <div class="subtitle">Official Weekly Live Classroom Schedule & Timetable</div>
-    </div>
-    <div style="text-align: right; font-size: 12px; color: #64748b;">
-      <div><strong>Academic Year:</strong> 2025–2026</div>
-      <div><strong>Issued Date:</strong> ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</div>
-    </div>
-  </div>
+    // 1. Header Banner
+    doc.setFillColor(0, 33, 55); // #002137 Sapphire Dark
+    doc.rect(0, 0, 297, 24, "F");
 
-  <div class="meta-box">
-    <div class="meta-item">
-      <label>Grade & Curriculum</label>
-      <div class="val">${data.currentClass} (${data.board})</div>
-    </div>
-    <div class="meta-item">
-      <label>Assigned Batch Schedule</label>
-      <div class="val" style="color: #4f46e5;">${data.batchName} (Mon–Sat)</div>
-    </div>
-    <div class="meta-item">
-      <label>Attendance Requirement</label>
-      <div class="val" style="color: #16a34a;">Minimum 75% Active Turnout</div>
-    </div>
-  </div>
+    // Title
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.setTextColor(255, 255, 255);
+    doc.text("ACUITY TUTORING", 14, 15);
 
-  <table>
-    <thead>
-      <tr>
-        <th style="width: 12%;">Day</th>
-        <th style="width: 18%;">Session Time</th>
-        <th style="width: 16%;">Subject</th>
-        <th style="width: 32%;">Topic & Learning Objectives</th>
-        <th style="width: 14%;">Faculty</th>
-        <th style="width: 8%; text-align: center;">Delivery</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${rowsHtml}
-    </tbody>
-  </table>
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(223, 183, 74); // Gold #dfb74a
+    doc.text("OFFICIAL WEEKLY LIVE CLASSROOM TIMETABLE", 75, 15);
 
-  <div class="info-card">
-    <strong>📌 Student Guidelines:</strong> Live sessions open 5 minutes prior to scheduled batch time. A 5-minute late entry grace period is enforced. Attendance is recorded automatically in real-time.
-  </div>
+    // Meta Box / Subtitle
+    doc.setFontSize(10);
+    doc.setTextColor(51, 65, 85);
+    doc.text(`Grade & Board: ${data.currentClass} (${data.board})`, 14, 32);
+    doc.text(`Assigned Batch: ${data.batchName} (Monday – Saturday)`, 105, 32);
+    doc.text(`Academic Year: 2025–2026`, 228, 32);
 
-  <div class="footer">
-    <div>Acuity Tutoring System • Live HD Classroom Network</div>
-    <div>Support Helpline: +91 98765 43210 • support@acuity.edu</div>
-  </div>
+    // 2. Table Data
+    const tableData = data.weeklySchedule.map((item) => [
+      item.day,
+      item.time || data.batchName,
+      item.subject,
+      `${item.topic}\n${item.description || ""}`,
+      item.faculty,
+      "Live HD",
+    ]);
 
-  <script>
-    if (window.location.search.includes('print=true')) {
-      window.onload = () => window.print();
-    }
-  </script>
-</body>
-</html>`;
+    autoTable(doc, {
+      startY: 37,
+      head: [["Day", "Session Time", "Subject", "Topic & Learning Objectives", "Faculty Instructor", "Delivery"]],
+      body: tableData,
+      theme: "grid",
+      headStyles: {
+        fillColor: [0, 33, 55],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+        fontSize: 10,
+        halign: "left",
+      },
+      styles: {
+        fontSize: 9,
+        cellPadding: 4,
+        valign: "middle",
+        textColor: [30, 41, 59],
+        lineColor: [226, 232, 240],
+        lineWidth: 0.2,
+      },
+      columnStyles: {
+        0: { fontStyle: "bold", cellWidth: 24 },
+        1: { fontStyle: "bold", textColor: [79, 70, 229], cellWidth: 35 },
+        2: { fontStyle: "bold", cellWidth: 28 },
+        3: { cellWidth: 95 },
+        4: { fontStyle: "bold", cellWidth: 42 },
+        5: { halign: "center", cellWidth: 20, textColor: [22, 163, 74] },
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252],
+      },
+    });
 
-    const blob = new Blob([docContent], { type: "text/html" });
-    const blobUrl = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = blobUrl;
-    link.download = rawFileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(blobUrl);
-    return true;
+    // 3. Footer
+    const finalY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 12 : 180;
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text(
+      "Acuity Tutoring System • Where Accuracy Meets Knowledge • 24/7 Helpline: +91 98765 43210 • support@acuity.edu",
+      14,
+      Math.min(finalY, 195)
+    );
+
+    // Force strict filename with .pdf extension
+    const cleanFileName = `Acuity_Timetable_${data.currentClass.replace(/\s+/g, "_")}_${data.board}.pdf`;
+    return triggerPdfDownload(doc, cleanFileName);
   } catch (error) {
-    console.error("Failed to download timetable:", error);
+    console.error("Failed to generate PDF timetable:", error);
+    return false;
+  }
+}
+
+export interface ReceiptDocData {
+  receiptNumber: string;
+  studentName?: string;
+  studentClass?: string;
+  board?: string;
+  billingMonth: string;
+  amount: number;
+  paymentMethod: string;
+  transactionId?: string;
+  paidDate?: string | Date;
+}
+
+/**
+ * Generates and downloads the official Acuity Fee Payment Receipt in high-resolution PDF format.
+ */
+export function downloadReceiptPDF(data: ReceiptDocData): boolean {
+  try {
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
+    // 1. Header Banner
+    doc.setFillColor(0, 33, 55); // #002137 Sapphire Dark
+    doc.rect(0, 0, 210, 28, "F");
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.setTextColor(255, 255, 255);
+    doc.text("ACUITY TUTORING", 15, 14);
+
+    doc.setFontSize(9);
+    doc.setTextColor(223, 183, 74); // Gold #dfb74a
+    doc.text("OFFICIAL TUITION FEE RECEIPT", 15, 22);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(203, 213, 225);
+    doc.text(`Receipt No: ${data.receiptNumber}`, 145, 14);
+    doc.text(
+      `Date: ${
+        data.paidDate
+          ? new Date(data.paidDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+          : new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+      }`,
+      145,
+      20
+    );
+
+    // 2. Receipt Details Table
+    const receiptRows = [
+      ["Receipt Number", data.receiptNumber],
+      ["Billing Cycle / Month", data.billingMonth],
+      ["Student Grade & Board", `${data.studentClass || "Class 10"} (${data.board || "CBSE"} Board)`],
+      ["Payment Mode", data.paymentMethod || "Online UPI"],
+      ["Transaction Reference / UTR", data.transactionId || `UPI-${data.receiptNumber.replace(/\D/g, "") || "984210"}`],
+      ["Tuition Fee Amount", `INR ${data.amount.toLocaleString("en-IN")}.00`],
+      ["Payment Status", "PAID & VERIFIED (CLEARED)"],
+    ];
+
+    autoTable(doc, {
+      startY: 40,
+      head: [["Particulars", "Transaction & Enrollment Details"]],
+      body: receiptRows,
+      theme: "grid",
+      headStyles: {
+        fillColor: [0, 33, 55],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+        fontSize: 10,
+      },
+      styles: {
+        fontSize: 9,
+        cellPadding: 5,
+        valign: "middle",
+        textColor: [30, 41, 59],
+        lineColor: [226, 232, 240],
+        lineWidth: 0.2,
+      },
+      columnStyles: {
+        0: { fontStyle: "bold", cellWidth: 65 },
+        1: { cellWidth: 115 },
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252],
+      },
+    });
+
+    // 3. Amount Total Strip
+    const finalY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 8 : 140;
+    doc.setFillColor(240, 253, 244);
+    doc.setDrawColor(187, 247, 208);
+    doc.rect(15, finalY, 180, 16, "FD");
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(22, 101, 52);
+    doc.text("TOTAL AMOUNT RECEIVED:", 22, finalY + 10);
+    doc.text(`INR ${data.amount.toLocaleString("en-IN")}.00`, 135, finalY + 10);
+
+    // 4. Verification Stamp & Footer
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text(
+      "This is a computer-generated authentic fee receipt. No physical signature required. • Support: support@acuity.edu",
+      15,
+      Math.min(finalY + 32, 270)
+    );
+
+    const cleanFileName = `Acuity_Fee_Receipt_${data.receiptNumber.replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`;
+    return triggerPdfDownload(doc, cleanFileName);
+  } catch (error) {
+    console.error("Failed to generate PDF receipt:", error);
     return false;
   }
 }

@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { verifyToken, TokenPayload } from "./jwt";
 import { UserRole } from "@/types";
@@ -9,7 +8,7 @@ export const AUTH_COOKIE_NAME = "acuity_auth_token";
 export async function getSession(req?: any): Promise<TokenPayload | null> {
   let token: string | undefined = undefined;
 
-  // 1. Direct request parameter cookies
+  // 1. Direct request parameter cookies & headers
   if (req) {
     if (typeof req.cookies?.get === "function") {
       token = req.cookies.get(AUTH_COOKIE_NAME)?.value;
@@ -24,24 +23,29 @@ export async function getSession(req?: any): Promise<TokenPayload | null> {
         );
         if (matches) token = decodeURIComponent(matches[1]);
       }
+
+      // Also check Authorization: Bearer token header
+      if (!token) {
+        const authHeader =
+          typeof req.headers.get === "function"
+            ? req.headers.get("authorization")
+            : req.headers.authorization;
+        if (authHeader && typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
+          token = authHeader.slice(7).trim();
+        }
+      }
     }
   }
 
-  // 2. Async Local Storage from express adapter
-  if (!token) {
-    const store = requestContextStorage.getStore();
-    if (store && store.cookies && store.cookies[AUTH_COOKIE_NAME]) {
-      token = store.cookies[AUTH_COOKIE_NAME];
-    }
-  }
-
-  // 3. Fallback to next/headers cookies() if in Next.js environment
+  // 2. Async Local Storage from express adapter context
   if (!token) {
     try {
-      const cookieStore = await cookies();
-      token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+      const store = requestContextStorage.getStore();
+      if (store && store.cookies && store.cookies[AUTH_COOKIE_NAME]) {
+        token = store.cookies[AUTH_COOKIE_NAME];
+      }
     } catch {
-      // Outside Next request store
+      // Storage unavailable
     }
   }
 

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db/mongoose";
 import { getSession } from "@/lib/auth/session";
 import StudentProfile from "@/models/StudentProfile";
@@ -8,9 +8,9 @@ import User from "@/models/User";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const session = await getSession();
+    const session = await getSession(req);
     if (!session || session.role !== "STUDENT") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
