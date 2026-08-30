@@ -9,19 +9,19 @@ import {
   BookOpen,
   CalendarCheck2,
   Clock,
-  Plus,
   ArrowRight,
   ShieldCheck,
-  GraduationCap,
   Calendar,
   Shuffle,
   CalendarDays,
-  Sparkles,
+  GraduationCap,
+  Mail,
+  Hash,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useFastFetch } from "@/lib/api-cache";
 import { ScheduleSwapModal } from "@/components/classroom/ScheduleSwapModal";
 import { useClassLiveTimer } from "@/lib/class-timing";
+import { PortalHeader } from "@/components/layout/PortalHeader";
 
 function TeacherLiveClassRow({ cls, onSwap }: { cls: any; onSwap: (cls: any) => void }) {
   const batchData = {
@@ -37,13 +37,13 @@ function TeacherLiveClassRow({ cls, onSwap }: { cls: any; onSwap: (cls: any) => 
   const targetRoomId = timing.permanentRoomId || cls.livekitRoomId || cls._id;
 
   return (
-    <div className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors px-1">
       <div className="space-y-1.5 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#dfb74a] border border-blue-200 dark:border-[#004b79]/60">
+          <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#dfb74a] border border-blue-200 dark:border-[#004b79]/60">
             {cls.subject}
           </span>
-          <span className="text-xs font-mono font-semibold text-slate-600 dark:text-slate-400">
+          <span className="text-xs font-mono font-semibold text-slate-500 dark:text-slate-400">
             {cls.startTime} – {cls.endTime}
           </span>
           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
@@ -61,16 +61,11 @@ function TeacherLiveClassRow({ cls, onSwap }: { cls: any; onSwap: (cls: any) => 
             </span>
           )}
         </div>
-        <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100">
-          {cls.title}
-        </h3>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          {cls.topic || timing.detailedCountdown}
-        </p>
+        <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">{cls.title}</h3>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{cls.topic || timing.detailedCountdown}</p>
       </div>
 
       <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
-        {/* Reschedule / Day Swap Tool Button */}
         <button
           type="button"
           onClick={() => onSwap(cls)}
@@ -113,6 +108,7 @@ export default function TeacherDashboardPage() {
     specialization: "Class 8-10 Mathematics & Science",
     subjects: ["Mathematics", "Science"],
     classesTaught: ["Class 8", "Class 9", "Class 10"],
+    email: "",
   };
 
   const stats = data?.stats || {
@@ -134,178 +130,206 @@ export default function TeacherDashboardPage() {
     year: "numeric",
   }).format(new Date());
 
+  const quickLinks = [
+    {
+      href: "/teacher/schedule",
+      icon: CalendarDays,
+      label: "Timetable & Schedule",
+      desc: "Manage session timings and swap subject days",
+      color: "text-[#004b79] dark:text-[#dfb74a]",
+    },
+    {
+      href: "/teacher/materials",
+      icon: BookOpen,
+      label: "Upload Learning Notes",
+      desc: "Share PDFs, formula handbooks & workbooks",
+      color: "text-[#004b79] dark:text-[#dfb74a]",
+    },
+    {
+      href: "/teacher/assignments",
+      icon: FileCheck,
+      label: "Assignments & Grading",
+      desc: "Post homework tasks & grade student solutions",
+      color: "text-amber-600 dark:text-amber-400",
+    },
+    {
+      href: "/teacher/students",
+      icon: Users,
+      label: "Batch Student Roster",
+      desc: "View enrolled students, attendance & fee status",
+      color: "text-emerald-600 dark:text-emerald-400",
+    },
+    {
+      href: "/teacher/attendance",
+      icon: CalendarCheck2,
+      label: "Attendance Log",
+      desc: "Mark and review session attendance records",
+      color: "text-indigo-600 dark:text-indigo-400",
+    },
+  ];
+
   return (
-    <main className="w-full min-h-full bg-transparent p-6 sm:p-8 lg:p-10 space-y-8 animate-in fade-in duration-150">
-      {/* ── HEADER ── */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              Welcome, {teacher.name}
-            </h1>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#dfb74a] border border-blue-200 dark:border-[#004b79]/60">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Verified Faculty
-            </span>
-          </div>
-          <div className="text-sm text-slate-500 dark:text-slate-400 space-y-0.5 pt-0.5">
-            <p>
+    <>
+      {/* ── NAVBAR ── */}
+      <PortalHeader userRole="TEACHER" />
+
+      <main className="w-full max-w-7xl mx-auto p-6 sm:p-8 space-y-8 animate-in fade-in duration-150 select-none">
+
+        {/* ── 1. WELCOME HEADER ── */}
+        <div className="flex flex-row items-center justify-between gap-4 pb-5 border-b border-slate-200 dark:border-slate-800">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+                Welcome, {teacher.name}
+              </h1>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#dfb74a] border border-blue-200 dark:border-[#004b79]/60">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Verified Faculty
+              </span>
+            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               Subjects: <strong className="text-slate-700 dark:text-slate-300">{teacher.subjects?.join(", ")}</strong>
-            </p>
-            <p>
+              &nbsp;·&nbsp;
               Grades: <strong className="text-slate-700 dark:text-slate-300">{teacher.classesTaught?.join(", ")}</strong>
             </p>
           </div>
-        </div>
 
-        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium self-start md:self-auto">
-          <Calendar className="w-3.5 h-3.5" />
-          <span>{todayFormatted}</span>
-        </div>
-      </div>
-
-      {/* ── METRICS (LIVE DATABASE METRICS) ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Assigned Students</span>
-            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-              {stats.totalStudents} <span className="text-xs font-normal text-slate-400">enrolled</span>
-            </p>
-          </div>
-          <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center">
-            <Users className="w-4 h-4" />
+          <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium shrink-0">
+            <Calendar className="w-3.5 h-3.5" />
+            <span>{todayFormatted}</span>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Today&apos;s Sessions</span>
-            <p className="text-2xl font-bold text-[#004b79] dark:text-[#dfb74a] tracking-tight">
-              {stats.todayClassesCount} <span className="text-xs font-normal text-slate-400">scheduled</span>
-            </p>
-          </div>
-          <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#dfb74a] flex items-center justify-center">
-            <Video className="w-4 h-4" />
+        {/* ── 2. ACADEMIC VITAL METRICS (FLAT, NO CARDS) ── */}
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Teaching Overview</h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-5 divide-x-0 lg:divide-x divide-slate-200 dark:divide-slate-800 pb-6 border-b border-slate-200 dark:border-slate-800">
+            <div className="space-y-1">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Assigned Students</span>
+              <p className="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight leading-none">
+                {stats.totalStudents}
+              </p>
+              <p className="text-xs text-slate-400">enrolled</p>
+            </div>
+
+            <div className="space-y-1 lg:pl-8">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Today&apos;s Sessions</span>
+              <p className="text-3xl font-black text-[#004b79] dark:text-[#dfb74a] tracking-tight leading-none">
+                {stats.todayClassesCount}
+              </p>
+              <p className="text-xs text-slate-400">scheduled</p>
+            </div>
+
+            <div className="space-y-1 lg:pl-8">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Pending Grading</span>
+              <p className="text-3xl font-black text-amber-600 dark:text-amber-400 tracking-tight leading-none">
+                {stats.pendingEvaluations}
+              </p>
+              <p className="text-xs text-slate-400">tasks</p>
+            </div>
+
+            <div className="space-y-1 lg:pl-8">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Avg Attendance</span>
+              <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight leading-none">
+                {stats.averageAttendance}%
+              </p>
+              <p className="text-xs text-slate-400">turnout</p>
+            </div>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Pending Grading</span>
-            <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 tracking-tight">
-              {stats.pendingEvaluations} <span className="text-xs font-normal text-slate-400">tasks</span>
-            </p>
-          </div>
-          <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-            <FileCheck className="w-4 h-4" />
-          </div>
-        </div>
-
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Avg Attendance</span>
-            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">
-              {stats.averageAttendance}% <span className="text-xs font-normal text-slate-400">turnout</span>
-            </p>
-          </div>
-          <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-            <CalendarCheck2 className="w-4 h-4" />
-          </div>
-        </div>
-      </div>
-
-      {/* ── TODAY'S LIVE CLASS SCHEDULE (WITH REAL-TIME COUNTDOWN) ── */}
-      {todayClasses.length > 0 && (
+        {/* ── 3. TEACHER DETAILS (FLAT TABLE) ── */}
         <div className="space-y-3">
-          <div className="pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <h2 className="font-semibold text-sm text-slate-800 dark:text-slate-200">
-              Today&apos;s Active Lecture Schedule
-            </h2>
-            <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400">Live Timing Synced</span>
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Faculty Details & Credentials</h2>
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+              Active
+            </span>
           </div>
 
-          <div className="border border-slate-200 dark:border-slate-800 rounded-2xl divide-y divide-slate-200 dark:divide-slate-800 overflow-hidden bg-white dark:bg-slate-900/50 shadow-xs">
-            {todayClasses.map((cls: any) => (
-              <TeacherLiveClassRow
-                key={cls._id}
-                cls={cls}
-                onSwap={(target) => setSwapModalSession(target)}
-              />
+          <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+            {[
+              { icon: GraduationCap, label: "Teacher Name", value: teacher.name },
+              { icon: ShieldCheck, label: "Qualification", value: teacher.qualification || "M.Sc., B.Ed" },
+              { icon: BookOpen, label: "Specialization", value: teacher.specialization || teacher.subjects?.join(", ") },
+              { icon: Hash, label: "Classes Taught", value: teacher.classesTaught?.join(", ") },
+              ...(teacher.email ? [{ icon: Mail, label: "Email Address", value: teacher.email }] : []),
+            ].map(({ icon: Icon, label, value }) => (
+              <div key={label} className="flex items-center justify-between py-3 gap-4">
+                <div className="flex items-center gap-2.5 text-slate-400">
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{label}</span>
+                </div>
+                <span className="text-xs font-bold text-slate-900 dark:text-slate-100 text-right">{value || "—"}</span>
+              </div>
             ))}
           </div>
         </div>
-      )}
 
-      {/* ── QUICK ACTIONS ── */}
-      <div className="space-y-3">
-        <div className="pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <h2 className="font-semibold text-sm text-slate-800 dark:text-slate-200">
-            Teaching Management Modules
-          </h2>
-          <span className="text-[11px] text-slate-400">Direct Navigation</span>
+        {/* ── 4. TODAY'S LIVE CLASS SCHEDULE ── */}
+        {todayClasses.length > 0 && (
+          <div className="space-y-3">
+            <div className="pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <h2 className="font-semibold text-sm text-slate-800 dark:text-slate-200">
+                Today&apos;s Active Lecture Schedule
+              </h2>
+              <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400">Live Timing Synced</span>
+            </div>
+
+            <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+              {todayClasses.map((cls: any) => (
+                <TeacherLiveClassRow
+                  key={cls._id}
+                  cls={cls}
+                  onSwap={(target) => setSwapModalSession(target)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── 5. TEACHING MANAGEMENT MODULES (FLAT LIST, NO CARDS) ── */}
+        <div className="space-y-3">
+          <div className="pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <h2 className="font-semibold text-sm text-slate-800 dark:text-slate-200">Teaching Management Modules</h2>
+            <span className="text-[11px] text-slate-400">Direct Navigation</span>
+          </div>
+
+          <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+            {quickLinks.map(({ href, icon: Icon, label, desc, color }) => (
+              <Link
+                key={href}
+                href={href}
+                prefetch={true}
+                className="flex items-center justify-between py-4 gap-4 hover:bg-slate-50/60 dark:hover:bg-slate-800/20 transition-colors group px-1"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <Icon className={`w-4 h-4 shrink-0 ${color}`} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{label}</p>
+                    <p className="text-[11px] text-slate-400 truncate">{desc}</p>
+                  </div>
+                </div>
+                <ArrowRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 group-hover:translate-x-0.5 transition-all shrink-0" />
+              </Link>
+            ))}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Link
-            href="/teacher/schedule"
-            prefetch={true}
-            className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:border-[#004b79] dark:hover:border-[#dfb74a] transition-all group flex flex-col justify-between h-32"
-          >
-            <div className="flex items-center justify-between">
-              <CalendarDays className="w-5 h-5 text-[#004b79] dark:text-[#dfb74a]" />
-              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-            </div>
-            <div>
-              <h3 className="font-bold text-xs text-slate-800 dark:text-slate-200">Timetable & Schedule Swap</h3>
-              <p className="text-[11px] text-slate-400 mt-0.5">Manage session timings and swap subject days</p>
-            </div>
-          </Link>
-
-          <Link
-            href="/teacher/materials"
-            prefetch={true}
-            className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:border-[#004b79] dark:hover:border-[#dfb74a] transition-all group flex flex-col justify-between h-32"
-          >
-            <div className="flex items-center justify-between">
-              <BookOpen className="w-5 h-5 text-[#004b79] dark:text-[#dfb74a]" />
-              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-            </div>
-            <div>
-              <h3 className="font-bold text-xs text-slate-800 dark:text-slate-200">Upload Learning Notes</h3>
-              <p className="text-[11px] text-slate-400 mt-0.5">Share PDFs, formula handbooks & workbooks</p>
-            </div>
-          </Link>
-
-          <Link
-            href="/teacher/assignments"
-            prefetch={true}
-            className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:border-[#004b79] dark:hover:border-[#dfb74a] transition-all group flex flex-col justify-between h-32"
-          >
-            <div className="flex items-center justify-between">
-              <FileCheck className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-            </div>
-            <div>
-              <h3 className="font-bold text-xs text-slate-800 dark:text-slate-200">Assignments & Grading</h3>
-              <p className="text-[11px] text-slate-400 mt-0.5">Post homework tasks & grade student solutions</p>
-            </div>
-          </Link>
-        </div>
-      </div>
-
-      {/* ── SCHEDULE RESCHEDULE & SWAP MODAL ── */}
-      {swapModalSession && (
-        <ScheduleSwapModal
-          isOpen={!!swapModalSession}
-          onClose={() => setSwapModalSession(null)}
-          targetSession={swapModalSession}
-          allSessions={combinedSessions}
-          onSuccess={() => {
-            if (typeof refetch === "function") refetch();
-          }}
-        />
-      )}
-    </main>
+        {/* ── SCHEDULE SWAP MODAL ── */}
+        {swapModalSession && (
+          <ScheduleSwapModal
+            isOpen={!!swapModalSession}
+            onClose={() => setSwapModalSession(null)}
+            targetSession={swapModalSession}
+            allSessions={combinedSessions}
+            onSuccess={() => {
+              if (typeof refetch === "function") refetch();
+            }}
+          />
+        )}
+      </main>
+    </>
   );
 }
