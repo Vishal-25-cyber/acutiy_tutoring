@@ -59,27 +59,29 @@ export function PortalSidebar({ role }: SidebarProps) {
   const studentLinks: SidebarLink[] = [
     { href: "/student/dashboard", label: "Dashboard", icon: LayoutDashboard, api: "/api/student/dashboard" },
     { href: "/student/classes", label: "Live Classes & Timetable", icon: Video, badge: "Live", badgeVariant: "live", api: "/api/student/classes" },
-    { href: "/student/materials", label: "Learning Hub", icon: BookOpen, api: "/api/student/materials" },
+    { href: "/student/materials", label: "Study Materials", icon: BookOpen, api: "/api/student/materials" },
     { href: "/student/assignments", label: "Assignments & Tasks", icon: FileCheck, api: "/api/student/assignments" },
-    { href: "/student/attendance", label: "Attendance & Streak", icon: CalendarCheck2, api: "/api/student/attendance" },
+    { href: "/student/attendance", label: "Attendance Record", icon: CalendarCheck2, api: "/api/student/attendance" },
     {
       href: "/student/fees",
-      label: "Tuition & Fees",
+      label: "Fee Receipts & QR",
       icon: CreditCard,
       badge: feeBadge,
       badgeVariant: currentFee ? "warning" : "default",
       api: "/api/student/payments",
     },
+    { href: "/student/performance", label: "Academic Progress", icon: TrendingUp, api: "/api/student/performance" },
+    { href: "/student/ai-tutor", label: "AI Doubt Assistant", icon: Bot },
   ];
 
   const teacherLinks: SidebarLink[] = [
     { href: "/teacher/dashboard", label: "Dashboard", icon: LayoutDashboard, api: "/api/teacher/dashboard" },
-    { href: "/teacher/schedule", label: "Timetable & Schedule", icon: CalendarCheck2, api: "/api/classes" },
-    { href: "/teacher/live-class/create", label: "Create Live Class", icon: Video, badge: "Host" },
-    { href: "/teacher/materials", label: "Upload Materials", icon: BookOpen, api: "/api/teacher/materials" },
+    { href: "/teacher/schedule", label: "Schedule & Timetable", icon: CalendarCheck2, api: "/api/classes" },
+    { href: "/teacher/live-class/create", label: "Launch Live Class", icon: Video, badge: "Host" },
     { href: "/teacher/assignments", label: "Assignments & Grading", icon: FileCheck, api: "/api/teacher/assignments" },
-    { href: "/teacher/students", label: "Batch Student Roster", icon: Users2, api: "/api/teacher/students" },
-    { href: "/teacher/attendance", label: "Attendance Log", icon: Clock },
+    { href: "/teacher/students", label: "Student Roster", icon: Users2, api: "/api/teacher/students" },
+    { href: "/teacher/materials", label: "Study Resources", icon: BookOpen, api: "/api/teacher/materials" },
+    { href: "/teacher/attendance", label: "Staff Attendance Log", icon: Clock },
   ];
 
   const { data: dashboardData } = useFastFetch(role === "ADMIN" ? "/api/admin/dashboard" : "");
@@ -88,18 +90,23 @@ export function PortalSidebar({ role }: SidebarProps) {
   const teacherPendingBadge = pendingTeacherCount > 0 ? `${pendingTeacherCount} Pending` : undefined;
 
   const adminLinks: SidebarLink[] = [
-    { href: "/admin/dashboard", label: "Admin Overview", icon: LayoutDashboard, api: "/api/admin/dashboard" },
-    { href: "/admin/students", label: "Student Management", icon: Users2, api: "/api/admin/students" },
+    { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard, api: "/api/admin/dashboard" },
+    { href: "/admin/students", label: "Student Records", icon: Users2, api: "/api/admin/students" },
     {
       href: "/admin/teachers",
-      label: "Teacher Approvals & Staff",
+      label: "Faculty Approvals",
       icon: UserCheck,
+      badge: teacherPendingBadge,
+      badgeVariant: "warning",
       api: "/api/admin/teachers?status=ALL",
     },
+    { href: "/admin/batches", label: "Batch Slots", icon: Layers, api: "/api/batches" },
+    { href: "/admin/classes", label: "Live Class Schedule", icon: Video, api: "/api/classes" },
     { href: "/admin/attendance", label: "Student Attendance", icon: CalendarCheck2, api: "/api/admin/attendance?classLevel=ALL&status=ALL" },
-    { href: "/admin/staff-attendance", label: "Staff Attendance", icon: Clock, api: "/api/admin/staff-attendance" },
-    { href: "/admin/finance", label: "Monthly Income & Fees", icon: DollarSign, api: "/api/admin/finance" },
-    { href: "/admin/settings", label: "System Settings", icon: Settings, api: "/api/admin/settings" },
+    { href: "/admin/staff-attendance", label: "Faculty Attendance", icon: Clock, api: "/api/admin/staff-attendance" },
+    { href: "/admin/finance", label: "Fee Accounts & Income", icon: DollarSign, api: "/api/admin/finance" },
+    { href: "/admin/analytics", label: "Platform Analytics", icon: Activity, api: "/api/admin/analytics" },
+    { href: "/admin/settings", label: "Institute Settings", icon: Settings, api: "/api/admin/settings" },
   ];
 
   const links = role === "STUDENT" ? studentLinks : role === "TEACHER" ? teacherLinks : adminLinks;
