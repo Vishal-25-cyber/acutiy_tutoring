@@ -52,10 +52,27 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "An account with this email or phone already exists." }, { status: 409 });
       }
 
-      // Check batch exists
-      const batch = await Batch.findById(batchId);
+      // Check batch exists or assign active batch
+      let batch = null;
+      if (batchId && typeof batchId === "string" && batchId.length === 24) {
+        try {
+          batch = await Batch.findById(batchId);
+        } catch {
+          batch = null;
+        }
+      }
       if (!batch) {
-        return NextResponse.json({ error: "Selected batch not found. Please contact admin." }, { status: 404 });
+        batch = await Batch.findOne({ isActive: true });
+      }
+      if (!batch) {
+        batch = await Batch.create({
+          name: "7:00 PM – 8:00 PM",
+          startTime: "19:00",
+          endTime: "20:00",
+          days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+          capacity: 30,
+          gracePeriodMinutes: 5,
+        });
       }
 
       const passwordHash = await hashPassword(password);

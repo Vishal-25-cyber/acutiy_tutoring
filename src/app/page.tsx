@@ -50,7 +50,12 @@ export default function HomePage() {
   const [qOk, setQOk] = useState("");
 
   // Sign up state
-  const [batches, setBatches] = useState<any[]>([]);
+  const defaultBatchesList = [
+    { _id: "6a9425fa1491b9fc49acfd12", name: "6:00 PM – 7:00 PM", startTime: "18:00", endTime: "19:00" },
+    { _id: "6a9425fa1491b9fc49acfd13", name: "7:00 PM – 8:00 PM", startTime: "19:00", endTime: "20:00" },
+    { _id: "6a9425fa1491b9fc49acfd14", name: "8:00 PM – 9:00 PM", startTime: "20:00", endTime: "21:00" },
+  ];
+  const [batches, setBatches] = useState<any[]>(defaultBatchesList);
   const [signupRole, setSignupRole] = useState<SignupRole>("STUDENT");
   const [step, setStep] = useState<Step>(1);
   const [sName, setSName] = useState("");
@@ -63,7 +68,7 @@ export default function HomePage() {
   const [sSchool, setSSchool] = useState("");
   const [sBoard, setSBoard] = useState<"CBSE" | "State Board">("CBSE");
   const [sClass, setSClass] = useState("Class 10");
-  const [sBatch, setSBatch] = useState("");
+  const [sBatch, setSBatch] = useState("6a9425fa1491b9fc49acfd13");
 
   const [tQual, setTQual] = useState("");
   const [tSpec, setTSpec] = useState("");
@@ -87,9 +92,10 @@ export default function HomePage() {
     fetch("/api/batches")
       .then((r) => r.json())
       .then((d) => {
-        if (d.batches?.length) {
-          setBatches(d.batches);
-          setSBatch(d.batches[0]._id);
+        const list = d.batches || (Array.isArray(d) ? d : []);
+        if (list.length > 0) {
+          setBatches(list);
+          setSBatch((curr) => (curr && list.some((b: any) => b._id === curr) ? curr : list[0]._id));
         }
       })
       .catch(() => {});
@@ -207,7 +213,9 @@ export default function HomePage() {
 
   const v2s = () => {
     if (!sSchool.trim()) { setErr("Please enter your school name."); return false; }
-    if (!sBatch) { setErr("Please select a batch."); return false; }
+    if (!sBatch && batches.length > 0) {
+      setSBatch(batches[0]._id);
+    }
     return true;
   };
 
@@ -1075,19 +1083,17 @@ export default function HomePage() {
 
                       <div className="space-y-1">
                         <label className="block text-xs font-bold text-slate-700">Batch Timing *</label>
-                        {batches.length === 0 ? (
-                          <p className="text-xs text-slate-500 font-medium">Batch will be assigned by Administrator.</p>
-                        ) : (
-                          <select
-                            value={sBatch}
-                            onChange={(e) => setSBatch(e.target.value)}
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium cursor-pointer"
-                          >
-                            {batches.map((b) => (
-                              <option key={b._id} value={b._id}>{b.name} ({b.classLevel || "All Classes"})</option>
-                            ))}
-                          </select>
-                        )}
+                        <select
+                          value={sBatch}
+                          onChange={(e) => setSBatch(e.target.value)}
+                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium cursor-pointer"
+                        >
+                          {batches.map((b) => (
+                            <option key={b._id} value={b._id}>
+                              {b.name} {b.startTime && b.endTime ? `(${b.startTime} – ${b.endTime})` : ""}
+                            </option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className="flex gap-2 pt-1">
