@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+.gitignore
+.env*.local
+dist
+.system_generated
+.tempmediaStorage
+.user_uploaded
+README.md
+*.log
