@@ -380,7 +380,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Line 1 */}
-                <div className="p-3.5 rounded-xl border border-slate-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                <div className="p-3.5 rounded-xl border border-slate-200 bg-white flex items-center justify-between gap-3 shadow-2xs">
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
                       <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-blue-50 text-[#004b79]">
@@ -392,36 +392,36 @@ export default function HomePage() {
                       +91 {phone1.slice(0, 5)} {phone1.slice(5)}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <a
                       href={`tel:+91${phone1}`}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                      title="Direct Call"
+                      className="w-8 h-8 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                     >
-                      <PhoneCall className="w-3.5 h-3.5" />
-                      <span>Call</span>
+                      <PhoneCall className="w-4 h-4" />
                     </a>
                     <a
                       href={`https://wa.me/91${phone1}?text=Hello%20Acuity%20Tutoring,%20I%20would%20like%20to%20inquire%20about%20admissions.`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                      title="WhatsApp Chat"
+                      className="w-8 h-8 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                     >
-                      <WhatsAppIcon className="w-3.5 h-3.5" />
-                      <span>WhatsApp</span>
+                      <WhatsAppIcon className="w-4 h-4" />
                     </a>
                     <button
                       type="button"
                       onClick={() => handleCopy(`+91${phone1}`, "p1")}
-                      className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer"
+                      className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
                       title="Copy number"
                     >
-                      {copiedKey === "p1" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
+                      {copiedKey === "p1" ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-slate-500" />}
                     </button>
                   </div>
                 </div>
 
                 {/* Line 2 */}
-                <div className="p-3.5 rounded-xl border border-slate-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                <div className="p-3.5 rounded-xl border border-slate-200 bg-white flex items-center justify-between gap-3 shadow-2xs">
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
                       <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-amber-50 text-amber-800">
@@ -433,36 +433,36 @@ export default function HomePage() {
                       +91 {phone2.slice(0, 5)} {phone2.slice(5)}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <a
                       href={`tel:+91${phone2}`}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                      title="Direct Call"
+                      className="w-8 h-8 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                     >
-                      <PhoneCall className="w-3.5 h-3.5" />
-                      <span>Call</span>
+                      <PhoneCall className="w-4 h-4" />
                     </a>
                     <a
                       href={`https://wa.me/91${phone2}?text=Hello,%20I%20have%20a%20query%20regarding%20batch%20timings%20and%20curriculum.`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                      title="WhatsApp Chat"
+                      className="w-8 h-8 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                     >
-                      <WhatsAppIcon className="w-3.5 h-3.5" />
-                      <span>WhatsApp</span>
+                      <WhatsAppIcon className="w-4 h-4" />
                     </a>
                     <button
                       type="button"
                       onClick={() => handleCopy(`+91${phone2}`, "p2")}
-                      className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer"
+                      className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
                       title="Copy number"
                     >
-                      {copiedKey === "p2" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
+                      {copiedKey === "p2" ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-slate-500" />}
                     </button>
                   </div>
                 </div>
 
                 {/* Line 3 */}
-                <div className="p-3.5 rounded-xl border border-slate-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                <div className="p-3.5 rounded-xl border border-slate-200 bg-white flex items-center justify-between gap-3 shadow-2xs">
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
                       <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-purple-50 text-purple-800">
@@ -474,30 +474,30 @@ export default function HomePage() {
                       +91 {phone3.slice(0, 5)} {phone3.slice(5)}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <a
                       href={`tel:+91${phone3}`}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                      title="Direct Call"
+                      className="w-8 h-8 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                     >
-                      <PhoneCall className="w-3.5 h-3.5" />
-                      <span>Call</span>
+                      <PhoneCall className="w-4 h-4" />
                     </a>
                     <a
                       href={`https://wa.me/91${phone3}?text=Hello%20Acuity%20Support,%20I%20need%20technical%20assistance.`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                      title="WhatsApp Chat"
+                      className="w-8 h-8 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                     >
-                      <WhatsAppIcon className="w-3.5 h-3.5" />
-                      <span>WhatsApp</span>
+                      <WhatsAppIcon className="w-4 h-4" />
                     </a>
                     <button
                       type="button"
                       onClick={() => handleCopy(`+91${phone3}`, "p3")}
-                      className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer"
+                      className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
                       title="Copy number"
                     >
-                      {copiedKey === "p3" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
+                      {copiedKey === "p3" ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-slate-500" />}
                     </button>
                   </div>
                 </div>
@@ -653,11 +653,11 @@ export default function HomePage() {
                   />
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
+                <div className="pt-1">
                   <button
                     type="submit"
                     disabled={qLoading}
-                    className="w-full sm:flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm bg-[#004b79] hover:bg-[#003b60] text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-60"
+                    className="w-full py-3 rounded-xl font-bold text-xs sm:text-sm bg-[#004b79] hover:bg-[#003b60] text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-60"
                   >
                     {qLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -668,16 +668,6 @@ export default function HomePage() {
                       </>
                     )}
                   </button>
-
-                  <a
-                    href={`mailto:${emailSupport}?subject=${encodeURIComponent(qSubject)}&body=${encodeURIComponent(
-                      `Name: ${qName}\nPhone: ${qPhone}\nGrade: ${qClass} (${qBoard})\n\nMessage:\n${qMessage}`
-                    )}`}
-                    className="w-full sm:w-auto px-4 py-3 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    <Mail className="w-3.5 h-3.5 text-[#004b79]" />
-                    <span>Open in Email App</span>
-                  </a>
                 </div>
               </form>
 
