@@ -41,8 +41,9 @@ export default function StudentFeesPage() {
 
   const upiId = data?.settings?.upiId || "acuity.tutoring@upi";
   const companyName = data?.settings?.companyName || "Acuity Tutoring";
-  const monthlyFee = Number(data?.settings?.monthlyFee || 2500);
+  const monthlyFee = Number(data?.settings?.monthlyFee || data?.currentFee?.amount || 1999);
   const customQrImage = data?.settings?.qrCodeImageUrl;
+  const currentMonthStr = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date());
 
   // Genuine UPI Deep Link URI with pre-filled exact amount
   const upiUri = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(
@@ -74,7 +75,7 @@ export default function StudentFeesPage() {
 
     const paymentTarget = data?.currentFee || data?.allPayments?.[0] || {
       _id: "direct-pay",
-      billingMonth: "August 2026",
+      billingMonth: currentMonthStr,
     };
 
     try {
@@ -105,8 +106,8 @@ export default function StudentFeesPage() {
   const handleDownloadReceipt = (p: any) => {
     setDownloadingReceiptId(p._id || p.receiptNumber);
     downloadReceiptPDF({
-      receiptNumber: p.receiptNumber || "REC-2026-00189",
-      billingMonth: p.billingMonth || p.courseName || "August 2026",
+      receiptNumber: p.receiptNumber || `REC-${Date.now().toString().slice(-6)}`,
+      billingMonth: p.billingMonth || p.courseName || currentMonthStr,
       amount: p.amount || monthlyFee,
       paymentMethod: p.paymentMethod || "Online UPI",
       transactionId: p.transactionId,

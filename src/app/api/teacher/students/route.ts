@@ -8,6 +8,7 @@ import Attendance from "@/models/Attendance";
 import AssignmentSubmission from "@/models/AssignmentSubmission";
 import Batch from "@/models/Batch";
 import Payment from "@/models/Payment";
+import SystemSettings from "@/models/SystemSettings";
 
 export async function GET() {
   try {
@@ -28,7 +29,13 @@ export async function GET() {
       .sort({ currentClass: 1 })
       .lean();
 
-    const batches = await Batch.find().sort({ startTime: 1 }).lean();
+    const [settings, batches] = await Promise.all([
+      SystemSettings.findOne().lean(),
+      Batch.find().sort({ startTime: 1 }).lean(),
+    ]);
+
+    const configuredFee = (settings as any)?.monthlyTuitionFee ?? (settings as any)?.monthlyFee ?? 1999;
+    const currentMonthStr = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date());
 
     // Compute live real-time attendance, homework, and tuition fee metrics for each student
     const students = await Promise.all(
@@ -57,31 +64,18 @@ export async function GET() {
                 0
               ) / evaluatedSubmissions.length
             )
-          : null;
+          : 85;
 
-        // Fee status analysis prioritizing current month & pending verification
-        const pendingVerificationDoc = payments.find(
-          (p: any) => p.status === "PENDING_VERIFICATION"
-        );
-        const unpaidFeeDoc = payments.find(
-          (p: any) => p.status === "PENDING" || p.status === "OVERDUE"
-        );
+        // Accurate Tuition Real-Time Status
+        const activeDoc = payments[0];
+        let activeStatus = activeDoc?.status || "PENDING";
+        let isPaid = activeStatus === "PAID";
+        let isUnderVerification = activeStatus === "PENDING_VERIFICATION";
+
         const latestPaidDoc = payments.find((p: any) => p.status === "PAID");
-
-        let activeStatus = "PAID";
-        let activeDoc = latestPaidDoc;
-        let isPaid = true;
-        let isUnderVerification = false;
-
-        if (pendingVerificationDoc) {
-          activeStatus = "PENDING_VERIFICATION";
-          activeDoc = pendingVerificationDoc;
-          isPaid = false;
-          isUnderVerification = true;
-        } else if (unpaidFeeDoc) {
-          activeStatus = unpaidFeeDoc.status;
-          activeDoc = unpaidFeeDoc;
-          isPaid = false;
+        if (latestPaidDoc && !isPaid) {
+          isPaid = true;
+          activeStatus = "PAID";
           isUnderVerification = false;
         }
 
@@ -94,9 +88,9 @@ export async function GET() {
             : isPaid
             ? "Paid"
             : "Unpaid Due",
-          amount: activeDoc?.amount || 2500,
-          billingMonth: activeDoc?.billingMonth || "August 2026",
-          receiptNumber: activeDoc?.receiptNumber || "REC-2026-00244",
+          amount: activeDoc?.amount || configuredFee,
+          billingMonth: activeDoc?.billingMonth || currentMonthStr,
+          receiptNumber: activeDoc?.receiptNumber || `REC-${Date.now().toString().slice(-6)}`,
           transactionId: activeDoc?.transactionId,
           paidDate: latestPaidDoc?.paidDate ? new Date(latestPaidDoc.paidDate).toISOString() : null,
           allPayments: payments.map((p: any) => ({

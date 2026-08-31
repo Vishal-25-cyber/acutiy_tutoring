@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db/mongoose";
 import { getSession } from "@/lib/auth/session";
 import SystemSettings from "@/models/SystemSettings";
+import Payment from "@/models/Payment";
 import { recordAuditLog } from "@/lib/audit";
 
 export async function GET() {
@@ -80,7 +81,20 @@ export async function POST(req: NextRequest) {
     } else {
       Object.assign(settings, body);
     }
+    if (body.monthlyTuitionFee) {
+      (settings as any).monthlyFee = Number(body.monthlyTuitionFee);
+    }
     await settings.save();
+
+    // Dynamically update all pending/unpaid invoices to reflect the new configured tuition fee and current month
+    if (body.monthlyTuitionFee && !isNaN(Number(body.monthlyTuitionFee))) {
+      const newFee = Number(body.monthlyTuitionFee);
+      const currentMonthStr = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date());
+      await Payment.updateMany(
+        { status: { $in: ["PENDING", "PENDING_VERIFICATION"] } },
+        { $set: { amount: newFee, billingMonth: currentMonthStr } }
+      );
+    }
 
     await recordAuditLog({
       actorId: session.userId,

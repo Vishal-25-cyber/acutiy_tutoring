@@ -10,9 +10,7 @@ import {
   BookOpen,
   FileCheck,
   CalendarCheck2,
-  TrendingUp,
   CreditCard,
-  Bot,
   Users2,
   Settings,
   ShieldAlert,
@@ -46,15 +44,6 @@ interface SidebarProps {
 export function PortalSidebar({ role }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { data: paymentData } = useFastFetch(role === "STUDENT" ? "/api/student/payments" : "");
-
-  const currentFee = paymentData?.currentFee;
-  const pendingVerification = paymentData?.pendingVerification;
-  const feeBadge = currentFee
-    ? `Due: ₹${currentFee.amount}`
-    : pendingVerification
-    ? "Verifying"
-    : undefined;
 
   const studentLinks: SidebarLink[] = [
     { href: "/student/dashboard", label: "Dashboard", icon: LayoutDashboard, api: "/api/student/dashboard" },
@@ -66,12 +55,8 @@ export function PortalSidebar({ role }: SidebarProps) {
       href: "/student/fees",
       label: "Fee Receipts & QR",
       icon: CreditCard,
-      badge: feeBadge,
-      badgeVariant: currentFee ? "warning" : "default",
       api: "/api/student/payments",
     },
-    { href: "/student/performance", label: "Academic Progress", icon: TrendingUp, api: "/api/student/performance" },
-    { href: "/student/ai-tutor", label: "AI Doubt Assistant", icon: Bot },
   ];
 
   const teacherLinks: SidebarLink[] = [

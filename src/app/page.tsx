@@ -320,6 +320,12 @@ export default function HomePage() {
           </div>
         </button>
 
+        {/* Center/Right Trial Badge */}
+        <div className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800 shadow-2xs">
+          <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
+          <span>2-Day Free Trial for All New Students</span>
+        </div>
+
         {/* Right Nav Actions (Seamless Page Toggles) */}
         <div className="flex items-center gap-5 sm:gap-7 text-sm font-bold">
           <button
@@ -351,13 +357,14 @@ export default function HomePage() {
           <button
             type="button"
             onClick={() => sw("SIGNUP")}
-            className={`pb-1 transition-all cursor-pointer ${
+            className={`pb-1 transition-all cursor-pointer flex items-center gap-1 ${
               mode === "SIGNUP"
                 ? "text-[#004b79] border-b-2 border-[#004b79]"
-                : "text-slate-400 hover:text-slate-800"
+                : "text-[#004b79] hover:underline"
             }`}
           >
-            Sign Up
+            <span>Start Free Trial</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </header>
@@ -716,61 +723,108 @@ export default function HomePage() {
               LEFT SIDE (7 COLS): ABOUT ACUITY & CURRICULUM
           ══════════════════════════════════════════════════ */}
           <div className="lg:col-span-7 h-full flex flex-col justify-center px-8 sm:px-14 lg:px-20 py-8 border-r border-slate-100 bg-[#fafcff] overflow-y-auto">
-            <div className="space-y-8 max-w-2xl">
-              <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-xs font-bold text-[#004b79] uppercase tracking-wider">
-                  <Shield className="w-3.5 h-3.5" />
-                  <span>4+ Years of Trusted Offline Coaching</span>
+            <div className="space-y-6 max-w-2xl">
+              <div className="space-y-3.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-xs font-bold text-[#004b79] uppercase tracking-wider">
+                    <Shield className="w-3.5 h-3.5" />
+                    <span>4+ Years Trusted Offline Coaching</span>
+                  </div>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-xs font-extrabold text-emerald-800 uppercase tracking-wider">
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
+                    <span>2-Day Free Trial Included</span>
+                  </div>
                 </div>
                 
-                <h1 className="text-4xl sm:text-5xl font-black text-[#002137] tracking-tight leading-[1.12]">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight leading-[1.12]">
                   Quality tutoring for Classes 1 to 10.
                 </h1>
 
-                <p className="text-slate-600 text-base sm:text-lg leading-relaxed">
+                <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
                   Having successfully mentored students in offline coaching for over 4 years, Acuity brings structured subject mastery, personal attention, and board exam preparation to CBSE and State Board students.
                 </p>
               </div>
 
-              {/* 4 Feature Pillars */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
-                  <div className="flex items-center gap-2 text-sm font-bold text-[#002137]">
-                    <BookOpen className="w-4 h-4 text-[#004b79]" />
-                    <span>Classes 1 to 10</span>
+              {/* ── 2-DAY COMPLIMENTARY FREE TRIAL SPOTLIGHT CARD ── */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-indigo-500/10 border border-emerald-500/30 text-slate-800 shadow-2xs space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-xs shrink-0">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-extrabold text-[#002137] tracking-tight">
+                        2-Day Complimentary Free Trial
+                      </h3>
+                      <p className="text-[11px] font-medium text-emerald-800">
+                        Full Uncapped Access For Every New Student
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-500">Comprehensive CBSE &amp; State Board Syllabus</p>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-2xs shrink-0">
+                    100% Free
+                  </span>
                 </div>
 
-                <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
-                  <div className="flex items-center gap-2 text-sm font-bold text-[#002137]">
-                    <Award className="w-4 h-4 text-emerald-600" />
-                    <span>Core Subjects</span>
-                  </div>
-                  <p className="text-xs text-slate-500">Mathematics, Science, English &amp; Social Studies</p>
-                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Experience our daily live interactive video classes, faculty doubt-solving, and NCERT formula handbooks with <strong>48 hours of unrestricted full access</strong> before tuition fee enrollment.
+                </p>
 
-                <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
-                  <div className="flex items-center gap-2 text-sm font-bold text-[#002137]">
-                    <Clock className="w-4 h-4 text-indigo-600" />
-                    <span>4+ Years Experience</span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-emerald-500/20 text-[11px] font-bold text-slate-700">
+                  <div className="flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Live Interactive Classes</span>
                   </div>
-                  <p className="text-xs text-slate-500">Proven offline coaching methodology and track record</p>
-                </div>
-
-                <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
-                  <div className="flex items-center gap-2 text-sm font-bold text-[#002137]">
-                    <Users className="w-4 h-4 text-amber-600" />
-                    <span>Daily Batches</span>
+                  <div className="flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Verified Study Handbooks</span>
                   </div>
-                  <p className="text-xs text-slate-500">Personalized attention and regular assessment tests</p>
+                  <div className="flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>₹1999/mo (After 2 Days)</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              {/* 4 Feature Pillars */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-0.5">
+                  <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[#002137]">
+                    <BookOpen className="w-4 h-4 text-[#004b79]" />
+                    <span>Classes 1 to 10</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">Comprehensive CBSE &amp; State Board Syllabus</p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-0.5">
+                  <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[#002137]">
+                    <Award className="w-4 h-4 text-emerald-600" />
+                    <span>Core Subjects</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">Mathematics, Science, English &amp; Social Studies</p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-0.5">
+                  <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[#002137]">
+                    <Clock className="w-4 h-4 text-indigo-600" />
+                    <span>4+ Years Experience</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">Proven offline coaching methodology &amp; track record</p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-0.5">
+                  <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[#002137]">
+                    <Users className="w-4 h-4 text-amber-600" />
+                    <span>Daily Batches</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">Personalized attention and regular assessment tests</p>
+                </div>
+              </div>
+
+              <div className="pt-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <span>Dedicated faculty mentorship • Regular mock tests • Board preparation</span>
+                  <span>Faculty mentorship • Mock tests • Exam preparation</span>
                 </div>
                 
                 <button
@@ -894,14 +948,17 @@ export default function HomePage() {
                     </button>
                   </form>
 
-                  <div className="text-xs sm:text-sm text-slate-500">
-                    New to Acuity?{" "}
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
+                    <span className="text-slate-600 font-medium flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                      New student? Claim 2-day free trial
+                    </span>
                     <button
                       type="button"
                       onClick={() => sw("SIGNUP")}
-                      className="text-[#004b79] font-bold hover:underline cursor-pointer ml-1"
+                      className="text-[#004b79] font-bold hover:underline cursor-pointer"
                     >
-                      Create an account →
+                      Start Free Trial →
                     </button>
                   </div>
                 </div>
@@ -913,6 +970,16 @@ export default function HomePage() {
               {mode === "SIGNUP" && (
                 <div className="space-y-4">
                   
+                  {/* 2-Day Free Trial Notice Banner for Students */}
+                  {signupRole === "STUDENT" && (
+                    <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 text-emerald-950 flex items-center gap-2.5 text-xs font-semibold">
+                      <Sparkles className="w-4 h-4 text-emerald-600 shrink-0 animate-pulse" />
+                      <span>
+                        <strong>2-Day Free Trial Included:</strong> 48-hour instant access to live video classes &amp; study notes upon signup!
+                      </span>
+                    </div>
+                  )}
+
                   {/* Role Switcher */}
                   <div className="grid grid-cols-2 gap-2">
                     {[

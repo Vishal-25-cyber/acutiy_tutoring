@@ -179,27 +179,70 @@ export default function StudentMaterialsPage() {
         </div>
       </div>
 
-      {/* ── TUITION FEE LOCK PAYWALL (IF LOCKED) ── */}
+      {/* ── TUITION FEE LOCK PAYWALL (IF LOCKED & TRIAL EXPIRED) ── */}
       {data?.locked ? (
-        <div className="py-12 text-center space-y-4 max-w-md mx-auto">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto">
-            {data.isUnderReview ? <Clock className="w-6 h-6 animate-spin text-amber-600" /> : <Lock className="w-6 h-6 text-amber-600" />}
+        <div className="py-6 sm:py-10 flex items-center justify-center">
+          <div className="w-full max-w-xl p-8 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm text-center space-y-6">
+            
+            {/* Icon */}
+            <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto ring-8 ring-amber-50/50 dark:ring-amber-950/20">
+              {data.isUnderReview ? (
+                <Clock className="w-7 h-7 animate-spin text-amber-600 dark:text-amber-400" />
+              ) : (
+                <Lock className="w-7 h-7 text-amber-600 dark:text-amber-400" />
+              )}
+            </div>
+
+            {/* Title & Description */}
+            <div className="space-y-2 max-w-md mx-auto">
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                {data.isUnderReview ? "Tuition Payment Under Verification" : "2-Day Free Trial Concluded"}
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                {data.isUnderReview
+                  ? "Your fee submission is currently under review by admin. Full access to study notes and live recordings will unlock immediately upon approval."
+                  : `Your complimentary 2-day trial has concluded. Please clear your monthly tuition fee to continue accessing official verified formula handbooks, question banks, and live sessions.`}
+              </p>
+            </div>
+
+            {/* Fee & Month Badge */}
+            <div className="inline-flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <span>Due Amount: <strong className="text-slate-900 dark:text-slate-100 font-bold">₹{data.unpaidFee?.amount || 1999}</strong></span>
+              <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+              <span>Billing Cycle: <strong className="text-slate-900 dark:text-slate-100 font-bold">{data.unpaidFee?.billingMonth || "Current Cycle"}</strong></span>
+            </div>
+
+            {/* Features Checklist */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 text-left">
+              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">NCERT Handbooks</span>
+              </div>
+              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">Solved Exemplars</span>
+              </div>
+              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">PDF Downloads</span>
+              </div>
+            </div>
+
+            {/* Call to Action Buttons */}
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link href="/student/fees" className="w-full sm:w-auto">
+                <Button className="w-full sm:w-auto px-6 py-2.5 text-xs font-bold bg-[#004b79] hover:bg-[#003b60] dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white rounded-xl shadow-xs transition-all cursor-pointer">
+                  {data.isUnderReview ? "View Payment Verification Status →" : `Pay Tuition Fee (₹${data.unpaidFee?.amount || 1999}) →`}
+                </Button>
+              </Link>
+              <Link href="/student/fees" className="w-full sm:w-auto">
+                <Button variant="outline" className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold rounded-xl border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 cursor-pointer">
+                  View Fee Receipts & QR
+                </Button>
+              </Link>
+            </div>
+
           </div>
-          <div className="space-y-1">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-              {data.isUnderReview ? "Payment Under Verification" : "Tuition Fee Pending"}
-            </h2>
-            <p className="text-xs text-slate-500">
-              {data.isUnderReview
-                ? "Your fee submission is currently under review by admin. Full notes access will unlock upon confirmation."
-                : `Please clear your monthly tuition fee (₹${data.unpaidFee?.amount || 2500}) to access study materials.`}
-            </p>
-          </div>
-          <Link href="/student/fees">
-            <Button size="sm" className="font-bold text-xs bg-amber-600 hover:bg-amber-500 text-white rounded-lg">
-              {data.isUnderReview ? "View Payment Status →" : "Pay Tuition Fee →"}
-            </Button>
-          </Link>
         </div>
       ) : (
         <>

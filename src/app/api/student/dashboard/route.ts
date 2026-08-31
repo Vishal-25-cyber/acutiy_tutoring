@@ -108,21 +108,56 @@ export async function GET() {
       Payment.find({ studentId: session.userId }).sort({ createdAt: -1, dueDate: -1 }).lean(),
     ]);
 
-    // Ensure payment invoice exists for current student if none in DB
-    let studentPayments: any[] = paymentsList;
+    // Dynamic Current Month & Fee Setup
+    const currentMonthStr = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date());
+    const settings = await SystemSettings.findOne().lean();
+    const monthlyFee = (settings as any)?.monthlyTuitionFee ?? (settings as any)?.monthlyFee ?? 1999;
+
+    // Ensure single payment invoice exists for current student (no duplicates)
+    let studentPayments: any[] = await Payment.find({ studentId: session.userId }).sort({ createdAt: -1 }).lean();
     if (studentPayments.length === 0) {
-      const settings = await SystemSettings.findOne();
-      const monthlyFee = settings?.monthlyTuitionFee || 2500;
-      const newInvoice = await Payment.create({
-        studentId: session.userId,
-        amount: monthlyFee,
-        billingMonth: "February 2025",
-        courseName: `${currentClass} ${board} — Core Academic Tuition`,
-        dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-        status: "PENDING",
-        receiptNumber: `REC-${Date.now().toString().slice(-6)}`,
-      });
-      studentPayments = [newInvoice.toObject ? newInvoice.toObject() : newInvoice];
+      const invoice = await Payment.findOneAndUpdate(
+        { studentId: session.userId, billingMonth: currentMonthStr },
+        {
+          $setOnInsert: {
+            studentId: session.userId,
+            amount: monthlyFee,
+            billingMonth: currentMonthStr,
+            courseName: `${currentClass} ${board} — Core Academic Tuition`,
+            dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+            status: "PENDING",
+            receiptNumber: `REC-${Date.now().toString().slice(-6)}`,
+          },
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      ).lean();
+      studentPayments = [invoice];
+    } else {
+      // Deduplicate: If there are multiple PENDING invoices for the same student & month, remove duplicates
+      const seenMonths = new Set<string>();
+      const uniquePayments: any[] = [];
+      for (const p of studentPayments) {
+        const key = `${p.billingMonth || currentMonthStr}-${p.status}`;
+        if (p.status === "PENDING" && seenMonths.has(key)) {
+          // Duplicate pending invoice -> remove from DB
+          await Payment.deleteOne({ _id: p._id });
+        } else {
+          seenMonths.add(key);
+          if (
+            (p.status === "PENDING" || p.status === "PENDING_VERIFICATION") &&
+            (p.amount !== monthlyFee || p.billingMonth === "February 2025" || !p.billingMonth)
+          ) {
+            await Payment.updateOne(
+              { _id: p._id },
+              { $set: { amount: monthlyFee, billingMonth: currentMonthStr } }
+            );
+            p.amount = monthlyFee;
+            p.billingMonth = currentMonthStr;
+          }
+          uniquePayments.push(p);
+        }
+      }
+      studentPayments = uniquePayments;
     }
 
     const pendingFee = studentPayments.find((p: any) => p.status === "PENDING" || p.status === "OVERDUE");
@@ -133,8 +168,8 @@ export async function GET() {
       hasPending: !!pendingFee,
       hasPendingVerification: !!pendingVerificationFee,
       isPaid: !pendingFee && !pendingVerificationFee && !!paidFee,
-      dueAmount: pendingFee?.amount || (pendingVerificationFee?.amount ?? 0),
-      billingMonth: pendingFee?.billingMonth || pendingVerificationFee?.billingMonth || paidFee?.billingMonth || "February 2025",
+      dueAmount: pendingFee?.amount ?? (pendingVerificationFee?.amount ?? monthlyFee),
+      billingMonth: pendingFee?.billingMonth || pendingVerificationFee?.billingMonth || paidFee?.billingMonth || currentMonthStr,
       dueDate: pendingFee?.dueDate || pendingVerificationFee?.dueDate || null,
       receiptNumber: pendingFee?.receiptNumber || pendingVerificationFee?.receiptNumber || paidFee?.receiptNumber || null,
       transactionId: pendingVerificationFee?.transactionId || paidFee?.transactionId || null,

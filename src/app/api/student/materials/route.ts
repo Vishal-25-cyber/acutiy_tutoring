@@ -85,6 +85,10 @@ export async function GET(req: NextRequest) {
       studentClass: currentClass,
       board: board,
       enrolledSubjects: profile.subjects?.length > 0 ? profile.subjects : syllabusSubjects,
+      isTrialActive: feeStatus.isTrialActive,
+      trialHoursRemaining: feeStatus.trialHoursRemaining,
+      trialExpiresAt: feeStatus.trialExpiresAt,
+      feeStatus,
     }, {
       headers: {
         "Cache-Control": "no-store, max-age=0, must-revalidate",

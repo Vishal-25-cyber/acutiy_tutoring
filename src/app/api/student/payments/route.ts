@@ -22,15 +22,61 @@ export async function GET(req: NextRequest) {
       StudentProfile.findOne({ userId: session.userId }).lean(),
     ]);
 
-    const monthlyFee = (settings as any)?.monthlyTuitionFee || 2500;
+    const monthlyFee = (settings as any)?.monthlyTuitionFee ?? (settings as any)?.monthlyFee ?? 1999;
     const companyName = (settings as any)?.companyName || "Acuity Tutoring";
     const upiId = (settings as any)?.upiId || "acuity.tutoring@upi";
     const qrCodeImageUrl = (settings as any)?.qrCodeImageUrl || "";
+    const currentMonthStr = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date());
 
     // Strictly fetch payments belonging ONLY to this specific student
-    const payments = await Payment.find({ studentId: session.userId })
+    let payments: any[] = await Payment.find({ studentId: session.userId })
       .sort({ createdAt: -1, dueDate: -1 })
       .lean();
+
+    // If no invoice exists, generate one atomically for the current month
+    if (payments.length === 0) {
+      const invoice = await Payment.findOneAndUpdate(
+        { studentId: session.userId, billingMonth: currentMonthStr },
+        {
+          $setOnInsert: {
+            studentId: session.userId,
+            amount: monthlyFee,
+            billingMonth: currentMonthStr,
+            courseName: `${profile?.currentClass || "Class 10"} ${profile?.board || "CBSE"} — Core Academic Tuition`,
+            dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+            status: "PENDING",
+            receiptNumber: `REC-${Date.now().toString().slice(-6)}`,
+          },
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      ).lean();
+      payments = [invoice];
+    } else {
+      // Deduplicate: If there are multiple PENDING invoices for the same month, delete duplicates
+      const seenMonths = new Set<string>();
+      const uniquePayments: any[] = [];
+      for (const p of payments) {
+        const key = `${p.billingMonth || currentMonthStr}-${p.status}`;
+        if (p.status === "PENDING" && seenMonths.has(key)) {
+          await Payment.deleteOne({ _id: p._id });
+        } else {
+          seenMonths.add(key);
+          if (
+            (p.status === "PENDING" || p.status === "PENDING_VERIFICATION") &&
+            (p.amount !== monthlyFee || p.billingMonth === "February 2025" || !p.billingMonth)
+          ) {
+            await Payment.updateOne(
+              { _id: p._id },
+              { $set: { amount: monthlyFee, billingMonth: currentMonthStr } }
+            );
+            p.amount = monthlyFee;
+            p.billingMonth = currentMonthStr;
+          }
+          uniquePayments.push(p);
+        }
+      }
+      payments = uniquePayments;
+    }
 
     const pendingVerification = payments.find((p) => p.status === "PENDING_VERIFICATION");
     const currentFee = payments.find((p) => p.status === "PENDING" || p.status === "OVERDUE");
@@ -72,6 +118,9 @@ export async function POST(req: NextRequest) {
 
     await connectToDatabase();
 
+    const settings = await SystemSettings.findOne().lean();
+    const configuredFee = (settings as any)?.monthlyTuitionFee ?? (settings as any)?.monthlyFee ?? 1999;
+
     let payment = null;
     if (paymentId && paymentId !== "direct-pay") {
       payment = await Payment.findOne({ _id: paymentId, studentId: session.userId });
@@ -84,7 +133,7 @@ export async function POST(req: NextRequest) {
       // Create fresh payment submission record
       payment = new Payment({
         studentId: session.userId,
-        amount: Number(amount) || 2500,
+        amount: Number(amount) || configuredFee,
         billingMonth: currentMonthStr,
         courseName: courseName || `Tuition Fee (${currentMonthStr})`,
         dueDate: now,
@@ -94,6 +143,8 @@ export async function POST(req: NextRequest) {
         transactionId: transactionId && transactionId.trim() ? transactionId.trim() : `UPI-${Date.now().toString().slice(-8)}`,
       });
     } else {
+      payment.amount = Number(amount) || payment.amount || configuredFee;
+      payment.billingMonth = currentMonthStr;
       payment.status = "PENDING_VERIFICATION";
       payment.paidDate = undefined;
       payment.paymentMethod = paymentMethod || "Online UPI Transfer";

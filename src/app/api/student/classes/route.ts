@@ -148,6 +148,10 @@ export async function GET() {
       currentClass: profile.currentClass,
       board: profile.board || "CBSE",
       currentDay: currentDayName,
+      isTrialActive: feeStatus.isTrialActive,
+      trialHoursRemaining: feeStatus.trialHoursRemaining,
+      trialExpiresAt: feeStatus.trialExpiresAt,
+      feeStatus,
     }, {
       headers: {
         "Cache-Control": "private, max-age=15, stale-while-revalidate=60",
