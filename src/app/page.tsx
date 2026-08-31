@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   AlertCircle, CheckCircle2, ArrowRight, ArrowLeft,
   Loader2, ChevronRight, BookOpen, GraduationCap,
-  Award, Shield, Users, Clock, Check
+  Award, Shield, Users, Clock, Check, Phone, PhoneCall,
+  Mail, MapPin, Copy, X, MessageSquare, ExternalLink, Sparkles
 } from "lucide-react";
 
 type Mode = "SIGNIN" | "SIGNUP";
@@ -22,6 +23,15 @@ export default function HomePage() {
   const [uid, setUid] = useState("");
   const [pw, setPw] = useState("");
   const [showPw, setShowPw] = useState(false);
+
+  // Contact Us Modal & Numbers State
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [contactSettings, setContactSettings] = useState<any>(null);
+  const [callbackName, setCallbackName] = useState("");
+  const [callbackPhone, setCallbackPhone] = useState("");
+  const [callbackClass, setCallbackClass] = useState("Class 10");
+  const [callbackSent, setCallbackSent] = useState(false);
 
   // Sign up state
   const [batches, setBatches] = useState<any[]>([]);
@@ -63,7 +73,39 @@ export default function HomePage() {
         }
       })
       .catch(() => {});
+
+    fetch("/api/admin/settings")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.settings) {
+          setContactSettings(d.settings);
+        }
+      })
+      .catch(() => {});
   }, []);
+
+  const phone1 = (contactSettings?.supportPhone1 || "9876543210").replace(/\D/g, "").slice(-10);
+  const phone2 = (contactSettings?.supportPhone2 || "9876543211").replace(/\D/g, "").slice(-10);
+  const phone3 = (contactSettings?.supportPhone3 || "9876543212").replace(/\D/g, "").slice(-10);
+  const emailSupport = contactSettings?.supportEmail || "support@gmail.com";
+
+  const handleCopy = (text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
+
+  const handleCallbackSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!callbackName.trim() || callbackPhone.replace(/\D/g, "").length < 10) return;
+    setCallbackSent(true);
+    setTimeout(() => {
+      setCallbackSent(false);
+      setCallbackName("");
+      setCallbackPhone("");
+      setShowContactModal(false);
+    }, 2500);
+  };
 
   const clear = () => { setErr(""); setOk(""); };
   const sw = (m: Mode) => { setMode(m); clear(); setStep(1); };
@@ -210,30 +252,44 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Auth Toggle */}
-        <div className="flex items-center gap-6 text-sm font-bold">
+        {/* Right Nav Actions */}
+        <div className="flex items-center gap-5 text-sm font-bold">
           <button
             type="button"
-            onClick={() => sw("SIGNIN")}
-            className={`pb-1 transition-all cursor-pointer ${
-              mode === "SIGNIN"
-                ? "text-[#004b79] border-b-2 border-[#004b79]"
-                : "text-slate-400 hover:text-slate-800"
-            }`}
+            onClick={() => setShowContactModal(true)}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 hover:text-[#004b79] transition-all cursor-pointer shadow-2xs"
           >
-            Sign In
+            <PhoneCall className="w-3.5 h-3.5 text-[#004b79]" />
+            <span>Contact Us</span>
           </button>
-          <button
-            type="button"
-            onClick={() => sw("SIGNUP")}
-            className={`pb-1 transition-all cursor-pointer ${
-              mode === "SIGNUP"
-                ? "text-[#004b79] border-b-2 border-[#004b79]"
-                : "text-slate-400 hover:text-slate-800"
-            }`}
-          >
-            Sign Up
-          </button>
+
+          <div className="h-4 w-px bg-slate-200" />
+
+          {/* Auth Toggle */}
+          <div className="flex items-center gap-6">
+            <button
+              type="button"
+              onClick={() => sw("SIGNIN")}
+              className={`pb-1 transition-all cursor-pointer ${
+                mode === "SIGNIN"
+                  ? "text-[#004b79] border-b-2 border-[#004b79]"
+                  : "text-slate-400 hover:text-slate-800"
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => sw("SIGNUP")}
+              className={`pb-1 transition-all cursor-pointer ${
+                mode === "SIGNUP"
+                  ? "text-[#004b79] border-b-2 border-[#004b79]"
+                  : "text-slate-400 hover:text-slate-800"
+              }`}
+            >
+              Sign Up
+            </button>
+          </div>
         </div>
       </header>
 
@@ -295,9 +351,20 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="pt-2 flex items-center gap-2 text-xs font-semibold text-slate-500">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span>Dedicated faculty mentorship • Regular mock tests • Comprehensive board preparation</span>
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span>Dedicated faculty mentorship • Regular mock tests • Board preparation</span>
+              </div>
+              
+              <button
+                type="button"
+                onClick={() => setShowContactModal(true)}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#004b79] hover:underline cursor-pointer"
+              >
+                <PhoneCall className="w-3.5 h-3.5" />
+                <span>Helpline: +91 {phone1.slice(0, 5)} {phone1.slice(5)}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -794,8 +861,288 @@ export default function HomePage() {
       {/* ── FOOTER ── */}
       <footer className="w-full px-8 lg:px-16 py-3 flex items-center justify-between text-slate-400 text-xs border-t border-slate-100 shrink-0">
         <p>Acuity Tutoring • CBSE &amp; State Board (Classes 1–10)</p>
-        <p>© 2026 Acuity</p>
+        <button
+          type="button"
+          onClick={() => setShowContactModal(true)}
+          className="text-[#004b79] font-bold hover:underline cursor-pointer"
+        >
+          Contact Helplines &amp; Support
+        </button>
       </footer>
+
+      {/* ── CONTACT US MODAL WITH 3 DEDICATED PHONE NUMBERS & ACUITY DETAILS ── */}
+      {showContactModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div
+            className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh]"
+            style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}
+          >
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#004b79] flex items-center justify-center text-white font-black text-sm shadow-2xs">
+                  A
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-[#002137] tracking-tight">
+                    Contact Acuity Tutoring
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Direct Admissions, Academic Coordination &amp; Student Support Helplines
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowContactModal(false)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Scrollable Body */}
+            <div className="p-6 overflow-y-auto space-y-6">
+              
+              {/* ── SECTION 1: 3 DEDICATED PHONE HELPLINES ── */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Official Support &amp; Inquiry Hotlines
+                  </span>
+                  <span className="text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    Available Mon–Sat (9 AM – 8:30 PM)
+                  </span>
+                </div>
+
+                <div className="space-y-2.5">
+                  {/* Line 1: Primary Admissions */}
+                  <div className="p-3.5 rounded-xl border border-slate-200/90 bg-white hover:border-[#004b79]/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase bg-blue-50 text-[#004b79] border border-blue-200/60">
+                          Hotline 1 • Admissions
+                        </span>
+                        <span className="text-xs font-bold text-slate-900">New Enrollments &amp; Fee Inquiries</span>
+                      </div>
+                      <p className="text-sm font-black font-mono text-[#002137]">
+                        +91 {phone1.slice(0, 5)} {phone1.slice(5)}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <a
+                        href={`tel:+91${phone1}`}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                      >
+                        <PhoneCall className="w-3.5 h-3.5" />
+                        <span>Call Now</span>
+                      </a>
+                      <a
+                        href={`https://wa.me/91${phone1}?text=Hello%20Acuity%20Tutoring,%20I%20would%20like%20to%20inquire%20about%20admissions.`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>WhatsApp</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(`+91${phone1}`, "p1")}
+                        className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer"
+                        title="Copy number"
+                      >
+                        {copiedKey === "p1" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Line 2: Academic Coordinator */}
+                  <div className="p-3.5 rounded-xl border border-slate-200/90 bg-white hover:border-[#004b79]/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase bg-amber-50 text-amber-800 border border-amber-200/60">
+                          Hotline 2 • Academics
+                        </span>
+                        <span className="text-xs font-bold text-slate-900">Batch Timing &amp; Syllabus Coordinator</span>
+                      </div>
+                      <p className="text-sm font-black font-mono text-[#002137]">
+                        +91 {phone2.slice(0, 5)} {phone2.slice(5)}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <a
+                        href={`tel:+91${phone2}`}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                      >
+                        <PhoneCall className="w-3.5 h-3.5" />
+                        <span>Call Now</span>
+                      </a>
+                      <a
+                        href={`https://wa.me/91${phone2}?text=Hello,%20I%20have%20a%20query%20regarding%20batch%20timings%20and%20curriculum.`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>WhatsApp</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(`+91${phone2}`, "p2")}
+                        className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer"
+                        title="Copy number"
+                      >
+                        {copiedKey === "p2" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Line 3: Student Helpdesk */}
+                  <div className="p-3.5 rounded-xl border border-slate-200/90 bg-white hover:border-[#004b79]/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase bg-purple-50 text-purple-800 border border-purple-200/60">
+                          Hotline 3 • Helpdesk
+                        </span>
+                        <span className="text-xs font-bold text-slate-900">Live Class Access &amp; Technical Support</span>
+                      </div>
+                      <p className="text-sm font-black font-mono text-[#002137]">
+                        +91 {phone3.slice(0, 5)} {phone3.slice(5)}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <a
+                        href={`tel:+91${phone3}`}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                      >
+                        <PhoneCall className="w-3.5 h-3.5" />
+                        <span>Call Now</span>
+                      </a>
+                      <a
+                        href={`https://wa.me/91${phone3}?text=Hello%20Acuity%20Support,%20I%20need%20assistance%20with%20live%20class%20login.`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>WhatsApp</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(`+91${phone3}`, "p3")}
+                        className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer"
+                        title="Copy number"
+                      >
+                        {copiedKey === "p3" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── SECTION 2: ACADEMY DETAILS & SCHEDULE ── */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#002137]">
+                    <Clock className="w-4 h-4 text-[#004b79]" />
+                    <span>Center &amp; Support Hours</span>
+                  </div>
+                  <p className="text-xs text-slate-600">
+                    <strong className="text-slate-800">Monday – Saturday:</strong> 9:00 AM – 8:30 PM
+                  </p>
+                  <p className="text-xs text-slate-600">
+                    <strong className="text-slate-800">Sunday:</strong> 10:00 AM – 2:00 PM (Inquiries)
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#002137]">
+                    <Mail className="w-4 h-4 text-[#004b79]" />
+                    <span>Email &amp; Curriculum</span>
+                  </div>
+                  <p className="text-xs text-slate-600 font-mono">
+                    {emailSupport}
+                  </p>
+                  <p className="text-xs text-slate-600">
+                    Classes 1 to 10 • CBSE &amp; State Board
+                  </p>
+                </div>
+              </div>
+
+              {/* ── SECTION 3: REQUEST A QUICK CALLBACK FORM ── */}
+              <div className="p-4 rounded-xl border border-blue-100 bg-blue-50/40 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold text-[#002137] flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#004b79]" />
+                    Request a Fast Admissions Callback
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400">Response within 15 mins</span>
+                </div>
+
+                {callbackSent ? (
+                  <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-700 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Thank you! Our admissions coordinator will call you shortly.</span>
+                  </div>
+                ) : (
+                  <form onSubmit={handleCallbackSubmit} className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                    <input
+                      required
+                      type="text"
+                      placeholder="Student/Parent Name"
+                      value={callbackName}
+                      onChange={(e) => setCallbackName(e.target.value)}
+                      className="sm:col-span-4 px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79]"
+                    />
+                    <input
+                      required
+                      type="tel"
+                      placeholder="10-Digit Mobile"
+                      value={callbackPhone}
+                      onChange={(e) => setCallbackPhone(e.target.value)}
+                      className="sm:col-span-4 px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79]"
+                    />
+                    <select
+                      value={callbackClass}
+                      onChange={(e) => setCallbackClass(e.target.value)}
+                      className="sm:col-span-2 px-2 py-2 text-xs rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] cursor-pointer"
+                    >
+                      {["Class 1", "Class 2", "Class 3", "Class 4", "Class 5", "Class 6", "Class 7", "Class 8", "Class 9", "Class 10"].map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="submit"
+                      className="sm:col-span-2 px-3 py-2 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white text-xs font-bold transition-all cursor-pointer"
+                    >
+                      Submit
+                    </button>
+                  </form>
+                )}
+              </div>
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs text-slate-500">
+              <span>Acuity Tutoring Center • 4+ Years of Offline Excellence</span>
+              <button
+                type="button"
+                onClick={() => setShowContactModal(false)}
+                className="px-3.5 py-1 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-200/60 cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
