@@ -15,6 +15,14 @@ type SignupRole = "STUDENT" | "TEACHER";
 type Step = 1 | 2 | 3;
 type LoginRole = "STUDENT" | "TEACHER" | "ADMIN";
 
+function WhatsAppIcon({ className = "w-3.5 h-3.5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.414-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.885m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+    </svg>
+  );
+}
+
 export default function HomePage() {
   const router = useRouter();
 
@@ -29,13 +37,13 @@ export default function HomePage() {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [contactSettings, setContactSettings] = useState<any>(null);
 
-  // Query & Send Mail Form State
+  // Query & Send Mail Form State (Completely Blank by Default)
   const [qName, setQName] = useState("");
   const [qEmail, setQEmail] = useState("");
   const [qPhone, setQPhone] = useState("");
   const [qClass, setQClass] = useState("Class 10");
   const [qBoard, setQBoard] = useState("CBSE");
-  const [qSubject, setQSubject] = useState("Admissions & Fee Inquiry");
+  const [qSubject, setQSubject] = useState("Admissions & Monthly Fee Inquiry");
   const [qMessage, setQMessage] = useState("");
   const [qLoading, setQLoading] = useState(false);
   const [qErr, setQErr] = useState("");
@@ -59,7 +67,7 @@ export default function HomePage() {
 
   const [tQual, setTQual] = useState("");
   const [tSpec, setTSpec] = useState("");
-  const [tExp, setTExp] = useState("0");
+  const [tExp, setTExp] = useState("");
   const [tCity, setTCity] = useState("");
 
   const [spName, setSpName] = useState("");
@@ -133,7 +141,7 @@ export default function HomePage() {
         return;
       }
 
-      setQOk("Thank you! Your query has been recorded. Our counselor will call and email you shortly.");
+      setQOk("Thank you! Your query has been recorded. Our academic counselor will email and call you shortly.");
       setQName("");
       setQEmail("");
       setQPhone("");
@@ -245,7 +253,7 @@ export default function HomePage() {
         Object.assign(body, {
           qualification: tQual,
           specialization: tSpec,
-          experienceYears: tExp,
+          experienceYears: tExp ? Number(tExp) : 0,
           address: tCity,
         });
       }
@@ -387,7 +395,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-2 shrink-0">
                     <a
                       href={`tel:+91${phone1}`}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
                     >
                       <PhoneCall className="w-3.5 h-3.5" />
                       <span>Call</span>
@@ -396,9 +404,9 @@ export default function HomePage() {
                       href={`https://wa.me/91${phone1}?text=Hello%20Acuity%20Tutoring,%20I%20would%20like%20to%20inquire%20about%20admissions.`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
                     >
-                      <MessageSquare className="w-3.5 h-3.5" />
+                      <WhatsAppIcon className="w-3.5 h-3.5" />
                       <span>WhatsApp</span>
                     </a>
                     <button
@@ -428,7 +436,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-2 shrink-0">
                     <a
                       href={`tel:+91${phone2}`}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
                     >
                       <PhoneCall className="w-3.5 h-3.5" />
                       <span>Call</span>
@@ -437,9 +445,9 @@ export default function HomePage() {
                       href={`https://wa.me/91${phone2}?text=Hello,%20I%20have%20a%20query%20regarding%20batch%20timings%20and%20curriculum.`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
                     >
-                      <MessageSquare className="w-3.5 h-3.5" />
+                      <WhatsAppIcon className="w-3.5 h-3.5" />
                       <span>WhatsApp</span>
                     </a>
                     <button
@@ -469,7 +477,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-2 shrink-0">
                     <a
                       href={`tel:+91${phone3}`}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
                     >
                       <PhoneCall className="w-3.5 h-3.5" />
                       <span>Call</span>
@@ -478,9 +486,9 @@ export default function HomePage() {
                       href={`https://wa.me/91${phone3}?text=Hello%20Acuity%20Support,%20I%20need%20technical%20assistance.`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
                     >
-                      <MessageSquare className="w-3.5 h-3.5" />
+                      <WhatsAppIcon className="w-3.5 h-3.5" />
                       <span>WhatsApp</span>
                     </a>
                     <button
@@ -497,27 +505,27 @@ export default function HomePage() {
 
               {/* Coaching & Center Info */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                <div className="p-3 rounded-xl bg-white border border-slate-200 space-y-1">
+                <div className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-1">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-[#002137]">
                     <Clock className="w-3.5 h-3.5 text-[#004b79]" />
                     <span>Center Timings</span>
                   </div>
-                  <p className="text-[11px] text-slate-600">Mon–Sat: 9:00 AM – 8:30 PM</p>
-                  <p className="text-[11px] text-slate-600">Sunday: 10:00 AM – 2:00 PM</p>
+                  <p className="text-xs text-slate-600">Mon–Sat: 9:00 AM – 8:30 PM</p>
+                  <p className="text-xs text-slate-600">Sunday: 10:00 AM – 2:00 PM</p>
                 </div>
 
-                <div className="p-3 rounded-xl bg-white border border-slate-200 space-y-1">
+                <div className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-1">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-[#002137]">
                     <Mail className="w-3.5 h-3.5 text-[#004b79]" />
                     <span>Official Email</span>
                   </div>
                   <a
                     href={`mailto:${emailSupport}`}
-                    className="text-[11px] text-[#004b79] font-mono font-semibold hover:underline block truncate"
+                    className="text-xs text-[#004b79] font-mono font-semibold hover:underline block truncate"
                   >
                     {emailSupport}
                   </a>
-                  <p className="text-[10px] text-slate-400">Classes 1–10 (CBSE &amp; State)</p>
+                  <p className="text-[11px] text-slate-400">Classes 1–10 (CBSE &amp; State)</p>
                 </div>
               </div>
 
@@ -559,10 +567,10 @@ export default function HomePage() {
                     <input
                       required
                       type="text"
-                      placeholder="e.g. Suresh Patel"
+                      placeholder="Enter your name"
                       value={qName}
                       onChange={(e) => setQName(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79]"
+                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79]"
                     />
                   </div>
                   <div className="space-y-1">
@@ -570,10 +578,10 @@ export default function HomePage() {
                     <input
                       required
                       type="email"
-                      placeholder="name@gmail.com"
+                      placeholder="Enter your email"
                       value={qEmail}
                       onChange={(e) => setQEmail(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79]"
+                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79]"
                     />
                   </div>
                 </div>
@@ -584,10 +592,11 @@ export default function HomePage() {
                     <input
                       required
                       type="tel"
-                      placeholder="9876543210"
+                      maxLength={10}
+                      placeholder="Enter 10-digit mobile"
                       value={qPhone}
-                      onChange={(e) => setQPhone(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79]"
+                      onChange={(e) => setQPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79]"
                     />
                   </div>
 
@@ -624,11 +633,11 @@ export default function HomePage() {
                     onChange={(e) => setQSubject(e.target.value)}
                     className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] cursor-pointer"
                   >
-                    <option value="Admissions & Fee Inquiry">Admissions &amp; Monthly Fee Inquiry</option>
-                    <option value="Batch Timings & Schedule">Batch Timings &amp; Class Schedule</option>
-                    <option value="Free Demo Session">Free Live Demo Class Request</option>
-                    <option value="Faculty & Curriculum">Faculty &amp; Subject Syllabus Questions</option>
-                    <option value="General Question">Other Question / Feedback</option>
+                    <option value="Admissions & Monthly Fee Inquiry">Admissions &amp; Monthly Fee Inquiry</option>
+                    <option value="Batch Timings & Class Schedule">Batch Timings &amp; Class Schedule</option>
+                    <option value="Free Live Demo Class Request">Free Live Demo Class Request</option>
+                    <option value="Faculty & Subject Syllabus Questions">Faculty &amp; Subject Syllabus Questions</option>
+                    <option value="General Question / Feedback">Other Question / Feedback</option>
                   </select>
                 </div>
 
@@ -637,10 +646,10 @@ export default function HomePage() {
                   <textarea
                     required
                     rows={3}
-                    placeholder="Write your query here. e.g. I want to know about Class 10 CBSE Math & Science batches..."
+                    placeholder="Type your question or query here..."
                     value={qMessage}
                     onChange={(e) => setQMessage(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] resize-none"
+                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] resize-none"
                   />
                 </div>
 
@@ -839,7 +848,7 @@ export default function HomePage() {
                         data-lpignore="true"
                         value={uid}
                         onChange={(e) => setUid(e.target.value)}
-                        placeholder={loginRole === "STUDENT" ? "Enter registered phone or email" : "e.g. staff@gmail.com"}
+                        placeholder="Enter phone number or email"
                         className="w-full px-4 py-3 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] focus:ring-1 focus:ring-[#004b79] font-medium transition-all"
                       />
                     </div>
@@ -863,7 +872,7 @@ export default function HomePage() {
                         data-lpignore="true"
                         value={pw}
                         onChange={(e) => setPw(e.target.value)}
-                        placeholder="••••••••••••"
+                        placeholder="Enter password"
                         className="w-full px-4 py-3 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] focus:ring-1 focus:ring-[#004b79] font-medium transition-all"
                       />
                     </div>
@@ -953,8 +962,8 @@ export default function HomePage() {
                           data-lpignore="true"
                           value={sName}
                           onChange={(e) => setSName(e.target.value)}
-                          placeholder="e.g. Rahul Sharma"
-                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                          placeholder="Enter your full name"
+                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                         />
                       </div>
 
@@ -967,8 +976,8 @@ export default function HomePage() {
                             data-lpignore="true"
                             value={sEmail}
                             onChange={(e) => setSEmail(e.target.value)}
-                            placeholder="name@email.com"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                            placeholder="Enter email address"
+                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                           />
                         </div>
                         <div className="space-y-1">
@@ -977,10 +986,11 @@ export default function HomePage() {
                             type="tel"
                             autoComplete="off"
                             data-lpignore="true"
+                            maxLength={10}
                             value={sPhone}
-                            onChange={(e) => setSPhone(e.target.value)}
-                            placeholder="9876543210"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                            onChange={(e) => setSPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                            placeholder="Enter 10-digit mobile"
+                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                           />
                         </div>
                       </div>
@@ -994,8 +1004,8 @@ export default function HomePage() {
                             data-lpignore="true"
                             value={sPw}
                             onChange={(e) => setSPw(e.target.value)}
-                            placeholder="Min 6 chars"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                            placeholder="Create password (min 6 chars)"
+                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                           />
                         </div>
                         <div className="space-y-1">
@@ -1006,8 +1016,8 @@ export default function HomePage() {
                             data-lpignore="true"
                             value={sCPw}
                             onChange={(e) => setSCPw(e.target.value)}
-                            placeholder="Re-enter"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                            placeholder="Confirm password"
+                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                           />
                         </div>
                       </div>
@@ -1033,7 +1043,7 @@ export default function HomePage() {
                           value={sSchool}
                           onChange={(e) => setSSchool(e.target.value)}
                           placeholder="Enter school name"
-                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                         />
                       </div>
 
@@ -1110,8 +1120,8 @@ export default function HomePage() {
                             type="text"
                             value={tQual}
                             onChange={(e) => setTQual(e.target.value)}
-                            placeholder="e.g. B.Ed, M.Sc"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                            placeholder="Enter degree (e.g. B.Ed, M.Sc)"
+                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                           />
                         </div>
                         <div className="space-y-1">
@@ -1120,8 +1130,8 @@ export default function HomePage() {
                             type="text"
                             value={tSpec}
                             onChange={(e) => setTSpec(e.target.value)}
-                            placeholder="e.g. Mathematics"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                            placeholder="Enter specialization (e.g. Math)"
+                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                           />
                         </div>
                       </div>
@@ -1134,7 +1144,8 @@ export default function HomePage() {
                             min="0"
                             value={tExp}
                             onChange={(e) => setTExp(e.target.value)}
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                            placeholder="Years of experience"
+                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                           />
                         </div>
                         <div className="space-y-1">
@@ -1143,8 +1154,8 @@ export default function HomePage() {
                             type="text"
                             value={tCity}
                             onChange={(e) => setTCity(e.target.value)}
-                            placeholder="Your city"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                            placeholder="Enter city"
+                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                           />
                         </div>
                       </div>
@@ -1181,18 +1192,19 @@ export default function HomePage() {
                             type="text"
                             value={spName}
                             onChange={(e) => setSpName(e.target.value)}
-                            placeholder="Parent full name"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                            placeholder="Enter parent/guardian name"
+                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                           />
                         </div>
                         <div className="space-y-1">
                           <label className="block text-xs font-bold text-slate-700">Parent Mobile *</label>
                           <input
                             type="tel"
+                            maxLength={10}
                             value={spPhone}
-                            onChange={(e) => setSpPhone(e.target.value)}
-                            placeholder="Parent phone"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium"
+                            onChange={(e) => setSpPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                            placeholder="Enter parent mobile number"
+                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                           />
                         </div>
                       </div>
