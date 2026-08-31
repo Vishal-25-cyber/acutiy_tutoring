@@ -1,14 +1,12 @@
 "use client";
 
-import React, { use } from "react";
+import React from "react";
+import { useParams } from "next/navigation";
 import { JitsiClassroom } from "@/components/classroom/JitsiClassroom";
 
-export default function StudentClassroomPage({
-  params,
-}: {
-  params: Promise<{ sessionId: string }>;
-}) {
-  const resolvedParams = use(params);
+export default function StudentClassroomPage() {
+  const params = useParams();
+  const sessionId = (params?.sessionId as string) || "acuity-session";
 
-  return <JitsiClassroom classId={resolvedParams.sessionId} currentUserRole="STUDENT" />;
+  return <JitsiClassroom classId={sessionId} currentUserRole="STUDENT" />;
 }

@@ -20,11 +20,7 @@ import {
 } from "lucide-react";
 import { invalidateCache } from "@/lib/api-cache";
 
-export default function TeacherClassAttendanceDetailPage({
-  params,
-}: {
-  params?: Promise<{ classId: string }> | { classId: string };
-} = {}) {
+export default function TeacherClassAttendanceDetailPage() {
   const nextParams = useParams();
   const classId = (nextParams?.classId as string) || "acuity-live-classroom";
 

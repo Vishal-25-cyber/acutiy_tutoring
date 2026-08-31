@@ -17,7 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { ScheduleSwapModal } from "@/components/classroom/ScheduleSwapModal";
-import { useClassLiveTimer, sortClassesByPriority } from "@/lib/class-timing";
+import { sortClassesByPriority } from "@/lib/class-timing";
+import { useClassLiveTimer } from "@/lib/use-class-timer";
 
 function TeacherScheduleClassRow({
   cls,

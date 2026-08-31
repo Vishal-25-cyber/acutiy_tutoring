@@ -3,11 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently -k -p \"[{name}]\" -n \"Vite,API\" -c \"cyan.bold,green.bold\" \"npx vite --port 3000\" \"npx tsx watch server/index.ts\"",
-    "dev:client": "npx vite --port 3000",
-    "dev:server": "npx tsx watch server/index.ts",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
     "seed": "npx tsx src/scripts/seed.ts"
   },
   "dependencies": {

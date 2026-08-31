@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useFastFetch } from "@/lib/api-cache";
 import { downloadTimetableDoc } from "@/lib/download";
-import { useClassLiveTimer } from "@/lib/class-timing";
+import { useClassLiveTimer } from "@/lib/use-class-timer";
 
 export default function StudentClassesPage() {
   const { data } = useFastFetch("/api/student/classes");
