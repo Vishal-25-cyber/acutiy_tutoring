@@ -14,16 +14,17 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-// ── AUTH ROUTES ──
 import * as AuthLogin from "../src/app/api/auth/login/route";
 import * as AuthLogout from "../src/app/api/auth/logout/route";
 import * as AuthMe from "../src/app/api/auth/me/route";
+import * as AuthRegister from "../src/app/api/auth/register/route";
 import * as AuthRegisterStudent from "../src/app/api/auth/register/student/route";
 import * as AuthRegisterTeacher from "../src/app/api/auth/register/teacher/route";
 
 app.post("/api/auth/login", adaptRoute(AuthLogin.POST));
 app.post("/api/auth/logout", adaptRoute(AuthLogout.POST));
 app.get("/api/auth/me", adaptRoute(AuthMe.GET));
+app.post("/api/auth/register", adaptRoute(AuthRegister.POST));
 app.post("/api/auth/register/student", adaptRoute(AuthRegisterStudent.POST));
 app.post("/api/auth/register/teacher", adaptRoute(AuthRegisterTeacher.POST));
 
@@ -163,6 +164,14 @@ app.put("/api/notifications", adaptRoute(NotificationsRoute.PUT));
 app.post("/api/attendance/join", adaptRoute(AttendanceJoinRoute.POST));
 app.post("/api/attendance/leave", adaptRoute(AttendanceLeaveRoute.POST));
 app.post("/api/attendance/heartbeat", adaptRoute(AttendanceHeartbeatRoute.POST));
+import * as ContactRoute from "../src/app/api/contact/route";
+
+app.post("/api/contact", adaptRoute(ContactRoute.POST));
+
+// 404 Fallback returning clean JSON instead of HTML
+app.use((req: any, res: any) => {
+  res.status(404).json({ error: `Route ${req.method} ${req.path} not found.` });
+});
 
 // Global Error Handler returning JSON
 app.use((err: any, req: any, res: any, next: any) => {

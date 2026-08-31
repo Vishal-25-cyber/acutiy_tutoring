@@ -36,7 +36,12 @@ const StudentProfileSchema = new Schema<IStudentProfileDocument>(
     parentPhone: { type: String, required: true, trim: true },
     altEmergencyPhone: { type: String, trim: true },
     dob: { type: String },
-    gender: { type: String, enum: ["MALE", "FEMALE", "OTHER"], default: "OTHER" },
+    gender: {
+      type: String,
+      enum: ["MALE", "FEMALE", "OTHER", "Male", "Female", "Other"],
+      default: "OTHER",
+      set: (v: string) => (v ? v.toUpperCase() : "OTHER"),
+    },
     streakCount: { type: Number, default: 1 },
     streakLastUpdated: { type: Date, default: Date.now },
     earnedBadges: {

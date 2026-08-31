@@ -173,7 +173,12 @@ export default function HomePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const data = await res.json();
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch {
+        data = { error: "Server connection error. Please try again." };
+      }
       if (!res.ok) {
         setErr(data.error || "Invalid login credentials.");
         return;
@@ -262,7 +267,12 @@ export default function HomePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const data = await res.json();
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch {
+        data = { error: "Server connection error. Please try again." };
+      }
       if (!res.ok) {
         setErr(data.error || "Registration failed.");
         return;

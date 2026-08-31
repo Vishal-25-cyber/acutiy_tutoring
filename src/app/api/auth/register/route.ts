@@ -70,6 +70,9 @@ export async function POST(req: NextRequest) {
         status: "ACTIVE",
       });
 
+      const normalizedGender = (gender || "OTHER").toString().toUpperCase();
+      const safeGender = ["MALE", "FEMALE", "OTHER"].includes(normalizedGender) ? normalizedGender : "OTHER";
+
       // Save to `studentprofiles` collection
       await StudentProfile.create({
         userId: user._id,
@@ -79,7 +82,7 @@ export async function POST(req: NextRequest) {
         batchId,
         parentName: parentName.trim(),
         parentPhone: parentPhone.trim(),
-        gender: gender || "OTHER",
+        gender: safeGender,
         dob: dob || "",
         subjects: [],
         streakCount: 0,
