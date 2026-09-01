@@ -1735,7 +1735,61 @@ export default function HomePage() {
           {/* Main Footer: 2-Column Clean Layout */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-start">
             
-            {/* Left Column (5 cols): Official Email & Social Connections */}
+            {/* Left Column (7 cols): 3 Dedicated Helplines (Clean without buttons) */}
+            <div className="md:col-span-7 space-y-4">
+              
+              <div className="flex items-center justify-between pb-1 border-b border-white/10">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#dfb74a]">
+                  Official Helplines (Direct Support)
+                </span>
+                <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Mon–Sat (9 AM – 8:30 PM)
+                </span>
+              </div>
+
+              {/* Line 1 */}
+              <div className="py-2 border-b border-white/5 space-y-0.5">
+                <span className="text-[10px] font-bold uppercase text-slate-400 block">
+                  Hotline 1 • Admissions &amp; Fees
+                </span>
+                <a
+                  href="tel:+919842743538"
+                  className="text-lg sm:text-xl font-black font-mono text-white hover:text-[#dfb74a] transition-colors tracking-wide block"
+                >
+                  +91 98427 43538
+                </a>
+              </div>
+
+              {/* Line 2 */}
+              <div className="py-2 border-b border-white/5 space-y-0.5">
+                <span className="text-[10px] font-bold uppercase text-slate-400 block">
+                  Hotline 2 • Academic &amp; Batch Timing
+                </span>
+                <a
+                  href="tel:+918056453211"
+                  className="text-lg sm:text-xl font-black font-mono text-white hover:text-[#dfb74a] transition-colors tracking-wide block"
+                >
+                  +91 80564 53211
+                </a>
+              </div>
+
+              {/* Line 3 */}
+              <div className="py-2 space-y-0.5">
+                <span className="text-[10px] font-bold uppercase text-slate-400 block">
+                  Hotline 3 • Tech Support &amp; Helpdesk
+                </span>
+                <a
+                  href="tel:+916381180488"
+                  className="text-lg sm:text-xl font-black font-mono text-white hover:text-[#dfb74a] transition-colors tracking-wide block"
+                >
+                  +91 63811 80488
+                </a>
+              </div>
+
+            </div>
+
+            {/* Right Column (5 cols): Official Email & Social Connections */}
             <div className="md:col-span-5 space-y-6">
               
               {/* Official Email */}
@@ -1753,14 +1807,6 @@ export default function HomePage() {
                   >
                     info@mantif.com
                   </a>
-                  <button
-                    type="button"
-                    onClick={() => handleCopy("info@mantif.com", "fmail")}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                    title="Copy Email"
-                  >
-                    {copiedKey === "fmail" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-slate-300" />}
-                  </button>
                 </div>
               </div>
 
@@ -1815,135 +1861,6 @@ export default function HomePage() {
                   >
                     <WhatsAppIcon className="w-5 h-5" />
                   </a>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Right Column (7 cols): 3 Dedicated Helplines */}
-            <div className="md:col-span-7 space-y-4">
-              
-              <div className="flex items-center justify-between pb-1 border-b border-white/10">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#dfb74a]">
-                  Official Helplines (Direct Support)
-                </span>
-                <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  Mon–Sat (9 AM – 8:30 PM)
-                </span>
-              </div>
-
-              {/* Line 1 */}
-              <div className="py-2 flex items-center justify-between gap-3 border-b border-white/5">
-                <div>
-                  <span className="text-[10px] font-bold uppercase text-slate-400 block">
-                    Hotline 1 • Admissions &amp; Fees
-                  </span>
-                  <span className="text-base sm:text-lg font-black font-mono text-white tracking-wide">
-                    +91 98427 43538
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <a
-                    href="tel:+919842743538"
-                    title="Direct Call"
-                    className="w-9 h-9 rounded-xl bg-[#004b79] hover:bg-[#005f99] text-white flex items-center justify-center transition-colors cursor-pointer"
-                  >
-                    <PhoneCall className="w-4 h-4" />
-                  </a>
-                  <a
-                    href="https://wa.me/919842743538?text=Hello%20Mantif%20Tutoring,%20I%20would%20like%20to%20inquire%20about%20admissions."
-                    target="_blank"
-                    rel="noreferrer"
-                    title="WhatsApp Chat"
-                    className="w-9 h-9 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-colors cursor-pointer"
-                  >
-                    <WhatsAppIcon className="w-4 h-4" />
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => handleCopy("+919842743538", "f1")}
-                    className="w-9 h-9 rounded-xl bg-white/10 text-slate-300 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
-                    title="Copy Number"
-                  >
-                    {copiedKey === "f1" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Line 2 */}
-              <div className="py-2 flex items-center justify-between gap-3 border-b border-white/5">
-                <div>
-                  <span className="text-[10px] font-bold uppercase text-slate-400 block">
-                    Hotline 2 • Academic &amp; Batch Timing
-                  </span>
-                  <span className="text-base sm:text-lg font-black font-mono text-white tracking-wide">
-                    +91 80564 53211
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <a
-                    href="tel:+918056453211"
-                    title="Direct Call"
-                    className="w-9 h-9 rounded-xl bg-[#004b79] hover:bg-[#005f99] text-white flex items-center justify-center transition-colors cursor-pointer"
-                  >
-                    <PhoneCall className="w-4 h-4" />
-                  </a>
-                  <a
-                    href="https://wa.me/918056453211?text=Hello%20Mantif%20Academic%20Team,%20I%20have%20a%20question%20about%20classes."
-                    target="_blank"
-                    rel="noreferrer"
-                    title="WhatsApp Chat"
-                    className="w-9 h-9 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-colors cursor-pointer"
-                  >
-                    <WhatsAppIcon className="w-4 h-4" />
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => handleCopy("+918056453211", "f2")}
-                    className="w-9 h-9 rounded-xl bg-white/10 text-slate-300 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
-                    title="Copy Number"
-                  >
-                    {copiedKey === "f2" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Line 3 */}
-              <div className="py-2 flex items-center justify-between gap-3">
-                <div>
-                  <span className="text-[10px] font-bold uppercase text-slate-400 block">
-                    Hotline 3 • Tech Support &amp; Helpdesk
-                  </span>
-                  <span className="text-base sm:text-lg font-black font-mono text-white tracking-wide">
-                    +91 63811 80488
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <a
-                    href="tel:+916381180488"
-                    title="Direct Call"
-                    className="w-9 h-9 rounded-xl bg-[#004b79] hover:bg-[#005f99] text-white flex items-center justify-center transition-colors cursor-pointer"
-                  >
-                    <PhoneCall className="w-4 h-4" />
-                  </a>
-                  <a
-                    href="https://wa.me/916381180488?text=Hello%20Mantif%20Support,%20I%20need%20assistance."
-                    target="_blank"
-                    rel="noreferrer"
-                    title="WhatsApp Chat"
-                    className="w-9 h-9 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-colors cursor-pointer"
-                  >
-                    <WhatsAppIcon className="w-4 h-4" />
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => handleCopy("+916381180488", "f3")}
-                    className="w-9 h-9 rounded-xl bg-white/10 text-slate-300 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
-                    title="Copy Number"
-                  >
-                    {copiedKey === "f3" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                  </button>
                 </div>
               </div>
 
