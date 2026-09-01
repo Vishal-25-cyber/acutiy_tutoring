@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   AlertCircle, CheckCircle2, ArrowRight, ArrowLeft,
-  Loader2, ChevronRight, BookOpen, GraduationCap,
+  Loader2, ChevronRight, ChevronLeft, BookOpen, GraduationCap,
   Award, Shield, Users, Clock, Check, Phone, PhoneCall,
   Mail, MapPin, Copy, MessageSquare, Send, Sparkles,
   Building, ExternalLink, Quote, Heart, Cpu, Brain,
   Compass, School, UserCheck, Star, Image as ImageIcon,
-  Menu, X, Laptop, Rocket
+  Menu, X, Laptop, Rocket, Maximize2
 } from "lucide-react";
 
 type AuthMode = "SIGNIN" | "SIGNUP";
@@ -73,7 +73,8 @@ export default function HomePage() {
   const [pw, setPw] = useState("");
   const [showPw, setShowPw] = useState(false);
 
-  // Gallery Lightbox Modal State
+  // Gallery Lightbox Modal & Filter State
+  const [galleryCategory, setGalleryCategory] = useState<string>("ALL");
   const [selectedGalleryItem, setSelectedGalleryItem] = useState<{ src: string; tag: string; title: string; sub: string } | null>(null);
 
   // Dynamic Contact & Phone State
@@ -1552,117 +1553,110 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 7: GALLERY (SINGLE-VIEWPORT DUAL-REEL SHOWCASE + LIGHTBOX)
+          PAGE 7: GALLERY (LARGE-SCALE INTERACTIVE BENTO SHOWCASE + LIGHTBOX)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="gallery" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex flex-col justify-center py-6 sm:py-8 bg-gradient-to-b from-white via-slate-50/50 to-white overflow-hidden relative border-b border-slate-200/80">
-        
-        {/* Ambient background glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-[#dfb74a]/5 rounded-full blur-3xl pointer-events-none -z-10" />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full space-y-5 sm:space-y-6 flex flex-col justify-center">
+      <section id="gallery" className="scroll-mt-20 py-20 bg-gradient-to-b from-white via-slate-50/50 to-white border-b border-slate-200/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           
-          <div className="text-center max-w-3xl mx-auto space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#dfb74a]/15 border border-[#dfb74a]/30 text-[#002137] text-xs font-black uppercase tracking-wider mb-1">
-              <Sparkles className="w-3.5 h-3.5 text-[#b89047]" />
-              Authentic Moments
-            </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight">
+          {/* Header */}
+          <div className="text-center max-w-3xl mx-auto space-y-2">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Gallery
             </h2>
-            <p className="text-xs sm:text-sm lg:text-base font-bold text-[#b89047] tracking-normal max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base lg:text-lg font-bold text-[#b89047] tracking-normal max-w-2xl mx-auto">
               Memories from our AI school workshops, physical Tutoring Hub classrooms, and student milestones.
             </p>
           </div>
 
-          {/* Dual-Track Seamless Dynamic Reel */}
-          <div className="relative w-full overflow-hidden space-y-4 sm:space-y-5 py-2">
-            
-            {/* Edge Shadow Gradient Masks */}
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-16 sm:w-28 bg-gradient-to-r from-white via-white/80 to-transparent z-10" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-16 sm:w-28 bg-gradient-to-l from-white via-white/80 to-transparent z-10" />
-
-            {/* Reel 1 (Flows Left - Items 1 to 5) */}
-            <div className="animate-marquee-slow flex gap-4 sm:gap-5">
-              {[
-                { src: "/images/gallery_1.jpg", tag: "Tutoring Hub", title: "Creative Learning & Activity Circles", sub: "Hands-on creative engagement at Tutoring Hub" },
-                { src: "/images/gallery_2.jpg", tag: "Active Learning", title: "Interactive Reading & Discovery", sub: "Curiosity-driven study sessions" },
-                { src: "/images/gallery_3.jpg", tag: "Mentorship", title: "Early Focus & Skill Building", sub: "Individual care and guided attention" },
-                { src: "/images/gallery_4.jpg", tag: "Academic Excellence", title: "Classroom Problem Solving", sub: "In-depth whiteboard concept breakdown" },
-                { src: "/images/gallery_5.jpg", tag: "Math Mastery", title: "Whiteboard Algebraic Practice", sub: "Step-by-step formula derivation & mastery" },
-                // Loop set
-                { src: "/images/gallery_1.jpg", tag: "Tutoring Hub", title: "Creative Learning & Activity Circles", sub: "Hands-on creative engagement at Tutoring Hub" },
-                { src: "/images/gallery_2.jpg", tag: "Active Learning", title: "Interactive Reading & Discovery", sub: "Curiosity-driven study sessions" },
-                { src: "/images/gallery_3.jpg", tag: "Mentorship", title: "Early Focus & Skill Building", sub: "Individual care and guided attention" },
-                { src: "/images/gallery_4.jpg", tag: "Academic Excellence", title: "Classroom Problem Solving", sub: "In-depth whiteboard concept breakdown" },
-                { src: "/images/gallery_5.jpg", tag: "Math Mastery", title: "Whiteboard Algebraic Practice", sub: "Step-by-step formula derivation & mastery" },
-              ].map((item, idx) => (
-                <div
-                  key={`reel1-${idx}`}
-                  onClick={() => setSelectedGalleryItem(item)}
-                  className="w-[260px] sm:w-[310px] md:w-[340px] h-[155px] sm:h-[175px] rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-900 border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-[#b89047]/60 group cursor-pointer relative flex-shrink-0 transition-all duration-300 transform hover:-translate-y-1"
+          {/* Interactive Category Filter Pills */}
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+            {[
+              { id: "ALL", label: "All Moments", count: 10 },
+              { id: "CLASSROOM", label: "Classroom & Math", count: 4 },
+              { id: "CREATIVE", label: "Creative & Art", count: 2 },
+              { id: "MENTORSHIP", label: "Mentorship & Focus", count: 2 },
+              { id: "COMMUNITY", label: "Student Community", count: 2 },
+            ].map((cat) => {
+              const active = galleryCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setGalleryCategory(cat.id)}
+                  className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-extrabold transition-all duration-300 flex items-center gap-2 cursor-pointer ${
+                    active
+                      ? "bg-[#002137] text-white shadow-md shadow-[#002137]/20 border border-[#002137]"
+                      : "bg-white text-slate-600 hover:text-[#002137] hover:bg-slate-100 border border-slate-200"
+                  }`}
                 >
-                  <img
-                    src={item.src}
-                    alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-108 transition-all duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/95 via-[#001726]/35 to-transparent flex flex-col justify-end p-4 text-white">
-                    <span className="self-start text-[9px] uppercase font-black px-2.5 py-0.5 rounded-full bg-[#dfb74a] text-[#002137] mb-1.5 shadow-sm">
-                      {item.tag}
-                    </span>
-                    <h4 className="font-black text-xs sm:text-sm leading-snug line-clamp-1 group-hover:text-[#dfb74a] transition-colors">
-                      {item.title}
-                    </h4>
-                    <p className="text-[11px] text-slate-300 line-clamp-1 mt-0.5">{item.sub}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Reel 2 (Flows Right - Items 6 to 10) */}
-            <div className="animate-marquee-slow-reverse flex gap-4 sm:gap-5">
-              {[
-                { src: "/images/gallery_6.jpg", tag: "Student Life", title: "Peer Camaraderie & Support", sub: "Joyful collaborative milestone celebration" },
-                { src: "/images/gallery_7.jpg", tag: "Team Craft", title: "Hands-on Creative Teamwork", sub: "Rainbow art & creative expression" },
-                { src: "/images/gallery_8.jpg", tag: "Board Prep", title: "Senior Board Exam Cohort", sub: "Dedicated revision and problem practice" },
-                { src: "/images/gallery_9.jpg", tag: "Community", title: "MANTIF Friendship Circle", sub: "Lifelong bonds, care, and mutual growth" },
-                { src: "/images/gallery_10.jpg", tag: "Foundations", title: "Foundational Math & Handwriting", sub: "Building strong early learning habits" },
-                // Loop set
-                { src: "/images/gallery_6.jpg", tag: "Student Life", title: "Peer Camaraderie & Support", sub: "Joyful collaborative milestone celebration" },
-                { src: "/images/gallery_7.jpg", tag: "Team Craft", title: "Hands-on Creative Teamwork", sub: "Rainbow art & creative expression" },
-                { src: "/images/gallery_8.jpg", tag: "Board Prep", title: "Senior Board Exam Cohort", sub: "Dedicated revision and problem practice" },
-                { src: "/images/gallery_9.jpg", tag: "Community", title: "MANTIF Friendship Circle", sub: "Lifelong bonds, care, and mutual growth" },
-                { src: "/images/gallery_10.jpg", tag: "Foundations", title: "Foundational Math & Handwriting", sub: "Building strong early learning habits" },
-              ].map((item, idx) => (
-                <div
-                  key={`reel2-${idx}`}
-                  onClick={() => setSelectedGalleryItem(item)}
-                  className="w-[260px] sm:w-[310px] md:w-[340px] h-[155px] sm:h-[175px] rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-900 border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-[#b89047]/60 group cursor-pointer relative flex-shrink-0 transition-all duration-300 transform hover:-translate-y-1"
-                >
-                  <img
-                    src={item.src}
-                    alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-108 transition-all duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/95 via-[#001726]/35 to-transparent flex flex-col justify-end p-4 text-white">
-                    <span className="self-start text-[9px] uppercase font-black px-2.5 py-0.5 rounded-full bg-[#dfb74a] text-[#002137] mb-1.5 shadow-sm">
-                      {item.tag}
-                    </span>
-                    <h4 className="font-black text-xs sm:text-sm leading-snug line-clamp-1 group-hover:text-[#dfb74a] transition-colors">
-                      {item.title}
-                    </h4>
-                    <p className="text-[11px] text-slate-300 line-clamp-1 mt-0.5">{item.sub}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
+                  <span>{cat.label}</span>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${
+                      active ? "bg-[#dfb74a] text-[#002137]" : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    {cat.count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
-          <p className="text-center text-xs text-slate-400 font-semibold flex items-center justify-center gap-2">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#b89047]" />
-            Click any moment to view in high resolution • Hover to pause reel
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#b89047]" />
+          {/* Large-Format Responsive Dynamic Photo Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {[
+              { id: 1, category: "CREATIVE", src: "/images/gallery_1.jpg", tag: "Tutoring Hub", title: "Creative Learning & Activity Circles", sub: "Hands-on collaborative drawing and color studies at Tutoring Hub." },
+              { id: 2, category: "CLASSROOM", src: "/images/gallery_2.jpg", tag: "Active Learning", title: "Interactive Reading & Discovery", sub: "Young students exploring science and nature literature together." },
+              { id: 3, category: "MENTORSHIP", src: "/images/gallery_3.jpg", tag: "Mentorship", title: "Early Focus & Skill Building", sub: "Individual care and guided creative practice for young minds." },
+              { id: 4, category: "CLASSROOM", src: "/images/gallery_4.jpg", tag: "Academic Excellence", title: "Classroom Problem Solving", sub: "In-depth whiteboard concept breakdown and formula analysis." },
+              { id: 5, category: "CLASSROOM", src: "/images/gallery_5.jpg", tag: "Math Mastery", title: "Whiteboard Algebraic Practice", sub: "Student deriving step-by-step solutions to linear algebraic problems." },
+              { id: 6, category: "COMMUNITY", src: "/images/gallery_6.jpg", tag: "Student Life", title: "Peer Camaraderie & Support", sub: "Celebratory fist-bump milestone between learning peers." },
+              { id: 7, category: "CREATIVE", src: "/images/gallery_7.jpg", tag: "Team Craft", title: "Hands-on Creative Teamwork", sub: "Collaborative rainbow art and sensory craft session." },
+              { id: 8, category: "CLASSROOM", src: "/images/gallery_8.jpg", tag: "Board Prep", title: "Senior Board Exam Cohort", sub: "Dedicated revision, mock testing, and core subject preparation." },
+              { id: 9, category: "COMMUNITY", src: "/images/gallery_9.jpg", tag: "Community", title: "MANTIF Friendship Circle", sub: "Lifelong student bonds, peer encouragement, and mutual support." },
+              { id: 10, category: "MENTORSHIP", src: "/images/gallery_10.jpg", tag: "Foundations", title: "Foundational Math & Handwriting", sub: "Early geometric drawing and precision handwriting practice." },
+            ]
+              .filter((item) => galleryCategory === "ALL" || item.category === galleryCategory)
+              .map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => setSelectedGalleryItem(item)}
+                  className="group relative h-[300px] sm:h-[340px] rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md hover:shadow-2xl hover:border-[#b89047]/80 transition-all duration-500 cursor-pointer flex flex-col justify-end transform hover:-translate-y-1.5"
+                >
+                  <img
+                    src={item.src}
+                    alt={item.title}
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
+                  />
+                  
+                  {/* Subtle Gradient Backplate */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/95 via-[#001726]/40 to-transparent transition-opacity duration-300 group-hover:from-[#001726]/98" />
+
+                  {/* Top Floating Badge & Expand Button */}
+                  <div className="absolute top-4 inset-x-4 flex items-center justify-between z-10">
+                    <span className="text-[10px] sm:text-xs uppercase font-black px-3 py-1 rounded-full bg-[#dfb74a] text-[#002137] shadow-md tracking-wider">
+                      {item.tag}
+                    </span>
+                    <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0">
+                      <Maximize2 className="w-4 h-4" />
+                    </div>
+                  </div>
+
+                  {/* Bottom Text Content */}
+                  <div className="relative z-10 p-5 sm:p-6 space-y-1">
+                    <h3 className="text-base sm:text-lg font-black text-white leading-snug group-hover:text-[#dfb74a] transition-colors">
+                      {item.title}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-200 line-clamp-2 leading-relaxed font-normal">
+                      {item.sub}
+                    </p>
+                  </div>
+                </div>
+              ))}
+          </div>
+
+          {/* Footer Note */}
+          <p className="text-center text-xs text-slate-400 font-semibold">
+            Photos and workshop media are periodically archived by the MANTIF Academic Operations Team.
           </p>
 
         </div>
