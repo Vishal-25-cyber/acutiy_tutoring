@@ -39,6 +39,7 @@ type Stage =
   | "PENDING_ADMISSION"  // student: waiting for teacher to admit
   | "DENIED"             // student: teacher rejected
   | "LIVE_CLASS"
+  | "ENDED"              // faculty concluded class
   | "ERROR";
 
 /* ─────────────────────────────────────────────── */
@@ -312,7 +313,18 @@ export function JitsiClassroom({
         const res = await fetch(`/api/classes/${targetClassId}/signal?userId=${userInfo.id}&since=${lastSignalTime}`);
         if (!res.ok) return;
         const data = await res.json();
-        lastSignalTime = data.serverTime || Date.now();
+        // Check if teacher concluded the class
+        if (data.isEnded || (data.signals && data.signals.some((s: any) => s.type === "CLASS_ENDED"))) {
+          if (!userInfo.isTeacher) {
+            stopAllMedia();
+            if (peerConnectionRef.current) {
+              peerConnectionRef.current.close();
+              peerConnectionRef.current = null;
+            }
+            setStage("ENDED");
+            return;
+          }
+        }
 
         // Update participants list
         if (data.participants) {
@@ -700,6 +712,48 @@ export function JitsiClassroom({
             className="w-full py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs font-medium text-white transition-colors cursor-pointer"
           >
             Return to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════
+     RENDER — ENDED (Teacher concluded class)
+  ══════════════════════════════════════════════ */
+  if (stage === "ENDED") {
+    return (
+      <div className="min-h-screen bg-[#111] flex items-center justify-center text-white p-6">
+        <div className="max-w-md w-full p-8 rounded-2xl bg-[#1e1e1e] border border-white/10 text-center space-y-6 shadow-2xl animate-in zoom-in-95">
+          <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold text-white">Class Completed</h2>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              The faculty instructor has concluded today&apos;s live class for {classData?.subject || "your session"}.
+              Your attendance and participation have been submitted.
+            </p>
+          </div>
+          <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-left space-y-2 text-xs">
+            <div className="flex justify-between">
+              <span className="text-slate-400">Class Topic:</span>
+              <span className="text-white font-medium truncate max-w-[200px]">{classData?.title || classData?.topic || "Live Lecture"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-400">Duration Attended:</span>
+              <span className="text-emerald-400 font-mono font-semibold">{fmt(durationSeconds)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-400">Status:</span>
+              <span className="text-emerald-400 font-semibold">Completed &amp; Recorded</span>
+            </div>
+          </div>
+          <button
+            onClick={() => router.push("/student/classes")}
+            className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer shadow-lg shadow-blue-600/20"
+          >
+            Return to Student Portal
           </button>
         </div>
       </div>

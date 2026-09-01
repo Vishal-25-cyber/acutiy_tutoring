@@ -41,6 +41,20 @@ export async function PUT(
     liveClass.actualEndTime = new Date();
     await liveClass.save();
 
+    // Signal in-memory WebRTC rooms to terminate live calls instantly
+    try {
+      const { getRoom } = await import("../signal/route");
+      const r1 = getRoom(id);
+      r1.isEnded = true;
+      r1.signals.push({ from: session.userId, type: "CLASS_ENDED", timestamp: Date.now() });
+
+      if (liveClass.livekitRoomId && liveClass.livekitRoomId !== id) {
+        const r2 = getRoom(liveClass.livekitRoomId);
+        r2.isEnded = true;
+        r2.signals.push({ from: session.userId, type: "CLASS_ENDED", timestamp: Date.now() });
+      }
+    } catch {}
+
     // Automatically increment classes conducted for Teacher in StaffAttendance
     try {
       const StaffAttendance = (await import("@/models/StaffAttendance")).default;

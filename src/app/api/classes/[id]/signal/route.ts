@@ -4,15 +4,16 @@ import { getSession } from "@/lib/auth/session";
 export const dynamic = "force-dynamic";
 
 // In-memory signaling cache for low-latency WebRTC exchange between laptops
-const roomSignals: Record<
+export const roomSignals: Record<
   string,
   {
+    isEnded?: boolean;
     participants: Record<string, { id: string; name: string; role: string; lastSeen: number; isCameraOn?: boolean; isMicOn?: boolean }>;
-    signals: Array<{ from: string; to?: string; type: "offer" | "answer" | "candidate" | "leave"; data: any; timestamp: number }>;
+    signals: Array<{ from: string; to?: string; type: "offer" | "answer" | "candidate" | "leave" | "CLASS_ENDED"; data?: any; timestamp: number }>;
   }
 > = {};
 
-function getRoom(roomId: string) {
+export function getRoom(roomId: string) {
   if (!roomSignals[roomId]) {
     roomSignals[roomId] = { participants: {}, signals: [] };
   }
@@ -27,7 +28,7 @@ function getRoom(roomId: string) {
   return roomSignals[roomId];
 }
 
-// POST: Send WebRTC offer, answer, ICE candidate, or heartbeat
+// POST: Send WebRTC offer, answer, ICE candidate, heartbeat, or CLASS_ENDED
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -43,6 +44,16 @@ export async function POST(
     const userRole = role || session?.role || "STUDENT";
 
     const room = getRoom(roomId);
+
+    if (type === "CLASS_ENDED") {
+      room.isEnded = true;
+      room.signals.push({
+        from: userId,
+        type: "CLASS_ENDED",
+        timestamp: Date.now(),
+      });
+      return NextResponse.json({ success: true, isEnded: true });
+    }
 
     // Update participant presence
     room.participants[userId] = {
@@ -65,7 +76,7 @@ export async function POST(
       });
     }
 
-    return NextResponse.json({ success: true, timestamp: Date.now() });
+    return NextResponse.json({ success: true, isEnded: Boolean(room.isEnded), timestamp: Date.now() });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -95,6 +106,7 @@ export async function GET(
     const activeParticipants = Object.values(room.participants);
 
     return NextResponse.json({
+      isEnded: Boolean(room.isEnded),
       signals: relevantSignals,
       participants: activeParticipants,
       serverTime: Date.now(),
