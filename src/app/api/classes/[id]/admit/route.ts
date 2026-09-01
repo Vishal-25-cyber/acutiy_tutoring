@@ -30,7 +30,7 @@ async function resolveClassDoc(id: string) {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// POST — Student knocks (requests to join) or re-knocks after denial
+// POST — Student knocks (requests to join) or re-knocks after leaving/denial
 // Body: { name?: string }
 // ─────────────────────────────────────────────────────────────────
 export async function POST(
@@ -63,30 +63,27 @@ export async function POST(
     if (!classDoc.deniedStudents) classDoc.deniedStudents = [];
     if (!classDoc.pendingAdmissions) classDoc.pendingAdmissions = [];
 
-    // Already admitted → tell the client to enter directly
-    const alreadyAdmitted = (classDoc.admittedStudents as any[]).some(
-      (e: any) => e.userId === userId
-    );
-    if (alreadyAdmitted) {
-      return NextResponse.json({ status: "ADMITTED" });
-    }
-
-    // If student was previously denied and is now requesting again (Try Again),
-    // clear the denied status so they can knock fresh!
+    // Reset previous states so every knock is a fresh request to the faculty
     classDoc.deniedStudents = (classDoc.deniedStudents as any[]).filter(
       (e: any) => e.userId !== userId
     );
+    classDoc.admittedStudents = (classDoc.admittedStudents as any[]).filter(
+      (e: any) => e.userId !== userId
+    );
 
-    // Add to pending (idempotent — skip if already pending)
-    const alreadyPending = (classDoc.pendingAdmissions as any[]).some(
+    // Add to pending (idempotent — update timestamp if already pending)
+    const existingPending = (classDoc.pendingAdmissions as any[]).find(
       (e: any) => e.userId === userId
     );
-    if (!alreadyPending) {
+    if (!existingPending) {
       (classDoc.pendingAdmissions as any[]).push({
         userId,
         name: studentName,
         requestedAt: new Date(),
       });
+    } else {
+      existingPending.requestedAt = new Date();
+      existingPending.name = studentName;
     }
 
     await classDoc.save();
@@ -99,7 +96,7 @@ export async function POST(
 }
 
 // ─────────────────────────────────────────────────────────────────
-// DELETE — Student cancels knock or leaves the lobby
+// DELETE — Student cancels knock, leaves lobby, or leaves live classroom
 // ─────────────────────────────────────────────────────────────────
 export async function DELETE(
   req: NextRequest,
@@ -119,15 +116,21 @@ export async function DELETE(
     }
 
     const userId = session.userId;
-    // Remove student from pending admissions when they cancel or leave lobby
+
+    // Remove student from both pending and admitted when they leave the classroom
     if (classDoc.pendingAdmissions) {
       classDoc.pendingAdmissions = (classDoc.pendingAdmissions as any[]).filter(
         (e: any) => e.userId !== userId
       );
-      await classDoc.save();
     }
+    if (classDoc.admittedStudents) {
+      classDoc.admittedStudents = (classDoc.admittedStudents as any[]).filter(
+        (e: any) => e.userId !== userId
+      );
+    }
+    await classDoc.save();
 
-    return NextResponse.json({ success: true, message: "Knock cancelled" });
+    return NextResponse.json({ success: true, message: "Participant left classroom" });
   } catch (err: any) {
     console.error("DELETE /api/classes/[id]/admit error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
@@ -199,7 +202,7 @@ export async function GET(
 }
 
 // ─────────────────────────────────────────────────────────────────
-// PATCH — Teacher admits or denies a student
+// PATCH / PUT — Teacher admits or denies a student
 // Body: { userId: string, action: "ADMIT" | "DENY" }
 // ─────────────────────────────────────────────────────────────────
 export async function PATCH(

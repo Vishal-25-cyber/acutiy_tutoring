@@ -608,28 +608,39 @@ export function JitsiClassroom({
   const handleLeaveClass = async () => {
     if (pollTimerRef.current) clearInterval(pollTimerRef.current);
     stopAllMedia();
+    const targetClassId = classData?.id || classData?.livekitRoomId || classId;
 
     if (userInfo.isTeacher) {
       try {
-        await fetch(`/api/classes/${classId}/end`, {
+        await fetch(`/api/classes/${targetClassId}/end`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
         });
       } catch (e) {
         console.warn("Failed to mark class as ended:", e);
       }
-      router.push("/teacher/schedule");
+      router.push("/teacher/dashboard");
     } else {
       try {
+        // 1. Remove from admitted & pending lists so next visit requires new admission
+        await fetch(`/api/classes/${targetClassId}/admit`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (e) {}
+
+      try {
+        // 2. Record attendance duration
         await fetch("/api/attendance/leave", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            classId,
+            classId: targetClassId,
             durationMinutes: Math.max(1, Math.round(durationSeconds / 60)),
           }),
         });
       } catch (e) { console.warn(e); }
+
       router.push("/student/classes");
     }
   };
