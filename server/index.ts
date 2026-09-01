@@ -183,7 +183,20 @@ import * as ContactRoute from "../src/app/api/contact/route";
 
 app.post("/api/contact", adaptRoute(ContactRoute.POST));
 
-// 404 Fallback returning clean JSON instead of HTML
+import path from "path";
+import fs from "fs";
+
+// Static SPA Serving for Production (Render / Cloud)
+const distPath = path.join(process.cwd(), "dist");
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get("*", (req: any, res: any, next: any) => {
+    if (req.path.startsWith("/api")) return next();
+    res.sendFile(path.join(distPath, "index.html"));
+  });
+}
+
+// 404 Fallback returning clean JSON instead of HTML for API routes
 app.use((req: any, res: any) => {
   res.status(404).json({ error: `Route ${req.method} ${req.path} not found.` });
 });
