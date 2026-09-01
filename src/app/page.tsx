@@ -39,6 +39,9 @@ export default function HomePage() {
   const [pw, setPw] = useState("");
   const [showPw, setShowPw] = useState(false);
 
+  // Gallery Lightbox Modal State
+  const [selectedGalleryItem, setSelectedGalleryItem] = useState<{ src: string; tag: string; title: string; sub: string } | null>(null);
+
   // Dynamic Contact & Phone State
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [contactSettings, setContactSettings] = useState<any>(null);
@@ -1515,190 +1518,164 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 7: GALLERY (MOMENTS & WORKSHOPS READY FOR IMAGES)
+          PAGE 7: GALLERY (SINGLE-VIEWPORT DUAL-REEL SHOWCASE + LIGHTBOX)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="gallery" className="scroll-mt-20 py-20 bg-white border-b border-slate-200/80">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <section id="gallery" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex flex-col justify-center py-6 sm:py-8 bg-gradient-to-b from-white via-slate-50/50 to-white overflow-hidden relative border-b border-slate-200/80">
+        
+        {/* Ambient background glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-[#dfb74a]/5 rounded-full blur-3xl pointer-events-none -z-10" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full space-y-5 sm:space-y-6 flex flex-col justify-center">
           
-          <div className="text-center max-w-3xl mx-auto space-y-2">
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
+          <div className="text-center max-w-3xl mx-auto space-y-1.5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#dfb74a]/15 border border-[#dfb74a]/30 text-[#002137] text-xs font-black uppercase tracking-wider mb-1">
+              <Sparkles className="w-3.5 h-3.5 text-[#b89047]" />
+              Authentic Moments
+            </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight">
               Gallery
             </h2>
-            <p className="text-sm sm:text-base lg:text-lg font-bold text-[#b89047] tracking-normal max-w-2xl mx-auto">
+            <p className="text-xs sm:text-sm lg:text-base font-bold text-[#b89047] tracking-normal max-w-2xl mx-auto">
               Memories from our AI school workshops, physical Tutoring Hub classrooms, and student milestones.
             </p>
           </div>
 
-          {/* Interactive Responsive Gallery Grid (9 Real Photo Cards) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Dual-Track Seamless Dynamic Reel */}
+          <div className="relative w-full overflow-hidden space-y-4 sm:space-y-5 py-2">
             
-            {/* Gallery Item 1 (Creative Circles) */}
-            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
-              <img
-                src="/images/gallery_1.jpg"
-                alt="Creative Learning and Drawing Activity Circle"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/90 via-[#001726]/30 to-transparent flex flex-col justify-end p-5 text-white">
-                <span className="self-start text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-[#dfb74a] text-[#002137] mb-2 shadow-sm">
-                  Tutoring Hub
-                </span>
-                <h4 className="font-extrabold text-sm sm:text-base leading-snug">Creative Learning &amp; Activity Circles</h4>
-                <p className="text-xs text-slate-200 mt-0.5">Hands-on creative engagement at Tutoring Hub</p>
-              </div>
+            {/* Edge Shadow Gradient Masks */}
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-16 sm:w-28 bg-gradient-to-r from-white via-white/80 to-transparent z-10" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-16 sm:w-28 bg-gradient-to-l from-white via-white/80 to-transparent z-10" />
+
+            {/* Reel 1 (Flows Left - Items 1 to 5) */}
+            <div className="animate-marquee-slow flex gap-4 sm:gap-5">
+              {[
+                { src: "/images/gallery_1.jpg", tag: "Tutoring Hub", title: "Creative Learning & Activity Circles", sub: "Hands-on creative engagement at Tutoring Hub" },
+                { src: "/images/gallery_2.jpg", tag: "Active Learning", title: "Interactive Reading & Discovery", sub: "Curiosity-driven study sessions" },
+                { src: "/images/gallery_3.jpg", tag: "Mentorship", title: "Early Focus & Skill Building", sub: "Individual care and guided attention" },
+                { src: "/images/gallery_4.jpg", tag: "Academic Excellence", title: "Classroom Problem Solving", sub: "In-depth whiteboard concept breakdown" },
+                { src: "/images/gallery_5.jpg", tag: "Math Mastery", title: "Whiteboard Algebraic Practice", sub: "Step-by-step formula derivation & mastery" },
+                // Loop set
+                { src: "/images/gallery_1.jpg", tag: "Tutoring Hub", title: "Creative Learning & Activity Circles", sub: "Hands-on creative engagement at Tutoring Hub" },
+                { src: "/images/gallery_2.jpg", tag: "Active Learning", title: "Interactive Reading & Discovery", sub: "Curiosity-driven study sessions" },
+                { src: "/images/gallery_3.jpg", tag: "Mentorship", title: "Early Focus & Skill Building", sub: "Individual care and guided attention" },
+                { src: "/images/gallery_4.jpg", tag: "Academic Excellence", title: "Classroom Problem Solving", sub: "In-depth whiteboard concept breakdown" },
+                { src: "/images/gallery_5.jpg", tag: "Math Mastery", title: "Whiteboard Algebraic Practice", sub: "Step-by-step formula derivation & mastery" },
+              ].map((item, idx) => (
+                <div
+                  key={`reel1-${idx}`}
+                  onClick={() => setSelectedGalleryItem(item)}
+                  className="w-[260px] sm:w-[310px] md:w-[340px] h-[155px] sm:h-[175px] rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-900 border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-[#b89047]/60 group cursor-pointer relative flex-shrink-0 transition-all duration-300 transform hover:-translate-y-1"
+                >
+                  <img
+                    src={item.src}
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-108 transition-all duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/95 via-[#001726]/35 to-transparent flex flex-col justify-end p-4 text-white">
+                    <span className="self-start text-[9px] uppercase font-black px-2.5 py-0.5 rounded-full bg-[#dfb74a] text-[#002137] mb-1.5 shadow-sm">
+                      {item.tag}
+                    </span>
+                    <h4 className="font-black text-xs sm:text-sm leading-snug line-clamp-1 group-hover:text-[#dfb74a] transition-colors">
+                      {item.title}
+                    </h4>
+                    <p className="text-[11px] text-slate-300 line-clamp-1 mt-0.5">{item.sub}</p>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {/* Gallery Item 2 (Reading & Discovery) */}
-            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
-              <img
-                src="/images/gallery_2.jpg"
-                alt="Interactive Reading and Knowledge Discovery"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/90 via-[#001726]/30 to-transparent flex flex-col justify-end p-5 text-white">
-                <span className="self-start text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-[#dfb74a] text-[#002137] mb-2 shadow-sm">
-                  Active Learning
-                </span>
-                <h4 className="font-extrabold text-sm sm:text-base leading-snug">Interactive Reading &amp; Discovery</h4>
-                <p className="text-xs text-slate-200 mt-0.5">Curiosity-driven study sessions</p>
-              </div>
-            </div>
-
-            {/* Gallery Item 3 (Early Focus & Skill) */}
-            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
-              <img
-                src="/images/gallery_3.jpg"
-                alt="Early Focus and Skill Development"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/90 via-[#001726]/30 to-transparent flex flex-col justify-end p-5 text-white">
-                <span className="self-start text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-[#dfb74a] text-[#002137] mb-2 shadow-sm">
-                  Mentorship
-                </span>
-                <h4 className="font-extrabold text-sm sm:text-base leading-snug">Early Focus &amp; Skill Building</h4>
-                <p className="text-xs text-slate-200 mt-0.5">Individual care and guided attention</p>
-              </div>
-            </div>
-
-            {/* Gallery Item 4 (Classroom Problem Solving) */}
-            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
-              <img
-                src="/images/gallery_4.jpg"
-                alt="Tutoring Hub Classroom Problem Solving"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/90 via-[#001726]/30 to-transparent flex flex-col justify-end p-5 text-white">
-                <span className="self-start text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-[#dfb74a] text-[#002137] mb-2 shadow-sm">
-                  Academic Excellence
-                </span>
-                <h4 className="font-extrabold text-sm sm:text-base leading-snug">Classroom Problem Solving</h4>
-                <p className="text-xs text-slate-200 mt-0.5">In-depth whiteboard concept breakdown</p>
-              </div>
-            </div>
-
-            {/* Gallery Item 5 (Whiteboard Math Practice) */}
-            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
-              <img
-                src="/images/gallery_5.jpg"
-                alt="Student solving algebra equation on whiteboard"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/90 via-[#001726]/30 to-transparent flex flex-col justify-end p-5 text-white">
-                <span className="self-start text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-[#dfb74a] text-[#002137] mb-2 shadow-sm">
-                  Math Mastery
-                </span>
-                <h4 className="font-extrabold text-sm sm:text-base leading-snug">Whiteboard Algebraic Practice</h4>
-                <p className="text-xs text-slate-200 mt-0.5">Step-by-step formula derivation &amp; mastery</p>
-              </div>
-            </div>
-
-            {/* Gallery Item 6 (Peer Camaraderie & Friendship) */}
-            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
-              <img
-                src="/images/gallery_6.jpg"
-                alt="Students fist bumping in peer celebration"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/90 via-[#001726]/30 to-transparent flex flex-col justify-end p-5 text-white">
-                <span className="self-start text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-[#dfb74a] text-[#002137] mb-2 shadow-sm">
-                  Student Life
-                </span>
-                <h4 className="font-extrabold text-sm sm:text-base leading-snug">Peer Camaraderie &amp; Support</h4>
-                <p className="text-xs text-slate-200 mt-0.5">Joyful collaborative milestone celebration</p>
-              </div>
-            </div>
-
-            {/* Gallery Item 7 (Hands-On Rainbow Craft) */}
-            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
-              <img
-                src="/images/gallery_7.jpg"
-                alt="Children creating rainbow art project with cotton"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/90 via-[#001726]/30 to-transparent flex flex-col justify-end p-5 text-white">
-                <span className="self-start text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-[#dfb74a] text-[#002137] mb-2 shadow-sm">
-                  Team Craft
-                </span>
-                <h4 className="font-extrabold text-sm sm:text-base leading-snug">Hands-on Creative Teamwork</h4>
-                <p className="text-xs text-slate-200 mt-0.5">Rainbow art &amp; creative expression</p>
-              </div>
-            </div>
-
-            {/* Gallery Item 8 (Senior Board Study Cohort) */}
-            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
-              <img
-                src="/images/gallery_8.jpg"
-                alt="Senior students studying revision materials"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/90 via-[#001726]/30 to-transparent flex flex-col justify-end p-5 text-white">
-                <span className="self-start text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-[#dfb74a] text-[#002137] mb-2 shadow-sm">
-                  Board Prep
-                </span>
-                <h4 className="font-extrabold text-sm sm:text-base leading-snug">Senior Board Exam Cohort</h4>
-                <p className="text-xs text-slate-200 mt-0.5">Dedicated revision and problem practice</p>
-              </div>
-            </div>
-
-            {/* Gallery Item 9 (MANTIF Friendship Circle) */}
-            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
-              <img
-                src="/images/gallery_9.jpg"
-                alt="Students joining hands in friendship circle"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/90 via-[#001726]/30 to-transparent flex flex-col justify-end p-5 text-white">
-                <span className="self-start text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-[#dfb74a] text-[#002137] mb-2 shadow-sm">
-                  Community
-                </span>
-                <h4 className="font-extrabold text-sm sm:text-base leading-snug">MANTIF Friendship Circle</h4>
-                <p className="text-xs text-slate-200 mt-0.5">Lifelong bonds, care, and mutual growth</p>
-              </div>
-            </div>
-
-            {/* Gallery Item 10 (Foundational Math & Handwriting) */}
-            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
-              <img
-                src="/images/gallery_10.jpg"
-                alt="Young students practicing math geometry and handwriting"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/90 via-[#001726]/30 to-transparent flex flex-col justify-end p-5 text-white">
-                <span className="self-start text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-[#dfb74a] text-[#002137] mb-2 shadow-sm">
-                  Foundations
-                </span>
-                <h4 className="font-extrabold text-sm sm:text-base leading-snug">Foundational Math &amp; Handwriting</h4>
-                <p className="text-xs text-slate-200 mt-0.5">Building strong early learning habits</p>
-              </div>
+            {/* Reel 2 (Flows Right - Items 6 to 10) */}
+            <div className="animate-marquee-slow-reverse flex gap-4 sm:gap-5">
+              {[
+                { src: "/images/gallery_6.jpg", tag: "Student Life", title: "Peer Camaraderie & Support", sub: "Joyful collaborative milestone celebration" },
+                { src: "/images/gallery_7.jpg", tag: "Team Craft", title: "Hands-on Creative Teamwork", sub: "Rainbow art & creative expression" },
+                { src: "/images/gallery_8.jpg", tag: "Board Prep", title: "Senior Board Exam Cohort", sub: "Dedicated revision and problem practice" },
+                { src: "/images/gallery_9.jpg", tag: "Community", title: "MANTIF Friendship Circle", sub: "Lifelong bonds, care, and mutual growth" },
+                { src: "/images/gallery_10.jpg", tag: "Foundations", title: "Foundational Math & Handwriting", sub: "Building strong early learning habits" },
+                // Loop set
+                { src: "/images/gallery_6.jpg", tag: "Student Life", title: "Peer Camaraderie & Support", sub: "Joyful collaborative milestone celebration" },
+                { src: "/images/gallery_7.jpg", tag: "Team Craft", title: "Hands-on Creative Teamwork", sub: "Rainbow art & creative expression" },
+                { src: "/images/gallery_8.jpg", tag: "Board Prep", title: "Senior Board Exam Cohort", sub: "Dedicated revision and problem practice" },
+                { src: "/images/gallery_9.jpg", tag: "Community", title: "MANTIF Friendship Circle", sub: "Lifelong bonds, care, and mutual growth" },
+                { src: "/images/gallery_10.jpg", tag: "Foundations", title: "Foundational Math & Handwriting", sub: "Building strong early learning habits" },
+              ].map((item, idx) => (
+                <div
+                  key={`reel2-${idx}`}
+                  onClick={() => setSelectedGalleryItem(item)}
+                  className="w-[260px] sm:w-[310px] md:w-[340px] h-[155px] sm:h-[175px] rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-900 border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-[#b89047]/60 group cursor-pointer relative flex-shrink-0 transition-all duration-300 transform hover:-translate-y-1"
+                >
+                  <img
+                    src={item.src}
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-108 transition-all duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/95 via-[#001726]/35 to-transparent flex flex-col justify-end p-4 text-white">
+                    <span className="self-start text-[9px] uppercase font-black px-2.5 py-0.5 rounded-full bg-[#dfb74a] text-[#002137] mb-1.5 shadow-sm">
+                      {item.tag}
+                    </span>
+                    <h4 className="font-black text-xs sm:text-sm leading-snug line-clamp-1 group-hover:text-[#dfb74a] transition-colors">
+                      {item.title}
+                    </h4>
+                    <p className="text-[11px] text-slate-300 line-clamp-1 mt-0.5">{item.sub}</p>
+                  </div>
+                </div>
+              ))}
             </div>
 
           </div>
 
-          <p className="text-center text-xs text-slate-400 font-semibold">
-            Photos and workshop media are periodically archived by the MANTIF Academic Operations Team.
+          <p className="text-center text-xs text-slate-400 font-semibold flex items-center justify-center gap-2">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#b89047]" />
+            Click any moment to view in high resolution • Hover to pause reel
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#b89047]" />
           </p>
 
         </div>
+
+        {/* High-Resolution Interactive Lightbox Modal */}
+        {selectedGalleryItem && (
+          <div
+            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 transition-all"
+            onClick={() => setSelectedGalleryItem(null)}
+          >
+            <div
+              className="relative max-w-4xl w-full bg-[#001726] rounded-3xl overflow-hidden shadow-2xl border border-[#dfb74a]/40 p-4 sm:p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs uppercase font-black px-3 py-1 rounded-full bg-[#dfb74a] text-[#002137]">
+                  {selectedGalleryItem.tag}
+                </span>
+                <button
+                  onClick={() => setSelectedGalleryItem(null)}
+                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                  title="Close (Esc)"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="w-full max-h-[60vh] sm:max-h-[68vh] rounded-2xl overflow-hidden flex items-center justify-center bg-black/40 border border-white/10">
+                <img
+                  src={selectedGalleryItem.src}
+                  alt={selectedGalleryItem.title}
+                  className="max-h-[60vh] sm:max-h-[68vh] w-auto max-w-full object-contain rounded-xl"
+                />
+              </div>
+
+              <div className="text-left space-y-1">
+                <h3 className="text-lg sm:text-xl font-black text-white">
+                  {selectedGalleryItem.title}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-300">
+                  {selectedGalleryItem.sub}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
