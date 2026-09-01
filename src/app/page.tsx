@@ -1532,11 +1532,75 @@ export default function HomePage() {
           {/* Interactive Responsive Gallery Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             
-            {/* Gallery Slot 1 */}
+            {/* Gallery Item 1 (Real Photo: Creative Circles) */}
+            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
+              <img
+                src="/images/gallery_1.jpg"
+                alt="Creative Learning and Drawing Activity Circle"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/90 via-[#001726]/30 to-transparent flex flex-col justify-end p-5 text-white">
+                <span className="self-start text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-[#dfb74a] text-[#002137] mb-2 shadow-sm">
+                  Tutoring Hub
+                </span>
+                <h4 className="font-extrabold text-sm sm:text-base leading-snug">Creative Learning &amp; Activity Circles</h4>
+                <p className="text-xs text-slate-200 mt-0.5">Hands-on creative engagement at Tutoring Hub</p>
+              </div>
+            </div>
+
+            {/* Gallery Item 2 (Real Photo: Reading & Discovery) */}
+            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
+              <img
+                src="/images/gallery_2.jpg"
+                alt="Interactive Reading and Knowledge Discovery"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/90 via-[#001726]/30 to-transparent flex flex-col justify-end p-5 text-white">
+                <span className="self-start text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-[#dfb74a] text-[#002137] mb-2 shadow-sm">
+                  Active Learning
+                </span>
+                <h4 className="font-extrabold text-sm sm:text-base leading-snug">Interactive Reading &amp; Discovery</h4>
+                <p className="text-xs text-slate-200 mt-0.5">Curiosity-driven study sessions</p>
+              </div>
+            </div>
+
+            {/* Gallery Item 3 (Real Photo: Early Focus & Skill) */}
+            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
+              <img
+                src="/images/gallery_3.jpg"
+                alt="Early Focus and Skill Development"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/90 via-[#001726]/30 to-transparent flex flex-col justify-end p-5 text-white">
+                <span className="self-start text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-[#dfb74a] text-[#002137] mb-2 shadow-sm">
+                  Mentorship
+                </span>
+                <h4 className="font-extrabold text-sm sm:text-base leading-snug">Early Focus &amp; Skill Building</h4>
+                <p className="text-xs text-slate-200 mt-0.5">Individual care and guided attention</p>
+              </div>
+            </div>
+
+            {/* Gallery Item 4 (Real Photo: Whiteboard Classroom) */}
+            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
+              <img
+                src="/images/gallery_4.jpg"
+                alt="Tutoring Hub Classroom Problem Solving"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/90 via-[#001726]/30 to-transparent flex flex-col justify-end p-5 text-white">
+                <span className="self-start text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-[#dfb74a] text-[#002137] mb-2 shadow-sm">
+                  Academic Excellence
+                </span>
+                <h4 className="font-extrabold text-sm sm:text-base leading-snug">Classroom Problem Solving</h4>
+                <p className="text-xs text-slate-200 mt-0.5">In-depth whiteboard concept breakdown</p>
+              </div>
+            </div>
+
+            {/* Gallery Slot 5 (Seminar & Workshops) */}
             <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
               <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#002137] to-[#004b79] text-white">
                 <School className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
-                <h4 className="font-extrabold text-sm">Kongu National School Seminar</h4>
+                <h4 className="font-extrabold text-sm sm:text-base">Kongu National School Seminar</h4>
                 <p className="text-xs text-slate-300 mt-1">AI in Education for Teachers</p>
                 <span className="mt-3 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-white/10 text-[#dfb74a] border border-white/20">
                   School Outreach
@@ -1544,62 +1608,14 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Gallery Slot 2 */}
-            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
-              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#003659] to-[#002137] text-white">
-                <Brain className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
-                <h4 className="font-extrabold text-sm">AI Tool Demonstration</h4>
-                <p className="text-xs text-slate-300 mt-1">Interactive Teaching Technologies</p>
-                <span className="mt-3 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-white/10 text-[#dfb74a] border border-white/20">
-                  Faculty Workshop
-                </span>
-              </div>
-            </div>
-
-            {/* Gallery Slot 3 */}
-            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
-              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#002137] to-[#0a4870] text-white">
-                <BookOpen className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
-                <h4 className="font-extrabold text-sm">Tutoring Hub Physical Sessions</h4>
-                <p className="text-xs text-slate-300 mt-1">4 Years of Personalized Guidance</p>
-                <span className="mt-3 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-white/10 text-[#dfb74a] border border-white/20">
-                  Tutoring Hub
-                </span>
-              </div>
-            </div>
-
-            {/* Gallery Slot 4 */}
-            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
-              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#004b79] to-[#002137] text-white">
-                <Sparkles className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
-                <h4 className="font-extrabold text-sm">Student Doubt Solving Circle</h4>
-                <p className="text-xs text-slate-300 mt-1">One-on-One Problem Solving</p>
-                <span className="mt-3 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-white/10 text-[#dfb74a] border border-white/20">
-                  Mentorship
-                </span>
-              </div>
-            </div>
-
-            {/* Gallery Slot 5 */}
-            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
-              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#002137] to-[#083353] text-white">
-                <Award className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
-                <h4 className="font-extrabold text-sm">Board Exam Achievers Meet</h4>
-                <p className="text-xs text-slate-300 mt-1">Celebrating Student Milestones</p>
-                <span className="mt-3 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-white/10 text-[#dfb74a] border border-white/20">
-                  Student Success
-                </span>
-              </div>
-            </div>
-
-            {/* Gallery Slot 6 */}
+            {/* Gallery Slot 6 (Online Live Platform) */}
             <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
               <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#003b60] to-[#002137] text-white">
                 <Users className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
-                <h4 className="font-extrabold text-sm">Online Live Classroom</h4>
+                <h4 className="font-extrabold text-sm sm:text-base">Online Live Classroom</h4>
                 <p className="text-xs text-slate-300 mt-1">MANTIF Real-Time Web Platform</p>
                 <span className="mt-3 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-white/10 text-[#dfb74a] border border-white/20">
-                  Live Tech
+                  Live Platform
                 </span>
               </div>
             </div>
