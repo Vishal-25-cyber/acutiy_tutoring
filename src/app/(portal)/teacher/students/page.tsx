@@ -25,12 +25,16 @@ import {
   Award,
   BookOpen,
   Layers,
+  Activity,
+  Download,
+  Loader2,
 } from "lucide-react";
 import { useFastFetch } from "@/lib/api-cache";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CLASS_LIST } from "@/lib/curriculum";
+import { generateStudentPerformanceReportPdf } from "@/lib/download";
 
 export default function TeacherStudentsPage() {
   const { data, refetch, isLoading } = useFastFetch("/api/teacher/students");
@@ -38,9 +42,10 @@ export default function TeacherStudentsPage() {
   const [classFilter, setClassFilter] = useState("ALL");
   const [feeFilter, setFeeFilter] = useState("ALL");
 
-  // Modals state
+  // Modals & PDF state
   const [viewingStudent, setViewingStudent] = useState<any>(null);
   const [editingStudent, setEditingStudent] = useState<any>(null);
+  const [downloadingStudentId, setDownloadingStudentId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [copiedPhone, setCopiedPhone] = useState(false);
@@ -112,6 +117,27 @@ export default function TeacherStudentsPage() {
       setStatusMessage({ type: "error", text: err.message || "Network error while saving." });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDownloadReportPdf = async (student: any) => {
+    const sId = student.userId?._id || student.userId || student._id;
+    if (!sId) return;
+
+    setDownloadingStudentId(sId);
+    try {
+      const res = await fetch(`/api/teacher/reports/${sId}?period=LAST_90_DAYS`);
+      const rData = await res.json();
+      if (rData.report) {
+        generateStudentPerformanceReportPdf(rData.report);
+      } else {
+        alert("Unable to generate student performance report data.");
+      }
+    } catch (err) {
+      console.error("Download report error:", err);
+      alert("Failed to download student performance report PDF.");
+    } finally {
+      setDownloadingStudentId(null);
     }
   };
 
@@ -387,7 +413,30 @@ export default function TeacherStudentsPage() {
                             </p>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <button
+                              type="button"
+                              disabled={downloadingStudentId === (s.userId?._id || s._id)}
+                              onClick={() => handleDownloadReportPdf(s)}
+                              className="font-bold text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 cursor-pointer transition-all shadow-2xs disabled:opacity-60"
+                              title="Download Official Student Performance Report PDF"
+                            >
+                              {downloadingStudentId === (s.userId?._id || s._id) ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Download className="w-3.5 h-3.5 text-emerald-600" />
+                              )}
+                              <span>Download PDF</span>
+                            </button>
+
+                            <a
+                              href={`/teacher/reports`}
+                              className="font-bold text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800/80 bg-blue-50 dark:bg-blue-950/40 text-[#004b79] dark:text-[#dfb74a] hover:bg-blue-100 dark:hover:bg-blue-900/60 cursor-pointer transition-all"
+                            >
+                              <Activity className="w-3.5 h-3.5" />
+                              <span>Analytics</span>
+                            </a>
+
                             <Button
                               variant="outline"
                               size="sm"
@@ -395,7 +444,7 @@ export default function TeacherStudentsPage() {
                               className="font-bold text-xs flex items-center gap-1.5 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                             >
                               <Eye className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                              <span>View Details</span>
+                              <span>View</span>
                             </Button>
 
                             <Button
@@ -405,7 +454,7 @@ export default function TeacherStudentsPage() {
                               className="font-bold text-xs flex items-center gap-1.5 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                             >
                               <Edit className="w-3.5 h-3.5 text-[#004b79] dark:text-[#dfb74a]" />
-                              <span>Edit Student</span>
+                              <span>Edit</span>
                             </Button>
                           </div>
                         </div>
@@ -535,7 +584,21 @@ export default function TeacherStudentsPage() {
               </div>
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex items-center justify-between pt-2 gap-2 flex-wrap">
+              <button
+                type="button"
+                disabled={downloadingStudentId === (viewingStudent.userId?._id || viewingStudent._id)}
+                onClick={() => handleDownloadReportPdf(viewingStudent)}
+                className="px-4 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-60"
+              >
+                {downloadingStudentId === (viewingStudent.userId?._id || viewingStudent._id) ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                <span>Download Full Performance Report PDF</span>
+              </button>
+
               <Button
                 variant="outline"
                 size="sm"

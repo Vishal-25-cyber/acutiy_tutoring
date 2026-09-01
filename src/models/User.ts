@@ -11,6 +11,7 @@ const UserSchema = new Schema<IUserDocument>(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true, index: true },
     phone: { type: String, required: true, trim: true, index: true },
     altPhone: { type: String, trim: true },
+    district: { type: String, trim: true, default: "" },
     passwordHash: { type: String, required: true },
     role: {
       type: String,

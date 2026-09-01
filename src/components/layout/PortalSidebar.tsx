@@ -45,7 +45,7 @@ export function PortalSidebar({ role }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const studentLinks: SidebarLink[] = [
+  const studentLinks: SidebarLink[] = React.useMemo(() => [
     { href: "/student/dashboard", label: "Dashboard", icon: LayoutDashboard, api: "/api/student/dashboard" },
     { href: "/student/classes", label: "Live Classes & Timetable", icon: Video, badge: "Live", badgeVariant: "live", api: "/api/student/classes" },
     { href: "/student/materials", label: "Study Materials", icon: BookOpen, api: "/api/student/materials" },
@@ -57,25 +57,33 @@ export function PortalSidebar({ role }: SidebarProps) {
       icon: CreditCard,
       api: "/api/student/payments",
     },
-  ];
+    {
+      href: "/student/performance",
+      label: "Performance Report",
+      icon: Activity,
+      api: "/api/student/performance",
+    },
+  ], []);
 
-  const teacherLinks: SidebarLink[] = [
+  const teacherLinks: SidebarLink[] = React.useMemo(() => [
     { href: "/teacher/dashboard", label: "Dashboard", icon: LayoutDashboard, api: "/api/teacher/dashboard" },
+    { href: "/teacher/reports", label: "Performance Reports", icon: Activity, api: "/api/teacher/reports" },
     { href: "/teacher/schedule", label: "Schedule & Timetable", icon: CalendarCheck2, api: "/api/classes" },
     { href: "/teacher/live-class/create", label: "Launch Live Class", icon: Video, badge: "Host" },
     { href: "/teacher/assignments", label: "Assignments & Grading", icon: FileCheck, api: "/api/teacher/assignments" },
     { href: "/teacher/students", label: "Student Roster", icon: Users2, api: "/api/teacher/students" },
     { href: "/teacher/materials", label: "Study Resources", icon: BookOpen, api: "/api/teacher/materials" },
     { href: "/teacher/attendance", label: "Staff Attendance Log", icon: Clock },
-  ];
+  ], []);
 
   const { data: dashboardData } = useFastFetch(role === "ADMIN" ? "/api/admin/dashboard" : "");
 
   const pendingTeacherCount = dashboardData?.metrics?.pendingApprovals ?? 0;
   const teacherPendingBadge = pendingTeacherCount > 0 ? `${pendingTeacherCount} Pending` : undefined;
 
-  const adminLinks: SidebarLink[] = [
+  const adminLinks: SidebarLink[] = React.useMemo(() => [
     { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard, api: "/api/admin/dashboard" },
+    { href: "/admin/reports", label: "Performance Reports", icon: Activity, api: "/api/teacher/reports" },
     { href: "/admin/students", label: "Student Records", icon: Users2, api: "/api/admin/students" },
     {
       href: "/admin/teachers",
@@ -91,31 +99,24 @@ export function PortalSidebar({ role }: SidebarProps) {
     { href: "/admin/staff-attendance", label: "Faculty Attendance", icon: Clock, api: "/api/admin/staff-attendance" },
     { href: "/admin/finance", label: "Fee Accounts & Income", icon: DollarSign, api: "/api/admin/finance" },
     { href: "/admin/settings", label: "Institute Settings", icon: Settings, api: "/api/admin/settings" },
-  ];
+  ], [teacherPendingBadge]);
 
   const links = role === "STUDENT" ? studentLinks : role === "TEACHER" ? teacherLinks : adminLinks;
 
-  // Pre-warm data into in-memory cache on initial load for instant 0ms transitions
+  // Pre-warm data into in-memory cache once on mount for instant transitions
   useEffect(() => {
     warmupPortalCache(role);
-    // Prefetch all router pages ahead of time
-    links.forEach((item) => {
-      if (item.href) {
-        try {
-          router.prefetch(item.href);
-        } catch (e) {
-          // ignore
-        }
-      }
-      if (item.api) {
-        prefetchApi(item.api);
-      }
-    });
-  }, [role, router, links]);
+  }, [role]);
 
   const handleHoverPrefetch = (item: any) => {
-    if (item.href) router.prefetch(item.href);
-    if (item.api) prefetchApi(item.api);
+    if (item.href) {
+      try {
+        router.prefetch(item.href);
+      } catch (e) {}
+    }
+    if (item.api) {
+      prefetchApi(item.api);
+    }
   };
 
   const handleLogout = async () => {

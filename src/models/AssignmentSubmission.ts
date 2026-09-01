@@ -14,8 +14,16 @@ const AssignmentSubmissionSchema = new Schema<IAssignmentSubmissionDocument>(
       index: true,
     },
     studentId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    type: {
+      type: String,
+      enum: ["ASSIGNMENT", "TEST", "HOMEWORK"],
+      default: "ASSIGNMENT",
+      index: true,
+    },
     submissionText: { type: String, trim: true },
     fileUrl: { type: String, default: "" },
+    proctoringSnapshotUrl: { type: String, default: "" },
+    timeTakenMinutes: { type: Number },
     submittedAt: { type: Date, default: Date.now },
     status: {
       type: String,

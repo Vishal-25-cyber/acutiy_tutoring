@@ -22,11 +22,6 @@ import { useFastFetch, invalidateCache } from "@/lib/api-cache";
 import { sanitize10DigitPhone, isValid10DigitPhone, isValidAcuityOrGmail } from "@/lib/validations/phone";
 
 const CLASS_OPTIONS = [
-  "Class 1",
-  "Class 2",
-  "Class 3",
-  "Class 4",
-  "Class 5",
   "Class 6",
   "Class 7",
   "Class 8",
@@ -311,7 +306,7 @@ export default function AdminStudentsPage() {
             onChange={(e) => setSelectedClass(e.target.value)}
             className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79] shadow-xs cursor-pointer"
           >
-            <option value="ALL">All Classes (1-10)</option>
+            <option value="ALL">All Classes (6-10)</option>
             {CLASS_OPTIONS.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}

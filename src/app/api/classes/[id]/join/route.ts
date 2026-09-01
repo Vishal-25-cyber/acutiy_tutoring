@@ -86,7 +86,7 @@ export async function POST(
         .populate("teacherId", "name email avatarUrl");
 
       if (!liveClass) {
-        let fallbackBatch = await Batch.findOne().lean();
+        let fallbackBatch: any = await Batch.findOne().lean();
         if (!fallbackBatch) {
           fallbackBatch = await Batch.create({
             name: "7:00 PM – 8:00 PM (Batch 2)",

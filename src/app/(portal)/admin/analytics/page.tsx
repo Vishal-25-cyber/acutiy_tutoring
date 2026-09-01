@@ -16,11 +16,6 @@ import {
 import { useFastFetch } from "@/lib/api-cache";
 
 const EMPTY_DISTRIBUTION = [
-  { class: "Class 1", count: 0 },
-  { class: "Class 2", count: 0 },
-  { class: "Class 3", count: 0 },
-  { class: "Class 4", count: 0 },
-  { class: "Class 5", count: 0 },
   { class: "Class 6", count: 0 },
   { class: "Class 7", count: 0 },
   { class: "Class 8", count: 0 },
@@ -56,7 +51,7 @@ export default function AdminAnalyticsPage() {
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Real-time enrollment distribution across Class 1 to 10, faculty staff, and live batch occupancy.
+            Real-time enrollment distribution across Class 6 to 10, faculty staff, and live batch occupancy.
           </p>
         </div>
 
@@ -79,7 +74,7 @@ export default function AdminAnalyticsPage() {
         <div className="space-y-3">
           <div>
             <h2 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100">
-              Student Enrollment by Class (Grade 1 to 10)
+              Student Enrollment by Class (Grade 6 to 10)
             </h2>
             <p className="text-xs text-slate-500">Distribution across active CBSE &amp; State Board classes</p>
           </div>

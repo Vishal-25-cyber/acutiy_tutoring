@@ -1,5 +1,5 @@
-import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 // Public / Landing Page & Contact
 import LandingPage from "./app/page";
@@ -26,6 +26,7 @@ import TeacherLiveClassCreatePage from "./app/(portal)/teacher/live-class/create
 import TeacherMaterialsPage from "./app/(portal)/teacher/materials/page";
 import TeacherAssignmentsPage from "./app/(portal)/teacher/assignments/page";
 import TeacherStudentsPage from "./app/(portal)/teacher/students/page";
+import TeacherStudentReportsPage from "./app/(portal)/teacher/reports/page";
 import TeacherAttendancePage from "./app/(portal)/teacher/attendance/page";
 import TeacherClassAttendanceDetailPage from "./app/(portal)/teacher/attendance/[classId]/page";
 import TeacherClassroomSessionPage from "./app/(portal)/teacher/classroom/[sessionId]/page";
@@ -46,260 +47,88 @@ import AdminSettingsPage from "./app/(portal)/admin/settings/page";
 // Live Classroom
 import ClassroomPage from "./app/classroom/[classId]/page";
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    const scrollContainers = document.querySelectorAll(
+      "#student-portal-scroll-area, #teacher-portal-scroll-area, #admin-portal-scroll-area"
+    );
+    scrollContainers.forEach((el) => {
+      el.scrollTop = 0;
+    });
+  }, [pathname]);
+
+  return null;
+}
+
 export default function App() {
   return (
-    <Routes>
-      {/* ── Public Landing Page & Auth Redirects ── */}
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/contact" element={<ContactPage />} />
-      <Route path="/login" element={<Navigate to="/" replace />} />
-      <Route path="/register" element={<Navigate to="/" replace />} />
-      <Route path="/register/student" element={<Navigate to="/" replace />} />
-      <Route path="/register/teacher" element={<Navigate to="/" replace />} />
+    <>
+      <ScrollToTop />
+      <Routes>
+        {/* ── Public Landing Page & Auth Redirects ── */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/login" element={<Navigate to="/" replace />} />
+        <Route path="/register" element={<Navigate to="/" replace />} />
+        <Route path="/register/student" element={<Navigate to="/" replace />} />
+        <Route path="/register/teacher" element={<Navigate to="/" replace />} />
 
-      {/* ── Student Portal Routes ── */}
-      <Route
-        path="/student/dashboard"
-        element={
-          <StudentLayout>
-            <StudentDashboardPage />
-          </StudentLayout>
-        }
-      />
-      <Route
-        path="/student/classes"
-        element={
-          <StudentLayout>
-            <StudentClassesPage />
-          </StudentLayout>
-        }
-      />
-      <Route
-        path="/student/materials"
-        element={
-          <StudentLayout>
-            <StudentMaterialsPage />
-          </StudentLayout>
-        }
-      />
-      <Route
-        path="/student/assignments"
-        element={
-          <StudentLayout>
-            <StudentAssignmentsPage />
-          </StudentLayout>
-        }
-      />
-      <Route
-        path="/student/attendance"
-        element={
-          <StudentLayout>
-            <StudentAttendancePage />
-          </StudentLayout>
-        }
-      />
-      <Route
-        path="/student/fees"
-        element={
-          <StudentLayout>
-            <StudentFeesPage />
-          </StudentLayout>
-        }
-      />
-      <Route
-        path="/student/performance"
-        element={
-          <StudentLayout>
-            <StudentPerformancePage />
-          </StudentLayout>
-        }
-      />
-      <Route
-        path="/student/parent-view"
-        element={
-          <StudentLayout>
-            <StudentParentViewPage />
-          </StudentLayout>
-        }
-      />
-      <Route
-        path="/student/ai-tutor"
-        element={
-          <StudentLayout>
-            <StudentAiTutorPage />
-          </StudentLayout>
-        }
-      />
-      <Route
-        path="/student/classroom/:sessionId"
-        element={
-          <StudentLayout>
-            <StudentClassroomSessionPage />
-          </StudentLayout>
-        }
-      />
+        {/* ── Student Portal Nested Routes (Persistent Layout) ── */}
+        <Route path="/student" element={<StudentLayout />}>
+          <Route index element={<Navigate to="/student/dashboard" replace />} />
+          <Route path="dashboard" element={<StudentDashboardPage />} />
+          <Route path="classes" element={<StudentClassesPage />} />
+          <Route path="materials" element={<StudentMaterialsPage />} />
+          <Route path="assignments" element={<StudentAssignmentsPage />} />
+          <Route path="attendance" element={<StudentAttendancePage />} />
+          <Route path="fees" element={<StudentFeesPage />} />
+          <Route path="performance" element={<StudentPerformancePage />} />
+          <Route path="parent-view" element={<StudentParentViewPage />} />
+          <Route path="ai-tutor" element={<StudentAiTutorPage />} />
+          <Route path="classroom/:sessionId" element={<StudentClassroomSessionPage />} />
+        </Route>
 
-      {/* ── Teacher Portal Routes ── */}
-      <Route
-        path="/teacher/dashboard"
-        element={
-          <TeacherLayout>
-            <TeacherDashboardPage />
-          </TeacherLayout>
-        }
-      />
-      <Route
-        path="/teacher/schedule"
-        element={
-          <TeacherLayout>
-            <TeacherSchedulePage />
-          </TeacherLayout>
-        }
-      />
-      <Route
-        path="/teacher/live-class/create"
-        element={
-          <TeacherLayout>
-            <TeacherLiveClassCreatePage />
-          </TeacherLayout>
-        }
-      />
-      <Route
-        path="/teacher/materials"
-        element={
-          <TeacherLayout>
-            <TeacherMaterialsPage />
-          </TeacherLayout>
-        }
-      />
-      <Route
-        path="/teacher/assignments"
-        element={
-          <TeacherLayout>
-            <TeacherAssignmentsPage />
-          </TeacherLayout>
-        }
-      />
-      <Route
-        path="/teacher/students"
-        element={
-          <TeacherLayout>
-            <TeacherStudentsPage />
-          </TeacherLayout>
-        }
-      />
-      <Route
-        path="/teacher/attendance"
-        element={
-          <TeacherLayout>
-            <TeacherAttendancePage />
-          </TeacherLayout>
-        }
-      />
-      <Route
-        path="/teacher/attendance/:classId"
-        element={
-          <TeacherLayout>
-            <TeacherClassAttendanceDetailPage />
-          </TeacherLayout>
-        }
-      />
-      <Route
-        path="/teacher/classroom/:sessionId"
-        element={
-          <TeacherLayout>
-            <TeacherClassroomSessionPage />
-          </TeacherLayout>
-        }
-      />
+        {/* ── Teacher Portal Nested Routes (Persistent Layout) ── */}
+        <Route path="/teacher" element={<TeacherLayout />}>
+          <Route index element={<Navigate to="/teacher/dashboard" replace />} />
+          <Route path="dashboard" element={<TeacherDashboardPage />} />
+          <Route path="reports" element={<TeacherStudentReportsPage />} />
+          <Route path="schedule" element={<TeacherSchedulePage />} />
+          <Route path="live-class/create" element={<TeacherLiveClassCreatePage />} />
+          <Route path="materials" element={<TeacherMaterialsPage />} />
+          <Route path="assignments" element={<TeacherAssignmentsPage />} />
+          <Route path="students" element={<TeacherStudentsPage />} />
+          <Route path="attendance" element={<TeacherAttendancePage />} />
+          <Route path="attendance/:classId" element={<TeacherClassAttendanceDetailPage />} />
+          <Route path="classroom/:sessionId" element={<TeacherClassroomSessionPage />} />
+        </Route>
 
-      {/* ── Admin Portal Routes ── */}
-      <Route
-        path="/admin/dashboard"
-        element={
-          <AdminLayout>
-            <AdminDashboardPage />
-          </AdminLayout>
-        }
-      />
-      <Route
-        path="/admin/students"
-        element={
-          <AdminLayout>
-            <AdminStudentsPage />
-          </AdminLayout>
-        }
-      />
-      <Route
-        path="/admin/teachers"
-        element={
-          <AdminLayout>
-            <AdminTeachersPage />
-          </AdminLayout>
-        }
-      />
-      <Route
-        path="/admin/batches"
-        element={
-          <AdminLayout>
-            <AdminBatchesPage />
-          </AdminLayout>
-        }
-      />
-      <Route
-        path="/admin/classes"
-        element={
-          <AdminLayout>
-            <AdminClassesPage />
-          </AdminLayout>
-        }
-      />
-      <Route
-        path="/admin/attendance"
-        element={
-          <AdminLayout>
-            <AdminAttendancePage />
-          </AdminLayout>
-        }
-      />
-      <Route
-        path="/admin/staff-attendance"
-        element={
-          <AdminLayout>
-            <AdminStaffAttendancePage />
-          </AdminLayout>
-        }
-      />
-      <Route
-        path="/admin/finance"
-        element={
-          <AdminLayout>
-            <AdminFinancePage />
-          </AdminLayout>
-        }
-      />
-      <Route
-        path="/admin/analytics"
-        element={
-          <AdminLayout>
-            <AdminAnalyticsPage />
-          </AdminLayout>
-        }
-      />
-      <Route
-        path="/admin/settings"
-        element={
-          <AdminLayout>
-            <AdminSettingsPage />
-          </AdminLayout>
-        }
-      />
+        {/* ── Admin Portal Nested Routes (Persistent Layout) ── */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboardPage />} />
+          <Route path="reports" element={<TeacherStudentReportsPage />} />
+          <Route path="students" element={<AdminStudentsPage />} />
+          <Route path="teachers" element={<AdminTeachersPage />} />
+          <Route path="batches" element={<AdminBatchesPage />} />
+          <Route path="classes" element={<AdminClassesPage />} />
+          <Route path="attendance" element={<AdminAttendancePage />} />
+          <Route path="staff-attendance" element={<AdminStaffAttendancePage />} />
+          <Route path="finance" element={<AdminFinancePage />} />
+          <Route path="analytics" element={<AdminAnalyticsPage />} />
+          <Route path="settings" element={<AdminSettingsPage />} />
+        </Route>
 
-      {/* ── Live Classroom Route ── */}
-      <Route path="/classroom/:classId" element={<ClassroomPage />} />
+        {/* ── Live Classroom Route ── */}
+        <Route path="/classroom/:classId" element={<ClassroomPage />} />
 
-      {/* ── Fallback Redirect ── */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* ── Fallback Redirect ── */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }
+

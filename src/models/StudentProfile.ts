@@ -7,6 +7,7 @@ const StudentProfileSchema = new Schema<IStudentProfileDocument>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true, unique: true, index: true },
     schoolName: { type: String, required: true, trim: true },
+    district: { type: String, trim: true, default: "" },
     board: {
       type: String,
       enum: ["CBSE", "State Board"],
@@ -16,11 +17,6 @@ const StudentProfileSchema = new Schema<IStudentProfileDocument>(
     currentClass: {
       type: String,
       enum: [
-        "Class 1",
-        "Class 2",
-        "Class 3",
-        "Class 4",
-        "Class 5",
         "Class 6",
         "Class 7",
         "Class 8",

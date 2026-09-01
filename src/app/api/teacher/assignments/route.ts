@@ -5,13 +5,12 @@ import Assignment from "@/models/Assignment";
 import AssignmentSubmission from "@/models/AssignmentSubmission";
 import StudentProfile from "@/models/StudentProfile";
 import Notification from "@/models/Notification";
-
 import TeacherProfile from "@/models/TeacherProfile";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session || (session.role !== "TEACHER" && session.role !== "ADMIN")) {
@@ -20,7 +19,14 @@ export async function GET() {
 
     await connectToDatabase();
 
+    const { searchParams } = new URL(req.url);
+    const typeFilter = searchParams.get("type"); // "ASSIGNMENT" | "TEST" | "HOMEWORK" | "ALL"
+
     let query: any = {};
+    if (typeFilter && typeFilter !== "ALL") {
+      query.type = typeFilter;
+    }
+
     if (session.role === "TEACHER") {
       const teacherProfile = await TeacherProfile.findOne({ userId: session.userId }).lean();
       const teacherSubjects = teacherProfile?.subjects && teacherProfile.subjects.length > 0
@@ -47,7 +53,14 @@ export async function GET() {
         });
       }
 
-      query = { $or: orConditions };
+      if (query.type) {
+        query = {
+          type: query.type,
+          $or: orConditions,
+        };
+      } else {
+        query = { $or: orConditions };
+      }
     }
 
     const assignments = await Assignment.find(query)
@@ -73,15 +86,21 @@ export async function GET() {
       const doc = asg.toObject ? asg.toObject() : asg;
       return {
         ...doc,
+        type: doc.type || "ASSIGNMENT",
+        durationMinutes: doc.durationMinutes || 45,
+        proctoringRequired: doc.proctoringRequired ?? true,
         submissionCount: submissionCounts[doc._id.toString()] || 0,
       };
     });
 
-    return NextResponse.json({ assignments: enrichedAssignments, submissions }, {
-      headers: {
-        "Cache-Control": "no-store, max-age=0, must-revalidate",
-      },
-    });
+    return NextResponse.json(
+      { assignments: enrichedAssignments, submissions },
+      {
+        headers: {
+          "Cache-Control": "no-store, max-age=0, must-revalidate",
+        },
+      }
+    );
   } catch (error: any) {
     console.error("Get Assignments Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -95,12 +114,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { title, description, subject, classLevel, batchId, dueDate, maxMarks, attachmentUrl } =
-      await req.json();
+    const {
+      title,
+      description,
+      subject,
+      classLevel,
+      batchId,
+      dueDate,
+      maxMarks,
+      attachmentUrl,
+      type,
+      durationMinutes,
+      proctoringRequired,
+      testDate,
+    } = await req.json();
 
-    if (!title || !subject || !classLevel || !batchId || !dueDate) {
-      return NextResponse.json({ error: "Please fill all required assignment fields." }, { status: 400 });
+    if (!title || !subject || !classLevel || !batchId) {
+      return NextResponse.json({ error: "Please fill all required fields." }, { status: 400 });
     }
+
+    const taskType = type || "ASSIGNMENT";
+    const finalDueDate = dueDate ? new Date(dueDate) : new Date(Date.now() + 86400000 * 3);
 
     await connectToDatabase();
     const newAssignment = await Assignment.create({
@@ -110,8 +144,12 @@ export async function POST(req: NextRequest) {
       classLevel,
       batchId,
       teacherId: session.userId,
-      dueDate: new Date(dueDate),
-      maxMarks: Number(maxMarks) || 20,
+      type: taskType,
+      durationMinutes: taskType === "TEST" ? Number(durationMinutes) || 45 : undefined,
+      proctoringRequired: taskType === "TEST" ? (proctoringRequired ?? true) : false,
+      testDate: testDate ? new Date(testDate) : undefined,
+      dueDate: finalDueDate,
+      maxMarks: Number(maxMarks) || (taskType === "TEST" ? 50 : 20),
       attachmentUrl: attachmentUrl || "",
     });
 
@@ -122,11 +160,12 @@ export async function POST(req: NextRequest) {
     });
 
     if (eligibleStudents.length > 0) {
+      const typeLabel = taskType === "TEST" ? "Timed Proctored Test" : taskType === "HOMEWORK" ? "Daily Homework" : "Assignment";
       const notifs = eligibleStudents.map((st) => ({
         userId: st.userId,
-        title: `New Assignment: ${title}`,
-        message: `Due on ${new Date(dueDate).toLocaleDateString()}. Subject: ${subject}. Max marks: ${maxMarks || 20}.`,
-        type: "ASSIGNMENT",
+        title: `New ${typeLabel}: ${title}`,
+        message: `Due on ${finalDueDate.toLocaleDateString()}. Subject: ${subject}. Max marks: ${maxMarks || (taskType === "TEST" ? 50 : 20)}.`,
+        type: taskType,
         linkUrl: "/student/assignments",
       }));
       await Notification.insertMany(notifs);
@@ -134,7 +173,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Assignment created! ${eligibleStudents.length} students notified.`,
+      message: `${taskType === "TEST" ? "Proctored Test" : taskType === "HOMEWORK" ? "Daily Homework" : "Assignment"} created! ${eligibleStudents.length} students notified.`,
       assignment: newAssignment,
     });
   } catch (error: any) {

@@ -141,17 +141,75 @@ export function JitsiClassroom({
   }, [classId]);
 
   /* ─────────────────────────────────────────────────
+     Stop all media tracks completely & release hardware
+  ───────────────────────────────────────────────── */
+  const stopAllMediaTracks = useCallback(() => {
+    try {
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach((track) => {
+          try {
+            track.stop();
+          } catch (e) {
+            console.warn("Track stop error:", e);
+          }
+        });
+        localStreamRef.current = null;
+      }
+      if (screenStreamRef.current) {
+        screenStreamRef.current.getTracks().forEach((track) => {
+          try {
+            track.stop();
+          } catch (e) {
+            console.warn("Screen track stop error:", e);
+          }
+        });
+        screenStreamRef.current = null;
+      }
+      if (prejoinVideoRef.current) prejoinVideoRef.current.srcObject = null;
+      if (localVideoRef.current) localVideoRef.current.srcObject = null;
+      if (teacherVideoRef.current) teacherVideoRef.current.srcObject = null;
+    } catch (err) {
+      console.warn("stopAllMediaTracks error:", err);
+    }
+  }, []);
+
+  // Global unmount & window pageleave cleanup (ensures webcam hardware light turns off immediately)
+  useEffect(() => {
+    const handleLeaveWindow = () => {
+      stopAllMediaTracks();
+    };
+    window.addEventListener("beforeunload", handleLeaveWindow);
+    window.addEventListener("pagehide", handleLeaveWindow);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleLeaveWindow);
+      window.removeEventListener("pagehide", handleLeaveWindow);
+      stopAllMediaTracks();
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    };
+  }, [stopAllMediaTracks]);
+
+  /* ─────────────────────────────────────────────────
      2.  Camera / Mic stream management
   ───────────────────────────────────────────────── */
   useEffect(() => {
     let active = true;
     async function setupStream() {
       if (!isCameraOn) {
-        localStreamRef.current?.getVideoTracks().forEach((t) => (t.enabled = false));
+        // Stop video tracks to immediately turn off physical camera indicator LED
+        if (localStreamRef.current) {
+          localStreamRef.current.getVideoTracks().forEach((t) => t.stop());
+          const audioTracks = localStreamRef.current.getAudioTracks();
+          localStreamRef.current = audioTracks.length > 0 ? new MediaStream(audioTracks) : null;
+        }
+        if (prejoinVideoRef.current) prejoinVideoRef.current.srcObject = null;
+        if (localVideoRef.current) localVideoRef.current.srcObject = null;
+        if (teacherVideoRef.current) teacherVideoRef.current.srcObject = null;
         return;
       }
+
       try {
-        if (!localStreamRef.current) {
+        if (!localStreamRef.current || localStreamRef.current.getVideoTracks().length === 0) {
           const stream = await navigator.mediaDevices.getUserMedia({
             video: {
               width: { ideal: 1280 },
@@ -166,31 +224,43 @@ export function JitsiClassroom({
               sampleRate: 48000,
             },
           });
-          if (!active) { stream.getTracks().forEach((t) => t.stop()); return; }
+          if (!active) {
+            stream.getTracks().forEach((t) => t.stop());
+            return;
+          }
           localStreamRef.current = stream;
-          // Mic OFF by default (prevents echo in waiting room)
+          // Sync initial audio state
           stream.getAudioTracks().forEach((t) => (t.enabled = isMicOn));
-        } else {
-          localStreamRef.current.getVideoTracks().forEach((t) => (t.enabled = true));
         }
+
         const ref =
-          (stage === "WAITING_ROOM" || stage === "PENDING_ADMISSION")
+          stage === "WAITING_ROOM" || stage === "PENDING_ADMISSION"
             ? prejoinVideoRef.current
             : userInfo.isTeacher
             ? teacherVideoRef.current
             : localVideoRef.current;
-        if (ref) ref.srcObject = localStreamRef.current;
+        if (ref && localStreamRef.current) ref.srcObject = localStreamRef.current;
       } catch (err) {
         console.warn("Camera/mic unavailable:", err);
       }
     }
-    setupStream();
-    return () => { active = false; };
-  }, [isCameraOn, stage]);
+
+    if (stage !== "LOADING" && stage !== "ERROR" && stage !== "DENIED") {
+      setupStream();
+    } else {
+      stopAllMediaTracks();
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [isCameraOn, stage, userInfo.isTeacher, stopAllMediaTracks]);
 
   // Sync audio track with mic toggle
   useEffect(() => {
-    localStreamRef.current?.getAudioTracks().forEach((t) => { t.enabled = isMicOn; });
+    localStreamRef.current?.getAudioTracks().forEach((t) => {
+      t.enabled = isMicOn;
+    });
   }, [isMicOn]);
 
   // Attach stream when stage transitions to LIVE_CLASS
@@ -365,9 +435,8 @@ export function JitsiClassroom({
      8.  Leave class
   ───────────────────────────────────────────────── */
   const handleLeaveClass = async () => {
+    stopAllMediaTracks();
     if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-    localStreamRef.current?.getTracks().forEach((t) => t.stop());
-    screenStreamRef.current?.getTracks().forEach((t) => t.stop());
     if (!userInfo.isTeacher) {
       try {
         await fetch("/api/attendance/leave", {
@@ -430,11 +499,12 @@ export function JitsiClassroom({
             <p className="text-xs text-slate-400 mt-1">{errorMessage}</p>
           </div>
           <button
-            onClick={() =>
+            onClick={() => {
+              stopAllMediaTracks();
               router.push(
                 currentUserRole === "TEACHER" ? "/teacher/schedule" : "/student/classes"
-              )
-            }
+              );
+            }}
             className="w-full py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs font-medium text-white transition-colors cursor-pointer"
           >
             Return to Dashboard
@@ -469,7 +539,10 @@ export function JitsiClassroom({
               Try Again
             </button>
             <button
-              onClick={() => router.push("/student/classes")}
+              onClick={() => {
+                stopAllMediaTracks();
+                router.push("/student/classes");
+              }}
               className="w-full py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs font-medium text-white transition-colors cursor-pointer"
             >
               Back to Classes
@@ -600,7 +673,10 @@ export function JitsiClassroom({
                     <span>Ask to Join</span>
                   </button>
                   <button
-                    onClick={() => router.push("/student/classes")}
+                    onClick={() => {
+                      stopAllMediaTracks();
+                      router.push("/student/classes");
+                    }}
                     className="w-full py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                   >
                     Cancel
@@ -616,6 +692,7 @@ export function JitsiClassroom({
                   </div>
                   <button
                     onClick={() => {
+                      stopAllMediaTracks();
                       if (pollTimerRef.current) clearInterval(pollTimerRef.current);
                       router.push("/student/classes");
                     }}

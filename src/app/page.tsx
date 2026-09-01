@@ -66,6 +66,7 @@ export default function HomePage() {
   const [showSPw, setShowSPw] = useState(false);
 
   const [sSchool, setSSchool] = useState("");
+  const [sDistrict, setSDistrict] = useState("");
   const [sBoard, setSBoard] = useState<"CBSE" | "State Board">("CBSE");
   const [sClass, setSClass] = useState("Class 10");
   const [sBatch, setSBatch] = useState("6a9425fa1491b9fc49acfd13");
@@ -73,7 +74,21 @@ export default function HomePage() {
   const [tQual, setTQual] = useState("");
   const [tSpec, setTSpec] = useState("");
   const [tExp, setTExp] = useState("");
-  const [tCity, setTCity] = useState("");
+  const [tDistrict, setTDistrict] = useState("");
+  const [tClasses, setTClasses] = useState<string[]>(["Class 10"]);
+  const [tSubjects, setTSubjects] = useState<string[]>(["Mathematics"]);
+
+  const toggleTClass = (c: string) => {
+    setTClasses((prev) =>
+      prev.includes(c) ? (prev.length > 1 ? prev.filter((x) => x !== c) : prev) : [...prev, c]
+    );
+  };
+
+  const toggleTSubject = (s: string) => {
+    setTSubjects((prev) =>
+      prev.includes(s) ? (prev.length > 1 ? prev.filter((x) => x !== s) : prev) : [...prev, s]
+    );
+  };
 
   const [spName, setSpName] = useState("");
   const [spPhone, setSpPhone] = useState("");
@@ -213,6 +228,7 @@ export default function HomePage() {
 
   const v2s = () => {
     if (!sSchool.trim()) { setErr("Please enter your school name."); return false; }
+    if (!sDistrict.trim()) { setErr("Please enter your district."); return false; }
     if (!sBatch && batches.length > 0) {
       setSBatch(batches[0]._id);
     }
@@ -222,6 +238,9 @@ export default function HomePage() {
   const v2t = () => {
     if (!tQual.trim()) { setErr("Please enter your qualification."); return false; }
     if (!tSpec.trim()) { setErr("Please enter your specialization."); return false; }
+    if (!tDistrict.trim()) { setErr("Please enter your district."); return false; }
+    if (tClasses.length === 0) { setErr("Please select at least one class you are willing to teach."); return false; }
+    if (tSubjects.length === 0) { setErr("Please select at least one subject you want to teach."); return false; }
     return true;
   };
 
@@ -254,6 +273,7 @@ export default function HomePage() {
       if (signupRole === "STUDENT") {
         Object.assign(body, {
           schoolName: sSchool,
+          district: sDistrict.trim(),
           board: sBoard,
           currentClass: sClass,
           batchId: sBatch,
@@ -267,7 +287,10 @@ export default function HomePage() {
           qualification: tQual,
           specialization: tSpec,
           experienceYears: tExp ? Number(tExp) : 0,
-          address: tCity,
+          district: tDistrict.trim(),
+          address: tDistrict.trim(),
+          classesTaught: tClasses,
+          subjects: tSubjects,
         });
       }
       const res = await fetch("/api/auth/register", {
@@ -618,7 +641,7 @@ export default function HomePage() {
                       onChange={(e) => setQClass(e.target.value)}
                       className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] cursor-pointer"
                     >
-                      {["Class 1", "Class 2", "Class 3", "Class 4", "Class 5", "Class 6", "Class 7", "Class 8", "Class 9", "Class 10"].map((c) => (
+                      {["Class 6", "Class 7", "Class 8", "Class 9", "Class 10"].map((c) => (
                         <option key={c} value={c}>{c}</option>
                       ))}
                     </select>
@@ -723,7 +746,7 @@ export default function HomePage() {
                 </div>
 
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight leading-[1.12]">
-                  Quality tutoring for Classes 1 to 10.
+                  Quality tutoring for Classes 6 to 10.
                 </h1>
 
                 <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
@@ -777,7 +800,7 @@ export default function HomePage() {
                 <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-0.5">
                   <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[#002137]">
                     <BookOpen className="w-4 h-4 text-[#004b79]" />
-                    <span>Classes 1 to 10</span>
+                    <span>Classes 6 to 10</span>
                   </div>
                   <p className="text-[11px] text-slate-500">Comprehensive CBSE &amp; State Board Syllabus</p>
                 </div>
@@ -935,8 +958,8 @@ export default function HomePage() {
 
                   <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
                     <span className="text-slate-600 font-medium flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                      New student? Claim 2-day free trial
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                      New to Acuity? Create an account
                     </span>
                     <button
                       type="button"
@@ -954,17 +977,6 @@ export default function HomePage() {
               ───────────────────────────────────────────────────────────── */}
               {mode === "SIGNUP" && (
                 <div className="space-y-4">
-
-                  {/* 2-Day Free Trial Notice Banner for Students */}
-                  {signupRole === "STUDENT" && (
-                    <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 text-emerald-950 flex items-center gap-2.5 text-xs font-semibold">
-                      <Sparkles className="w-4 h-4 text-emerald-600 shrink-0 animate-pulse" />
-                      <span>
-                        <strong>2-Day Free Trial Included:</strong> 48-hour instant access to live video classes &amp; study notes upon signup!
-                      </span>
-                    </div>
-                  )}
-
                   {/* Role Switcher */}
                   <div className="grid grid-cols-2 gap-2">
                     {[
@@ -1092,18 +1104,30 @@ export default function HomePage() {
                     </div>
                   )}
 
-                  {/* Step 2: Student Academic Info */}
+                  {/* Step 2: Student Academic & Location Info */}
                   {step === 2 && signupRole === "STUDENT" && (
                     <div className="space-y-3.5">
-                      <div className="space-y-1">
-                        <label className="block text-xs font-bold text-slate-700">School Name *</label>
-                        <input
-                          type="text"
-                          value={sSchool}
-                          onChange={(e) => setSSchool(e.target.value)}
-                          placeholder="Enter school name"
-                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
-                        />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div className="space-y-1">
+                          <label className="block text-xs font-bold text-slate-700">School Name *</label>
+                          <input
+                            type="text"
+                            value={sSchool}
+                            onChange={(e) => setSSchool(e.target.value)}
+                            placeholder="Enter school name"
+                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="block text-xs font-bold text-slate-700">District *</label>
+                          <input
+                            type="text"
+                            value={sDistrict}
+                            onChange={(e) => setSDistrict(e.target.value)}
+                            placeholder="Enter district (e.g. Chennai)"
+                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
+                          />
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-2.5">
@@ -1125,7 +1149,7 @@ export default function HomePage() {
                             onChange={(e) => setSClass(e.target.value)}
                             className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium cursor-pointer"
                           >
-                            {["Class 1", "Class 2", "Class 3", "Class 4", "Class 5", "Class 6", "Class 7", "Class 8", "Class 9", "Class 10"].map((c) => (
+                            {["Class 6", "Class 7", "Class 8", "Class 9", "Class 10"].map((c) => (
                               <option key={c} value={c}>{c}</option>
                             ))}
                           </select>
@@ -1167,27 +1191,79 @@ export default function HomePage() {
                     </div>
                   )}
 
-                  {/* Step 2: Teacher Qualifications */}
+                  {/* Step 2: Teacher Qualifications & Teaching Preferences */}
                   {step === 2 && signupRole === "TEACHER" && (
                     <div className="space-y-3.5">
+                      {/* Classes willing to teach */}
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700">
+                          Which Classes are you willing to teach? *
+                        </label>
+                        <div className="grid grid-cols-5 gap-1.5">
+                          {["Class 6", "Class 7", "Class 8", "Class 9", "Class 10"].map((c) => {
+                            const isSelected = tClasses.includes(c);
+                            return (
+                              <button
+                                key={c}
+                                type="button"
+                                onClick={() => toggleTClass(c)}
+                                className={`py-2 px-1 text-xs font-bold rounded-xl border transition-all cursor-pointer text-center ${
+                                  isSelected
+                                    ? "bg-[#004b79] text-white border-[#004b79] shadow-xs"
+                                    : "bg-white text-slate-700 border-slate-200 hover:border-slate-300"
+                                }`}
+                              >
+                                {c}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Subjects willing to teach */}
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700">
+                          Which Subjects do you want to teach? *
+                        </label>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {["Mathematics", "Science", "English", "Social Science", "Hindi"].map((s) => {
+                            const isSelected = tSubjects.includes(s);
+                            return (
+                              <button
+                                key={s}
+                                type="button"
+                                onClick={() => toggleTSubject(s)}
+                                className={`py-2 px-2 text-xs font-bold rounded-xl border transition-all cursor-pointer text-center truncate ${
+                                  isSelected
+                                    ? "bg-[#004b79] text-white border-[#004b79] shadow-xs"
+                                    : "bg-white text-slate-700 border-slate-200 hover:border-slate-300"
+                                }`}
+                              >
+                                {s}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
                       <div className="grid grid-cols-2 gap-2.5">
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">Degree *</label>
+                          <label className="block text-xs font-bold text-slate-700">Degree / Qualification *</label>
                           <input
                             type="text"
                             value={tQual}
                             onChange={(e) => setTQual(e.target.value)}
-                            placeholder="Enter degree (e.g. B.Ed, M.Sc)"
+                            placeholder="e.g. B.Ed, M.Sc, M.Ed"
                             className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">Specialization *</label>
+                          <label className="block text-xs font-bold text-slate-700">Major / Specialization *</label>
                           <input
                             type="text"
                             value={tSpec}
                             onChange={(e) => setTSpec(e.target.value)}
-                            placeholder="Enter specialization (e.g. Math)"
+                            placeholder="e.g. Mathematics, Physics"
                             className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                           />
                         </div>
@@ -1195,23 +1271,23 @@ export default function HomePage() {
 
                       <div className="grid grid-cols-2 gap-2.5">
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">Experience (Yrs)</label>
+                          <label className="block text-xs font-bold text-slate-700">Experience (Years)</label>
                           <input
                             type="number"
                             min="0"
                             value={tExp}
                             onChange={(e) => setTExp(e.target.value)}
-                            placeholder="Years of experience"
+                            placeholder="Years of teaching"
                             className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">City</label>
+                          <label className="block text-xs font-bold text-slate-700">District *</label>
                           <input
                             type="text"
-                            value={tCity}
-                            onChange={(e) => setTCity(e.target.value)}
-                            placeholder="Enter city"
+                            value={tDistrict}
+                            onChange={(e) => setTDistrict(e.target.value)}
+                            placeholder="Enter district location"
                             className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                           />
                         </div>
@@ -1329,7 +1405,7 @@ export default function HomePage() {
 
       {/* ── FOOTER ── */}
       <footer className="w-full px-6 sm:px-10 lg:px-16 py-3 flex items-center justify-between text-slate-400 text-xs border-t border-slate-100 shrink-0 bg-white z-20">
-        <p>Acuity Tutoring • CBSE &amp; State Board (Classes 1–10)</p>
+        <p>Acuity Tutoring • CBSE &amp; State Board (Classes 6–10)</p>
         <div className="flex items-center gap-4">
           <button
             type="button"

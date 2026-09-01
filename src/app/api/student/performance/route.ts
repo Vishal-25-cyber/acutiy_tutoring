@@ -1,65 +1,35 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db/mongoose";
 import { getSession } from "@/lib/auth/session";
-import StudentProfile from "@/models/StudentProfile";
-import AssignmentSubmission from "@/models/AssignmentSubmission";
+import { generateStudentPerformanceReport } from "@/lib/performance-engine";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "STUDENT") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized. Student access required." }, { status: 401 });
     }
 
     await connectToDatabase();
-    const profile = await StudentProfile.findOne({ userId: session.userId });
-    if (!profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-    }
 
-    const submissions = await AssignmentSubmission.find({
-      studentId: session.userId,
-      status: "EVALUATED",
-    }).populate("assignmentId");
+    const { searchParams } = new URL(req.url);
+    const period = searchParams.get("period") || "LAST_90_DAYS";
 
-    // Monthly progress trend
-    const monthlyProgress = [
-      { month: "Sep", score: 72, attendance: 88 },
-      { month: "Oct", score: 78, attendance: 92 },
-      { month: "Nov", score: 82, attendance: 94 },
-      { month: "Dec", score: 85, attendance: 90 },
-      { month: "Jan", score: 89, attendance: 96 },
-    ];
-
-    // Subject breakdown
-    const subjectBreakdown = [
-      { subject: "Mathematics", score: 88, fullMark: 100, strength: "Strong in Algebra & Geometry" },
-      { subject: "Science", score: 84, fullMark: 100, strength: "Strong in Physics & Chemical Reactions" },
-      { subject: "English", score: 92, fullMark: 100, strength: "High reading comprehension & vocabulary" },
-      { subject: "Social Science", score: 79, fullMark: 100, strength: "Good in Geography, Revise Map Work" },
-    ];
-
-    const overallScore = Math.round(
-      subjectBreakdown.reduce((acc, curr) => acc + curr.score, 0) / subjectBreakdown.length
-    );
+    const report = await generateStudentPerformanceReport(session.userId, { period });
 
     return NextResponse.json({
-      overallScore,
-      improvementPercentage: "+14%",
-      subjectBreakdown,
-      monthlyProgress,
-      strengths: [
-        "Consistent daily class attendance",
-        "Timely submission of weekly worksheets",
-        "Active participation in live quizzes",
-      ],
-      areasForImprovement: [
-        "Practice additional quadratic equation problems in Mathematics",
-        "Review historical timeline diagrams for Social Science",
-      ],
+      success: true,
+      report,
+      overallScore: report.performanceSummary.overallPerformanceScore,
+      improvementPercentage: report.performanceSummary.performanceTrend,
+      subjectBreakdown: report.subjectBreakdown,
+      monthlyProgress: report.testPerformance.monthlyProgress,
+      strengths: report.strengths,
+      areasForImprovement: report.areasNeedingAttention,
+      recommendedActionPlan: report.recommendedActionPlan,
     });
   } catch (error: any) {
     console.error("Student Performance Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to load student performance." }, { status: 500 });
   }
 }

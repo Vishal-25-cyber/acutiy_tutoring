@@ -11,11 +11,6 @@ export type SubmissionStatus = "PENDING" | "SUBMITTED" | "EVALUATED" | "OVERDUE"
 export type RiskLevel = "LOW" | "MEDIUM" | "HIGH";
 
 export type ClassLevel =
-  | "Class 1"
-  | "Class 2"
-  | "Class 3"
-  | "Class 4"
-  | "Class 5"
   | "Class 6"
   | "Class 7"
   | "Class 8"
@@ -30,6 +25,7 @@ export interface IUser {
   email: string;
   phone: string;
   altPhone?: string;
+  district?: string;
   role: UserRole;
   status: AccountStatus;
   avatarUrl?: string;
@@ -41,6 +37,7 @@ export interface IStudentProfile {
   _id: string;
   userId: string | IUser;
   schoolName: string;
+  district?: string;
   board: EducationBoard;
   currentClass: ClassLevel;
   subjects: string[];
@@ -66,6 +63,7 @@ export interface ITeacherProfile {
   subjects: string[];
   classesTaught: ClassLevel[];
   experienceYears: number;
+  district?: string;
   address?: string;
   resumeUrl?: string;
   certificateUrl?: string;
@@ -185,6 +183,8 @@ export interface IMaterial {
   createdAt: Date;
 }
 
+export type TaskCategory = "ASSIGNMENT" | "TEST" | "HOMEWORK";
+
 export interface IAssignment {
   _id: string;
   title: string;
@@ -193,6 +193,10 @@ export interface IAssignment {
   classLevel: ClassLevel;
   batchId: string | IBatch;
   teacherId: string | IUser;
+  type?: TaskCategory;
+  durationMinutes?: number;
+  proctoringRequired?: boolean;
+  testDate?: Date;
   dueDate: Date;
   maxMarks: number;
   attachmentUrl?: string;
@@ -203,8 +207,11 @@ export interface IAssignmentSubmission {
   _id: string;
   assignmentId: string | IAssignment;
   studentId: string | IUser;
+  type?: TaskCategory;
   submissionText?: string;
   fileUrl?: string;
+  proctoringSnapshotUrl?: string;
+  timeTakenMinutes?: number;
   submittedAt: Date;
   status: SubmissionStatus;
   marksObtained?: number;

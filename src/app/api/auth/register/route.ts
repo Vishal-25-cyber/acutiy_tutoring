@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     if (role === "STUDENT") {
       const {
         name, email, phone, password,
-        schoolName, board, currentClass, batchId,
+        schoolName, district, board, currentClass, batchId,
         parentName, parentPhone, gender, dob,
       } = body;
 
@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
         name: name.trim(),
         email: email.trim().toLowerCase(),
         phone: phone.trim(),
+        district: district?.trim() || "",
         passwordHash,
         role: "STUDENT",
         status: "ACTIVE",
@@ -94,6 +95,7 @@ export async function POST(req: NextRequest) {
       await StudentProfile.create({
         userId: user._id,
         schoolName: schoolName.trim(),
+        district: district?.trim() || "",
         board,
         currentClass,
         batchId,
@@ -118,7 +120,8 @@ export async function POST(req: NextRequest) {
     if (role === "TEACHER") {
       const {
         name, email, phone, password,
-        qualification, specialization, experienceYears, address,
+        qualification, specialization, experienceYears, district, address,
+        classesTaught, subjects,
       } = body;
 
       if (!name || !email || !phone || !password) {
@@ -144,20 +147,25 @@ export async function POST(req: NextRequest) {
         name: name.trim(),
         email: email.trim().toLowerCase(),
         phone: phone.trim(),
+        district: district?.trim() || address?.trim() || "",
         passwordHash,
         role: "TEACHER",
         status: "PENDING_APPROVAL",
       });
+
+      const safeClasses = Array.isArray(classesTaught) && classesTaught.length > 0 ? classesTaught : ["Class 10"];
+      const safeSubjects = Array.isArray(subjects) && subjects.length > 0 ? subjects : [specialization.trim() || "Mathematics"];
 
       // Save to `teacherprofiles` collection
       await TeacherProfile.create({
         userId: user._id,
         qualification: qualification.trim(),
         specialization: specialization.trim(),
-        subjects: [],
-        classesTaught: [],
+        subjects: safeSubjects,
+        classesTaught: safeClasses,
         experienceYears: parseInt(experienceYears) || 0,
-        address: address?.trim() || "",
+        district: district?.trim() || address?.trim() || "",
+        address: address?.trim() || district?.trim() || "",
         approvalStatus: "PENDING_APPROVAL",
       });
 

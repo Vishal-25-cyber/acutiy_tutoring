@@ -1,17 +1,17 @@
 "use client";
 
 import React from "react";
+import { Outlet } from "react-router-dom";
 import { usePathname } from "next/navigation";
 import { PortalSidebar } from "@/components/layout/PortalSidebar";
 import { LivePaymentListener } from "@/components/payment/LivePaymentListener";
 
-
-export default function StudentLayout({ children }: { children: React.ReactNode }) {
+export default function StudentLayout({ children }: { children?: React.ReactNode }) {
   const pathname = usePathname();
   const isClassroom = pathname.includes("/classroom/");
 
   if (isClassroom) {
-    return <>{children}</>;
+    return <>{children || <Outlet />}</>;
   }
 
   return (
@@ -19,10 +19,9 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       <PortalSidebar role="STUDENT" />
       <LivePaymentListener />
 
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto" id="student-portal-scroll-area">
         <div className="flex-1 transition-opacity duration-150 ease-out">
-          {children}
+          {children || <Outlet />}
         </div>
       </div>
     </div>

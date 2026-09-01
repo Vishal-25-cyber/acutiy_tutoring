@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
       email,
       phone,
       altPhone: data.altPhone,
+      district: data.district?.trim(),
       passwordHash,
       role: "STUDENT",
       status: "ACTIVE",
@@ -60,6 +61,7 @@ export async function POST(req: NextRequest) {
     const profile = await StudentProfile.create({
       userId: user._id,
       schoolName: data.schoolName.trim(),
+      district: data.district?.trim(),
       board: data.board,
       currentClass: data.currentClass,
       subjects: data.subjects,

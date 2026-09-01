@@ -3,6 +3,7 @@ import connectToDatabase from "@/lib/db/mongoose";
 import { getSession } from "@/lib/auth/session";
 import LiveSession from "@/models/LiveSession";
 import StudentProfile from "@/models/StudentProfile";
+import Batch from "@/models/Batch";
 import Notification from "@/models/Notification";
 import { recordAuditLog } from "@/lib/audit";
 

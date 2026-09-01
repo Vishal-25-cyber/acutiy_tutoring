@@ -59,14 +59,20 @@ export async function GET() {
       paymentsList,
     ] = await Promise.all([
       LiveSession.find({
-        $or: [
-          { classLevel: currentClass },
-          { batchId: batchId || null },
-          { status: "LIVE" },
-        ],
-        $or: [
-          { status: "LIVE" },
-          { date: todayDateStr },
+        $and: [
+          {
+            $or: [
+              { classLevel: currentClass },
+              { batchId: batchId || null },
+              { status: "LIVE" },
+            ],
+          },
+          {
+            $or: [
+              { status: "LIVE" },
+              { date: todayDateStr },
+            ],
+          },
         ],
       })
         .populate("teacherId", "name avatarUrl email")
@@ -215,7 +221,7 @@ export async function GET() {
           (a: any) => a._id?.toString() === sub.assignmentId?.toString()
         );
         const maxMarks = matchingAssignment?.maxMarks || 100;
-        const score = sub.marksObtained ?? sub.score ?? 0;
+        const score = sub.marksObtained ?? (sub as any).score ?? 0;
         const percentage = maxMarks > 0 ? (score / maxMarks) * 100 : score;
         totalPercentageSum += percentage;
       }

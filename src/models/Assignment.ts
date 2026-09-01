@@ -11,11 +11,6 @@ const AssignmentSchema = new Schema<IAssignmentDocument>(
     classLevel: {
       type: String,
       enum: [
-        "Class 1",
-        "Class 2",
-        "Class 3",
-        "Class 4",
-        "Class 5",
         "Class 6",
         "Class 7",
         "Class 8",
@@ -27,6 +22,15 @@ const AssignmentSchema = new Schema<IAssignmentDocument>(
     },
     batchId: { type: Schema.Types.ObjectId, ref: "Batch", required: true, index: true },
     teacherId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    type: {
+      type: String,
+      enum: ["ASSIGNMENT", "TEST", "HOMEWORK"],
+      default: "ASSIGNMENT",
+      index: true,
+    },
+    durationMinutes: { type: Number, default: 45 },
+    proctoringRequired: { type: Boolean, default: true },
+    testDate: { type: Date },
     dueDate: { type: Date, required: true },
     maxMarks: { type: Number, required: true, default: 20 },
     attachmentUrl: { type: String, default: "" },

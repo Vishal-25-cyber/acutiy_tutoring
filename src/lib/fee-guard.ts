@@ -87,7 +87,7 @@ export async function getStudentFeeAccessStatus(userId: string): Promise<FeeAcce
       trialHoursRemaining,
       trialExpiresAt: trialExpiresAt.toISOString(),
       reason: "FREE_TRIAL",
-      message: `You are currently enjoying your 2-Day Free Trial (${trialHoursRemaining}h remaining). All materials and classes are unlocked!`,
+      message: `Your account access is currently active. All materials and classes are unlocked!`,
       unpaidFee: null,
       pendingVerification: null,
     };
@@ -110,7 +110,7 @@ export async function getStudentFeeAccessStatus(userId: string): Promise<FeeAcce
       isTrialActive: false,
       trialHoursRemaining: 0,
       reason: "PENDING_VERIFICATION",
-      message: `Your 2-Day Free Trial has ended. Your fee submission of ₹${pendingVerificationDoc.amount || configuredFee} for ${pendingVerificationDoc.billingMonth || currentMonthStr} is currently Under Review by the Administrator. Access will unlock once approved.`,
+      message: `Your fee submission of ₹${pendingVerificationDoc.amount || configuredFee} for ${pendingVerificationDoc.billingMonth || currentMonthStr} is currently Under Review by the Administrator. Access will unlock once approved.`,
       unpaidFee: null,
       pendingVerification: {
         _id: pendingVerificationDoc._id.toString(),
@@ -129,7 +129,7 @@ export async function getStudentFeeAccessStatus(userId: string): Promise<FeeAcce
     isTrialActive: false,
     trialHoursRemaining: 0,
     reason: "UNPAID_DUE",
-    message: `Your 2-Day Free Trial has ended. Please complete your monthly tuition fee (₹${unpaidFeeDoc?.amount || configuredFee}) for ${unpaidFeeDoc?.billingMonth || currentMonthStr} to unlock full access to study materials and live sessions.`,
+    message: `Please complete your monthly tuition fee (₹${unpaidFeeDoc?.amount || configuredFee}) for ${unpaidFeeDoc?.billingMonth || currentMonthStr} to unlock full access to study materials and live sessions.`,
     unpaidFee: {
       _id: unpaidFeeDoc?._id ? unpaidFeeDoc._id.toString() : "unpaid-due",
       amount: unpaidFeeDoc?.amount || configuredFee,

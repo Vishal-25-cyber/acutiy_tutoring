@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 const memoryCache = new Map<string, { data: any; timestamp: number }>();
 const inflightRequests = new Map<string, Promise<any>>();
-const CACHE_STALE_MS = 2000; // 2 seconds stale time: gives instant UI on transitions but revalidates immediately
+const CACHE_STALE_MS = 60000; // 60s stale time: instant UI transitions with background sync
 
 // Global event bus for instant cache invalidation across tabs / components
 const cacheListeners = new Set<(urlPrefix: string) => void>();
@@ -90,44 +90,71 @@ export function warmupPortalCache(role: string = "STUDENT") {
       ];
 
   endpoints.forEach((ep, i) => {
-    setTimeout(() => prefetchApi(ep), i * 30);
+    setTimeout(() => prefetchApi(ep), i * 20);
   });
 }
 
 /**
  * High-performance Stale-While-Revalidate (SWR) hook.
- * Returns cached data immediately on mount, then always fetches real fresh data from the server in background.
+ * Returns cached data immediately on mount, then fetches fresh data from the server in background.
  * Also supports auto-revalidation on window focus and auto-polling.
  */
 export function useFastFetch<T = any>(
   url: string | null,
   initialFallback?: T,
   options: { pollIntervalMs?: number; disableAutoRevalidate?: boolean } = {}
-): { data: T | null; isLoading: boolean; error: any; refetch: () => Promise<void> } {
-  const cachedEntry = url ? memoryCache.get(url) : null;
-  const hasCachedData = Boolean(cachedEntry && cachedEntry.data);
+): { data: T | null; isLoading: boolean; isRevalidating: boolean; error: any; refetch: () => Promise<void> } {
+  const getCached = useCallback(() => {
+    if (!url) return null;
+    const entry = memoryCache.get(url);
+    return entry ? entry.data : null;
+  }, [url]);
 
-  const [data, setData] = useState<T | null>(
-    (cachedEntry ? cachedEntry.data : initialFallback) ?? null
-  );
-  const [isLoading, setIsLoading] = useState<boolean>(!hasCachedData);
+  const [data, setData] = useState<T | null>(() => {
+    const cached = getCached();
+    return cached !== null && cached !== undefined ? cached : (initialFallback ?? null);
+  });
+
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    if (!url) return false;
+    return getCached() === null;
+  });
+
+  const [isRevalidating, setIsRevalidating] = useState<boolean>(false);
   const [error, setError] = useState<any>(null);
   const isMountedRef = useRef(true);
+
+  // Sync cache immediately when url changes
+  useEffect(() => {
+    if (!url) {
+      setData(null);
+      setIsLoading(false);
+      return;
+    }
+    const cached = memoryCache.get(url)?.data;
+    if (cached !== undefined && cached !== null) {
+      setData(cached);
+      setIsLoading(false);
+    } else {
+      setIsLoading(true);
+    }
+  }, [url]);
 
   const executeFetch = useCallback(
     async (isManual = false) => {
       if (!url) return;
 
-      if (!isManual && hasCachedData) {
+      const cached = memoryCache.get(url)?.data;
+      if (!isManual && cached !== undefined && cached !== null) {
         setIsLoading(false);
-      } else if (!hasCachedData) {
+        setIsRevalidating(true);
+      } else if (isManual || cached === undefined || cached === null) {
         setIsLoading(true);
       }
 
       try {
         const res = await fetch(url, {
           credentials: "include",
-          headers: { "Cache-Control": "no-cache" },
         });
 
         if (res.ok) {
@@ -142,23 +169,23 @@ export function useFastFetch<T = any>(
         }
       } catch (err) {
         if (isMountedRef.current) {
-          console.warn(`FastFetch error for ${url}:`, err);
           setError(err);
         }
       } finally {
         if (isMountedRef.current) {
           setIsLoading(false);
+          setIsRevalidating(false);
         }
       }
     },
-    [url, hasCachedData]
+    [url]
   );
 
   useEffect(() => {
     isMountedRef.current = true;
     executeFetch();
 
-    // Revalidate on window focus so updates in other tabs/windows reflect immediately
+    // Revalidate on window focus
     const handleFocus = () => {
       executeFetch();
     };
@@ -172,8 +199,8 @@ export function useFastFetch<T = any>(
     };
     cacheListeners.add(handleInvalidation);
 
-    // Optional polling interval (default every 6 seconds for live real-time sync)
-    const pollInterval = options.pollIntervalMs || 6000;
+    // Optional polling interval (default every 10 seconds for live sync)
+    const pollInterval = options.pollIntervalMs || 10000;
     let timer: any = null;
     if (!options.disableAutoRevalidate) {
       timer = setInterval(() => {
@@ -192,6 +219,7 @@ export function useFastFetch<T = any>(
   return {
     data,
     isLoading,
+    isRevalidating,
     error,
     refetch: () => executeFetch(true),
   };

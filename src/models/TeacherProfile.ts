@@ -13,11 +13,6 @@ const TeacherProfileSchema = new Schema<ITeacherProfileDocument>(
       {
         type: String,
         enum: [
-          "Class 1",
-          "Class 2",
-          "Class 3",
-          "Class 4",
-          "Class 5",
           "Class 6",
           "Class 7",
           "Class 8",
@@ -27,6 +22,7 @@ const TeacherProfileSchema = new Schema<ITeacherProfileDocument>(
       },
     ],
     experienceYears: { type: Number, required: true, default: 0 },
+    district: { type: String, trim: true, default: "" },
     address: { type: String, trim: true },
     resumeUrl: { type: String, default: "" },
     certificateUrl: { type: String, default: "" },

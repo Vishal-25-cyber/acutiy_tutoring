@@ -1,17 +1,12 @@
 /**
  * Acuity Tutoring — Curriculum & Syllabus Architecture
  * Strict syllabus alignment for CBSE (NCERT) and State Board (Samacheer Kalvi / Standard State Board)
- * Covering Class 1 to Class 10
+ * Covering Class 6 to Class 10
  */
 
 export type SupportedBoard = "CBSE" | "State Board";
 
 export type SupportedClass =
-  | "Class 1"
-  | "Class 2"
-  | "Class 3"
-  | "Class 4"
-  | "Class 5"
   | "Class 6"
   | "Class 7"
   | "Class 8"
@@ -33,11 +28,6 @@ export interface ClassCurriculum {
 export const BOARD_LIST: SupportedBoard[] = ["CBSE", "State Board"];
 
 export const CLASS_LIST: SupportedClass[] = [
-  "Class 1",
-  "Class 2",
-  "Class 3",
-  "Class 4",
-  "Class 5",
   "Class 6",
   "Class 7",
   "Class 8",
@@ -47,44 +37,6 @@ export const CLASS_LIST: SupportedClass[] = [
 
 export const CURRICULUM_DATA: Record<SupportedBoard, Record<SupportedClass, string[]>> = {
   CBSE: {
-    "Class 1": [
-      "Mathematics",
-      "English",
-      "Hindi / Regional Language",
-      "Environmental Studies (EVS)",
-      "General Knowledge",
-    ],
-    "Class 2": [
-      "Mathematics",
-      "English",
-      "Hindi / Regional Language",
-      "Environmental Studies (EVS)",
-      "General Knowledge",
-    ],
-    "Class 3": [
-      "Mathematics",
-      "Environmental Studies (EVS)",
-      "English",
-      "Hindi",
-      "Computer Science Basics",
-      "General Knowledge",
-    ],
-    "Class 4": [
-      "Mathematics",
-      "Environmental Studies (EVS)",
-      "English",
-      "Hindi",
-      "Computer Science Basics",
-      "General Knowledge",
-    ],
-    "Class 5": [
-      "Mathematics",
-      "Environmental Studies (EVS)",
-      "English",
-      "Hindi",
-      "Computer Science Basics",
-      "General Knowledge",
-    ],
     "Class 6": [
       "Mathematics",
       "Science (Physics / Chemistry / Biology)",
@@ -130,39 +82,6 @@ export const CURRICULUM_DATA: Record<SupportedBoard, Record<SupportedClass, stri
     ],
   },
   "State Board": {
-    "Class 1": [
-      "Tamil / Regional Language",
-      "English",
-      "Mathematics",
-      "Environmental Studies (EVS)",
-    ],
-    "Class 2": [
-      "Tamil / Regional Language",
-      "English",
-      "Mathematics",
-      "Environmental Studies (EVS)",
-    ],
-    "Class 3": [
-      "Tamil / Regional Language",
-      "English",
-      "Mathematics",
-      "Science",
-      "Social Science",
-    ],
-    "Class 4": [
-      "Tamil / Regional Language",
-      "English",
-      "Mathematics",
-      "Science",
-      "Social Science",
-    ],
-    "Class 5": [
-      "Tamil / Regional Language",
-      "English",
-      "Mathematics",
-      "Science",
-      "Social Science",
-    ],
     "Class 6": [
       "Tamil (Language)",
       "English",
@@ -202,7 +121,7 @@ export const CURRICULUM_DATA: Record<SupportedBoard, Record<SupportedClass, stri
 };
 
 /**
- * Returns the syllabus-exact subjects for any Class (1 to 10) and Board (CBSE / State Board)
+ * Returns the syllabus-exact subjects for any Class (6 to 10) and Board (CBSE / State Board)
  */
 export function getSubjectsForClassAndBoard(
   classLevel: string = "Class 10",

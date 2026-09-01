@@ -15,13 +15,13 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Acuity Tutoring — Live Online Learning Platform (Class 1 to 10)",
+  title: "Acuity Tutoring — Live Online Learning Platform (Class 6 to 10)",
   description:
-    "Production-grade online tutoring and live classroom management platform for CBSE & State Board students from Class 1 to 10. Automated attendance, late entry control, and expert faculty.",
+    "Production-grade online tutoring and live classroom management platform for CBSE & State Board students from Class 6 to 10. Automated attendance, late entry control, and expert faculty.",
   keywords: [
     "Online Tuition",
     "Live Classes",
-    "Class 1 to 10 Tuition",
+    "Class 6 to 10 Tuition",
     "CBSE Tuition",
     "State Board Tuition",
     "Interactive Classroom",

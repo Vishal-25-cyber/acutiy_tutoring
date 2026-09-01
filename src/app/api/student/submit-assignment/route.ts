@@ -13,20 +13,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized access. Please login as a student." }, { status: 401 });
     }
 
-    const { assignmentId, submissionText, fileUrl } = await req.json();
+    const { assignmentId, submissionText, fileUrl, proctoringSnapshotUrl, timeTakenMinutes, type } =
+      await req.json();
+
     if (!assignmentId) {
       return NextResponse.json({ error: "Assignment ID is required" }, { status: 400 });
     }
 
     await connectToDatabase();
 
-    let assignment = null;
+    let assignment: any = null;
     if (mongoose.Types.ObjectId.isValid(assignmentId)) {
       assignment = await Assignment.findById(assignmentId).lean();
     }
 
-    // Server-side Deadline Enforcement
-    if (assignment && assignment.dueDate) {
+    // Server-side Deadline Enforcement for non-tests or past due
+    if (assignment && assignment.dueDate && assignment.type !== "TEST") {
       const d = new Date(assignment.dueDate);
       d.setHours(23, 59, 59, 999);
       if (Date.now() > d.getTime()) {
@@ -55,11 +57,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "This assignment has already been evaluated and graded by faculty. Resubmissions are not permitted.",
+            "This task has already been evaluated and graded by faculty. Resubmissions are not permitted.",
         },
         { status: 400 }
       );
     }
+
+    const taskType = type || assignment?.type || "ASSIGNMENT";
 
     // Fast atomic upsert
     const submission = await AssignmentSubmission.findOneAndUpdate(
@@ -72,8 +76,11 @@ export async function POST(req: NextRequest) {
           : session.userId,
       },
       {
+        type: taskType,
         submissionText: submissionText || "",
         fileUrl: fileUrl || "",
+        proctoringSnapshotUrl: proctoringSnapshotUrl || "",
+        timeTakenMinutes: Number(timeTakenMinutes) || undefined,
         submittedAt: new Date(),
         status: "SUBMITTED",
       },
@@ -82,9 +89,10 @@ export async function POST(req: NextRequest) {
 
     // Non-blocking notification if assignment has a teacher
     if (assignment && assignment.teacherId) {
+      const typeLabel = taskType === "TEST" ? "Proctored Test" : taskType === "HOMEWORK" ? "Homework" : "Assignment";
       Notification.create({
         userId: assignment.teacherId,
-        title: "New Assignment Submission",
+        title: `New ${typeLabel} Submission`,
         message: `${session.name} submitted solution for "${assignment.title}".`,
         type: "ASSIGNMENT",
       }).catch((e) => console.error("Notification creation failed:", e));
@@ -92,7 +100,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Assignment submitted successfully!",
+      message: `${taskType === "TEST" ? "Proctored test" : taskType === "HOMEWORK" ? "Homework" : "Assignment"} submitted successfully!`,
       submission,
     });
   } catch (error: any) {

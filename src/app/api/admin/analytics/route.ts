@@ -28,13 +28,8 @@ export async function GET() {
     const allStudentUsers = allUsers.filter((u: any) => u.role === "STUDENT");
     const allTeacherUsers = allUsers.filter((u: any) => u.role === "TEACHER");
 
-    // Real Student enrollment by class (1 to 10)
+    // Real Student enrollment by class (6 to 10)
     const classOrder = [
-      "Class 1",
-      "Class 2",
-      "Class 3",
-      "Class 4",
-      "Class 5",
       "Class 6",
       "Class 7",
       "Class 8",

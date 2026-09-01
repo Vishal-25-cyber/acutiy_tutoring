@@ -5,6 +5,7 @@ import { adaptRoute } from "./adapter";
 import connectToDatabase from "../src/lib/db/mongoose";
 
 // Live Acuity API Server
+dotenv.config({ path: ".env.local" });
 dotenv.config();
 
 const app = express();
@@ -68,6 +69,9 @@ import * as TeacherEvaluate from "../src/app/api/teacher/evaluate/route";
 import * as TeacherClasses from "../src/app/api/teacher/classes/route";
 import * as TeacherAttendance from "../src/app/api/teacher/attendance/route";
 import * as TeacherLiveSession from "../src/app/api/teacher/live-session/route";
+import * as TeacherReports from "../src/app/api/teacher/reports/route";
+import * as TeacherSchoolReports from "../src/app/api/teacher/reports/school/route";
+import * as TeacherStudentReportDetail from "../src/app/api/teacher/reports/[studentId]/route";
 
 app.get("/api/teacher/dashboard", adaptRoute(TeacherDashboard.GET));
 app.get("/api/teacher/materials", adaptRoute(TeacherMaterials.GET));
@@ -79,6 +83,10 @@ app.get("/api/teacher/assignments", adaptRoute(TeacherAssignments.GET));
 app.post("/api/teacher/assignments", adaptRoute(TeacherAssignments.POST));
 app.get("/api/teacher/students", adaptRoute(TeacherStudents.GET));
 app.patch("/api/teacher/students", adaptRoute(TeacherStudents.PATCH));
+app.get("/api/teacher/reports", adaptRoute(TeacherReports.GET));
+app.get("/api/teacher/reports/school", adaptRoute(TeacherSchoolReports.GET));
+app.get("/api/teacher/reports/:studentId", adaptRoute(TeacherStudentReportDetail.GET));
+app.post("/api/teacher/reports/:studentId", adaptRoute(TeacherStudentReportDetail.POST));
 app.post("/api/teacher/schedule/swap", adaptRoute(TeacherScheduleSwap.POST));
 app.patch("/api/teacher/schedule/reschedule", adaptRoute(TeacherScheduleReschedule.PATCH));
 app.post("/api/teacher/evaluate", adaptRoute(TeacherEvaluate.POST));

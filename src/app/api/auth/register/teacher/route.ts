@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
       email,
       phone,
       altPhone: data.altPhone,
+      district: data.district?.trim() || data.address?.trim() || "",
       passwordHash,
       role: "TEACHER",
       status: "PENDING_APPROVAL", // Teacher accounts require admin approval
@@ -52,7 +53,8 @@ export async function POST(req: NextRequest) {
       subjects: data.subjects,
       classesTaught: data.classesTaught,
       experienceYears: data.experienceYears,
-      address: data.address,
+      district: data.district?.trim() || data.address?.trim() || "",
+      address: data.address || data.district?.trim() || "",
       resumeUrl: data.resumeUrl || "",
       certificateUrl: data.certificateUrl || "",
       idProofUrl: data.idProofUrl || "",

@@ -196,12 +196,12 @@ export default function StudentMaterialsPage() {
             {/* Title & Description */}
             <div className="space-y-2 max-w-md mx-auto">
               <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-                {data.isUnderReview ? "Tuition Payment Under Verification" : "2-Day Free Trial Concluded"}
+                {data.isUnderReview ? "Tuition Payment Under Verification" : "Monthly Tuition Fee Payment Required"}
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                 {data.isUnderReview
                   ? "Your fee submission is currently under review by admin. Full access to study notes and live recordings will unlock immediately upon approval."
-                  : `Your complimentary 2-day trial has concluded. Please clear your monthly tuition fee to continue accessing official verified formula handbooks, question banks, and live sessions.`}
+                  : "Please clear your monthly tuition fee to access official verified formula handbooks, question banks, and live sessions."}
               </p>
             </div>
 

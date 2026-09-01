@@ -209,12 +209,12 @@ export default function StudentClassesPage() {
             {/* Title & Description */}
             <div className="space-y-2 max-w-md mx-auto">
               <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-                {data.isUnderReview ? "Tuition Payment Under Verification" : "2-Day Free Trial Concluded"}
+                {data.isUnderReview ? "Tuition Payment Under Verification" : "Monthly Tuition Fee Payment Required"}
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                 {data.isUnderReview
                   ? "Your fee submission is currently under verification by the administration. Live class joining will unlock immediately upon approval."
-                  : `Your complimentary 2-day trial has concluded. Please clear your monthly tuition fee to continue attending live interactive coaching classes.`}
+                  : "Please clear your monthly tuition fee to attend live interactive coaching classes."}
               </p>
             </div>
 
