@@ -42,16 +42,17 @@ export default function StudentDashboardPage() {
   const schoolName = student?.schoolName || "National Public School";
 
   // Real strictly computed attendance values
-  const totalSessions = student?.totalSessions ?? 12;
-  const totalAttended = student?.totalAttended ?? 11;
-  const attendancePercentage = student?.attendancePercentage ?? 92;
+  const totalSessions = student?.totalSessions ?? 0;
+  const totalAttended = student?.totalAttended ?? 0;
+  const attendancePercentage = student?.attendancePercentage ?? (totalSessions > 0 ? Math.round((totalAttended / totalSessions) * 100) : 100);
 
   // Real assessment summary stats
   const assessments = data?.assessmentSummary || {
-    total: 4,
-    submitted: 3,
-    pending: 1,
-    averageScore: 88,
+    total: 0,
+    submitted: 0,
+    pending: 0,
+    evaluated: 0,
+    averageScore: null,
   };
 
   // Real fee status
@@ -125,7 +126,9 @@ export default function StudentDashboardPage() {
               {attendancePercentage}%
             </p>
             <p className="text-xs text-slate-400 font-medium">
-              {totalAttended} of {totalSessions} Sessions Attended
+              {totalSessions > 0
+                ? `${totalAttended} of ${totalSessions} Sessions Attended`
+                : `${totalAttended} of ${totalSessions} Sessions Held`}
             </p>
           </div>
 
@@ -183,10 +186,14 @@ export default function StudentDashboardPage() {
               Academic Average
             </span>
             <p className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-400 tracking-tight">
-              {assessments.averageScore > 0 ? `${assessments.averageScore}%` : "88%"}
+              {assessments.averageScore !== null && assessments.averageScore !== undefined
+                ? `${assessments.averageScore}%`
+                : "—"}
             </p>
             <p className="text-xs text-slate-400 font-medium">
-              Exam Benchmark Score
+              {assessments.evaluated && assessments.evaluated > 0
+                ? `${assessments.evaluated} Graded Task${assessments.evaluated === 1 ? "" : "s"}`
+                : "No Graded Tasks Yet"}
             </p>
           </div>
 

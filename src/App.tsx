@@ -1,8 +1,9 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
-// Public / Landing Page
+// Public / Landing Page & Contact
 import LandingPage from "./app/page";
+import ContactPage from "./app/contact/page";
 
 // Student Portal
 import StudentLayout from "./app/(portal)/student/layout";
@@ -12,6 +13,10 @@ import StudentMaterialsPage from "./app/(portal)/student/materials/page";
 import StudentAssignmentsPage from "./app/(portal)/student/assignments/page";
 import StudentAttendancePage from "./app/(portal)/student/attendance/page";
 import StudentFeesPage from "./app/(portal)/student/fees/page";
+import StudentPerformancePage from "./app/(portal)/student/performance/page";
+import StudentParentViewPage from "./app/(portal)/student/parent-view/page";
+import StudentAiTutorPage from "./app/(portal)/student/ai-tutor/page";
+import StudentClassroomSessionPage from "./app/(portal)/student/classroom/[sessionId]/page";
 
 // Faculty / Teacher Portal
 import TeacherLayout from "./app/(portal)/teacher/layout";
@@ -23,6 +28,7 @@ import TeacherAssignmentsPage from "./app/(portal)/teacher/assignments/page";
 import TeacherStudentsPage from "./app/(portal)/teacher/students/page";
 import TeacherAttendancePage from "./app/(portal)/teacher/attendance/page";
 import TeacherClassAttendanceDetailPage from "./app/(portal)/teacher/attendance/[classId]/page";
+import TeacherClassroomSessionPage from "./app/(portal)/teacher/classroom/[sessionId]/page";
 
 // Admin Portal
 import AdminLayout from "./app/(portal)/admin/layout";
@@ -45,6 +51,7 @@ export default function App() {
     <Routes>
       {/* ── Public Landing Page & Auth Redirects ── */}
       <Route path="/" element={<LandingPage />} />
+      <Route path="/contact" element={<ContactPage />} />
       <Route path="/login" element={<Navigate to="/" replace />} />
       <Route path="/register" element={<Navigate to="/" replace />} />
       <Route path="/register/student" element={<Navigate to="/" replace />} />
@@ -96,6 +103,38 @@ export default function App() {
         element={
           <StudentLayout>
             <StudentFeesPage />
+          </StudentLayout>
+        }
+      />
+      <Route
+        path="/student/performance"
+        element={
+          <StudentLayout>
+            <StudentPerformancePage />
+          </StudentLayout>
+        }
+      />
+      <Route
+        path="/student/parent-view"
+        element={
+          <StudentLayout>
+            <StudentParentViewPage />
+          </StudentLayout>
+        }
+      />
+      <Route
+        path="/student/ai-tutor"
+        element={
+          <StudentLayout>
+            <StudentAiTutorPage />
+          </StudentLayout>
+        }
+      />
+      <Route
+        path="/student/classroom/:sessionId"
+        element={
+          <StudentLayout>
+            <StudentClassroomSessionPage />
           </StudentLayout>
         }
       />
@@ -162,6 +201,14 @@ export default function App() {
         element={
           <TeacherLayout>
             <TeacherClassAttendanceDetailPage />
+          </TeacherLayout>
+        }
+      />
+      <Route
+        path="/teacher/classroom/:sessionId"
+        element={
+          <TeacherLayout>
+            <TeacherClassroomSessionPage />
           </TeacherLayout>
         }
       />

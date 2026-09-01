@@ -43,9 +43,9 @@ export async function GET() {
 
     // 3. Compute 100% synchronized attendance metrics
     const presentCount = attendanceRecords.filter(
-      (a: any) => a.status === "PRESENT" || a.status === "LATE"
+      (a: any) => a.status === "PRESENT" || a.status === "LATE" || a.status === "PARTIAL"
     ).length;
-    const totalSessions = Math.max(presentCount, 1);
+    const totalSessions = Math.max(batchSessions.length, presentCount);
 
     const attendancePercentage = totalSessions > 0
       ? Math.round((presentCount / totalSessions) * 100)
@@ -68,7 +68,7 @@ export async function GET() {
       return sessDate === todayIso || createdDate === todayIso;
     });
 
-    const todayStatus = todayRecord ? todayRecord.status : (totalSessions > 0 && presentCount > 0 ? "PRESENT" : "NOT_MARKED");
+    const todayStatus = todayRecord ? todayRecord.status : "NOT_MARKED";
 
     // 5. Subject-wise stats
     const validCurriculumSubjects = ["Mathematics", "Science", "Social Science", "English"];

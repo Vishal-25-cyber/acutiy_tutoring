@@ -354,18 +354,6 @@ export default function HomePage() {
           >
             Sign In
           </button>
-          <button
-            type="button"
-            onClick={() => sw("SIGNUP")}
-            className={`pb-1 transition-all cursor-pointer flex items-center gap-1 ${
-              mode === "SIGNUP"
-                ? "text-[#004b79] border-b-2 border-[#004b79]"
-                : "text-[#004b79] hover:underline"
-            }`}
-          >
-            <span>Start Free Trial</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
         </div>
       </header>
 
@@ -958,7 +946,7 @@ export default function HomePage() {
                       onClick={() => sw("SIGNUP")}
                       className="text-[#004b79] font-bold hover:underline cursor-pointer"
                     >
-                      Start Free Trial →
+                      Create Account →
                     </button>
                   </div>
                 </div>

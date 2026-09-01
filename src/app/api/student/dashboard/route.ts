@@ -179,9 +179,10 @@ export async function GET() {
 
     // Real strictly calculated Attendance from database
     const totalAttended = attendanceRecords.filter(
-      (a: any) => a.status === "PRESENT" || a.status === "LATE"
+      (a: any) => a.status === "PRESENT" || a.status === "LATE" || a.status === "PARTIAL"
     ).length;
-    const totalSessions = Math.max(totalAttended, 1);
+    const totalConductedSessions = completedOrLiveBatchSessions.length;
+    const totalSessions = Math.max(totalConductedSessions, totalAttended);
     const attendancePercentage = totalSessions > 0
       ? Math.round((totalAttended / totalSessions) * 100)
       : 100;
@@ -190,15 +191,24 @@ export async function GET() {
     const totalAssignments = activeAssignments.length;
     const submittedCount = submissions.length;
     const pendingCount = Math.max(0, totalAssignments - submittedCount);
-    const evaluatedSubmissions = submissions.filter((s: any) => s.status === "EVALUATED");
-    const avgScore = evaluatedSubmissions.length > 0
-      ? Math.round(
-        evaluatedSubmissions.reduce(
-          (acc: number, s: any) => acc + (s.marksObtained ?? s.score ?? 0),
-          0
-        ) / evaluatedSubmissions.length
-      )
-      : 0;
+    const evaluatedSubmissions = submissions.filter(
+      (s: any) => s.status === "EVALUATED" && (s.marksObtained !== undefined || s.score !== undefined)
+    );
+    
+    let avgScore: number | null = null;
+    if (evaluatedSubmissions.length > 0) {
+      let totalPercentageSum = 0;
+      for (const sub of evaluatedSubmissions) {
+        const matchingAssignment = activeAssignments.find(
+          (a: any) => a._id?.toString() === sub.assignmentId?.toString()
+        );
+        const maxMarks = matchingAssignment?.maxMarks || 100;
+        const score = sub.marksObtained ?? sub.score ?? 0;
+        const percentage = maxMarks > 0 ? (score / maxMarks) * 100 : score;
+        totalPercentageSum += percentage;
+      }
+      avgScore = Math.round(totalPercentageSum / evaluatedSubmissions.length);
+    }
 
     const assessmentSummary = {
       total: totalAssignments,

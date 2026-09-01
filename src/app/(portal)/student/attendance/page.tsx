@@ -24,66 +24,16 @@ export default function StudentAttendancePage() {
   const board = data?.stats?.board || "CBSE";
 
   const stats = data?.stats || {
-    totalSessions: 25,
-    presentCount: 23,
-    attendancePercentage: 92,
+    totalSessions: 0,
+    presentCount: 0,
+    attendancePercentage: 100,
     riskLevel: "LOW",
-    todayStatus: "PRESENT",
+    todayStatus: "NOT_MARKED",
   };
 
   const isCompliant = stats.attendancePercentage >= 75;
 
-  const defaultRecords = [
-    {
-      _id: "att-1",
-      date: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
-      time: "7:00 PM – 8:00 PM",
-      subject: "Mathematics",
-      title: "Quadratic Equations — Discriminant & Real Roots",
-      faculty: "Dr. Sarah Jenkins",
-      status: "PRESENT",
-    },
-    {
-      _id: "att-2",
-      date: new Date(Date.now() - 86400000).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
-      time: "7:00 PM – 8:00 PM",
-      subject: "Science",
-      title: "Light: Reflection & Refraction — Ray Diagrams Exemplar",
-      faculty: "Prof. Rajesh Kumar",
-      status: "PRESENT",
-    },
-    {
-      _id: "att-3",
-      date: new Date(Date.now() - 86400000 * 2).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
-      time: "7:00 PM – 8:00 PM",
-      subject: "English",
-      title: "Analytical Paragraph & Advanced Grammar Clauses",
-      faculty: "Ms. Anita Desai",
-      status: "PRESENT",
-    },
-    {
-      _id: "att-4",
-      date: new Date(Date.now() - 86400000 * 3).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
-      time: "7:00 PM – 8:00 PM",
-      subject: "Social Science",
-      title: "Nationalism in India — Non-Cooperation Movement Timeline",
-      faculty: "Prof. Rajesh Kumar",
-      status: "PRESENT",
-    },
-    {
-      _id: "att-5",
-      date: new Date(Date.now() - 86400000 * 4).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
-      time: "7:00 PM – 8:00 PM",
-      subject: "Mathematics",
-      title: "Arithmetic Progressions — nth Term & Sum Formula",
-      faculty: "Dr. Sarah Jenkins",
-      status: "LATE",
-    },
-  ];
-
-  const records = Array.isArray(data?.records) && data.records.length > 0
-    ? data.records
-    : defaultRecords;
+  const records = Array.isArray(data?.records) ? data.records : [];
 
   const filteredRecords = records.filter((r: any) => {
     const matchesStatus = statusFilter === "ALL" || r.status?.toUpperCase() === statusFilter.toUpperCase();
@@ -149,7 +99,8 @@ export default function StudentAttendancePage() {
         <div className="flex items-center gap-3 shrink-0">
           <button
             onClick={downloadStatementCSV}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+            disabled={filteredRecords.length === 0}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer disabled:opacity-50"
           >
             <Download className="w-3.5 h-3.5 text-[#004b79] dark:text-[#dfb74a]" />
             <span>Download Statement (CSV)</span>
@@ -191,10 +142,33 @@ export default function StudentAttendancePage() {
         <div className="py-2 sm:px-6 space-y-1">
           <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Today&apos;s Live Status</span>
           <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2 font-mono">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
-            Present
+            {stats.todayStatus === "PRESENT" ? (
+              <>
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
+                Present
+              </>
+            ) : stats.todayStatus === "LATE" ? (
+              <>
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block" />
+                Late
+              </>
+            ) : stats.todayStatus === "ABSENT" ? (
+              <>
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block" />
+                Absent
+              </>
+            ) : (
+              <>
+                <span className="w-2.5 h-2.5 rounded-full bg-slate-400 inline-block" />
+                Not Marked
+              </>
+            )}
           </p>
-          <p className="text-xs text-slate-500 font-medium">Verified by faculty attendance log</p>
+          <p className="text-xs text-slate-500 font-medium">
+            {stats.todayStatus === "PRESENT" || stats.todayStatus === "LATE"
+              ? "Verified by faculty attendance log"
+              : "No attendance recorded for today"}
+          </p>
         </div>
       </div>
 
@@ -246,64 +220,74 @@ export default function StudentAttendancePage() {
         </div>
 
         {/* Table Headers */}
-        <div className="hidden md:grid grid-cols-12 gap-4 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-850">
-          <div className="col-span-3">Date &amp; Timing</div>
-          <div className="col-span-5">Subject &amp; Lecture Topic</div>
-          <div className="col-span-2">Faculty Instructor</div>
-          <div className="col-span-2 text-right">Attendance Status</div>
-        </div>
+        {filteredRecords.length > 0 && (
+          <div className="hidden md:grid grid-cols-12 gap-4 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-850">
+            <div className="col-span-3">Date &amp; Timing</div>
+            <div className="col-span-5">Subject &amp; Lecture Topic</div>
+            <div className="col-span-2">Faculty Instructor</div>
+            <div className="col-span-2 text-right">Attendance Status</div>
+          </div>
+        )}
 
-        {/* History Rows */}
-        <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
-          {filteredRecords.map((r: any) => {
-            const isPresent = r.status === "PRESENT";
-            const isLate = r.status === "LATE";
+        {/* History Rows or Empty State */}
+        {filteredRecords.length === 0 ? (
+          <div className="py-12 text-center text-slate-400 space-y-2">
+            <CalendarCheck2 className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-700" />
+            <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">No Attendance Records Found</p>
+            <p className="text-xs text-slate-400">Your attendance logs will appear here in real-time as classes are conducted.</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+            {filteredRecords.map((r: any) => {
+              const isPresent = r.status === "PRESENT";
+              const isLate = r.status === "LATE";
 
-            return (
-              <div
-                key={r._id}
-                className="py-3.5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-900/30 px-1"
-              >
-                {/* Col 1: Date & Time */}
-                <div className="col-span-3 space-y-0.5">
-                  <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100">{r.date}</p>
-                  <p className="text-[11px] text-slate-400 font-mono">{r.time}</p>
+              return (
+                <div
+                  key={r._id}
+                  className="py-3.5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-900/30 px-1"
+                >
+                  {/* Col 1: Date & Time */}
+                  <div className="col-span-3 space-y-0.5">
+                    <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100">{r.date}</p>
+                    <p className="text-[11px] text-slate-400 font-mono">{r.time}</p>
+                  </div>
+
+                  {/* Col 2: Subject & Topic */}
+                  <div className="col-span-5 space-y-1">
+                    <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded border ${getSubjectColor(r.subject)}`}>
+                      {r.subject}
+                    </span>
+                    <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100">{r.title}</p>
+                  </div>
+
+                  {/* Col 3: Faculty */}
+                  <div className="col-span-2">
+                    <p className="font-semibold text-xs text-slate-800 dark:text-slate-200 truncate">
+                      {r.faculty || "Faculty Specialist"}
+                    </p>
+                    <p className="text-[10px] text-slate-400">Staff Faculty</p>
+                  </div>
+
+                  {/* Col 4: Status */}
+                  <div className="col-span-2 text-left md:text-right">
+                    <span
+                      className={`inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
+                        isPresent
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300"
+                          : isLate
+                          ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300"
+                          : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300"
+                      }`}
+                    >
+                      {r.status || "PRESENT"}
+                    </span>
+                  </div>
                 </div>
-
-                {/* Col 2: Subject & Topic */}
-                <div className="col-span-5 space-y-1">
-                  <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded border ${getSubjectColor(r.subject)}`}>
-                    {r.subject}
-                  </span>
-                  <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100">{r.title}</p>
-                </div>
-
-                {/* Col 3: Faculty */}
-                <div className="col-span-2">
-                  <p className="font-semibold text-xs text-slate-800 dark:text-slate-200 truncate">
-                    {r.faculty || "Faculty Specialist"}
-                  </p>
-                  <p className="text-[10px] text-slate-400">Staff Faculty</p>
-                </div>
-
-                {/* Col 4: Status */}
-                <div className="col-span-2 text-left md:text-right">
-                  <span
-                    className={`inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
-                      isPresent
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300"
-                        : isLate
-                        ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300"
-                        : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300"
-                    }`}
-                  >
-                    {r.status || "PRESENT"}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </main>
   );

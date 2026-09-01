@@ -3,11 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3000",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "seed": "npx tsx src/scripts/seed.ts"
+    "dev": "concurrently -n \"API,VITE\" -c \"blue,green\" \"tsx server/index.ts\" \"vite\"",
+    "dev:client": "vite",
+    "dev:server": "tsx server/index.ts",
+    "build": "vite build",
+    "start": "tsx server/index.ts",
+    "lint": "tsc --noEmit",
+    "seed": "tsx src/scripts/seed.ts",
+    "dev:next": "next dev -p 3000",
+    "build:next": "next build"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

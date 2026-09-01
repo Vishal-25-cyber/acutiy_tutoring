@@ -164,6 +164,21 @@ app.put("/api/notifications", adaptRoute(NotificationsRoute.PUT));
 app.post("/api/attendance/join", adaptRoute(AttendanceJoinRoute.POST));
 app.post("/api/attendance/leave", adaptRoute(AttendanceLeaveRoute.POST));
 app.post("/api/attendance/heartbeat", adaptRoute(AttendanceHeartbeatRoute.POST));
+
+import * as LivekitTokenRoute from "../src/app/api/livekit/token/route";
+import * as LivekitRecordAttendanceRoute from "../src/app/api/livekit/record-attendance/route";
+import * as LivekitPollRoute from "../src/app/api/livekit/poll/route";
+import * as ClassesUpcomingRoute from "../src/app/api/classes/upcoming/route";
+import * as ResetDbRoute from "../src/app/api/reset-db/route";
+import * as TestFlowRoute from "../src/app/api/test-flow/route";
+
+app.post("/api/livekit/token", adaptRoute(LivekitTokenRoute.POST));
+app.post("/api/livekit/record-attendance", adaptRoute(LivekitRecordAttendanceRoute.POST));
+app.post("/api/livekit/poll", adaptRoute(LivekitPollRoute.POST));
+app.get("/api/classes/upcoming", adaptRoute(ClassesUpcomingRoute.GET));
+app.post("/api/reset-db", adaptRoute(ResetDbRoute.POST));
+app.get("/api/test-flow", adaptRoute(TestFlowRoute.GET));
+
 import * as ContactRoute from "../src/app/api/contact/route";
 
 app.post("/api/contact", adaptRoute(ContactRoute.POST));
