@@ -1951,15 +1951,8 @@ export default function HomePage() {
 
           </div>
 
-          {/* Bottom Copyright & MSME Legal Bar */}
-          <div className="pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-white">MANTIF</span>
-              <span>•</span>
-              <span>Human x Artificial Intelligence</span>
-              <span>•</span>
-              <span className="text-[#dfb74a]">MSME Registered EdTech Startup</span>
-            </div>
+          {/* Bottom Copyright Bar */}
+          <div className="pt-6 border-t border-slate-800/80 flex items-center justify-center text-xs text-slate-400 text-center">
             <p>© 2026 MANTIF. All rights reserved.</p>
           </div>
 
