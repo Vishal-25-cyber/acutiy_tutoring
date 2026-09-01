@@ -388,13 +388,16 @@ export default function HomePage() {
       </header>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 1: ABOUT (HERO SPLIT: 2 SIDES - FULL WIDTH BALANCED & PRO CARD)
+          PAGE 1: ABOUT (HERO SPLIT: PERFECT CENTER LINE & COMPACT PRO CARD)
       ═══════════════════════════════════════════════════════════════════════ */}
       <section id="about" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-12 lg:py-16">
-        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 grid grid-cols-1 lg:grid-cols-2 gap-12 xl:gap-16 items-center">
+        {/* Exact Center Vertical Divider Line */}
+        <div className="hidden lg:block absolute left-1/2 top-12 bottom-12 w-px bg-slate-200 -translate-x-1/2" />
 
-          {/* LEFT HALF (50%): GRAND MANTIF STATEMENT & 3 PILLARS (WITH DIVIDER) */}
-          <div className="w-full space-y-8 lg:border-r lg:border-slate-200/90 lg:pr-12 xl:pr-16">
+        <div className="w-full px-6 sm:px-10 lg:px-14 xl:px-20 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 xl:gap-24 items-center">
+
+          {/* LEFT HALF (50%): GRAND MANTIF STATEMENT & 3 PILLARS */}
+          <div className="w-full space-y-8 lg:pr-6 xl:pr-10">
             <div className="space-y-4">
               <div className="space-y-1.5">
                 <h1
@@ -447,9 +450,9 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* RIGHT HALF (50%): ULTRA-PROFESSIONAL AUTH CARD */}
-          <div id="auth-card-section" className="w-full flex justify-center lg:justify-end">
-            <div className="w-full max-w-lg bg-white rounded-3xl border border-slate-200 shadow-[0_20px_50px_rgba(0,33,55,0.09)] p-7 sm:p-9 space-y-6">
+          {/* RIGHT HALF (50%): ULTRA-PROFESSIONAL AUTH CARD (COMPACT REDUCED WIDTH) */}
+          <div id="auth-card-section" className="w-full flex justify-center lg:pl-6 xl:pl-10">
+            <div className="w-full max-w-[420px] bg-white rounded-3xl border border-slate-200 shadow-[0_20px_50px_rgba(0,33,55,0.08)] p-6 sm:p-7 space-y-5">
               
               {/* Tab Switcher: Sign In vs Sign Up */}
               <div className="flex items-center p-1.5 rounded-2xl bg-slate-100/90 border border-slate-200/80">
