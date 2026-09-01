@@ -122,7 +122,13 @@ export default function StudentClassesPage() {
       const [eh = "23", em = "59"] = (c.endTime || "").split(":");
       const startMin = parseInt(sh, 10) * 60 + parseInt(sm, 10);
       const endMin = parseInt(eh, 10) * 60 + parseInt(em, 10);
-      return currentMinutes >= (startMin - 10) && currentMinutes <= endMin;
+      const isOvernight = endMin < startMin;
+      const effectiveEndMin = isOvernight ? endMin + 1440 : endMin;
+      const effectiveCurrentMin =
+        isOvernight && currentMinutes < startMin - 15
+          ? currentMinutes + 1440
+          : currentMinutes;
+      return effectiveCurrentMin >= (startMin - 15) && effectiveCurrentMin <= effectiveEndMin;
     }
     return false;
   };
@@ -138,7 +144,7 @@ export default function StudentClassesPage() {
     data?.classes?.find((c: any) => c.status === "LIVE") ||
     data?.classes?.find((c: any) => (!c.date || c.date === todayDateStr) && isWithinClassWindow(c));
 
-  const isClassCurrentlyLive = Boolean(liveClassDoc);
+  const isClassCurrentlyLive = Boolean(liveClassDoc) || Boolean(todayDbClass);
   const activeDoc = liveClassDoc || todayDbClass;
   const liveOrTodayDbClass = activeDoc;
 

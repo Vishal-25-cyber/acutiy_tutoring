@@ -53,9 +53,17 @@ export function computeClassTimingStatus(batch?: BatchInfo | null): ClassTimingS
 
   const startMinutes = parseTimeToMinutes(startTimeStr);
   const endMinutes = parseTimeToMinutes(endTimeStr);
-  const graceMinutes = batch?.gracePeriodMinutes ?? 10; // Allow joining 10 mins before class starts
+  const graceMinutes = batch?.gracePeriodMinutes ?? 15; // Allow joining 15 mins before class starts
 
   const currentMinutes = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+
+  // Handle overnight / past-midnight class windows (e.g. 23:15 to 01:00)
+  const isOvernight = endMinutes < startMinutes;
+  const effectiveEndMinutes = isOvernight ? endMinutes + 1440 : endMinutes;
+  const effectiveCurrentMinutes =
+    isOvernight && currentMinutes < (startMinutes - graceMinutes)
+      ? currentMinutes + 1440
+      : currentMinutes;
 
   // Derive permanent meet link for this timing batch
   const batchTag = startTimeStr.replace(":", "");
@@ -69,8 +77,8 @@ export function computeClassTimingStatus(batch?: BatchInfo | null): ClassTimingS
   if (batch?.date) {
     if (batch.date === todayDateStr) {
       // 1. Is it currently in the live window today?
-      if (currentMinutes >= (startMinutes - graceMinutes) && currentMinutes <= endMinutes) {
-        const remainingInClassMinutes = Math.max(0, Math.floor(endMinutes - currentMinutes));
+      if (effectiveCurrentMinutes >= (startMinutes - graceMinutes) && effectiveCurrentMinutes <= effectiveEndMinutes) {
+        const remainingInClassMinutes = Math.max(0, Math.floor(effectiveEndMinutes - effectiveCurrentMinutes));
         return {
           isLiveNow: true,
           canJoin: true,
@@ -86,8 +94,8 @@ export function computeClassTimingStatus(batch?: BatchInfo | null): ClassTimingS
       }
 
       // 2. Is it upcoming later today?
-      if (currentMinutes < (startMinutes - graceMinutes)) {
-        const diffSecondsTotal = Math.max(0, Math.floor(((startMinutes - graceMinutes) * 60) - (now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds())));
+      if (effectiveCurrentMinutes < (startMinutes - graceMinutes)) {
+        const diffSecondsTotal = Math.max(0, Math.floor(((startMinutes - graceMinutes) * 60) - (currentMinutes * 60)));
         const hours = Math.floor(diffSecondsTotal / 3600);
         const mins = Math.floor((diffSecondsTotal % 3600) / 60);
         const secs = diffSecondsTotal % 60;
@@ -174,8 +182,8 @@ export function computeClassTimingStatus(batch?: BatchInfo | null): ClassTimingS
   const isClassDayToday = batchDays.includes(currentDayName);
 
   // 1. Is the class currently in the active live window?
-  if (isClassDayToday && currentMinutes >= (startMinutes - graceMinutes) && currentMinutes <= endMinutes) {
-    const remainingInClassMinutes = Math.max(0, Math.floor(endMinutes - currentMinutes));
+  if (isClassDayToday && effectiveCurrentMinutes >= (startMinutes - graceMinutes) && effectiveCurrentMinutes <= effectiveEndMinutes) {
+    const remainingInClassMinutes = Math.max(0, Math.floor(effectiveEndMinutes - effectiveCurrentMinutes));
     return {
       isLiveNow: true,
       canJoin: true,
@@ -191,8 +199,8 @@ export function computeClassTimingStatus(batch?: BatchInfo | null): ClassTimingS
   }
 
   // 2. Is today a class day and the class is upcoming later today?
-  if (isClassDayToday && currentMinutes < (startMinutes - graceMinutes)) {
-    const diffSecondsTotal = Math.max(0, Math.floor(((startMinutes - graceMinutes) * 60) - (now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds())));
+  if (isClassDayToday && effectiveCurrentMinutes < (startMinutes - graceMinutes)) {
+    const diffSecondsTotal = Math.max(0, Math.floor(((startMinutes - graceMinutes) * 60) - (currentMinutes * 60)));
     const hours = Math.floor(diffSecondsTotal / 3600);
     const mins = Math.floor((diffSecondsTotal % 3600) / 60);
     const secs = diffSecondsTotal % 60;

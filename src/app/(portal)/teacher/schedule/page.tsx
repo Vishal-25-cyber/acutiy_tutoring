@@ -101,7 +101,7 @@ function TeacherScheduleClassRow({
       {/* Actions */}
       <div className="flex items-center gap-2 shrink-0 flex-wrap">
         {!isCancelled && !isDraft && (
-          timing.canJoin ? (
+          (!isCompleted || cls.status === "LIVE" || timing.canJoin) ? (
             <Link href={`/classroom/${targetRoomId}`}>
               <button
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all cursor-pointer shadow-md shadow-emerald-500/25 animate-pulse"
@@ -110,22 +110,13 @@ function TeacherScheduleClassRow({
                 <span>Enter Live Class</span>
               </button>
             </Link>
-          ) : isCompleted ? (
+          ) : (
             <button
               disabled
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-200 dark:border-slate-700"
             >
               <Clock className="w-3.5 h-3.5" />
               <span>Concluded</span>
-            </button>
-          ) : (
-            <button
-              disabled
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-200 dark:border-slate-700"
-              title={timing.detailedCountdown}
-            >
-              <Clock className="w-3.5 h-3.5" />
-              <span>Opens at {cls.startTime} ({timing.countdownText})</span>
             </button>
           )
         )}
