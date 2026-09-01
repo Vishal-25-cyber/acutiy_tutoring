@@ -1195,44 +1195,49 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 4: TEAM (FOUNDER SPOTLIGHT & SUB-TEAMS - 100% SINGLE PAGE VIEW)
+          PAGE 4: TEAM (FOUNDER SPOTLIGHT ALONE - 100% SINGLE PAGE VIEW)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="team" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-white py-6 lg:py-8">
-        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 space-y-6 lg:space-y-8">
+      <section id="team" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-white py-10 lg:py-16">
+        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 space-y-10 lg:space-y-12">
           
-          {/* Section Header (Compact & Centered) */}
-          <div className="text-center max-w-3xl mx-auto space-y-1">
+          {/* Section Header */}
+          <div className="text-center max-w-3xl mx-auto space-y-2">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Our Team
             </h2>
-            <p className="text-sm sm:text-base font-bold text-[#b89047] tracking-normal">
+            <p className="text-sm sm:text-base lg:text-lg font-bold text-[#b89047] tracking-normal max-w-2xl mx-auto">
               Passionate educators, engineering minds, and AI practitioners dedicated to student success.
             </p>
           </div>
 
-          {/* 1. Founder Spotlight (Prominent Image & Executive Profile) */}
-          <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center max-w-5xl mx-auto">
+          {/* Founder Spotlight (50/50 Split with Exact 292x365px Photo) */}
+          <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 xl:gap-20 items-center max-w-5xl mx-auto pb-4">
             {/* Center Vertical Divider Line */}
-            <div className="hidden lg:block absolute left-[42%] top-0 bottom-0 w-px bg-slate-200" />
+            <div className="hidden lg:block absolute left-1/2 top-2 bottom-2 w-px bg-slate-200 -translate-x-1/2" />
 
-            {/* Left (5 cols): Founder Portrait */}
-            <div className="lg:col-span-5 flex justify-center lg:justify-end">
-              <div className="relative shrink-0 w-[270px] h-[338px] sm:w-[292px] sm:h-[365px] rounded-2xl overflow-hidden shadow-xl border-2 border-slate-200 bg-slate-100 group">
-                <img
-                  src="/images/founder_karunya.png"
-                  alt="Karunya S - Founder of MANTIF"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
+            {/* Left: Founder Portrait (Exact 292x365px with Ambient Glow) */}
+            <div className="flex justify-center lg:justify-end lg:pr-6 xl:pr-10">
+              <div className="relative group">
+                <div className="absolute -inset-2 bg-gradient-to-r from-[#dfb74a]/25 to-[#004b79]/20 rounded-3xl blur-xl opacity-70 group-hover:opacity-100 transition duration-500 pointer-events-none" />
+
+                <div className="relative shrink-0 w-[292px] h-[365px] rounded-2xl overflow-hidden shadow-2xl border-2 border-slate-200/90 bg-white">
+                  <img
+                    src="/images/founder_karunya.png"
+                    alt="Karunya S - Founder of MANTIF"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    style={{ width: "292px", height: "365px" }}
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Right (7 cols): Executive Founder Details */}
-            <div className="lg:col-span-7 space-y-3.5 text-center lg:text-left">
+            {/* Right: Executive Founder Profile */}
+            <div className="w-full space-y-5 lg:pl-6 xl:pl-10 text-center lg:text-left">
               <div className="space-y-1">
-                <p className="text-xs font-black uppercase text-[#b89047] tracking-widest">
+                <span className="text-xs font-black uppercase text-[#b89047] tracking-widest">
                   Leadership &amp; Vision
-                </p>
-                <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight">
+                </span>
+                <h3 className="text-4xl sm:text-5xl font-black text-[#002137] tracking-tight pt-1">
                   Karunya S
                 </h3>
                 <p className="text-base sm:text-lg font-extrabold text-[#b89047]">
@@ -1240,28 +1245,28 @@ export default function HomePage() {
                 </p>
               </div>
 
-              <p className="text-slate-700 text-xs sm:text-sm lg:text-base leading-relaxed font-medium">
+              <p className="text-slate-700 text-sm sm:text-base leading-relaxed font-medium">
                 Educator with over 4 years of hands-on coaching leadership. Proud alumni of Kongu National Matriculation Higher Secondary School, passionate about revolutionizing student learning by bridging empathetic human teaching with cutting-edge artificial intelligence.
               </p>
 
-              {/* Founder Statement */}
-              <div className="border-l-4 border-[#b89047] pl-4 py-1 text-slate-800 text-xs sm:text-sm italic text-left">
-                <p className="font-semibold">
+              {/* Styled Gold Quote Box */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/50 border-l-4 border-[#b89047] border-y border-r border-amber-200/60 text-slate-800 text-sm sm:text-base italic text-left relative">
+                <p className="font-semibold text-slate-800">
                   “Education is about empowering students with curiosity, confidence, and genuine human care.”
                 </p>
               </div>
 
-              {/* Badges */}
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 pt-0.5">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200">
+              {/* Key Badges */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 pt-1">
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-700 text-xs font-extrabold border border-slate-200 shadow-2xs">
                   <GraduationCap className="w-3.5 h-3.5 text-slate-600" />
                   Kongu Alumni
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-[#8f6d2b] border border-amber-200 text-xs font-bold">
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-[#8f6d2b] border border-amber-200 text-xs font-extrabold shadow-2xs">
                   <Award className="w-3.5 h-3.5 text-[#b89047]" />
                   4+ Years Mentorship
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-[#004b79] border border-blue-200 text-xs font-bold">
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-blue-50 text-[#004b79] border border-blue-200 text-xs font-extrabold shadow-2xs">
                   <Brain className="w-3.5 h-3.5 text-[#004b79]" />
                   EdTech Innovator
                 </span>
@@ -1270,94 +1275,134 @@ export default function HomePage() {
 
           </div>
 
-          {/* 2. Three Sub-Teams (Compact 3-Column Grid Fitted Cleanly On-Screen) */}
-          <div className="pt-6 border-t border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          PAGE 5: MENTORS & TECH TEAM (EDUCATION MENTORS, SOFTWARE TEAM, AI TEAM)
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <section id="mentors" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-slate-50/60 py-12 lg:py-16">
+        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 space-y-10 lg:space-y-12">
+          
+          {/* Section Header */}
+          <div className="text-center max-w-3xl mx-auto space-y-2">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
+              Mentors &amp; Tech Team
+            </h2>
+            <p className="text-sm sm:text-base lg:text-lg font-bold text-[#b89047] tracking-normal max-w-2xl mx-auto">
+              Experienced educators, software engineers, and AI researchers shaping the future of learning.
+            </p>
+          </div>
+
+          {/* 3 Categories with Centered Headings */}
+          <div className="space-y-10 max-w-5xl mx-auto w-full">
             
-            {/* SUB-TEAM 1: Education Mentors */}
-            <div className="space-y-3">
-              <h4 className="text-sm font-black uppercase tracking-wider text-[#b89047] text-center md:text-left border-b border-slate-100 pb-1">
-                Education Mentors
-              </h4>
-              <div className="space-y-2">
-                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
-                  <div className="w-10 h-10 rounded-lg bg-[#002137] text-[#dfb74a] flex items-center justify-center shrink-0 font-bold">
-                    <Award className="w-5 h-5" />
+            {/* 1. Education Mentors */}
+            <div className="space-y-4">
+              <div className="text-center pb-1">
+                <h3 className="text-xl sm:text-2xl font-black text-[#002137] tracking-tight">
+                  Education Mentors
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Dr. A. Revathi */}
+                <div className="flex items-center gap-4 p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-[#004b79]/40 transition-all">
+                  <div className="w-16 h-16 rounded-2xl bg-[#002137] text-white flex flex-col items-center justify-center shrink-0 shadow-sm border border-slate-300">
+                    <Award className="w-7 h-7 text-[#dfb74a] mb-0.5" />
+                    <span className="text-[8px] font-extrabold uppercase text-[#dfb74a]">Photo</span>
                   </div>
-                  <div>
-                    <h5 className="font-extrabold text-xs text-[#002137]">Dr. A. Revathi</h5>
-                    <p className="text-[11px] font-bold text-[#b89047]">PhD Chemistry</p>
-                    <p className="text-[10px] text-slate-500 font-medium">Educational Mentor</p>
+                  <div className="space-y-0.5">
+                    <h4 className="font-black text-base sm:text-lg text-[#002137]">Dr. A. Revathi</h4>
+                    <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">PhD Chemistry</p>
+                    <p className="text-xs text-slate-500 font-medium">Educational Mentor</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
-                  <div className="w-10 h-10 rounded-lg bg-[#002137] text-[#dfb74a] flex items-center justify-center shrink-0 font-bold">
-                    <Award className="w-5 h-5" />
+                {/* V Lavanya */}
+                <div className="flex items-center gap-4 p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-[#004b79]/40 transition-all">
+                  <div className="w-16 h-16 rounded-2xl bg-[#002137] text-white flex flex-col items-center justify-center shrink-0 shadow-sm border border-slate-300">
+                    <Award className="w-7 h-7 text-[#dfb74a] mb-0.5" />
+                    <span className="text-[8px] font-extrabold uppercase text-[#dfb74a]">Photo</span>
                   </div>
-                  <div>
-                    <h5 className="font-extrabold text-xs text-[#002137]">V Lavanya</h5>
-                    <p className="text-[11px] font-bold text-[#b89047]">MSc MPhil Maths</p>
-                    <p className="text-[10px] text-slate-500 font-medium">Educational Mentor</p>
+                  <div className="space-y-0.5">
+                    <h4 className="font-black text-base sm:text-lg text-[#002137]">V Lavanya</h4>
+                    <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">MSc MPhil Maths</p>
+                    <p className="text-xs text-slate-500 font-medium">Educational Mentor</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* SUB-TEAM 2: Software Team */}
-            <div className="space-y-3">
-              <h4 className="text-sm font-black uppercase tracking-wider text-[#004b79] text-center md:text-left border-b border-slate-100 pb-1">
-                Software Team
-              </h4>
-              <div className="space-y-2">
-                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
-                  <div className="w-10 h-10 rounded-lg bg-[#003659] text-blue-200 flex items-center justify-center shrink-0 font-bold">
-                    <Laptop className="w-5 h-5" />
+            {/* 2. Software Team */}
+            <div className="space-y-4">
+              <div className="text-center pb-1">
+                <h3 className="text-xl sm:text-2xl font-black text-[#002137] tracking-tight">
+                  Software Team
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Vishal K */}
+                <div className="flex items-center gap-4 p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-[#004b79]/40 transition-all">
+                  <div className="w-16 h-16 rounded-2xl bg-[#003659] text-white flex flex-col items-center justify-center shrink-0 shadow-sm border border-slate-300">
+                    <Laptop className="w-7 h-7 text-blue-200 mb-0.5" />
+                    <span className="text-[8px] font-extrabold uppercase text-blue-200">Photo</span>
                   </div>
-                  <div>
-                    <h5 className="font-extrabold text-xs text-[#002137]">Vishal K</h5>
-                    <p className="text-[11px] font-bold text-[#004b79]">Software Team</p>
-                    <p className="text-[10px] text-slate-500 font-medium">Full Stack &amp; Platform</p>
+                  <div className="space-y-0.5">
+                    <h4 className="font-black text-base sm:text-lg text-[#002137]">Vishal K</h4>
+                    <p className="text-xs sm:text-sm font-extrabold text-[#004b79]">Software Team</p>
+                    <p className="text-xs text-slate-500 font-medium">Full Stack Architecture &amp; Platform</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
-                  <div className="w-10 h-10 rounded-lg bg-[#003659] text-blue-200 flex items-center justify-center shrink-0 font-bold">
-                    <Laptop className="w-5 h-5" />
+                {/* Solairaj R */}
+                <div className="flex items-center gap-4 p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-[#004b79]/40 transition-all">
+                  <div className="w-16 h-16 rounded-2xl bg-[#003659] text-white flex flex-col items-center justify-center shrink-0 shadow-sm border border-slate-300">
+                    <Laptop className="w-7 h-7 text-blue-200 mb-0.5" />
+                    <span className="text-[8px] font-extrabold uppercase text-blue-200">Photo</span>
                   </div>
-                  <div>
-                    <h5 className="font-extrabold text-xs text-[#002137]">Solairaj R</h5>
-                    <p className="text-[11px] font-bold text-[#004b79]">Software Team</p>
-                    <p className="text-[10px] text-slate-500 font-medium">Frontend &amp; UX Systems</p>
+                  <div className="space-y-0.5">
+                    <h4 className="font-black text-base sm:text-lg text-[#002137]">Solairaj R</h4>
+                    <p className="text-xs sm:text-sm font-extrabold text-[#004b79]">Software Team</p>
+                    <p className="text-xs text-slate-500 font-medium">Frontend &amp; User Experience Systems</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* SUB-TEAM 3: AI Team */}
-            <div className="space-y-3">
-              <h4 className="text-sm font-black uppercase tracking-wider text-[#8f6d2b] text-center md:text-left border-b border-slate-100 pb-1">
-                AI Research Team
-              </h4>
-              <div className="space-y-2">
-                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
-                  <div className="w-10 h-10 rounded-lg bg-[#1e293b] text-[#dfb74a] flex items-center justify-center shrink-0 font-bold">
-                    <Brain className="w-5 h-5" />
+            {/* 3. AI Team */}
+            <div className="space-y-4">
+              <div className="text-center pb-1">
+                <h3 className="text-xl sm:text-2xl font-black text-[#002137] tracking-tight">
+                  AI Team
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Abinaya B */}
+                <div className="flex items-center gap-4 p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-[#b89047]/40 transition-all">
+                  <div className="w-16 h-16 rounded-2xl bg-[#1e293b] text-white flex flex-col items-center justify-center shrink-0 shadow-sm border border-slate-300">
+                    <Brain className="w-7 h-7 text-[#dfb74a] mb-0.5" />
+                    <span className="text-[8px] font-extrabold uppercase text-[#dfb74a]">Photo</span>
                   </div>
-                  <div>
-                    <h5 className="font-extrabold text-xs text-[#002137]">Abinaya B</h5>
-                    <p className="text-[11px] font-bold text-[#b89047]">AI Team</p>
-                    <p className="text-[10px] text-slate-500 font-medium">AI Pedagogical Models</p>
+                  <div className="space-y-0.5">
+                    <h4 className="font-black text-base sm:text-lg text-[#002137]">Abinaya B</h4>
+                    <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">AI Team</p>
+                    <p className="text-xs text-slate-500 font-medium">AI Pedagogical Models &amp; Diagnostics</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
-                  <div className="w-10 h-10 rounded-lg bg-[#1e293b] text-[#dfb74a] flex items-center justify-center shrink-0 font-bold">
-                    <Brain className="w-5 h-5" />
+                {/* Arunkarthick K */}
+                <div className="flex items-center gap-4 p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-[#b89047]/40 transition-all">
+                  <div className="w-16 h-16 rounded-2xl bg-[#1e293b] text-white flex flex-col items-center justify-center shrink-0 shadow-sm border border-slate-300">
+                    <Brain className="w-7 h-7 text-[#dfb74a] mb-0.5" />
+                    <span className="text-[8px] font-extrabold uppercase text-[#dfb74a]">Photo</span>
                   </div>
-                  <div>
-                    <h5 className="font-extrabold text-xs text-[#002137]">Arunkarthick K</h5>
-                    <p className="text-[11px] font-bold text-[#b89047]">AI Team</p>
-                    <p className="text-[10px] text-slate-500 font-medium">Adaptive Tutoring &amp; ML</p>
+                  <div className="space-y-0.5">
+                    <h4 className="font-black text-base sm:text-lg text-[#002137]">Arunkarthick K</h4>
+                    <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">AI Team</p>
+                    <p className="text-xs text-slate-500 font-medium">Machine Learning &amp; Adaptive Tutoring</p>
                   </div>
                 </div>
               </div>
@@ -1369,7 +1414,7 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 5: TESTIMONIALS (STUDENT STORIES & EXPERIENCES FROM DAY 1)
+          PAGE 6: TESTIMONIALS (STUDENT STORIES & EXPERIENCES FROM DAY 1)
       ═══════════════════════════════════════════════════════════════════════ */}
       <section id="testimonials" className="scroll-mt-20 py-20 bg-slate-50 border-b border-slate-200/80">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
