@@ -1116,15 +1116,15 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           PAGE 3: OUR SIDE (INSTITUTIONAL OUTREACH - FULL PAGE 50/50 SPLIT)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="our-side" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-10 lg:py-14">
-        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 space-y-8 lg:space-y-10">
+      <section id="our-side" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white pt-6 pb-10 lg:pt-8 lg:pb-12">
+        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 space-y-6 lg:space-y-8">
           
           {/* Centered Heading at Top */}
-          <div className="text-center space-y-1.5">
+          <div className="text-center space-y-1">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Our Side
             </h2>
-            <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#b89047] tracking-tight">
+            <p className="text-sm sm:text-base lg:text-lg font-bold text-[#b89047] tracking-normal max-w-2xl mx-auto">
               Empowering school teachers and academic institutions with practical AI tools.
             </p>
           </div>
