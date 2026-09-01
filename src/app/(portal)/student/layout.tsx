@@ -1,17 +1,36 @@
 "use client";
 
-import React from "react";
-import { usePathname } from "next/navigation";
+import React, { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { PortalSidebar } from "@/components/layout/PortalSidebar";
 import { LivePaymentListener } from "@/components/payment/LivePaymentListener";
-
+import { useFastFetch } from "@/lib/api-cache";
 
 export default function StudentLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const isClassroom = pathname.includes("/classroom/");
+
+  // Verify role with /api/auth/me
+  const { data: authData } = useFastFetch("/api/auth/me");
+
+  useEffect(() => {
+    if (authData?.user) {
+      if (authData.user.role === "TEACHER") {
+        router.replace("/teacher/dashboard");
+      } else if (authData.user.role === "ADMIN") {
+        router.replace("/admin/dashboard");
+      }
+    }
+  }, [authData, router]);
 
   if (isClassroom) {
     return <>{children}</>;
+  }
+
+  // If user is actually teacher/admin, don't render student dashboard while redirecting
+  if (authData?.user && authData.user.role !== "STUDENT") {
+    return null;
   }
 
   return (
@@ -20,7 +39,6 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       <LivePaymentListener />
 
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-
         <div className="flex-1 transition-opacity duration-150 ease-out">
           {children}
         </div>
@@ -28,4 +46,3 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     </div>
   );
 }
-

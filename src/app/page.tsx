@@ -197,8 +197,9 @@ export default function HomePage() {
       }
       setOk("Login verified. Redirecting…");
       setTimeout(() => {
-        if (loginRole === "STUDENT") router.push("/student/dashboard");
-        else if (loginRole === "TEACHER") router.push("/teacher/dashboard");
+        const resolvedRole = data.user?.role || loginRole;
+        if (resolvedRole === "TEACHER") router.push("/teacher/dashboard");
+        else if (resolvedRole === "STUDENT") router.push("/student/dashboard");
         else router.push("/admin/dashboard");
       }, 300);
     } catch (e: any) {
