@@ -1065,38 +1065,44 @@ export default function HomePage() {
 
             {/* Right Side: Organic Cardless Milestone & Highlights */}
             <div className="w-full space-y-5 lg:pl-6 xl:pl-10">
-              <div className="space-y-2">
-                <div className="flex items-baseline gap-3">
-                  <span className="text-5xl sm:text-6xl font-black text-[#b89047]">4+</span>
-                  <div>
-                    <h3 className="text-base sm:text-lg font-black uppercase text-[#002137] tracking-wide">Years of Physical Coaching</h3>
-                    <p className="text-xs text-[#b89047] font-extrabold">Classroom Heritage &amp; Mentorship</p>
+              <div className="space-y-3">
+                <div className="flex items-center gap-4">
+                  <span className="text-5xl sm:text-6xl font-black text-[#b89047] leading-none shrink-0">
+                    4+
+                  </span>
+                  <div className="space-y-0.5">
+                    <h3 className="text-base sm:text-lg font-black uppercase text-[#002137] tracking-tight leading-tight">
+                      Years of Physical Coaching
+                    </h3>
+                    <p className="text-xs sm:text-sm text-[#b89047] font-extrabold tracking-wide uppercase">
+                      Classroom Heritage &amp; Mentorship
+                    </p>
                   </div>
                 </div>
-                <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
+                <p className="text-sm text-slate-600 font-medium leading-relaxed">
                   Hundreds of students personally mentored across Coimbatore and Erode for CBSE and State Board success.
                 </p>
               </div>
 
               {/* Unboxed Highlights */}
-              <div className="space-y-3.5 pt-3 border-t border-slate-200">
-                <div className="flex items-start gap-3">
+              <div className="space-y-4 pt-4 border-t border-slate-200">
+                <div className="flex items-start gap-3.5">
                   <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
                     <Check className="w-3.5 h-3.5" />
                   </div>
-                  <div>
-                    <h4 className="text-xs sm:text-sm font-bold text-[#002137]">Syllabus Aligned &amp; Doubt Focused</h4>
-                    <p className="text-xs text-slate-500 font-medium">Continuous homework feedback, live unit test evaluations, and mentor care.</p>
+                  <div className="space-y-0.5">
+                    <h4 className="text-sm font-extrabold text-[#002137]">Syllabus Aligned &amp; Doubt Focused</h4>
+                    <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">Continuous homework feedback, live unit test evaluations, and mentor care.</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-3.5">
                   <div className="w-6 h-6 rounded-full bg-blue-100 text-[#004b79] flex items-center justify-center shrink-0 mt-0.5">
                     <BookOpen className="w-3.5 h-3.5" />
                   </div>
-                  <div>
-                    <h4 className="text-xs sm:text-sm font-bold text-[#002137]">Empathetic Educator Leadership</h4>
-                    <p className="text-xs text-slate-500 font-medium">Four years of deep classroom experience translated into next-generation EdTech.</p>
+                  <div className="space-y-0.5">
+                    <h4 className="text-sm font-extrabold text-[#002137]">Empathetic Educator Leadership</h4>
+                    <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">Four years of deep classroom experience translated into next-generation EdTech.</p>
                   </div>
                 </div>
               </div>
