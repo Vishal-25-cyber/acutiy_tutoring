@@ -32,7 +32,7 @@ export default function HomePage() {
   // Mobile menu state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Auth Portal States
+  // Auth Card States
   const [authMode, setAuthMode] = useState<AuthMode>("SIGNIN");
   const [loginRole, setLoginRole] = useState<LoginRole>("STUDENT");
   const [uid, setUid] = useState("");
@@ -113,6 +113,7 @@ export default function HomePage() {
     { name: "Gallery", href: "#gallery" },
   ];
 
+  // Fetch batches and settings on mount
   useEffect(() => {
     fetch("/api/batches")
       .then((r) => r.json())
@@ -158,7 +159,7 @@ export default function HomePage() {
     setQLoading(true);
     try {
       await new Promise((r) => setTimeout(r, 600));
-      setQOk("Thank you! Your query has been submitted. We will reach out shortly.");
+      setQOk("Thank you! Your query has been submitted to Mantif Admissions. We will reach out shortly.");
       setQName("");
       setQPhone("");
       setQEmail("");
@@ -313,42 +314,42 @@ export default function HomePage() {
 
   return (
     <div
-      className="w-full min-h-screen bg-slate-50/70 text-slate-900 selection:bg-[#dfb74a]/20 selection:text-[#002137] overflow-x-hidden"
+      className="min-h-screen bg-slate-50 text-slate-900 selection:bg-[#dfb74a]/20 selection:text-[#002137]"
       style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}
     >
       {/* ═══════════════════════════════════════════════════════════════════════
-          FULL-WIDTH NAVBAR: Left Logo & Name, Right Nav Links, No Action Buttons
+          STICKY NAVBAR (EXACT REQ: About, Tutoring Hub, Our Side, Team, Testimonials, Gallery)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/90 backdrop-blur-md transition-all">
-        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 h-22 flex items-center justify-between">
+      <header className="sticky top-0 z-50 w-full border-b border-slate-200/90 bg-white/95 backdrop-blur-md transition-all shadow-xs">
+        <div className="w-full max-w-[1550px] mx-auto px-6 sm:px-10 lg:px-14 xl:px-16 h-20 flex items-center justify-between">
           
-          {/* Logo & Brand Identity (Left Side - Clearly Prominent) */}
-          <Link href="#about" className="flex items-center gap-4 group shrink-0">
-            <div className="w-13 h-13 rounded-2xl bg-white border border-slate-200 p-1.5 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform shrink-0">
+          {/* Logo & Brand Identity (Left Side - Clearly visible & crisp) */}
+          <Link href="#about" className="flex items-center gap-3.5 group text-left cursor-pointer shrink-0">
+            <div className="w-11 h-11 rounded-2xl bg-white border border-slate-200/90 p-1 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
               <img src="/images/mantif_logo.png" alt="MANTIF Logo" className="w-full h-full object-contain" />
             </div>
-            <div className="space-y-0.5">
-              <div className="flex items-center gap-2.5">
-                <span className="font-black text-2xl tracking-tight text-[#002137]">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-black text-xl tracking-tight text-[#002137]">
                   MANTIF
                 </span>
-                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-[#b89047]/15 text-[#8f6d2b] border border-[#b89047]/30">
+                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-[#b89047]/15 text-[#8f6d2b] border border-[#b89047]/30">
                   MSME Registered
                 </span>
               </div>
-              <p className="text-xs font-bold text-[#b89047] tracking-tight">
+              <p className="text-[11px] font-medium text-[#b89047] tracking-tight">
                 Human x Artificial Intelligence
               </p>
             </div>
           </Link>
 
-          {/* Desktop Navigation Links (Pushed to the Right Side) */}
-          <nav className="hidden lg:flex items-center gap-8 xl:gap-11 text-sm font-extrabold text-slate-700">
+          {/* Desktop Navigation Links (Moved to Right Side, No Contact Us / Portal Login buttons) */}
+          <nav className="hidden lg:flex items-center gap-7 xl:gap-9 text-sm font-bold text-slate-700">
             {navItems.map((item) => (
               <a
                 key={item.name}
                 href={item.href}
-                className="relative py-2 text-slate-600 hover:text-[#004b79] transition-colors group"
+                className="relative py-1 text-slate-600 hover:text-[#004b79] transition-colors group"
               >
                 <span>{item.name}</span>
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#004b79] transition-all duration-300 group-hover:w-full" />
@@ -360,7 +361,7 @@ export default function HomePage() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2.5 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors"
+            className="lg:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors"
             aria-label="Toggle Menu"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -369,7 +370,7 @@ export default function HomePage() {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-b border-slate-200 bg-white/98 px-8 py-6 space-y-4 shadow-xl">
+          <div className="lg:hidden border-b border-slate-200 bg-white px-8 py-6 space-y-4 shadow-xl">
             <div className="flex flex-col space-y-3 text-base font-bold">
               {navItems.map((item) => (
                 <a
@@ -387,145 +388,125 @@ export default function HomePage() {
       </header>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 1: ABOUT (FULL-COVER HERO SPLIT: EDITORIAL BRAND + INTEGRATED PORTAL)
+          PAGE 1: ABOUT (HERO SPLIT: ABOUT MANTIF + LOGIN / SIGNUP CARD)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="about" className="w-full min-h-[calc(100vh-5.5rem)] flex items-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-12 lg:py-16">
-        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+      <section id="about" className="relative min-h-[calc(100vh-5rem)] flex items-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/50 to-white py-12 lg:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
 
-          {/* LEFT HALF (7 COLS): GRAND TYPOGRAPHY & PILLARS (CARDLESS) */}
-          <div className="lg:col-span-7 space-y-8">
-            
+          {/* LEFT HALF (7 COLS): ABOUT MANTIF BRANDING & PILLARS */}
+          <div className="lg:col-span-7 space-y-7">
             <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-blue-50/80 border border-blue-200 text-xs font-black text-[#004b79] uppercase tracking-wider">
-                  <Shield className="w-3.5 h-3.5 text-[#004b79]" />
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs font-black text-[#004b79] uppercase tracking-wider">
+                  <Shield className="w-3.5 h-3.5" />
                   MSME-Registered EdTech Startup
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-xs font-extrabold text-emerald-800 uppercase tracking-wider">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-xs font-extrabold text-emerald-800 uppercase tracking-wider">
                   <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
                   2-Day Free Trial Included
                 </span>
               </div>
 
-              <div className="space-y-1.5 pt-1">
-                <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-[#002137] tracking-tight leading-[1.05]">
+              <div className="space-y-1">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight leading-[1.08]">
                   MANTIF
                 </h1>
-                <p className="text-2xl sm:text-3xl font-extrabold text-[#b89047] tracking-tight">
+                <p className="text-xl sm:text-2xl font-extrabold text-[#b89047] tracking-tight">
                   Human x Artificial Intelligence
                 </p>
               </div>
 
               {/* Core Philosophy Callout */}
-              <div className="py-2 pl-4 border-l-3 border-[#b89047]">
-                <p className="text-base sm:text-lg font-extrabold italic text-[#002137]">
+              <div className="p-4 rounded-2xl bg-[#002137]/5 border-l-4 border-[#b89047] text-slate-800">
+                <p className="text-sm sm:text-base font-bold italic text-[#002137]">
                   “Fusion — combining two different forms of intelligence”
                 </p>
               </div>
 
-              <p className="text-slate-600 text-base sm:text-lg leading-relaxed font-medium max-w-2xl">
+              <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">
                 MANTIF is an MSME-registered EdTech startup helping students learn better through personalised support from AI, educators, and real-world learning.
               </p>
             </div>
 
-            {/* 3 Pillars (Clean Minimalist Stream, Cardless) */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-2 border-t border-slate-200/80">
-              
-              <div className="space-y-2 group">
-                <div className="flex items-center gap-2.5">
-                  <span className="text-xs font-black text-[#004b79] font-mono tracking-widest">01</span>
-                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-[#004b79] flex items-center justify-center">
-                    <Cpu className="w-3.5 h-3.5" />
-                  </div>
+            {/* 3 Core Pillars */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-1">
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-1.5 hover:border-[#004b79]/40 transition-colors">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#004b79] flex items-center justify-center font-bold">
+                  <Cpu className="w-4 h-4" />
                 </div>
                 <h2 className="text-sm font-extrabold text-[#002137]">AI-Powered Learning</h2>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                <p className="text-xs text-slate-500 font-medium">
                   Curated syllabus paths &amp; intelligent practice designed for mastery.
                 </p>
               </div>
 
-              <div className="space-y-2 group">
-                <div className="flex items-center gap-2.5">
-                  <span className="text-xs font-black text-amber-700 font-mono tracking-widest">02</span>
-                  <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
-                    <Brain className="w-3.5 h-3.5" />
-                  </div>
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-1.5 hover:border-[#004b79]/40 transition-colors">
+                <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
+                  <Brain className="w-4 h-4" />
                 </div>
                 <h2 className="text-sm font-extrabold text-[#002137]">Learns With You</h2>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                <p className="text-xs text-slate-500 font-medium">
                   Adapts in real-time to your individual learning pace and doubt patterns.
                 </p>
               </div>
 
-              <div className="space-y-2 group">
-                <div className="flex items-center gap-2.5">
-                  <span className="text-xs font-black text-emerald-700 font-mono tracking-widest">03</span>
-                  <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
-                    <Award className="w-3.5 h-3.5" />
-                  </div>
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-1.5 hover:border-[#004b79]/40 transition-colors">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                  <Award className="w-4 h-4" />
                 </div>
                 <h2 className="text-sm font-extrabold text-[#002137]">Track Real Progress</h2>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                <p className="text-xs text-slate-500 font-medium">
                   Multi-dimensional reports &amp; full transparency for parents &amp; mentors.
                 </p>
               </div>
-
             </div>
 
-            {/* Subtle Action Anchors */}
-            <div className="flex flex-wrap items-center gap-4 pt-1">
+            {/* Quick Section Nav Anchors */}
+            <div className="flex flex-wrap items-center gap-3 pt-2">
               <a
                 href="#tutoring-hub"
-                className="text-xs font-extrabold text-[#004b79] hover:underline flex items-center gap-1.5"
+                className="px-5 py-3 rounded-xl bg-[#004b79] hover:bg-[#003b60] text-white text-xs font-bold transition-all shadow-xs flex items-center gap-2"
               >
-                <span>Read Tutoring Hub Origin Story</span>
-                <ChevronRight className="w-3.5 h-3.5" />
+                <span>Discover Tutoring Hub Story</span>
+                <ChevronRight className="w-4 h-4" />
               </a>
-              <span className="text-slate-300">•</span>
               <a
                 href="#our-side"
-                className="text-xs font-extrabold text-slate-600 hover:text-[#004b79] flex items-center gap-1.5"
+                className="px-5 py-3 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all flex items-center gap-2"
               >
-                <span>School AI Seminar (Our Side)</span>
-                <ChevronRight className="w-3.5 h-3.5" />
+                <span>School Outreach (Our Side)</span>
               </a>
             </div>
-
           </div>
 
-          {/* RIGHT HALF (5 COLS): INTEGRATED HIGH-TECH PORTAL PANE (CARDLESS) */}
+          {/* RIGHT HALF (5 COLS): INTERACTIVE AUTH CARD (SIGN IN & SIGN UP) */}
           <div id="auth-card-section" className="lg:col-span-5">
-            <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-6 sm:p-9 border border-slate-200/90 shadow-xl space-y-6">
+            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-6 sm:p-8 space-y-6">
               
-              {/* Top Mode Segment */}
-              <div className="flex items-center justify-between border-b border-slate-200/90 pb-3">
-                <div className="flex items-center gap-6">
-                  <button
-                    type="button"
-                    onClick={() => { setAuthMode("SIGNIN"); clear(); }}
-                    className={`text-sm font-black transition-all cursor-pointer pb-2 -mb-3.5 border-b-2 ${
-                      authMode === "SIGNIN"
-                        ? "text-[#002137] border-[#002137]"
-                        : "text-slate-400 border-transparent hover:text-slate-700"
-                    }`}
-                  >
-                    Sign In
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setAuthMode("SIGNUP"); setStep(1); clear(); }}
-                    className={`text-sm font-black transition-all cursor-pointer pb-2 -mb-3.5 border-b-2 ${
-                      authMode === "SIGNUP"
-                        ? "text-[#002137] border-[#002137]"
-                        : "text-slate-400 border-transparent hover:text-slate-700"
-                    }`}
-                  >
-                    Create Account
-                  </button>
-                </div>
-                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  Live Portal
-                </span>
+              {/* Tab Switcher: Sign In vs Sign Up */}
+              <div className="flex items-center p-1 rounded-2xl bg-slate-100 border border-slate-200/80">
+                <button
+                  type="button"
+                  onClick={() => { setAuthMode("SIGNIN"); clear(); }}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                    authMode === "SIGNIN"
+                      ? "bg-white text-[#002137] shadow-xs"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  Portal Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setAuthMode("SIGNUP"); setStep(1); clear(); }}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                    authMode === "SIGNUP"
+                      ? "bg-white text-[#002137] shadow-xs"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  Create Account (Sign Up)
+                </button>
               </div>
 
               {/* Alert Notifications */}
@@ -542,13 +523,11 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* ─────────────────────────────────────────────────────────────
-                  SIGN IN PANE
-              ───────────────────────────────────────────────────────────── */}
+              {/* SIGN IN FORM */}
               {authMode === "SIGNIN" && (
                 <div className="space-y-4">
-                  {/* Role Selector Pills */}
-                  <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/90 border border-slate-200/80">
+                  {/* Role Selector */}
+                  <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-50 border border-slate-200">
                     {[
                       { key: "STUDENT", label: "Student" },
                       { key: "TEACHER", label: "Faculty" },
@@ -561,10 +540,10 @@ export default function HomePage() {
                           setLoginRole(item.key as LoginRole);
                           clear();
                         }}
-                        className={`flex-1 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer text-center ${
+                        className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer text-center ${
                           loginRole === item.key
-                            ? "bg-white text-[#002137] shadow-xs"
-                            : "text-slate-500 hover:text-slate-800"
+                            ? "bg-[#002137] text-white shadow-2xs"
+                            : "text-slate-600 hover:text-slate-900"
                         }`}
                       >
                         {item.label}
@@ -572,7 +551,7 @@ export default function HomePage() {
                     ))}
                   </div>
 
-                  <form onSubmit={handleSignIn} className="space-y-3.5 pt-1">
+                  <form onSubmit={handleSignIn} className="space-y-3.5">
                     <div className="space-y-1">
                       <label className="block text-xs font-bold text-slate-700">
                         {loginRole === "STUDENT"
@@ -629,29 +608,30 @@ export default function HomePage() {
                     </button>
                   </form>
 
-                  <div className="pt-2 text-center text-xs text-slate-500 font-medium">
-                    Need an account?{" "}
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
+                    <span className="text-slate-600 font-medium flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                      New to MANTIF?
+                    </span>
                     <button
                       type="button"
                       onClick={() => { setAuthMode("SIGNUP"); setStep(1); clear(); }}
-                      className="text-[#004b79] font-extrabold hover:underline cursor-pointer ml-1"
+                      className="text-[#004b79] font-bold hover:underline cursor-pointer"
                     >
-                      Sign up in 30 seconds →
+                      Create Account →
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* ─────────────────────────────────────────────────────────────
-                  SIGN UP PANE
-              ───────────────────────────────────────────────────────────── */}
+              {/* SIGN UP FORM */}
               {authMode === "SIGNUP" && (
                 <div className="space-y-4">
                   {/* Role Switcher */}
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      { key: "STUDENT", label: "Student", icon: BookOpen },
-                      { key: "TEACHER", label: "Faculty", icon: GraduationCap },
+                      { key: "STUDENT", label: "Student Signup", icon: BookOpen },
+                      { key: "TEACHER", label: "Faculty Signup", icon: GraduationCap },
                     ].map((item) => (
                       <button
                         key={item.key}
@@ -661,28 +641,29 @@ export default function HomePage() {
                           setStep(1);
                           clear();
                         }}
-                        className={`py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer border ${
+                        className={`py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer border ${
                           signupRole === item.key
-                            ? "bg-[#002137] border-[#002137] text-white shadow-xs"
+                            ? "bg-blue-50 border-[#004b79] text-[#004b79] font-black shadow-2xs"
                             : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
                         }`}
                       >
-                        <item.icon className="w-3.5 h-3.5" />
+                        <item.icon className="w-4 h-4" />
                         <span>{item.label}</span>
                       </button>
                     ))}
                   </div>
 
+                  {/* Step progress */}
                   <div className="flex items-center justify-between text-xs font-bold text-slate-500 py-0.5">
                     <span>Step {step} of {totalSteps}: <strong className="text-[#004b79]">{stepLabels[step - 1]}</strong></span>
-                    <span className="text-[11px] text-slate-400">Secure Setup</span>
+                    <span className="text-[11px] text-slate-400">Secure Registration</span>
                   </div>
 
                   {/* Step 1: Base Credentials */}
                   {step === 1 && (
                     <div className="space-y-3">
                       <div className="space-y-1">
-                        <label className="block text-xs font-bold text-slate-700">Full Name *</label>
+                        <label className="block text-xs font-bold text-slate-700">Full Legal Name *</label>
                         <input
                           type="text"
                           value={sName}
@@ -760,7 +741,7 @@ export default function HomePage() {
                             type="text"
                             value={sSchool}
                             onChange={(e) => setSSchool(e.target.value)}
-                            placeholder="School name"
+                            placeholder="Enter school name"
                             className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                           />
                         </div>
@@ -837,9 +818,10 @@ export default function HomePage() {
                     </div>
                   )}
 
-                  {/* Step 2: Faculty Profile */}
+                  {/* Step 2: Teacher Preferences & Profile */}
                   {step === 2 && signupRole === "TEACHER" && (
                     <div className="space-y-3">
+                      {/* Classes willing to teach */}
                       <div className="space-y-1">
                         <label className="block text-xs font-bold text-slate-700">
                           Which Classes are you willing to teach? *
@@ -865,6 +847,7 @@ export default function HomePage() {
                         </div>
                       </div>
 
+                      {/* Subjects willing to teach */}
                       <div className="space-y-1">
                         <label className="block text-xs font-bold text-slate-700">
                           Which Subjects do you want to teach? *
@@ -957,7 +940,7 @@ export default function HomePage() {
                     </div>
                   )}
 
-                  {/* Step 3: Parent Info */}
+                  {/* Step 3: Student Guardian Details */}
                   {step === 3 && signupRole === "STUDENT" && (
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-2.5">
@@ -1047,61 +1030,46 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 2: TUTORING HUB (EDITORIAL TIMELINE & NARRATIVE - CARDLESS)
+          PAGE 2: TUTORING HUB (WHERE IT ALL BEGAN)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="tutoring-hub" className="w-full py-24 bg-white border-b border-slate-200/80">
-        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 space-y-16">
+      <section id="tutoring-hub" className="py-20 bg-white border-b border-slate-200/80">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-            
-            {/* Left: Giant Typography Header & 4 Years Experience Highlight */}
-            <div className="lg:col-span-5 space-y-6">
-              <div className="space-y-3">
-                <span className="text-xs font-black uppercase tracking-widest text-[#b89047] block">
-                  Origin &amp; Foundation
-                </span>
-                <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight leading-[1.08]">
-                  Tutoring Hub
-                </h2>
-                <p className="text-2xl font-extrabold text-[#b89047]">
-                  Where It All Began
-                </p>
-              </div>
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-xs font-black text-[#8f6d2b] uppercase tracking-wider">
+              <Compass className="w-3.5 h-3.5 text-[#b89047]" />
+              Our Origins
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">
+              Tutoring Hub
+            </h2>
+            <p className="text-lg sm:text-xl font-extrabold text-[#b89047]">
+              Where It All Began
+            </p>
+          </div>
 
-              <div className="pt-4 border-t border-slate-100 flex items-center gap-6">
-                <div>
-                  <span className="text-5xl font-black text-[#002137] block">4+</span>
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Years Physical Coaching</span>
-                </div>
-                <div className="h-12 w-px bg-slate-200" />
-                <div>
-                  <span className="text-5xl font-black text-[#b89047] block">100%</span>
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Personalized Mentorship</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Narrative Story with Vertical Accent & Quote */}
-            <div className="lg:col-span-7 space-y-6 lg:border-l lg:border-slate-200 lg:pl-12">
-              <p className="text-slate-700 text-lg sm:text-xl leading-relaxed font-medium">
+          {/* Narrative Story Card */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-slate-50 rounded-3xl p-8 sm:p-12 border border-slate-200/90 shadow-sm">
+            <div className="md:col-span-8 space-y-5">
+              <p className="text-slate-700 text-base sm:text-lg leading-relaxed font-medium">
                 For the past four years, <strong>Tutoring Hub</strong> has been a physical learning space where we worked closely with students and gained valuable experience in teaching and managing educational programs.
               </p>
-              <p className="text-slate-700 text-lg sm:text-xl leading-relaxed font-medium">
+              <p className="text-slate-700 text-base sm:text-lg leading-relaxed font-medium">
                 Now, we are taking that experience online through <strong>MANTIF</strong>, creating meaningful learning solutions for both students and educational institutions.
               </p>
 
-              {/* Seamless Quote Typography */}
-              <div className="pt-4 pb-2 space-y-1">
-                <p className="text-xl sm:text-2xl font-black text-[#002137]">
+              {/* Highlight Callout */}
+              <div className="p-5 rounded-2xl bg-white border border-[#b89047]/30 shadow-xs space-y-1">
+                <p className="text-base sm:text-lg font-black text-[#002137]">
                   “Tutoring Hub gave us the foundation.
                 </p>
-                <p className="text-xl sm:text-2xl font-black text-[#b89047]">
+                <p className="text-base sm:text-lg font-black text-[#b89047]">
                   MANTIF is taking it forward.”
                 </p>
               </div>
 
-              {/* Minimalist CTAs */}
-              <div className="flex flex-wrap items-center gap-4 pt-4">
+              {/* CTAs */}
+              <div className="flex flex-wrap items-center gap-3.5 pt-3">
                 <button
                   type="button"
                   onClick={() => {
@@ -1109,91 +1077,118 @@ export default function HomePage() {
                     setStep(1);
                     document.getElementById("auth-card-section")?.scrollIntoView({ behavior: "smooth" });
                   }}
-                  className="px-7 py-3.5 rounded-xl bg-[#002137] hover:bg-[#003659] text-white text-xs font-extrabold transition-all shadow-sm cursor-pointer flex items-center gap-2"
+                  className="px-6 py-3.5 rounded-xl bg-[#002137] hover:bg-[#003659] text-white text-sm font-extrabold transition-all shadow-sm cursor-pointer flex items-center gap-2"
                 >
                   <span>Sign Up on MANTIF</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
                 <a
                   href="#contact"
-                  className="px-7 py-3.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-extrabold transition-all cursor-pointer"
+                  className="px-6 py-3.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 text-sm font-extrabold transition-all cursor-pointer"
                 >
-                  Contact Admissions
+                  Contact Us
                 </a>
               </div>
             </div>
 
+            {/* Visual Icon Grid (4 Years Milestone) */}
+            <div className="md:col-span-4 space-y-4">
+              <div className="p-6 rounded-2xl bg-[#002137] text-white text-center space-y-2 shadow-lg">
+                <span className="text-4xl sm:text-5xl font-black text-[#dfb74a]">4+</span>
+                <h3 className="text-sm font-extrabold tracking-wide uppercase">Years of Physical Coaching</h3>
+                <p className="text-xs text-slate-300">
+                  Hundreds of students personally mentored for CBSE and State Board success.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 text-slate-800 space-y-1.5 shadow-2xs">
+                <div className="flex items-center gap-2 text-xs font-bold text-emerald-700">
+                  <Check className="w-4 h-4" />
+                  <span>Syllabus Aligned &amp; Doubt Focused</span>
+                </div>
+                <p className="text-xs text-slate-500 font-medium">
+                  Continuous homework feedback, live unit test evaluations, and mentor care.
+                </p>
+              </div>
+            </div>
           </div>
 
         </div>
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 3: OUR SIDE (INSTITUTIONAL OUTREACH & SCHOOL IMPACT - CARDLESS)
+          PAGE 3: OUR SIDE (INSTITUTIONAL OUTREACH & SCHOOL IMPACT)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="our-side" className="w-full py-24 bg-slate-50/60 border-b border-slate-200/80">
-        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 space-y-12">
+      <section id="our-side" className="py-20 bg-slate-50 border-b border-slate-200/80">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
-          <div className="space-y-3">
-            <span className="text-xs font-black uppercase tracking-widest text-[#004b79] block">
-              School Outreach &amp; AI Seminars
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs font-black text-[#004b79] uppercase tracking-wider">
+              <School className="w-3.5 h-3.5" />
+              Institutional Outreach &amp; AI Seminars
             </span>
-            <h2 className="text-4xl sm:text-5xl font-black text-[#002137] tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">
               Our Side
             </h2>
-            <p className="text-base sm:text-lg text-slate-600 font-medium max-w-2xl">
+            <p className="text-sm sm:text-base text-slate-600 font-medium">
               Empowering school teachers and academic institutions with practical AI tools.
             </p>
           </div>
 
-          <div className="pt-6 border-t border-slate-200 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+          {/* School Feature Card */}
+          <div className="bg-white rounded-3xl p-8 sm:p-12 border border-slate-200 shadow-md space-y-6">
             
-            {/* Left: School Title & Link */}
-            <div className="lg:col-span-5 space-y-4">
-              <a
-                href="https://www.google.com/search?q=Kongu+National+Matriculation+Hr+Sec+School+Nanjanapuram"
-                target="_blank"
-                rel="noreferrer"
-                className="group block space-y-2"
-              >
-                <div className="flex items-center gap-2 text-2xl sm:text-3xl font-black text-[#002137] group-hover:text-[#004b79] transition-colors leading-tight">
+            {/* Clickable School Link & Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+              <div className="space-y-1">
+                <a
+                  href="https://www.google.com/search?q=Kongu+National+Matriculation+Hr+Sec+School+Nanjanapuram"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group inline-flex items-center gap-2 text-xl sm:text-2xl font-black text-[#002137] hover:text-[#004b79] transition-colors"
+                >
                   <span>Kongu National Matriculation Hr Sec School, Nanjanapuram</span>
-                  <ExternalLink className="w-6 h-6 text-[#b89047] group-hover:translate-x-1 transition-transform shrink-0" />
-                </div>
-                <p className="text-xs font-bold text-[#b89047] tracking-wide uppercase">
+                  <ExternalLink className="w-5 h-5 text-[#b89047] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                </a>
+                <p className="text-xs font-bold text-slate-400">
                   Erode District • Academic Faculty Empowerment Seminar
                 </p>
-              </a>
-
-              <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-1">
-                <span className="text-xs font-black uppercase text-[#004b79] block">Workshop Topic</span>
-                <p className="text-sm font-extrabold text-[#002137]">
-                  “AI in Education: Empowering Students Today”
-                </p>
               </div>
+
+              <span className="self-start sm:self-auto px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-xs font-extrabold text-[#8f6d2b]">
+                Alma Mater Milestone
+              </span>
             </div>
 
-            {/* Right: Narrative Story */}
-            <div className="lg:col-span-7 space-y-5 text-slate-700 text-base sm:text-lg leading-relaxed font-medium">
+            {/* Workshop Narrative Body */}
+            <div className="space-y-4 text-slate-700 text-sm sm:text-base leading-relaxed font-medium">
+              <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200/70">
+                <h3 className="font-extrabold text-base text-[#002137] flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#b89047]" />
+                  Session: “AI in Education: Empowering Students Today”
+                </h3>
+              </div>
+
               <p>
-                MANTIF conducted a session on <strong>“AI in Education: Empowering Students Today”</strong> for the teachers of Kongu National Higher Secondary School, Nanjanapuram.
+                MANTIF conducted a specialized session on <strong>“AI in Education: Empowering Students Today”</strong> for the teachers of Kongu National Higher Secondary School, Nanjanapuram.
               </p>
               <p>
                 The session focused on exploring different AI tools that can help teachers engage students, capture their attention, and bring more interest into the learning process.
               </p>
-              <p className="pl-4 border-l-3 border-[#002137] italic text-slate-900 font-semibold">
+              <p className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 italic">
                 The best part of this session was that <strong>Our Founder Ms. Karunya S</strong> is an alumna of the school. It was truly a proud moment for the entire MANTIF team and for the teachers who once taught her. We could witness the pride and happiness on her teachers’ faces as they welcomed her back, this time as a Founder.
               </p>
+            </div>
 
-              <div className="pt-4 flex items-center justify-between flex-wrap gap-4 border-t border-slate-200/80">
-                <span className="text-lg font-black text-[#b89047] flex items-center gap-2">
-                  <Rocket className="w-5 h-5 text-[#b89047]" />
-                  Still we have a Long Journey !
-                </span>
-                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
-                  MANTIF Institutional Outreach
-                </span>
-              </div>
+            {/* Motivational Tag */}
+            <div className="pt-4 flex items-center justify-between flex-wrap gap-3 border-t border-slate-100">
+              <span className="text-sm sm:text-base font-black text-[#b89047] tracking-tight flex items-center gap-2">
+                <Rocket className="w-5 h-5 text-[#b89047]" />
+                Still we have a Long Journey !
+              </span>
+              <span className="text-xs text-slate-400 font-semibold">
+                MANTIF Community &amp; Institutional Outreach
+              </span>
             </div>
 
           </div>
@@ -1202,75 +1197,86 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 4: TEAM (CLEAN DIRECTORY & EDITORIAL PROFILES - CARDLESS)
+          PAGE 4: TEAM (FOUNDER, MENTORS, SOFTWARE, AI TEAMS WITH PHOTO SPACES)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="team" className="w-full py-24 bg-white border-b border-slate-200/80">
-        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 space-y-16">
+      <section id="team" className="py-20 bg-white border-b border-slate-200/80">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
-          <div className="space-y-3">
-            <span className="text-xs font-black uppercase tracking-widest text-[#004b79] block">
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs font-black text-[#004b79] uppercase tracking-wider">
+              <Users className="w-3.5 h-3.5" />
               Leadership &amp; Mentors
             </span>
-            <h2 className="text-4xl sm:text-5xl font-black text-[#002137] tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">
               Our Team
             </h2>
-            <p className="text-base sm:text-lg text-slate-600 font-medium max-w-2xl">
+            <p className="text-sm sm:text-base text-slate-600 font-medium">
               Passionate educators, engineering minds, and AI practitioners dedicated to student success.
             </p>
           </div>
 
-          {/* 1. Founder Spotlight Layout */}
-          <div className="pt-8 border-t border-slate-200 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-            <div className="lg:col-span-4 flex justify-center lg:justify-start">
-              <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-3xl overflow-hidden bg-gradient-to-br from-[#002137] to-[#004b79] text-white flex flex-col items-center justify-center p-4 shadow-xl border-4 border-white">
-                <GraduationCap className="w-14 h-14 text-[#dfb74a] mb-2" />
-                <span className="text-sm font-bold text-slate-100">Karunya S</span>
-                <span className="text-xs text-[#dfb74a] font-bold">Founder Photo</span>
+          {/* 1. Founder Spotlight Card */}
+          <div className="max-w-3xl mx-auto bg-gradient-to-br from-white via-slate-50 to-white rounded-3xl p-8 sm:p-10 border-2 border-[#b89047]/30 shadow-lg relative overflow-hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
+              
+              {/* Photo Space for Founder */}
+              <div className="sm:col-span-5 flex flex-col items-center">
+                <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-3xl overflow-hidden bg-[#002137] border-4 border-white shadow-xl flex items-center justify-center text-white group">
+                  <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-gradient-to-br from-[#002137] to-[#004b79]">
+                    <GraduationCap className="w-12 h-12 text-[#dfb74a] mb-1" />
+                    <span className="text-xs font-bold text-slate-200">Karunya S</span>
+                    <span className="text-[10px] text-[#dfb74a]">Founder Photo</span>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div className="lg:col-span-8 space-y-3">
-              <span className="text-xs font-black uppercase px-2.5 py-1 rounded bg-[#b89047]/15 text-[#8f6d2b] border border-[#b89047]/30">
-                Founder &amp; Lead Visionary
-              </span>
-              <h3 className="text-3xl sm:text-4xl font-black text-[#002137]">
-                Karunya S
-              </h3>
-              <p className="text-xs font-black text-[#b89047] uppercase tracking-wider">
-                Founder — MANTIF
-              </p>
-              <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium max-w-3xl">
-                Dedicated educator with over 4 years of hands-on coaching leadership. Alumna of Kongu National Higher Secondary School, passionate about revolutionizing student learning by bridging empathetic human teaching with cutting-edge artificial intelligence.
-              </p>
+              {/* Founder Details & Words */}
+              <div className="sm:col-span-7 space-y-3 text-center sm:text-left">
+                <span className="px-3 py-1 rounded-md text-[11px] font-black uppercase bg-[#b89047]/15 text-[#8f6d2b] border border-[#b89047]/30">
+                  Lead Visionary &amp; Founder
+                </span>
+                <h3 className="text-2xl sm:text-3xl font-black text-[#002137]">
+                  Karunya S
+                </h3>
+                <p className="text-xs font-extrabold text-[#b89047] uppercase tracking-wider">
+                  Founder — MANTIF
+                </p>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
+                  Educator with over 4 years of hands-on coaching leadership. Alumna of Kongu National Higher Secondary School, passionate about revolutionizing student learning by bridging empathetic human teaching with cutting-edge artificial intelligence.
+                </p>
+              </div>
+
             </div>
           </div>
 
-          {/* 2. Educational Mentors Stream */}
-          <div className="space-y-6 pt-6 border-t border-slate-200">
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">
-              Educational Mentors
+          {/* 2. Educational Mentors Grid (2 Mentors) */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 text-center">
+              Academic &amp; Subject Mentors
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
               
-              <div className="flex items-center gap-5">
-                <div className="w-20 h-20 rounded-2xl bg-[#002137] text-white flex flex-col items-center justify-center shrink-0 shadow-sm">
-                  <Award className="w-7 h-7 text-[#dfb74a]" />
+              {/* Mentor 1 */}
+              <div className="p-6 rounded-3xl bg-slate-50 border border-slate-200 shadow-xs flex items-center gap-4 hover:border-[#004b79]/40 transition-colors">
+                <div className="w-20 h-20 rounded-2xl bg-[#002137] text-white flex flex-col items-center justify-center shrink-0 border border-slate-300 shadow-xs">
+                  <Award className="w-7 h-7 text-[#dfb74a] mb-0.5" />
                   <span className="text-[9px] font-bold text-slate-300">Photo</span>
                 </div>
                 <div className="space-y-1">
-                  <h4 className="font-black text-lg text-[#002137]">Dr. A. Revathi</h4>
+                  <h4 className="font-extrabold text-base text-[#002137]">Dr. A. Revathi</h4>
                   <p className="text-xs font-bold text-[#b89047]">PhD Chemistry</p>
                   <p className="text-xs text-slate-500 font-semibold">Educational Mentor</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-5">
-                <div className="w-20 h-20 rounded-2xl bg-[#002137] text-white flex flex-col items-center justify-center shrink-0 shadow-sm">
-                  <Award className="w-7 h-7 text-[#dfb74a]" />
+              {/* Mentor 2 */}
+              <div className="p-6 rounded-3xl bg-slate-50 border border-slate-200 shadow-xs flex items-center gap-4 hover:border-[#004b79]/40 transition-colors">
+                <div className="w-20 h-20 rounded-2xl bg-[#002137] text-white flex flex-col items-center justify-center shrink-0 border border-slate-300 shadow-xs">
+                  <Award className="w-7 h-7 text-[#dfb74a] mb-0.5" />
                   <span className="text-[9px] font-bold text-slate-300">Photo</span>
                 </div>
                 <div className="space-y-1">
-                  <h4 className="font-black text-lg text-[#002137]">V Lavanya</h4>
+                  <h4 className="font-extrabold text-base text-[#002137]">V Lavanya</h4>
                   <p className="text-xs font-bold text-[#b89047]">MSc MPhil Maths</p>
                   <p className="text-xs text-slate-500 font-semibold">Educational Mentor</p>
                 </div>
@@ -1279,57 +1285,57 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* 3. Software & AI Teams Stream */}
-          <div className="space-y-6 pt-6 border-t border-slate-200">
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">
-              Software &amp; AI Research Teams
+          {/* 3. Engineering & AI Teams Grid (4 Members) */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 text-center">
+              Engineering, Software &amp; AI Research Team
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               
-              {/* Vishal K */}
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-slate-100 border border-slate-200 text-slate-700 flex flex-col items-center justify-center shrink-0">
-                  <Laptop className="w-6 h-6 text-[#004b79]" />
+              {/* Software Team: Vishal K */}
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3 text-center hover:border-[#004b79]/40 transition-colors">
+                <div className="w-16 h-16 rounded-2xl bg-slate-100 mx-auto flex flex-col items-center justify-center text-slate-700 border border-slate-200">
+                  <Laptop className="w-6 h-6 text-[#004b79] mb-0.5" />
                   <span className="text-[8px] font-bold text-slate-400">Photo</span>
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-base text-[#002137]">Vishal K</h4>
+                  <h4 className="font-extrabold text-sm text-[#002137]">Vishal K</h4>
                   <p className="text-xs font-bold text-[#004b79]">Software Team</p>
                 </div>
               </div>
 
-              {/* Solairaj R */}
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-slate-100 border border-slate-200 text-slate-700 flex flex-col items-center justify-center shrink-0">
-                  <Laptop className="w-6 h-6 text-[#004b79]" />
+              {/* Software Team: Solairaj R */}
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3 text-center hover:border-[#004b79]/40 transition-colors">
+                <div className="w-16 h-16 rounded-2xl bg-slate-100 mx-auto flex flex-col items-center justify-center text-slate-700 border border-slate-200">
+                  <Laptop className="w-6 h-6 text-[#004b79] mb-0.5" />
                   <span className="text-[8px] font-bold text-slate-400">Photo</span>
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-base text-[#002137]">Solairaj R</h4>
+                  <h4 className="font-extrabold text-sm text-[#002137]">Solairaj R</h4>
                   <p className="text-xs font-bold text-[#004b79]">Software Team</p>
                 </div>
               </div>
 
-              {/* Abinaya B */}
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 flex flex-col items-center justify-center shrink-0">
-                  <Brain className="w-6 h-6 text-[#b89047]" />
+              {/* AI Team: Abinaya B */}
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3 text-center hover:border-[#b89047]/40 transition-colors">
+                <div className="w-16 h-16 rounded-2xl bg-amber-50 mx-auto flex flex-col items-center justify-center text-amber-800 border border-amber-200">
+                  <Brain className="w-6 h-6 text-[#b89047] mb-0.5" />
                   <span className="text-[8px] font-bold text-slate-400">Photo</span>
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-base text-[#002137]">Abinaya B</h4>
+                  <h4 className="font-extrabold text-sm text-[#002137]">Abinaya B</h4>
                   <p className="text-xs font-bold text-[#b89047]">AI Team</p>
                 </div>
               </div>
 
-              {/* Arunkarthick K */}
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 flex flex-col items-center justify-center shrink-0">
-                  <Brain className="w-6 h-6 text-[#b89047]" />
+              {/* AI Team: Arunkarthick K */}
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3 text-center hover:border-[#b89047]/40 transition-colors">
+                <div className="w-16 h-16 rounded-2xl bg-amber-50 mx-auto flex flex-col items-center justify-center text-amber-800 border border-amber-200">
+                  <Brain className="w-6 h-6 text-[#b89047] mb-0.5" />
                   <span className="text-[8px] font-bold text-slate-400">Photo</span>
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-base text-[#002137]">Arunkarthick K</h4>
+                  <h4 className="font-extrabold text-sm text-[#002137]">Arunkarthick K</h4>
                   <p className="text-xs font-bold text-[#b89047]">AI Team</p>
                 </div>
               </div>
@@ -1341,75 +1347,84 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 5: TESTIMONIALS (EDITORIAL MAGAZINE QUOTES - CARDLESS)
+          PAGE 5: TESTIMONIALS (STUDENT STORIES & EXPERIENCES FROM DAY 1)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="testimonials" className="w-full py-24 bg-slate-50/60 border-b border-slate-200/80">
-        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 space-y-16">
+      <section id="testimonials" className="py-20 bg-slate-50 border-b border-slate-200/80">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
-          <div className="space-y-3">
-            <span className="text-xs font-black uppercase tracking-widest text-[#8f6d2b] block">
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-xs font-black text-[#8f6d2b] uppercase tracking-wider">
+              <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
               Student Voices &amp; Memories
             </span>
-            <h2 className="text-4xl sm:text-5xl font-black text-[#002137] tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">
               Testimonials
             </h2>
-            <p className="text-base sm:text-lg text-slate-600 font-medium max-w-2xl">
-              Real experiences from students who walked through our doors and excelled with us from Day 1.
+            <p className="text-sm sm:text-base text-slate-600 font-medium">
+              Real experiences from students who walked through our doors and excelled with us.
             </p>
           </div>
 
-          {/* 4 Testimonials Grid in Clean Editorial Flow */}
-          <div className="pt-8 border-t border-slate-200 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+          {/* 4 Testimonials Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             
-            {/* Story 1: T.G. Sivadharani */}
-            <div className="space-y-4">
-              <Quote className="w-9 h-9 text-[#dfb74a]" />
-              <p className="text-slate-700 text-sm sm:text-base leading-relaxed font-medium italic">
-                “If surviving 12th boards was a movie, Karunya was the director, scriptwriter, and the stunt double all in one. I walked into her tuition as her very first student — and not to brag (okay, totally to brag). Back then, I was clueless, stressed, and borderline terrified of what the CBSE gods were cooking up. But she? She was calm, collected, and totally ready to drag me lovingly, through the chaos. From breaking down the toughest topics with infinite patience, to hyping me up when I was drowning in doubts, she made sure I didn’t just survive 12th boards… I came out swinging. The late-night doubts, the last-minute revisions, the &lsquo;you better know this by tomorrow&rsquo; looks — all of it got me to where I am today. She built something amazing, and I’ll always be proud to say: I was there from Day 1. Forever your #1 ❤️”
-              </p>
-              <div className="pt-3 border-t border-slate-200">
-                <h4 className="font-black text-base text-[#002137]">T.G. Sivadharani</h4>
+            {/* Testimonial 1: T.G. Sivadharani */}
+            <div className="p-7 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-md space-y-5 flex flex-col justify-between hover:border-[#004b79]/50 transition-all">
+              <div className="space-y-4">
+                <Quote className="w-8 h-8 text-[#dfb74a]" />
+                <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-medium italic">
+                  “If surviving 12th boards was a movie, Karunya was the director, scriptwriter, and the stunt double all in one. I walked into her tuition as her very first student — and not to brag (okay, totally to brag). Back then, I was clueless, stressed, and borderline terrified of what the CBSE gods were cooking up. But she? She was calm, collected, and totally ready to drag me lovingly, through the chaos. From breaking down the toughest topics with infinite patience, to hyping me up when I was drowning in doubts, she made sure I didn’t just survive 12th boards… I came out swinging. The late-night doubts, the last-minute revisions, the &lsquo;you better know this by tomorrow&rsquo; looks — all of it got me to where I am today. She built something amazing, and I’ll always be proud to say: I was there from Day 1. Forever your #1 ❤️”
+                </p>
+              </div>
+              <div className="pt-4 border-t border-slate-100 space-y-0.5">
+                <h4 className="font-extrabold text-sm text-[#002137]">T.G. Sivadharani</h4>
                 <p className="text-xs font-bold text-[#b89047]">BSc Costume Design and Fashion</p>
-                <p className="text-xs text-slate-400">PSGR Krishnammal College, Coimbatore</p>
+                <p className="text-[11px] text-slate-500 font-medium">PSGR Krishnammal College, Coimbatore</p>
               </div>
             </div>
 
-            {/* Story 2: S. Darshan */}
-            <div className="space-y-4">
-              <Quote className="w-9 h-9 text-[#dfb74a]" />
-              <p className="text-slate-700 text-sm sm:text-base leading-relaxed font-medium italic">
-                “I just wanted to take a moment to sincerely thank you for all the support, guidance, and encouragement you&apos;ve given me throughout my time at Mantif . Your teaching has truly made a difference in how I understand the subjects, and I feel much more confident because of it. Your dedication and patience never went unnoticed, and I really appreciate the way you made even the toughest topics easier to grasp. Thanks to your help, I feel well-prepared and motivated to keep doing my best. Once again, thank you so much for everything!”
-              </p>
-              <div className="pt-3 border-t border-slate-200">
-                <h4 className="font-black text-base text-[#002137]">S. Darshan</h4>
+            {/* Testimonial 2: S. Darshan */}
+            <div className="p-7 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-md space-y-5 flex flex-col justify-between hover:border-[#004b79]/50 transition-all">
+              <div className="space-y-4">
+                <Quote className="w-8 h-8 text-[#dfb74a]" />
+                <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-medium italic">
+                  “I just wanted to take a moment to sincerely thank you for all the support, guidance, and encouragement you've given me throughout my time at Mantif . Your teaching has truly made a difference in how I understand the subjects, and I feel much more confident because of it. Your dedication and patience never went unnoticed, and I really appreciate the way you made even the toughest topics easier to grasp. Thanks to your help, I feel well-prepared and motivated to keep doing my best. Once again, thank you so much for everything!”
+                </p>
+              </div>
+              <div className="pt-4 border-t border-slate-100 space-y-0.5">
+                <h4 className="font-extrabold text-sm text-[#002137]">S. Darshan</h4>
                 <p className="text-xs font-bold text-[#b89047]">XII Standard</p>
-                <p className="text-xs text-slate-400">Board Exam Cohort</p>
+                <p className="text-[11px] text-slate-500 font-medium">Board Exam Cohort</p>
               </div>
             </div>
 
-            {/* Story 3: Kanishka C */}
-            <div className="space-y-4">
-              <Quote className="w-9 h-9 text-[#dfb74a]" />
-              <p className="text-slate-700 text-sm sm:text-base leading-relaxed font-medium italic">
-                “Mantif Tutoring wasn&apos;t just about academics; it also helped me in developing my personality and other skills. The supportive atmosphere boosted my confidence and made learning enjoyable. I truly thankful for all the memories of Mantif.”
-              </p>
-              <div className="pt-3 border-t border-slate-200">
-                <h4 className="font-black text-base text-[#002137]">Kanishka C</h4>
+            {/* Testimonial 3: Kanishka C */}
+            <div className="p-7 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-md space-y-5 flex flex-col justify-between hover:border-[#004b79]/50 transition-all">
+              <div className="space-y-4">
+                <Quote className="w-8 h-8 text-[#dfb74a]" />
+                <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-medium italic">
+                  “Mantif Tutoring wasn't just about academics; it also helped me in developing my personality and other skills. The supportive atmosphere boosted my confidence and made learning enjoyable. I truly thankful for all the memories of Mantif.”
+                </p>
+              </div>
+              <div className="pt-4 border-t border-slate-100 space-y-0.5">
+                <h4 className="font-extrabold text-sm text-[#002137]">Kanishka C</h4>
                 <p className="text-xs font-bold text-[#b89047]">XII Standard</p>
-                <p className="text-xs text-slate-400">Classroom Alumna</p>
+                <p className="text-[11px] text-slate-500 font-medium">Classroom Alumna</p>
               </div>
             </div>
 
-            {/* Story 4: R. Manikandan */}
-            <div className="space-y-4">
-              <Quote className="w-9 h-9 text-[#dfb74a]" />
-              <p className="text-slate-700 text-sm sm:text-base leading-relaxed font-medium italic">
-                “Tuition here is always jolly! It’s not boring like just sitting and writing notes. For me, Tutoring Hub from Mantif is a place where we study, have fun, and feel free to share our worries. It is serious learning, but with lots of care and friendship and that’s why it is so special.”
-              </p>
-              <div className="pt-3 border-t border-slate-200">
-                <h4 className="font-black text-base text-[#002137]">R. Manikandan</h4>
+            {/* Testimonial 4: R. Manikandan */}
+            <div className="p-7 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-md space-y-5 flex flex-col justify-between hover:border-[#004b79]/50 transition-all">
+              <div className="space-y-4">
+                <Quote className="w-8 h-8 text-[#dfb74a]" />
+                <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-medium italic">
+                  “Tuition here is always jolly! It’s not boring like just sitting and writing notes. For me, Tutoring Hub from Mantif is a place where we study, have fun, and feel free to share our worries. It is serious learning, but with lots of care and friendship and that’s why it is so special.”
+                </p>
+              </div>
+              <div className="pt-4 border-t border-slate-100 space-y-0.5">
+                <h4 className="font-extrabold text-sm text-[#002137]">R. Manikandan</h4>
                 <p className="text-xs font-bold text-[#b89047]">XI Standard</p>
-                <p className="text-xs text-slate-400">Tutoring Hub Learner</p>
+                <p className="text-[11px] text-slate-500 font-medium">Tutoring Hub Learner</p>
               </div>
             </div>
 
@@ -1419,92 +1434,123 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 6: GALLERY (FULL-WIDTH MODERN MOSAIC)
+          PAGE 6: GALLERY (MOMENTS & WORKSHOPS READY FOR IMAGES)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="gallery" className="w-full py-24 bg-white border-b border-slate-200/80">
-        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 space-y-12">
+      <section id="gallery" className="py-20 bg-white border-b border-slate-200/80">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
-          <div className="space-y-3">
-            <span className="text-xs font-black uppercase tracking-widest text-[#004b79] block">
-              Photo Highlights &amp; Seminars
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs font-black text-[#004b79] uppercase tracking-wider">
+              <ImageIcon className="w-3.5 h-3.5" />
+              Photo Highlights
             </span>
-            <h2 className="text-4xl sm:text-5xl font-black text-[#002137] tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">
               Gallery
             </h2>
-            <p className="text-base sm:text-lg text-slate-600 font-medium max-w-2xl">
+            <p className="text-sm sm:text-base text-slate-600 font-medium">
               Memories from our AI school workshops, physical Tutoring Hub classrooms, and student milestones.
             </p>
           </div>
 
-          {/* Full-width mosaic grid */}
-          <div className="pt-6 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Interactive Responsive Gallery Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             
-            <div className="group relative aspect-16/10 rounded-3xl overflow-hidden bg-slate-900 shadow-sm">
+            {/* Gallery Slot 1 */}
+            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
               <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#002137] to-[#004b79] text-white">
                 <School className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
-                <h4 className="font-extrabold text-base">Kongu National School Seminar</h4>
+                <h4 className="font-extrabold text-sm">Kongu National School Seminar</h4>
                 <p className="text-xs text-slate-300 mt-1">AI in Education for Teachers</p>
+                <span className="mt-3 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-white/10 text-[#dfb74a] border border-white/20">
+                  School Outreach
+                </span>
               </div>
             </div>
 
-            <div className="group relative aspect-16/10 rounded-3xl overflow-hidden bg-slate-900 shadow-sm">
+            {/* Gallery Slot 2 */}
+            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
               <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#003659] to-[#002137] text-white">
                 <Brain className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
-                <h4 className="font-extrabold text-base">AI Tool Demonstration</h4>
+                <h4 className="font-extrabold text-sm">AI Tool Demonstration</h4>
                 <p className="text-xs text-slate-300 mt-1">Interactive Teaching Technologies</p>
+                <span className="mt-3 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-white/10 text-[#dfb74a] border border-white/20">
+                  Faculty Workshop
+                </span>
               </div>
             </div>
 
-            <div className="group relative aspect-16/10 rounded-3xl overflow-hidden bg-slate-900 shadow-sm">
+            {/* Gallery Slot 3 */}
+            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
               <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#002137] to-[#0a4870] text-white">
                 <BookOpen className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
-                <h4 className="font-extrabold text-base">Tutoring Hub Physical Sessions</h4>
+                <h4 className="font-extrabold text-sm">Tutoring Hub Physical Sessions</h4>
                 <p className="text-xs text-slate-300 mt-1">4 Years of Personalized Guidance</p>
+                <span className="mt-3 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-white/10 text-[#dfb74a] border border-white/20">
+                  Tutoring Hub
+                </span>
               </div>
             </div>
 
-            <div className="group relative aspect-16/10 rounded-3xl overflow-hidden bg-slate-900 shadow-sm">
+            {/* Gallery Slot 4 */}
+            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
               <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#004b79] to-[#002137] text-white">
                 <Sparkles className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
-                <h4 className="font-extrabold text-base">Student Doubt Solving Circle</h4>
+                <h4 className="font-extrabold text-sm">Student Doubt Solving Circle</h4>
                 <p className="text-xs text-slate-300 mt-1">One-on-One Problem Solving</p>
+                <span className="mt-3 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-white/10 text-[#dfb74a] border border-white/20">
+                  Mentorship
+                </span>
               </div>
             </div>
 
-            <div className="group relative aspect-16/10 rounded-3xl overflow-hidden bg-slate-900 shadow-sm">
+            {/* Gallery Slot 5 */}
+            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
               <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#002137] to-[#083353] text-white">
                 <Award className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
-                <h4 className="font-extrabold text-base">Board Exam Achievers Meet</h4>
+                <h4 className="font-extrabold text-sm">Board Exam Achievers Meet</h4>
                 <p className="text-xs text-slate-300 mt-1">Celebrating Student Milestones</p>
+                <span className="mt-3 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-white/10 text-[#dfb74a] border border-white/20">
+                  Student Success
+                </span>
               </div>
             </div>
 
-            <div className="group relative aspect-16/10 rounded-3xl overflow-hidden bg-slate-900 shadow-sm">
+            {/* Gallery Slot 6 */}
+            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
               <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#003b60] to-[#002137] text-white">
                 <Users className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
-                <h4 className="font-extrabold text-base">Online Live Classroom</h4>
+                <h4 className="font-extrabold text-sm">Online Live Classroom</h4>
                 <p className="text-xs text-slate-300 mt-1">MANTIF Real-Time Web Platform</p>
+                <span className="mt-3 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-white/10 text-[#dfb74a] border border-white/20">
+                  Live Tech
+                </span>
               </div>
             </div>
 
           </div>
 
+          <p className="text-center text-xs text-slate-400 font-semibold">
+            Photos and workshop media are periodically archived by the MANTIF Academic Operations Team.
+          </p>
+
         </div>
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          FOOTER: CONTACT US & OFFICIAL COMMUNICATIONS (FULL WIDTH)
+          FOOTER: CONTACT US & OFFICIAL COMMUNICATIONS
       ═══════════════════════════════════════════════════════════════════════ */}
-      <footer id="contact" className="w-full bg-[#001726] text-white pt-20 pb-12 border-t border-slate-800">
-        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 space-y-16">
+      <footer id="contact" className="bg-[#001726] text-white pt-16 pb-12 border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          {/* Top Footer: Contact Grid & Query Form */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             
             {/* Left Column (6 cols): Direct Hotlines & Organization Info */}
             <div className="lg:col-span-6 space-y-6">
+              
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-white p-1 flex items-center justify-center shadow-xs">
+                  <div className="w-10 h-10 rounded-2xl bg-white p-1 flex items-center justify-center shadow-xs">
                     <img src="/images/mantif_logo.png" alt="MANTIF Logo" className="w-full h-full object-contain" />
                   </div>
                   <div>
@@ -1512,24 +1558,30 @@ export default function HomePage() {
                     <p className="text-xs text-[#dfb74a] font-bold">Human x Artificial Intelligence</p>
                   </div>
                 </div>
-                <p className="text-sm text-slate-300 leading-relaxed max-w-lg font-medium">
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-lg font-medium">
                   MSME-registered EdTech startup combining empathetic educator mentorship with artificial intelligence for students of Classes 6 to 10.
                 </p>
               </div>
 
               {/* 3 Dedicated Hotlines */}
-              <div className="space-y-3 pt-2">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400 block">
-                  Official Helplines (Direct Support)
-                </span>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    Official Helplines (Direct Support)
+                  </span>
+                  <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    Mon–Sat (9 AM – 8:30 PM)
+                  </span>
+                </div>
 
-                {/* Line 1 */}
+                {/* Line 1: Admissions */}
                 <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between gap-3">
                   <div>
                     <span className="text-[10px] font-bold uppercase text-[#dfb74a] block">
                       Hotline 1 • Admissions &amp; Fees
                     </span>
-                    <span className="text-base font-black font-mono text-white">
+                    <span className="text-sm sm:text-base font-black font-mono text-white">
                       +91 {phone1.slice(0, 5)} {phone1.slice(5)}
                     </span>
                   </div>
@@ -1554,19 +1606,20 @@ export default function HomePage() {
                       type="button"
                       onClick={() => handleCopy(`+91${phone1}`, "f1")}
                       className="w-8 h-8 rounded-lg bg-white/10 text-slate-300 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
+                      title="Copy"
                     >
                       {copiedKey === "f1" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
 
-                {/* Line 2 */}
+                {/* Line 2: Academic Inquiries */}
                 <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between gap-3">
                   <div>
                     <span className="text-[10px] font-bold uppercase text-[#dfb74a] block">
                       Hotline 2 • Academic &amp; Batch Timing
                     </span>
-                    <span className="text-base font-black font-mono text-white">
+                    <span className="text-sm sm:text-base font-black font-mono text-white">
                       +91 {phone2.slice(0, 5)} {phone2.slice(5)}
                     </span>
                   </div>
@@ -1591,19 +1644,20 @@ export default function HomePage() {
                       type="button"
                       onClick={() => handleCopy(`+91${phone2}`, "f2")}
                       className="w-8 h-8 rounded-lg bg-white/10 text-slate-300 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
+                      title="Copy"
                     >
                       {copiedKey === "f2" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
 
-                {/* Line 3 */}
+                {/* Line 3: Tech & General Support */}
                 <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between gap-3">
                   <div>
                     <span className="text-[10px] font-bold uppercase text-[#dfb74a] block">
                       Hotline 3 • Tech Support &amp; Helpdesk
                     </span>
-                    <span className="text-base font-black font-mono text-white">
+                    <span className="text-sm sm:text-base font-black font-mono text-white">
                       +91 {phone3.slice(0, 5)} {phone3.slice(5)}
                     </span>
                   </div>
@@ -1628,25 +1682,29 @@ export default function HomePage() {
                       type="button"
                       onClick={() => handleCopy(`+91${phone3}`, "f3")}
                       className="w-8 h-8 rounded-lg bg-white/10 text-slate-300 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
+                      title="Copy"
                     >
                       {copiedKey === "f3" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
+
               </div>
 
-              <div className="flex items-center gap-3 text-xs text-slate-300 pt-1">
+              {/* Email Support */}
+              <div className="flex items-center gap-3 text-xs text-slate-300">
                 <Mail className="w-4 h-4 text-[#dfb74a]" />
                 <span>Official Support: <strong className="text-white font-mono">{supportEmail}</strong></span>
               </div>
+
             </div>
 
             {/* Right Column (6 cols): Direct Message Inquiry Form */}
             <div className="lg:col-span-6 bg-white/5 rounded-3xl p-6 sm:p-8 border border-white/10 space-y-4">
               <div className="space-y-1">
-                <h4 className="text-lg font-black text-white">Send Direct Message</h4>
+                <h4 className="text-base sm:text-lg font-black text-white">Send Direct Message</h4>
                 <p className="text-xs text-slate-400 font-medium">
-                  Have a question about admissions, fee structure, or demo classes? We respond promptly.
+                  Have a question about admissions, fee structure, or demo classes? We respond within 15 minutes.
                 </p>
               </div>
 
@@ -1735,6 +1793,7 @@ export default function HomePage() {
 
           </div>
 
+          {/* Bottom Copyright & MSME Legal Bar */}
           <div className="pt-8 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-white">MANTIF</span>
