@@ -1529,10 +1529,10 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Interactive Responsive Gallery Grid */}
+          {/* Interactive Responsive Gallery Grid (9 Real Photo Cards) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             
-            {/* Gallery Item 1 (Real Photo: Creative Circles) */}
+            {/* Gallery Item 1 (Creative Circles) */}
             <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
               <img
                 src="/images/gallery_1.jpg"
@@ -1548,7 +1548,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Gallery Item 2 (Real Photo: Reading & Discovery) */}
+            {/* Gallery Item 2 (Reading & Discovery) */}
             <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
               <img
                 src="/images/gallery_2.jpg"
@@ -1564,7 +1564,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Gallery Item 3 (Real Photo: Early Focus & Skill) */}
+            {/* Gallery Item 3 (Early Focus & Skill) */}
             <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
               <img
                 src="/images/gallery_3.jpg"
@@ -1580,7 +1580,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Gallery Item 4 (Real Photo: Whiteboard Classroom) */}
+            {/* Gallery Item 4 (Classroom Problem Solving) */}
             <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
               <img
                 src="/images/gallery_4.jpg"
@@ -1596,27 +1596,83 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Gallery Slot 5 (Seminar & Workshops) */}
+            {/* Gallery Item 5 (Whiteboard Math Practice) */}
             <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
-              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#002137] to-[#004b79] text-white">
-                <School className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
-                <h4 className="font-extrabold text-sm sm:text-base">Kongu National School Seminar</h4>
-                <p className="text-xs text-slate-300 mt-1">AI in Education for Teachers</p>
-                <span className="mt-3 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-white/10 text-[#dfb74a] border border-white/20">
-                  School Outreach
+              <img
+                src="/images/gallery_5.jpg"
+                alt="Student solving algebra equation on whiteboard"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/90 via-[#001726]/30 to-transparent flex flex-col justify-end p-5 text-white">
+                <span className="self-start text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-[#dfb74a] text-[#002137] mb-2 shadow-sm">
+                  Math Mastery
                 </span>
+                <h4 className="font-extrabold text-sm sm:text-base leading-snug">Whiteboard Algebraic Practice</h4>
+                <p className="text-xs text-slate-200 mt-0.5">Step-by-step formula derivation &amp; mastery</p>
               </div>
             </div>
 
-            {/* Gallery Slot 6 (Online Live Platform) */}
+            {/* Gallery Item 6 (Peer Camaraderie & Friendship) */}
             <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
-              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#003b60] to-[#002137] text-white">
-                <Users className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
-                <h4 className="font-extrabold text-sm sm:text-base">Online Live Classroom</h4>
-                <p className="text-xs text-slate-300 mt-1">MANTIF Real-Time Web Platform</p>
-                <span className="mt-3 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-white/10 text-[#dfb74a] border border-white/20">
-                  Live Platform
+              <img
+                src="/images/gallery_6.jpg"
+                alt="Students fist bumping in peer celebration"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/90 via-[#001726]/30 to-transparent flex flex-col justify-end p-5 text-white">
+                <span className="self-start text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-[#dfb74a] text-[#002137] mb-2 shadow-sm">
+                  Student Life
                 </span>
+                <h4 className="font-extrabold text-sm sm:text-base leading-snug">Peer Camaraderie &amp; Support</h4>
+                <p className="text-xs text-slate-200 mt-0.5">Joyful collaborative milestone celebration</p>
+              </div>
+            </div>
+
+            {/* Gallery Item 7 (Hands-On Rainbow Craft) */}
+            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
+              <img
+                src="/images/gallery_7.jpg"
+                alt="Children creating rainbow art project with cotton"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/90 via-[#001726]/30 to-transparent flex flex-col justify-end p-5 text-white">
+                <span className="self-start text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-[#dfb74a] text-[#002137] mb-2 shadow-sm">
+                  Team Craft
+                </span>
+                <h4 className="font-extrabold text-sm sm:text-base leading-snug">Hands-on Creative Teamwork</h4>
+                <p className="text-xs text-slate-200 mt-0.5">Rainbow art &amp; creative expression</p>
+              </div>
+            </div>
+
+            {/* Gallery Item 8 (Senior Board Study Cohort) */}
+            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
+              <img
+                src="/images/gallery_8.jpg"
+                alt="Senior students studying revision materials"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/90 via-[#001726]/30 to-transparent flex flex-col justify-end p-5 text-white">
+                <span className="self-start text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-[#dfb74a] text-[#002137] mb-2 shadow-sm">
+                  Board Prep
+                </span>
+                <h4 className="font-extrabold text-sm sm:text-base leading-snug">Senior Board Exam Cohort</h4>
+                <p className="text-xs text-slate-200 mt-0.5">Dedicated revision and problem practice</p>
+              </div>
+            </div>
+
+            {/* Gallery Item 9 (MANTIF Friendship Circle) */}
+            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
+              <img
+                src="/images/gallery_9.jpg"
+                alt="Students joining hands in friendship circle"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/90 via-[#001726]/30 to-transparent flex flex-col justify-end p-5 text-white">
+                <span className="self-start text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-[#dfb74a] text-[#002137] mb-2 shadow-sm">
+                  Community
+                </span>
+                <h4 className="font-extrabold text-sm sm:text-base leading-snug">MANTIF Friendship Circle</h4>
+                <p className="text-xs text-slate-200 mt-0.5">Lifelong bonds, care, and mutual growth</p>
               </div>
             </div>
 
