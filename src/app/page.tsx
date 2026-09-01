@@ -1210,32 +1210,35 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* 1. Founder Spotlight (Cardless, 292x365px Photo) */}
-          <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-14 max-w-5xl mx-auto pb-4">
-            
-            {/* Exact 292x365px Founder Image */}
-            <div className="shrink-0 w-[292px] h-[365px] rounded-2xl overflow-hidden shadow-xl border-2 border-slate-100 bg-slate-100 relative group">
-              <img
-                src="/images/founder_karunya.png"
-                alt="Karunya S - Founder of MANTIF"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                style={{ width: "292px", height: "365px" }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#002137]/30 via-transparent to-transparent pointer-events-none" />
+          {/* 1. Founder Spotlight (50/50 Split with Exact 292x365px Photo) */}
+          <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 xl:gap-20 items-center max-w-5xl mx-auto pb-4">
+            {/* Center Vertical Divider Line */}
+            <div className="hidden lg:block absolute left-1/2 top-2 bottom-2 w-px bg-slate-200 -translate-x-1/2" />
+
+            {/* Left: Founder Portrait (Exact 292x365px) */}
+            <div className="flex justify-center lg:justify-end lg:pr-6 xl:pr-10">
+              <div className="shrink-0 w-[292px] h-[365px] rounded-2xl overflow-hidden shadow-xl border-2 border-slate-200/80 bg-slate-100 relative group">
+                <img
+                  src="/images/founder_karunya.png"
+                  alt="Karunya S - Founder of MANTIF"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  style={{ width: "292px", height: "365px" }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#002137]/25 via-transparent to-transparent pointer-events-none" />
+              </div>
             </div>
 
-            {/* Founder Biography & Vision (Cardless) */}
-            <div className="space-y-4 text-center lg:text-left">
-              <span className="inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-50 text-[#8f6d2b] border border-amber-200">
-                Lead Visionary &amp; Founder
-              </span>
-              
+            {/* Right: Executive Founder Profile */}
+            <div className="w-full space-y-4 lg:pl-6 xl:pl-10 text-center lg:text-left">
               <div className="space-y-1">
-                <h3 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">
+                <span className="text-xs font-black uppercase text-[#b89047] tracking-widest">
+                  Leadership &amp; Vision
+                </span>
+                <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight">
                   Karunya S
                 </h3>
                 <p className="text-base sm:text-lg font-extrabold text-[#b89047]">
-                  Founder — MANTIF
+                  Founder &amp; Lead Educator — MANTIF
                 </p>
               </div>
 
@@ -1243,10 +1246,24 @@ export default function HomePage() {
                 Educator with over 4 years of hands-on coaching leadership. Alumna of Kongu National Higher Secondary School, passionate about revolutionizing student learning by bridging empathetic human teaching with cutting-edge artificial intelligence.
               </p>
 
-              <div className="border-l-4 border-[#b89047] pl-4 py-1 text-slate-800 italic text-sm sm:text-base text-left">
+              {/* Founder Quote */}
+              <div className="border-l-4 border-[#b89047] pl-4 py-1 text-slate-800 text-sm sm:text-base italic text-left">
                 <p>
                   “Education is about empowering students with curiosity, confidence, and genuine human care.”
                 </p>
+              </div>
+
+              {/* Badges */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 pt-1">
+                <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-extrabold">
+                  4+ Years Mentorship
+                </span>
+                <span className="px-3 py-1 rounded-full bg-amber-50 text-[#8f6d2b] border border-amber-200 text-xs font-extrabold">
+                  Kongu Alumna
+                </span>
+                <span className="px-3 py-1 rounded-full bg-blue-50 text-[#004b79] text-xs font-extrabold">
+                  EdTech Innovator
+                </span>
               </div>
             </div>
 
