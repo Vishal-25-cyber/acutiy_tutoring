@@ -230,9 +230,11 @@ export function JitsiClassroom({
   const askToJoin = useCallback(async () => {
     setStage("PENDING_ADMISSION");
 
+    const targetClassId = classData?.id || classData?.livekitRoomId || classId;
+
     // Send knock
     try {
-      await fetch(`/api/classes/${classId}/admit`, {
+      await fetch(`/api/classes/${targetClassId}/admit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: userInfo.name }),
@@ -241,11 +243,11 @@ export function JitsiClassroom({
       console.warn("Knock failed:", e);
     }
 
-    // Start polling every 3 seconds
+    // Start polling every 2 seconds
     const poll = async () => {
       try {
         const res = await fetch(
-          `/api/classes/${classId}/admit?userId=${userInfo.id}`,
+          `/api/classes/${targetClassId}/admit?userId=${userInfo.id}`,
           { cache: "no-store" }
         );
         const data = await res.json();
@@ -260,7 +262,7 @@ export function JitsiClassroom({
       } catch (e) { /* ignore poll errors */ }
     };
 
-    pollTimerRef.current = setInterval(poll, 3000);
+    pollTimerRef.current = setInterval(poll, 2000);
     // Also poll immediately
     poll();
   }, [classId, userInfo.id, userInfo.name, classData]);
@@ -269,14 +271,16 @@ export function JitsiClassroom({
   useEffect(() => () => { if (pollTimerRef.current) clearInterval(pollTimerRef.current); }, []);
 
   /* ─────────────────────────────────────────────────
-     3b.  TEACHER → poll pending list every 4 seconds
+     3b.  TEACHER → poll pending list every 2 seconds
   ───────────────────────────────────────────────── */
   useEffect(() => {
     if (stage !== "LIVE_CLASS" || !userInfo.isTeacher) return;
 
+    const targetClassId = classData?.id || classData?.livekitRoomId || classId;
+
     const fetchPending = async () => {
       try {
-        const res = await fetch(`/api/classes/${classId}/admit`, { cache: "no-store" });
+        const res = await fetch(`/api/classes/${targetClassId}/admit`, { cache: "no-store" });
         if (!res.ok) return;
         const data = await res.json();
         const pending: PendingStudent[] = data.pendingAdmissions || [];
@@ -287,9 +291,9 @@ export function JitsiClassroom({
     };
 
     fetchPending();
-    const timer = setInterval(fetchPending, 2000);
+    const timer = setInterval(fetchPending, 1500);
     return () => clearInterval(timer);
-  }, [stage, userInfo.isTeacher, classId]);
+  }, [stage, userInfo.isTeacher, classId, classData]);
 
   /* ─────────────────────────────────────────────────
      3c.  TEACHER → admit or deny a student
@@ -297,8 +301,9 @@ export function JitsiClassroom({
   const handleAdmitDeny = useCallback(
     async (userId: string, action: "ADMIT" | "DENY") => {
       setAdmittingId(userId);
+      const targetClassId = classData?.id || classData?.livekitRoomId || classId;
       try {
-        await fetch(`/api/classes/${classId}/admit`, {
+        await fetch(`/api/classes/${targetClassId}/admit`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId, action }),
@@ -315,7 +320,7 @@ export function JitsiClassroom({
         setAdmittingId(null);
       }
     },
-    [classId]
+    [classId, classData]
   );
 
   /* ─────────────────────────────────────────────────

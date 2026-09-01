@@ -47,7 +47,7 @@ function TeacherScheduleClassRow({
   };
 
   const timing = useClassLiveTimer(batchData);
-  const targetRoomId = timing.permanentRoomId || cls.livekitRoomId || cls._id;
+  const targetRoomId = cls.livekitRoomId || cls.meetingId || cls._id || timing.permanentRoomId;
 
   return (
     <div className="py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors px-1">

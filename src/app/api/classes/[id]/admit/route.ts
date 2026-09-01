@@ -17,11 +17,16 @@ async function resolveClassDoc(id: string) {
   });
   if (byMeetingId) return byMeetingId;
 
-  // Fallback: look for an active live session
-  const liveSession = await LiveSession.findOne({ status: "LIVE" });
+  // Fallback: look for today's live or active session
+  const now = new Date();
+  const todayDateStr = now.toISOString().split("T")[0];
+  const liveSession = await LiveSession.findOne({
+    date: todayDateStr,
+    status: { $in: ["LIVE", "PUBLISHED", "SCHEDULED"] },
+  }).sort({ updatedAt: -1 });
   if (liveSession) return liveSession;
 
-  return await LiveSession.findOne();
+  return await LiveSession.findOne({ status: "LIVE" }) || await LiveSession.findOne().sort({ updatedAt: -1 });
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -111,7 +116,7 @@ export async function GET(
 
     const { id } = await params;
     const { searchParams } = new URL(req.url);
-    const pollUserId = searchParams.get("userId");
+    const queryUserId = searchParams.get("userId");
 
     await connectToDatabase();
     const classDoc = await resolveClassDoc(id);
@@ -120,28 +125,37 @@ export async function GET(
       return NextResponse.json({ error: "Class not found." }, { status: 404 });
     }
 
-    if (!classDoc.admittedStudents) classDoc.admittedStudents = [];
-    if (!classDoc.deniedStudents) classDoc.deniedStudents = [];
-    if (!classDoc.pendingAdmissions) classDoc.pendingAdmissions = [];
-
-    // ── Student polling their own status ──
-    if (pollUserId) {
-      const admitted = (classDoc.admittedStudents || []).some(
-        (e: any) => e.userId === pollUserId
+    // STUDENT POLL: Check if this specific student is admitted or denied
+    if (queryUserId) {
+      const isAdmitted = (classDoc.admittedStudents || []).some(
+        (e: any) => e.userId === queryUserId
       );
-      if (admitted) return NextResponse.json({ status: "ADMITTED" });
+      if (isAdmitted) {
+        return NextResponse.json({ status: "ADMITTED" });
+      }
 
-      const denied = (classDoc.deniedStudents || []).some(
-        (e: any) => e.userId === pollUserId
+      const isDenied = (classDoc.deniedStudents || []).some(
+        (e: any) => e.userId === queryUserId
       );
-      if (denied) return NextResponse.json({ status: "DENIED" });
+      if (isDenied) {
+        return NextResponse.json({ status: "DENIED" });
+      }
 
       return NextResponse.json({ status: "PENDING" });
     }
 
+    // TEACHER POLL: Return full pending queue and admitted list
     return NextResponse.json({
-      pendingAdmissions: classDoc.pendingAdmissions || [],
-      admittedStudents: classDoc.admittedStudents || [],
+      pendingAdmissions: (classDoc.pendingAdmissions || []).map((e: any) => ({
+        userId: e.userId,
+        name: e.name,
+        requestedAt: e.requestedAt,
+      })),
+      admittedStudents: (classDoc.admittedStudents || []).map((e: any) => ({
+        userId: e.userId,
+        name: e.name,
+        admittedAt: e.admittedAt,
+      })),
     });
   } catch (err: any) {
     console.error("GET /api/classes/[id]/admit error:", err);
@@ -150,29 +164,36 @@ export async function GET(
 }
 
 // ─────────────────────────────────────────────────────────────────
-// PUT — Teacher admits or denies a student
+// PATCH — Teacher admits or denies a student
 // Body: { userId: string, action: "ADMIT" | "DENY" }
 // ─────────────────────────────────────────────────────────────────
-export async function PUT(
+export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getSession(req);
-    if (!session || (session.role !== "TEACHER" && session.role !== "ADMIN")) {
-      return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
+    if (session.role !== "TEACHER" && session.role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden. Only teachers can manage admissions." }, { status: 403 });
     }
 
     const { id } = await params;
-    const body = await req.json();
-    const { userId, action } = body as { userId: string; action: "ADMIT" | "DENY" };
+    const body = await req.json().catch(() => ({}));
+    const { userId, action } = body;
 
-    if (!userId || !action) {
-      return NextResponse.json({ error: "userId and action are required." }, { status: 400 });
+    if (!userId || !["ADMIT", "DENY"].includes(action)) {
+      return NextResponse.json(
+        { error: "Invalid request. userId and action ('ADMIT' | 'DENY') are required." },
+        { status: 400 }
+      );
     }
 
     await connectToDatabase();
     const classDoc = await resolveClassDoc(id);
+
     if (!classDoc) {
       return NextResponse.json({ error: "Class not found." }, { status: 404 });
     }
@@ -181,32 +202,61 @@ export async function PUT(
     if (!classDoc.deniedStudents) classDoc.deniedStudents = [];
     if (!classDoc.pendingAdmissions) classDoc.pendingAdmissions = [];
 
-    // Remove from pending regardless of action
-    (classDoc.pendingAdmissions as any[]) = (classDoc.pendingAdmissions as any[]).filter(
+    // Find student name from pending
+    const pendingItem = (classDoc.pendingAdmissions as any[]).find(
+      (e: any) => e.userId === userId
+    );
+    const studentName = pendingItem?.name || "Student";
+
+    // Remove from pending
+    classDoc.pendingAdmissions = (classDoc.pendingAdmissions as any[]).filter(
       (e: any) => e.userId !== userId
     );
 
     if (action === "ADMIT") {
-      const alreadyIn = (classDoc.admittedStudents as any[]).some(
+      const alreadyAdmitted = (classDoc.admittedStudents as any[]).some(
         (e: any) => e.userId === userId
       );
-      if (!alreadyIn) {
-        (classDoc.admittedStudents as any[]).push({ userId, admittedAt: new Date() });
+      if (!alreadyAdmitted) {
+        (classDoc.admittedStudents as any[]).push({
+          userId,
+          name: studentName,
+          admittedAt: new Date(),
+        });
       }
+      // Remove from denied if previously denied
+      classDoc.deniedStudents = (classDoc.deniedStudents as any[]).filter(
+        (e: any) => e.userId !== userId
+      );
     } else if (action === "DENY") {
       const alreadyDenied = (classDoc.deniedStudents as any[]).some(
         (e: any) => e.userId === userId
       );
       if (!alreadyDenied) {
-        (classDoc.deniedStudents as any[]).push({ userId });
+        (classDoc.deniedStudents as any[]).push({
+          userId,
+          name: studentName,
+          deniedAt: new Date(),
+        });
       }
+      classDoc.admittedStudents = (classDoc.admittedStudents as any[]).filter(
+        (e: any) => e.userId !== userId
+      );
     }
 
     await classDoc.save();
 
-    return NextResponse.json({ success: true, action });
+    return NextResponse.json({
+      success: true,
+      action,
+      userId,
+      pendingAdmissions: classDoc.pendingAdmissions,
+      admittedStudents: classDoc.admittedStudents,
+    });
   } catch (err: any) {
-    console.error("PUT /api/classes/[id]/admit error:", err);
+    console.error("PATCH /api/classes/[id]/admit error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
+export const PUT = PATCH;
