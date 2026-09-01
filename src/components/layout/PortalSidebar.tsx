@@ -47,7 +47,7 @@ export function PortalSidebar({ role }: SidebarProps) {
 
   const studentLinks: SidebarLink[] = [
     { href: "/student/dashboard", label: "Dashboard", icon: LayoutDashboard, api: "/api/student/dashboard" },
-    { href: "/student/classes", label: "Live Classes & Timetable", icon: Video, badge: "Live", badgeVariant: "live", api: "/api/student/classes" },
+    { href: "/student/classes", label: "Live Classes & Timetable", icon: Video, api: "/api/student/classes" },
     { href: "/student/materials", label: "Study Materials", icon: BookOpen, api: "/api/student/materials" },
     { href: "/student/assignments", label: "Assignments & Tasks", icon: FileCheck, api: "/api/student/assignments" },
     { href: "/student/attendance", label: "Attendance Record", icon: CalendarCheck2, api: "/api/student/attendance" },
