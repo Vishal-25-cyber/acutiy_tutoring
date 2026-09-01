@@ -211,14 +211,14 @@ app.use((err: any, req: any, res: any, next: any) => {
   });
 });
 
-// Start server and connect DB
-connectToDatabase()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`[Acuity API Server] Running on http://localhost:${PORT}`);
+// Start HTTP server immediately on PORT so Render passes port binding check
+app.listen(PORT, () => {
+  console.log(`[Acuity API Server] Running on port ${PORT}`);
+  connectToDatabase()
+    .then(() => {
+      console.log(`[MongoDB] Connected successfully to Atlas`);
+    })
+    .catch((err) => {
+      console.error("[MongoDB] Connection warning (check Atlas IP Whitelist 0.0.0.0/0):", err.message);
     });
-  })
-  .catch((err) => {
-    console.error("Failed to connect to MongoDB:", err);
-    process.exit(1);
-  });
+});
