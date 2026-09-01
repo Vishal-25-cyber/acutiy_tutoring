@@ -1274,11 +1274,10 @@ export default function HomePage() {
             
             {/* SUB-TEAM 1: Education Mentors */}
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
+              <div className="text-center pb-1">
                 <h3 className="text-xl sm:text-2xl font-black text-[#002137] tracking-tight">
                   Education Mentors
                 </h3>
-                <div className="h-px flex-1 bg-slate-200" />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -1312,11 +1311,10 @@ export default function HomePage() {
 
             {/* SUB-TEAM 2: Software Team */}
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
+              <div className="text-center pb-1">
                 <h3 className="text-xl sm:text-2xl font-black text-[#002137] tracking-tight">
                   Software Team
                 </h3>
-                <div className="h-px flex-1 bg-slate-200" />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -1350,11 +1348,10 @@ export default function HomePage() {
 
             {/* SUB-TEAM 3: AI Team */}
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
+              <div className="text-center pb-1">
                 <h3 className="text-xl sm:text-2xl font-black text-[#002137] tracking-tight">
                   AI Team
                 </h3>
-                <div className="h-px flex-1 bg-slate-200" />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
