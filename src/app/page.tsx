@@ -1720,76 +1720,104 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          FOOTER: COMPACT CONTACT BAR
+          FOOTER: PROFESSIONAL CONTACT FOOTER
       ═══════════════════════════════════════════════════════════════════════ */}
-      <footer id="contact" className="scroll-mt-20 bg-[#00111f] border-t border-white/8 text-white py-5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <footer id="contact" className="scroll-mt-20 bg-[#00111f] border-t border-white/10 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
-          {/* Single compact row */}
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+          {/* 3-Column Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
 
-            {/* Phone numbers — inline pill row */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#dfb74a] mr-1 hidden sm:inline">Helplines</span>
-              {[
-                { num: "+91 98427 43538", tel: "tel:+919842743538" },
-                { num: "+91 80564 53211", tel: "tel:+918056453211" },
-                { num: "+91 63811 80488", tel: "tel:+916381180488" },
-              ].map((h, i) => (
-                <a
-                  key={i}
-                  href={h.tel}
-                  className="px-3 py-1.5 rounded-full bg-white/6 hover:bg-[#dfb74a]/15 border border-white/10 hover:border-[#dfb74a]/40 text-xs font-bold font-mono text-white/90 hover:text-[#dfb74a] transition-all duration-200"
-                >
-                  {h.num}
-                </a>
-              ))}
-              <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-semibold ml-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Mon–Sat 9AM–8:30PM
-              </span>
+            {/* Column 1: Brand + Address + Hours */}
+            <div className="space-y-4">
+              <div>
+                <span className="text-base font-black tracking-tight text-white">MANTIF</span>
+                <p className="text-[11px] font-medium text-[#dfb74a] uppercase tracking-widest mt-0.5">Tutoring Hub · AI-Powered Education</p>
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex items-start gap-2 text-slate-300">
+                  <MapPin className="w-3.5 h-3.5 mt-0.5 text-[#dfb74a] shrink-0" />
+                  <p className="text-xs leading-relaxed">
+                    No. 14, 2nd Cross Street, Nehru Nagar,<br />
+                    Coimbatore – 641 020, Tamil Nadu, India.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-slate-300">
+                  <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  </span>
+                  <p className="text-xs font-semibold text-emerald-400">Mon – Sat &nbsp;|&nbsp; 9:00 AM – 8:30 PM</p>
+                </div>
+              </div>
             </div>
 
-            {/* Email + Social icons */}
-            <div className="flex items-center gap-3 shrink-0">
-              <a
-                href="mailto:info@mantif.com"
-                className="flex items-center gap-1.5 text-xs font-bold font-mono text-slate-300 hover:text-[#dfb74a] transition-colors"
-              >
-                <Mail className="w-3.5 h-3.5" />
-                info@mantif.com
-              </a>
-              <span className="w-px h-4 bg-white/15" />
-              {/* Social icons */}
-              <div className="flex items-center gap-1.5">
-                <a href="https://instagram.com" target="_blank" rel="noreferrer" title="Instagram"
-                  className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200">
-                  <InstagramIcon className="w-3.5 h-3.5" />
+            {/* Column 2: Helplines */}
+            <div className="space-y-3">
+              <p className="text-[11px] font-extrabold uppercase tracking-widest text-[#dfb74a]">Helplines</p>
+              <div className="space-y-2.5">
+                {[
+                  { label: "Admissions & Fees", num: "+91 98427 43538", tel: "tel:+919842743538" },
+                  { label: "Academic & Batch Timing", num: "+91 80564 53211", tel: "tel:+918056453211" },
+                  { label: "Tech Support & Helpdesk", num: "+91 63811 80488", tel: "tel:+916381180488" },
+                ].map((h, i) => (
+                  <div key={i}>
+                    <p className="text-[10px] font-bold uppercase text-slate-500 tracking-wider mb-0.5">{h.label}</p>
+                    <a
+                      href={h.tel}
+                      className="text-sm font-black font-mono text-white hover:text-[#dfb74a] transition-colors tracking-wide"
+                    >
+                      {h.num}
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Column 3: Email + Connect */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-[11px] font-extrabold uppercase tracking-widest text-[#dfb74a]">Official Email</p>
+                <a
+                  href="mailto:info@mantif.com"
+                  className="flex items-center gap-2 text-sm font-bold font-mono text-white hover:text-[#dfb74a] transition-colors"
+                >
+                  <Mail className="w-4 h-4 text-[#dfb74a]" />
+                  info@mantif.com
                 </a>
-                <a href="https://linkedin.com" target="_blank" rel="noreferrer" title="LinkedIn"
-                  className="w-7 h-7 rounded-lg bg-[#0077b5] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200">
-                  <LinkedInIcon className="w-3.5 h-3.5" />
-                </a>
-                <a href="https://youtube.com" target="_blank" rel="noreferrer" title="YouTube"
-                  className="w-7 h-7 rounded-lg bg-[#ff0000] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200">
-                  <YouTubeIcon className="w-3.5 h-3.5" />
-                </a>
-                <a href="https://x.com" target="_blank" rel="noreferrer" title="X (Twitter)"
-                  className="w-7 h-7 rounded-lg bg-black border border-white/20 text-white flex items-center justify-center hover:scale-110 transition-transform duration-200">
-                  <XTwitterIcon className="w-3 h-3" />
-                </a>
-                <a href="https://wa.me/919842743538?text=Hello%20Mantif%20Team" target="_blank" rel="noreferrer" title="WhatsApp"
-                  className="w-7 h-7 rounded-lg bg-[#25d366] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200">
-                  <WhatsAppIcon className="w-3.5 h-3.5" />
-                </a>
+              </div>
+              <div className="space-y-2">
+                <p className="text-[11px] font-extrabold uppercase tracking-widest text-[#dfb74a]">Connect With Us</p>
+                <div className="flex items-center gap-2">
+                  <a href="https://instagram.com" target="_blank" rel="noreferrer" title="Instagram"
+                    className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow">
+                    <InstagramIcon className="w-4 h-4" />
+                  </a>
+                  <a href="https://linkedin.com" target="_blank" rel="noreferrer" title="LinkedIn"
+                    className="w-8 h-8 rounded-xl bg-[#0077b5] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow">
+                    <LinkedInIcon className="w-4 h-4" />
+                  </a>
+                  <a href="https://youtube.com" target="_blank" rel="noreferrer" title="YouTube"
+                    className="w-8 h-8 rounded-xl bg-[#ff0000] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow">
+                    <YouTubeIcon className="w-4 h-4" />
+                  </a>
+                  <a href="https://x.com" target="_blank" rel="noreferrer" title="X (Twitter)"
+                    className="w-8 h-8 rounded-xl bg-black border border-white/20 text-white flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow">
+                    <XTwitterIcon className="w-3.5 h-3.5" />
+                  </a>
+                  <a href="https://wa.me/919842743538?text=Hello%20Mantif%20Team" target="_blank" rel="noreferrer" title="WhatsApp"
+                    className="w-8 h-8 rounded-xl bg-[#25d366] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow">
+                    <WhatsAppIcon className="w-4 h-4" />
+                  </a>
+                </div>
               </div>
             </div>
 
           </div>
 
-          {/* Copyright */}
-          <div className="mt-4 pt-4 border-t border-white/6 text-center text-[11px] text-slate-500">
-            © 2026 MANTIF. All rights reserved.
+          {/* Copyright bar */}
+          <div className="mt-8 pt-5 border-t border-white/8 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500">
+            <p>© 2026 MANTIF Education Pvt. Ltd. All rights reserved.</p>
+            <p className="text-slate-600">Empowering learners through Human × Artificial Intelligence</p>
           </div>
 
         </div>
