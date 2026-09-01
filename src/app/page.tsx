@@ -1387,12 +1387,18 @@ export default function HomePage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
-                {/* Abinaya B */}
+                {/* Abinaya B (With Real Photo 292x365px on Top & Details Underneath) */}
                 <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-[#b89047]/40 transition-all flex flex-col items-center text-center space-y-4">
-                  <div className="w-full aspect-4/3 max-w-[260px] rounded-2xl bg-gradient-to-br from-[#1e293b] to-[#0f172a] text-white flex flex-col items-center justify-center shadow-md border-2 border-slate-100 relative group">
-                    <Brain className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
-                    <span className="text-xs font-bold text-slate-200">Abinaya B</span>
-                    <span className="text-[10px] text-[#dfb74a] uppercase font-black tracking-wider mt-1">Photo</span>
+                  <div
+                    className="shrink-0 rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group"
+                    style={{ width: "292px", height: "365px" }}
+                  >
+                    <img
+                      src="/images/team_abinaya.png"
+                      alt="Abinaya B - AI Team"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      style={{ width: "292px", height: "365px" }}
+                    />
                   </div>
                   <div className="space-y-1">
                     <h4 className="font-black text-lg text-[#002137]">Abinaya B</h4>
