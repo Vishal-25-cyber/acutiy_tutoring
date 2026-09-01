@@ -1806,8 +1806,9 @@ export default function HomePage() {
           </div>
 
           {/* Copyright */}
-          <div className="mt-7 pt-5 border-t border-white/8 flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px] text-slate-500">
+          <div className="mt-7 pt-5 border-t border-white/8 flex flex-col sm:flex-row items-center justify-center gap-3 text-[11px] text-slate-500 text-center">
             <p>© 2026 MANTIF Education Pvt. Ltd. All rights reserved.</p>
+            <span className="hidden sm:inline text-slate-700">·</span>
             <p className="text-slate-600">Empowering learners through Human × Artificial Intelligence</p>
           </div>
 
