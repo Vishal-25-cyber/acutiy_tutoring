@@ -234,12 +234,16 @@ export function JitsiClassroom({
     localStreamRef.current?.getAudioTracks().forEach((t) => { t.enabled = isMicOn; });
   }, [isMicOn]);
 
-  // Attach stream when stage transitions to LIVE_CLASS
+  // Attach local and remote streams when stage transitions or updates
   useEffect(() => {
     if (stage !== "LIVE_CLASS") return;
-    const ref = userInfo.isTeacher ? teacherVideoRef.current : localVideoRef.current;
-    if (ref && localStreamRef.current) ref.srcObject = localStreamRef.current;
-  }, [stage, userInfo.isTeacher]);
+    const localRef = userInfo.isTeacher ? teacherVideoRef.current : localVideoRef.current;
+    if (localRef && localStreamRef.current) localRef.srcObject = localStreamRef.current;
+    if (remoteVideoRef.current && remoteStreamRef.current) {
+      remoteVideoRef.current.srcObject = remoteStreamRef.current;
+      remoteVideoRef.current.play().catch(() => {});
+    }
+  }, [stage, userInfo.isTeacher, hasRemoteVideo, remoteParticipant?.id]);
 
   /* ─────────────────────────────────────────────────
      2b.  WebRTC Peer-to-Peer Streaming (Teacher <-> Student)

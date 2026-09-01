@@ -19,9 +19,19 @@ export async function GET(
     const { id } = await params;
     await connectToDatabase();
 
-    const liveClass = await LiveSession.findById(id)
-      .populate("batchId")
-      .populate("teacherId", "name email avatarUrl phone");
+    let liveClass: any = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      liveClass = await LiveSession.findById(id)
+        .populate("batchId")
+        .populate("teacherId", "name email avatarUrl phone");
+    }
+    if (!liveClass) {
+      liveClass = await LiveSession.findOne({
+        $or: [{ meetingId: id }, { livekitRoomId: id }],
+      })
+        .populate("batchId")
+        .populate("teacherId", "name email avatarUrl phone");
+    }
 
     if (!liveClass) {
       return NextResponse.json({ error: "Class not found." }, { status: 404 });
