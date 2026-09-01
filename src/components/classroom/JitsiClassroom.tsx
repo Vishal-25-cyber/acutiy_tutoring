@@ -267,12 +267,63 @@ export function JitsiClassroom({
     poll();
   }, [classId, userInfo.id, userInfo.name, classData]);
 
-  // Cleanup poll on unmount
-  useEffect(() => () => { if (pollTimerRef.current) clearInterval(pollTimerRef.current); }, []);
+  // Cancel student knock when leaving lobby
+  const cancelKnock = useCallback(async () => {
+    if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    const targetClassId = classData?.id || classData?.livekitRoomId || classId;
+    try {
+      await fetch(`/api/classes/${targetClassId}/admit`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch {}
+    setStage("WAITING_ROOM");
+  }, [classId, classData]);
+
+  // Cleanup poll and remove pending knock on unmount
+  useEffect(() => {
+    return () => {
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+      if (!userInfo.isTeacher) {
+        const targetClassId = classData?.id || classData?.livekitRoomId || classId;
+        try {
+          fetch(`/api/classes/${targetClassId}/admit`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            keepalive: true,
+          }).catch(() => {});
+        } catch {}
+      }
+    };
+  }, [classId, classData, userInfo.isTeacher]);
 
   /* ─────────────────────────────────────────────────
-     3b.  TEACHER → poll pending list every 2 seconds
+     3b.  TEACHER → poll pending list every 1.5 seconds & chime
   ───────────────────────────────────────────────── */
+  const lastPendingCountRef = useRef(0);
+  useEffect(() => {
+    if (pendingCount > lastPendingCountRef.current && userInfo.isTeacher) {
+      try {
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioCtx) {
+          const ctx = new AudioCtx();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12);
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.35);
+        }
+      } catch {}
+    }
+    lastPendingCountRef.current = pendingCount;
+  }, [pendingCount, userInfo.isTeacher]);
+
   useEffect(() => {
     if (stage !== "LIVE_CLASS" || !userInfo.isTeacher) return;
 
@@ -500,12 +551,10 @@ export function JitsiClassroom({
           </div>
           <div className="flex flex-col gap-2">
             <button
-              onClick={() => {
-                setStage("WAITING_ROOM");
-              }}
-              className="w-full py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-medium text-white transition-colors cursor-pointer"
+              onClick={askToJoin}
+              className="w-full py-2.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-bold text-white transition-colors cursor-pointer shadow-sm"
             >
-              Try Again
+              Request to Join Again
             </button>
             <button
               onClick={() => router.push("/student/classes")}
@@ -654,13 +703,13 @@ export function JitsiClassroom({
                     </p>
                   </div>
                   <button
-                    onClick={() => {
-                      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+                    onClick={async () => {
+                      await cancelKnock();
                       router.push("/student/classes");
                     }}
                     className="w-full py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                   >
-                    Leave Lobby
+                    Cancel Request &amp; Leave Lobby
                   </button>
                 </div>
               )}

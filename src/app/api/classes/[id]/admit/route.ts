@@ -30,7 +30,7 @@ async function resolveClassDoc(id: string) {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// POST — Student knocks (requests to join)
+// POST — Student knocks (requests to join) or re-knocks after denial
 // Body: { name?: string }
 // ─────────────────────────────────────────────────────────────────
 export async function POST(
@@ -71,13 +71,11 @@ export async function POST(
       return NextResponse.json({ status: "ADMITTED" });
     }
 
-    // Already denied → inform
-    const alreadyDenied = (classDoc.deniedStudents as any[]).some(
-      (e: any) => e.userId === userId
+    // If student was previously denied and is now requesting again (Try Again),
+    // clear the denied status so they can knock fresh!
+    classDoc.deniedStudents = (classDoc.deniedStudents as any[]).filter(
+      (e: any) => e.userId !== userId
     );
-    if (alreadyDenied) {
-      return NextResponse.json({ status: "DENIED" });
-    }
 
     // Add to pending (idempotent — skip if already pending)
     const alreadyPending = (classDoc.pendingAdmissions as any[]).some(
@@ -89,12 +87,49 @@ export async function POST(
         name: studentName,
         requestedAt: new Date(),
       });
-      await classDoc.save();
     }
+
+    await classDoc.save();
 
     return NextResponse.json({ status: "PENDING" });
   } catch (err: any) {
     console.error("POST /api/classes/[id]/admit error:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// DELETE — Student cancels knock or leaves the lobby
+// ─────────────────────────────────────────────────────────────────
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getSession(req);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
+
+    const { id } = await params;
+    await connectToDatabase();
+    const classDoc = await resolveClassDoc(id);
+    if (!classDoc) {
+      return NextResponse.json({ error: "Class not found." }, { status: 404 });
+    }
+
+    const userId = session.userId;
+    // Remove student from pending admissions when they cancel or leave lobby
+    if (classDoc.pendingAdmissions) {
+      classDoc.pendingAdmissions = (classDoc.pendingAdmissions as any[]).filter(
+        (e: any) => e.userId !== userId
+      );
+      await classDoc.save();
+    }
+
+    return NextResponse.json({ success: true, message: "Knock cancelled" });
+  } catch (err: any) {
+    console.error("DELETE /api/classes/[id]/admit error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
