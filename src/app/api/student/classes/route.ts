@@ -75,6 +75,9 @@ export async function GET() {
         (c.date === todayDateStr && (c.status === "SCHEDULED" || c.status === "PUBLISHED"))
     );
 
+    const hasLiveClassNow = dbClasses.some((c: any) => c.status === "LIVE");
+    const activeLiveClass = dbClasses.find((c: any) => c.status === "LIVE");
+
     const weeklySchedule = [
       {
         day: "Monday",
@@ -84,8 +87,8 @@ export async function GET() {
         subject: "Mathematics",
         topic: "Quadratic Equations — Discriminant & Real Roots Formula",
         faculty: "Dr. Sarah Jenkins",
-        status: currentDayName === "Monday" ? "LIVE" : "SCHEDULED",
-        roomId: "acuity-maths-live",
+        status: currentDayName === "Monday" && hasLiveClassNow ? "LIVE" : "SCHEDULED",
+        roomId: activeLiveClass?.livekitRoomId || "acuity-maths-live",
       },
       {
         day: "Tuesday",
@@ -95,8 +98,8 @@ export async function GET() {
         subject: "Science",
         topic: "Light: Reflection & Refraction — Ray Diagrams Exemplar",
         faculty: "Prof. Rajesh Kumar",
-        status: currentDayName === "Tuesday" ? "LIVE" : "SCHEDULED",
-        roomId: "acuity-science-live",
+        status: currentDayName === "Tuesday" && hasLiveClassNow ? "LIVE" : "SCHEDULED",
+        roomId: activeLiveClass?.livekitRoomId || "acuity-science-live",
       },
       {
         day: "Wednesday",
@@ -106,8 +109,8 @@ export async function GET() {
         subject: "Mathematics",
         topic: "Arithmetic Progressions — nth Term & Sum of Terms",
         faculty: "Dr. Sarah Jenkins",
-        status: currentDayName === "Wednesday" ? "LIVE" : "SCHEDULED",
-        roomId: "acuity-maths-live",
+        status: currentDayName === "Wednesday" && hasLiveClassNow ? "LIVE" : "SCHEDULED",
+        roomId: activeLiveClass?.livekitRoomId || "acuity-maths-live",
       },
       {
         day: "Thursday",
@@ -117,8 +120,8 @@ export async function GET() {
         subject: "English",
         topic: "Analytical Paragraph & Advanced Grammar Clauses",
         faculty: "Ms. Anita Desai",
-        status: currentDayName === "Thursday" ? "LIVE" : "SCHEDULED",
-        roomId: "acuity-english-live",
+        status: currentDayName === "Thursday" && hasLiveClassNow ? "LIVE" : "SCHEDULED",
+        roomId: activeLiveClass?.livekitRoomId || "acuity-english-live",
       },
       {
         day: "Friday",
@@ -128,8 +131,8 @@ export async function GET() {
         subject: "Social Science",
         topic: "Nationalism in India / Life Processes Core Concepts",
         faculty: "Prof. Rajesh Kumar",
-        status: currentDayName === "Friday" ? "LIVE" : "SCHEDULED",
-        roomId: "acuity-social-live",
+        status: currentDayName === "Friday" && hasLiveClassNow ? "LIVE" : "SCHEDULED",
+        roomId: activeLiveClass?.livekitRoomId || "acuity-social-live",
       },
       {
         day: "Saturday",
@@ -139,8 +142,8 @@ export async function GET() {
         subject: "Revision & Doubts",
         topic: "Weekly Test Analysis, Doubt Resolution & Worksheet Solving",
         faculty: "Senior Academic Faculty",
-        status: currentDayName === "Saturday" ? "LIVE" : "SCHEDULED",
-        roomId: "acuity-revision-live",
+        status: currentDayName === "Saturday" && hasLiveClassNow ? "LIVE" : "SCHEDULED",
+        roomId: activeLiveClass?.livekitRoomId || "acuity-revision-live",
       },
     ];
 

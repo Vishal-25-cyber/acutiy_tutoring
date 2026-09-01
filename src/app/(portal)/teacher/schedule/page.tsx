@@ -228,30 +228,50 @@ export default function TeacherSchedulePage() {
   };
 
   const handleCancelClass = async (classId: string) => {
+    if (!classId) return;
     try {
-      const res = await fetch(`/api/classes/${classId}/cancel`, { method: "PUT" });
+      const res = await fetch(`/api/classes/${classId}/cancel`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setCancelModalClass(null);
+        setClasses((prev) =>
+          prev.map((c) => (c._id === classId ? { ...c, status: "CANCELLED" } : c))
+        );
         setActionMessage("Class session cancelled successfully.");
         setTimeout(() => setActionMessage(""), 4000);
         loadClasses();
+      } else {
+        alert(data.error || "Failed to cancel class.");
       }
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error("Cancel class error:", e);
+      alert("Error cancelling class: " + (e.message || "Network error"));
     }
   };
 
   const handleDeleteClass = async (classId: string) => {
+    if (!classId) return;
     try {
-      const res = await fetch(`/api/classes/${classId}`, { method: "DELETE" });
+      const res = await fetch(`/api/classes/${classId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setDeleteModalClass(null);
-        setActionMessage("Class draft deleted permanently.");
+        setClasses((prev) => prev.filter((c) => c._id !== classId));
+        setActionMessage("Class deleted permanently.");
         setTimeout(() => setActionMessage(""), 4000);
         loadClasses();
+      } else {
+        alert(data.error || "Failed to delete class.");
       }
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error("Delete class error:", e);
+      alert("Error deleting class: " + (e.message || "Network error"));
     }
   };
 

@@ -256,26 +256,19 @@ export function getClassLiveState(cls?: { date?: string; startTime?: string; end
   const status = (cls.status || "").toUpperCase();
   if (status === "CANCELLED") return "CANCELLED";
   if (status === "DRAFT") return "DRAFT";
+  if (status === "COMPLETED") return "COMPLETED";
+  if (status === "LIVE") return "LIVE";
 
   const now = new Date();
   const todayStr = now.toISOString().split("T")[0];
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
-
-  const startMinutes = parseTimeToMinutes(cls.startTime || "19:00");
   const endMinutes = parseTimeToMinutes(cls.endTime || "20:00");
   const sessionDate = cls.date || todayStr;
 
-  // 1. Explicit LIVE status or current time is within [start - 10m, end] today
-  if (status === "LIVE" || (sessionDate === todayStr && nowMinutes >= (startMinutes - 10) && nowMinutes <= endMinutes)) {
-    return "LIVE";
-  }
-
-  // 2. Completed: status is COMPLETED or date is in the past or earlier today past end time
-  if (status === "COMPLETED" || sessionDate < todayStr || (sessionDate === todayStr && nowMinutes > endMinutes)) {
+  if (sessionDate < todayStr || (sessionDate === todayStr && nowMinutes > endMinutes)) {
     return "COMPLETED";
   }
 
-  // 3. Upcoming
   return "UPCOMING";
 }
 
