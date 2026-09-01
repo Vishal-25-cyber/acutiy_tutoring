@@ -132,27 +132,30 @@ export function PortalSidebar({ role }: SidebarProps) {
   return (
     <aside className="w-64 border-r border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#001726] flex flex-col h-screen sticky top-0 shrink-0 select-none z-30 transition-colors">
       {/* Sidebar Header */}
-      <div className="h-20 px-4 flex items-center gap-3 border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#00121e]/50">
-        <div className="w-11 h-11 rounded-2xl bg-white dark:bg-[#002137] p-1 shadow-sm border border-slate-200/80 dark:border-[#b89047]/30 flex items-center justify-center shrink-0">
+      <div className="h-20 px-4 flex items-center border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#00121e]/50">
+        <Link href="/" prefetch={true} className="flex items-center gap-2.5 group shrink-0 min-w-0">
           <img
             src="/images/mantif_logo.png"
-            alt="Mantif Logo"
-            className="w-full h-full object-contain"
+            alt="MANTIF Logo"
+            className="w-10 h-10 object-contain group-hover:scale-105 transition-transform shrink-0"
           />
-        </div>
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="font-black text-base tracking-tight text-[#002137] dark:text-white">
-              MANTIF
-            </span>
-            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-[#b89047]/15 text-[#8f6d2b] dark:text-[#dfb74a] uppercase tracking-wider border border-[#b89047]/30">
-              {role}
-            </span>
+          <div className="flex flex-col justify-center min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span
+                className="font-black text-[19px] tracking-[0.14em] text-[#002137] dark:text-white leading-tight select-none truncate"
+                style={{ fontFamily: "'Montserrat', 'Plus Jakarta Sans', sans-serif" }}
+              >
+                M<span className="text-[#b89047] dark:text-[#dfb74a]">Λ</span>NTIF
+              </span>
+              <span className="text-[8px] font-extrabold px-1.5 py-0.5 rounded-md bg-[#b89047]/15 text-[#8f6d2b] dark:text-[#dfb74a] uppercase tracking-wider border border-[#b89047]/30 shrink-0">
+                {role}
+              </span>
+            </div>
+            <p className="text-[9.5px] font-bold text-[#b89047] dark:text-[#dfb74a] tracking-tight leading-none mt-0.5 truncate">
+              Human x Artificial Intelligence
+            </p>
           </div>
-          <p className="text-[10px] font-medium text-[#b89047] dark:text-[#dfb74a] truncate tracking-tight">
-            Intelligent Tutoring
-          </p>
-        </div>
+        </Link>
       </div>
 
       {/* Navigation Links */}
