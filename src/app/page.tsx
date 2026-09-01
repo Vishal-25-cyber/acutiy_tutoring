@@ -1215,53 +1215,72 @@ export default function HomePage() {
             {/* Center Vertical Divider Line */}
             <div className="hidden lg:block absolute left-1/2 top-2 bottom-2 w-px bg-slate-200 -translate-x-1/2" />
 
-            {/* Left: Founder Portrait (Exact 292x365px) */}
+            {/* Left: Founder Portrait (Exact 292x365px with Ambient Glow & Glass Tag) */}
             <div className="flex justify-center lg:justify-end lg:pr-6 xl:pr-10">
-              <div className="shrink-0 w-[292px] h-[365px] rounded-2xl overflow-hidden shadow-xl border-2 border-slate-200/80 bg-slate-100 relative group">
-                <img
-                  src="/images/founder_karunya.png"
-                  alt="Karunya S - Founder of MANTIF"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  style={{ width: "292px", height: "365px" }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#002137]/25 via-transparent to-transparent pointer-events-none" />
+              <div className="relative group">
+                {/* Ambient Glow Backdrop */}
+                <div className="absolute -inset-2 bg-gradient-to-r from-[#dfb74a]/25 to-[#004b79]/20 rounded-3xl blur-xl opacity-70 group-hover:opacity-100 transition duration-500 pointer-events-none" />
+
+                <div className="relative shrink-0 w-[292px] h-[365px] rounded-2xl overflow-hidden shadow-2xl border-2 border-slate-200/90 bg-white">
+                  <img
+                    src="/images/founder_karunya.png"
+                    alt="Karunya S - Founder of MANTIF"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    style={{ width: "292px", height: "365px" }}
+                  />
+                  {/* Glass Bottom Name Tag */}
+                  <div className="absolute bottom-3 left-3 right-3 bg-[#002137]/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/20 shadow-lg flex items-center justify-between text-white">
+                    <div>
+                      <h4 className="text-xs font-black tracking-wide">Karunya S</h4>
+                      <p className="text-[10px] font-bold text-[#dfb74a]">Founder — MANTIF</p>
+                    </div>
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#dfb74a]/20 text-[#dfb74a] border border-[#dfb74a]/30">
+                      Visionary
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Right: Executive Founder Profile */}
             <div className="w-full space-y-4 lg:pl-6 xl:pl-10 text-center lg:text-left">
               <div className="space-y-1">
-                <span className="text-xs font-black uppercase text-[#b89047] tracking-widest">
-                  Leadership &amp; Vision
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-xs font-black text-[#8f6d2b] uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5 text-[#b89047]" />
+                  Founder &amp; Chief Educator
                 </span>
-                <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight">
+                <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight pt-1">
                   Karunya S
                 </h3>
                 <p className="text-base sm:text-lg font-extrabold text-[#b89047]">
-                  Founder &amp; Lead Educator — MANTIF
+                  Founder — MANTIF
                 </p>
               </div>
 
               <p className="text-slate-700 text-sm sm:text-base leading-relaxed font-medium">
-                Educator with over 4 years of hands-on coaching leadership. Alumna of Kongu National Higher Secondary School, passionate about revolutionizing student learning by bridging empathetic human teaching with cutting-edge artificial intelligence.
+                Educator with over 4 years of hands-on coaching leadership. Proud alumni of Kongu National Matriculation Higher Secondary School, passionate about revolutionizing student learning by bridging empathetic human teaching with cutting-edge artificial intelligence.
               </p>
 
-              {/* Founder Quote */}
-              <div className="border-l-4 border-[#b89047] pl-4 py-1 text-slate-800 text-sm sm:text-base italic text-left">
-                <p>
+              {/* Styled Gold Quote Box */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/50 border-l-4 border-[#b89047] border-y border-r border-amber-200/60 text-slate-800 text-sm sm:text-base italic text-left relative">
+                <Quote className="w-5 h-5 text-[#b89047] mb-1 opacity-80" />
+                <p className="font-semibold text-slate-800">
                   “Education is about empowering students with curiosity, confidence, and genuine human care.”
                 </p>
               </div>
 
-              {/* Badges */}
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 pt-1">
-                <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-extrabold">
+              {/* Key Badges */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 pt-1">
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-700 text-xs font-extrabold border border-slate-200 shadow-2xs">
+                  <GraduationCap className="w-3.5 h-3.5 text-slate-600" />
+                  Kongu Alumni
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-[#8f6d2b] border border-amber-200 text-xs font-extrabold shadow-2xs">
+                  <Award className="w-3.5 h-3.5 text-[#b89047]" />
                   4+ Years Mentorship
                 </span>
-                <span className="px-3 py-1 rounded-full bg-amber-50 text-[#8f6d2b] border border-amber-200 text-xs font-extrabold">
-                  Kongu Alumna
-                </span>
-                <span className="px-3 py-1 rounded-full bg-blue-50 text-[#004b79] text-xs font-extrabold">
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-blue-50 text-[#004b79] border border-blue-200 text-xs font-extrabold shadow-2xs">
+                  <Brain className="w-3.5 h-3.5 text-[#004b79]" />
                   EdTech Innovator
                 </span>
               </div>
