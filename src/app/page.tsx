@@ -1723,13 +1723,14 @@ export default function HomePage() {
           FOOTER: PROFESSIONAL CONTACT FOOTER
       ═══════════════════════════════════════════════════════════════════════ */}
       <footer id="contact" className="scroll-mt-20 bg-[#00111f] border-t border-white/10 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8 py-8">
 
-          {/* 3-Column Layout — equal visual weight */}
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-0">
+          {/* 3-Equal-Column Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
 
-            {/* Column 1: Address + Hours */}
-            <div className="space-y-3 pr-8 lg:pr-14">
+            {/* Col 1: Address + Hours */}
+            <div className="space-y-3">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#dfb74a]">Location</p>
               <div className="space-y-2">
                 <div className="flex items-start gap-2">
                   <MapPin className="w-3.5 h-3.5 mt-0.5 text-[#dfb74a] shrink-0" />
@@ -1745,74 +1746,67 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Vertical Divider */}
-            <div className="hidden md:block w-px bg-white/8 mx-8 lg:mx-12" />
-
-            {/* Column 2+3 right half — 2-col sub-grid */}
-            <div className="pl-0 md:pl-0 grid grid-cols-1 sm:grid-cols-2 gap-8 lg:gap-10 mt-8 md:mt-0">
-
-              {/* Helplines */}
+            {/* Col 2: Helplines */}
+            <div className="space-y-3">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#dfb74a]">Helplines</p>
               <div>
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#dfb74a] mb-3">Helplines</p>
-                <div className="space-y-0">
-                  {[
-                    { num: "+91 98427 43538", tel: "tel:+919842743538" },
-                    { num: "+91 80564 53211", tel: "tel:+918056453211" },
-                    { num: "+91 63811 80488", tel: "tel:+916381180488" },
-                  ].map((h, i) => (
-                    <div key={i}>
-                      <a
-                        href={h.tel}
-                        className="block py-2 text-base font-black font-mono text-white hover:text-[#dfb74a] transition-colors tracking-wide"
-                      >
-                        {h.num}
-                      </a>
-                      {i < 2 && <div className="h-px bg-white/8 w-full" />}
-                    </div>
-                  ))}
-                </div>
+                {[
+                  { num: "+91 98427 43538", tel: "tel:+919842743538" },
+                  { num: "+91 80564 53211", tel: "tel:+918056453211" },
+                  { num: "+91 63811 80488", tel: "tel:+916381180488" },
+                ].map((h, i) => (
+                  <div key={i}>
+                    <a
+                      href={h.tel}
+                      className="block py-2 text-sm font-black font-mono text-slate-100 hover:text-[#dfb74a] transition-colors tracking-wide"
+                    >
+                      {h.num}
+                    </a>
+                    {i < 2 && <div className="h-px bg-white/8" />}
+                  </div>
+                ))}
               </div>
+            </div>
 
-              {/* Email + Connect */}
-              <div className="space-y-5">
-                <div className="space-y-2">
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#dfb74a]">Official Email</p>
-                  <a
-                    href="mailto:info@mantif.com"
-                    className="flex items-center gap-2 text-sm font-bold font-mono text-white hover:text-[#dfb74a] transition-colors"
-                  >
-                    <Mail className="w-4 h-4 text-[#dfb74a] shrink-0" />
-                    info@mantif.com
+            {/* Col 3: Email + Connect */}
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#dfb74a]">Official Email</p>
+                <a
+                  href="mailto:info@mantif.com"
+                  className="flex items-center gap-2 text-sm font-bold font-mono text-slate-100 hover:text-[#dfb74a] transition-colors"
+                >
+                  <Mail className="w-3.5 h-3.5 text-[#dfb74a] shrink-0" />
+                  info@mantif.com
+                </a>
+              </div>
+              <div className="space-y-2">
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#dfb74a]">Connect With Us</p>
+                <div className="flex items-center gap-2">
+                  <a href="https://instagram.com" target="_blank" rel="noreferrer" title="Instagram"
+                    className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200">
+                    <InstagramIcon className="w-4 h-4" />
+                  </a>
+                  <a href="https://linkedin.com" target="_blank" rel="noreferrer" title="LinkedIn"
+                    className="w-8 h-8 rounded-lg bg-[#0077b5] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200">
+                    <LinkedInIcon className="w-4 h-4" />
+                  </a>
+                  <a href="https://youtube.com" target="_blank" rel="noreferrer" title="YouTube"
+                    className="w-8 h-8 rounded-lg bg-[#ff0000] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200">
+                    <YouTubeIcon className="w-4 h-4" />
+                  </a>
+                  <a href="https://x.com" target="_blank" rel="noreferrer" title="X (Twitter)"
+                    className="w-8 h-8 rounded-lg bg-black border border-white/20 text-white flex items-center justify-center hover:scale-110 transition-transform duration-200">
+                    <XTwitterIcon className="w-4 h-4" />
                   </a>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#dfb74a]">Connect With Us</p>
-                  <div className="flex items-center gap-2">
-                    <a href="https://instagram.com" target="_blank" rel="noreferrer" title="Instagram"
-                      className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow-md">
-                      <InstagramIcon className="w-4 h-4" />
-                    </a>
-                    <a href="https://linkedin.com" target="_blank" rel="noreferrer" title="LinkedIn"
-                      className="w-9 h-9 rounded-xl bg-[#0077b5] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow-md">
-                      <LinkedInIcon className="w-4 h-4" />
-                    </a>
-                    <a href="https://youtube.com" target="_blank" rel="noreferrer" title="YouTube"
-                      className="w-9 h-9 rounded-xl bg-[#ff0000] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow-md">
-                      <YouTubeIcon className="w-4 h-4" />
-                    </a>
-                    <a href="https://x.com" target="_blank" rel="noreferrer" title="X (Twitter)"
-                      className="w-9 h-9 rounded-xl bg-black border border-white/20 text-white flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow-md">
-                      <XTwitterIcon className="w-4 h-4" />
-                    </a>
-                  </div>
-                </div>
               </div>
-
             </div>
+
           </div>
 
-          {/* Copyright bar */}
-          <div className="mt-8 pt-5 border-t border-white/8 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500">
+          {/* Copyright */}
+          <div className="mt-7 pt-5 border-t border-white/8 flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px] text-slate-500">
             <p>© 2026 MANTIF Education Pvt. Ltd. All rights reserved.</p>
             <p className="text-slate-600">Empowering learners through Human × Artificial Intelligence</p>
           </div>
