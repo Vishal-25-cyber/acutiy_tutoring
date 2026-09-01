@@ -1293,25 +1293,25 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* 3 Categories with Centered Headings & Vertical Photo-on-Top Layout */}
-          <div className="space-y-12 max-w-5xl mx-auto w-full">
+          {/* Categories with Centered Headings & Proportional Full-Width Layout */}
+          <div className="space-y-12 max-w-7xl mx-auto w-full">
             
             {/* 1. Education Mentors */}
-            <div className="space-y-5">
+            <div className="space-y-6">
               <div className="text-center">
                 <h3 className="text-xl sm:text-2xl font-black text-[#002137] tracking-tight">
                   Education Mentors
                 </h3>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
-                {/* Dr. A. Revathi (With Real Photo on Top & Details Underneath) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto">
+                {/* Dr. A. Revathi */}
                 <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-[#004b79]/40 transition-all flex flex-col items-center text-center space-y-4">
-                  <div className="w-full aspect-4/5 max-w-[260px] rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
+                  <div className="w-full max-w-[280px] aspect-4/5 rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
                     <img
                       src="/images/mentor_revathi.jpg"
                       alt="Dr. A. Revathi - Educational Mentor"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1321,13 +1321,13 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* V Lavanya (With Real Photo on Top & Details Underneath) */}
+                {/* V Lavanya */}
                 <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-[#004b79]/40 transition-all flex flex-col items-center text-center space-y-4">
-                  <div className="w-full aspect-4/5 max-w-[260px] rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
+                  <div className="w-full max-w-[280px] aspect-4/5 rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
                     <img
                       src="/images/mentor_lavanya.jpg"
                       alt="V Lavanya - Educational Mentor"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1339,7 +1339,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* 2. Combined: Software Teams & AI Team */}
+            {/* 2. Combined: Software Teams & AI Team (Full Page 4-Column Grid with Equalized Head Sizes) */}
             <div className="space-y-6">
               <div className="text-center">
                 <h3 className="text-xl sm:text-2xl font-black text-[#002137] tracking-tight">
@@ -1347,15 +1347,16 @@ export default function HomePage() {
                 </h3>
               </div>
 
-              {/* 4 Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-                {/* Vishal K */}
-                <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-[#004b79]/40 transition-all flex flex-col items-center text-center space-y-4">
-                  <div className="shrink-0 w-[240px] h-[300px] sm:w-[260px] sm:h-[325px] rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
+              {/* 4 Cards Grid Full Width */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 xl:gap-8 w-full">
+                
+                {/* 1. Vishal K */}
+                <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-[#004b79]/40 transition-all flex flex-col items-center text-center space-y-4">
+                  <div className="w-full aspect-4/5 rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
                     <img
                       src="/images/team_vishal.jpg"
                       alt="Vishal K - Software Team"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1365,13 +1366,13 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Solairaj R */}
-                <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-[#004b79]/40 transition-all flex flex-col items-center text-center space-y-4">
-                  <div className="shrink-0 w-[240px] h-[300px] sm:w-[260px] sm:h-[325px] rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
+                {/* 2. Solairaj R */}
+                <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-[#004b79]/40 transition-all flex flex-col items-center text-center space-y-4">
+                  <div className="w-full aspect-4/5 rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
                     <img
                       src="/images/team_solairaj.jpg"
                       alt="Solairaj R - Software Team"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1381,13 +1382,13 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Abinaya B */}
-                <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-[#b89047]/40 transition-all flex flex-col items-center text-center space-y-4">
-                  <div className="shrink-0 w-[240px] h-[300px] sm:w-[260px] sm:h-[325px] rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
+                {/* 3. Abinaya B (Proportionally Zoomed to Equalize Head Scale) */}
+                <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-[#b89047]/40 transition-all flex flex-col items-center text-center space-y-4">
+                  <div className="w-full aspect-4/5 rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
                     <img
                       src="/images/team_abinaya.png"
                       alt="Abinaya B - AI Team"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover scale-[1.18] origin-[50%_25%] group-hover:scale-[1.24] transition-transform duration-500"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1397,13 +1398,13 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Arunkarthick K */}
-                <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-[#b89047]/40 transition-all flex flex-col items-center text-center space-y-4">
-                  <div className="shrink-0 w-[240px] h-[300px] sm:w-[260px] sm:h-[325px] rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
+                {/* 4. Arunkarthick K (Slightly Scaled Down to Equalize Head Scale) */}
+                <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-[#b89047]/40 transition-all flex flex-col items-center text-center space-y-4">
+                  <div className="w-full aspect-4/5 rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
                     <img
                       src="/images/team_arunkarthick.png"
                       alt="Arunkarthick K - AI Team"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover scale-[0.94] origin-[50%_20%] group-hover:scale-[0.99] transition-transform duration-500"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1412,6 +1413,7 @@ export default function HomePage() {
                     <p className="text-xs text-slate-500 font-medium">Machine Learning &amp; Adaptive Tutoring</p>
                   </div>
                 </div>
+
               </div>
             </div>
 
