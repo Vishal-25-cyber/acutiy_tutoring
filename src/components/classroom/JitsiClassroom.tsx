@@ -159,9 +159,10 @@ export function JitsiClassroom({
           isTeacher: Boolean(resolvedUser.isTeacher),
         });
 
-        if (resolvedUser.role === "TEACHER" || resolvedUser.role === "ADMIN") {
-          // Teacher enters immediately and activates camera
+        if (resolvedUser.role === "TEACHER" || resolvedUser.role === "ADMIN" || data.isAdmitted) {
+          // Teacher or already admitted student enters immediately and activates camera
           setIsCameraOn(true);
+          setIsMicOn(true);
           setStage("LIVE_CLASS");
           recordAttendanceJoin(data.class?.id || classId);
         } else {

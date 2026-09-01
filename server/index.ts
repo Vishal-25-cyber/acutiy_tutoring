@@ -142,6 +142,7 @@ import * as ClassJoinRoute from "../src/app/api/classes/[id]/join/route";
 import * as ClassEndRoute from "../src/app/api/classes/[id]/end/route";
 import * as ClassParticipantsRoute from "../src/app/api/classes/[id]/participants/route";
 import * as ClassAdmitRoute from "../src/app/api/classes/[id]/admit/route";
+import * as ClassSignalRoute from "../src/app/api/classes/[id]/signal/route";
 import * as BatchesRoute from "../src/app/api/batches/route";
 import * as SeedRoute from "../src/app/api/seed/route";
 import * as NotificationsRoute from "../src/app/api/notifications/route";
@@ -164,6 +165,12 @@ app.get("/api/classes/:id/participants", adaptRoute(ClassParticipantsRoute.GET))
 app.get("/api/classes/:id/admit", adaptRoute(ClassAdmitRoute.GET));
 app.post("/api/classes/:id/admit", adaptRoute(ClassAdmitRoute.POST));
 app.put("/api/classes/:id/admit", adaptRoute(ClassAdmitRoute.PUT));
+app.patch("/api/classes/:id/admit", adaptRoute(ClassAdmitRoute.PATCH));
+app.delete("/api/classes/:id/admit", adaptRoute(ClassAdmitRoute.DELETE));
+
+// Realtime WebRTC signaling (Offer, Answer, ICE Candidates, Presence, End)
+app.get("/api/classes/:id/signal", adaptRoute(ClassSignalRoute.GET));
+app.post("/api/classes/:id/signal", adaptRoute(ClassSignalRoute.POST));
 app.get("/api/batches", adaptRoute(BatchesRoute.GET));
 app.get("/api/seed", adaptRoute(SeedRoute.GET));
 app.post("/api/seed", adaptRoute(SeedRoute.POST));

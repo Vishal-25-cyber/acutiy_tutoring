@@ -218,6 +218,9 @@ export async function POST(
         teacher: liveClass.teacherId,
         materials: liveClass.materials || [],
       },
+      isAdmitted: (liveClass.admittedStudents || []).some(
+        (s: any) => String(s.userId) === String(userSession.userId)
+      ),
       user: {
         id: userSession.userId,
         name: userSession.name,
