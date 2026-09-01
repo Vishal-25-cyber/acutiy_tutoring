@@ -74,7 +74,7 @@ export default function HomePage() {
   const [showPw, setShowPw] = useState(false);
 
   // Gallery Lightbox Modal State
-  const [selectedGalleryItem, setSelectedGalleryItem] = useState<{ src: string; tag: string; title: string; sub: string } | null>(null);
+  const [selectedGalleryIdx, setSelectedGalleryIdx] = useState<number | null>(null);
 
   // Dynamic Contact & Phone State
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -1570,20 +1570,20 @@ export default function HomePage() {
           {/* Large-Format Responsive Dynamic Photo Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {[
-              { id: 1, src: "/images/gallery_1.jpg", tag: "Tutoring Hub", title: "Creative Learning & Activity Circles", sub: "Hands-on collaborative drawing and color studies at Tutoring Hub." },
-              { id: 2, src: "/images/gallery_2.jpg", tag: "Active Learning", title: "Interactive Reading & Discovery", sub: "Young students exploring science and nature literature together." },
-              { id: 3, src: "/images/gallery_3.jpg", tag: "Mentorship", title: "Early Focus & Skill Building", sub: "Individual care and guided creative practice for young minds." },
-              { id: 4, src: "/images/gallery_4.jpg", tag: "Academic Excellence", title: "Classroom Problem Solving", sub: "In-depth whiteboard concept breakdown and formula analysis." },
-              { id: 5, src: "/images/gallery_5.jpg", tag: "Math Mastery", title: "Whiteboard Algebraic Practice", sub: "Student deriving step-by-step solutions to linear algebraic problems." },
-              { id: 6, src: "/images/gallery_6.jpg", tag: "Student Life", title: "Peer Camaraderie & Support", sub: "Celebratory fist-bump milestone between learning peers." },
-              { id: 7, src: "/images/gallery_7.jpg", tag: "Team Craft", title: "Hands-on Creative Teamwork", sub: "Collaborative rainbow art and sensory craft session." },
-              { id: 8, src: "/images/gallery_8.jpg", tag: "Board Prep", title: "Senior Board Exam Cohort", sub: "Dedicated revision, mock testing, and core subject preparation." },
-              { id: 9, src: "/images/gallery_9.jpg", tag: "Community", title: "MANTIF Friendship Circle", sub: "Lifelong student bonds, peer encouragement, and mutual support." },
+              { id: 1, src: "/images/gallery_1.jpg", title: "Creative Learning & Activity Circles", sub: "Hands-on collaborative drawing and color studies at Tutoring Hub." },
+              { id: 2, src: "/images/gallery_2.jpg", title: "Interactive Reading & Discovery", sub: "Young students exploring science and nature literature together." },
+              { id: 3, src: "/images/gallery_3.jpg", title: "Early Focus & Skill Building", sub: "Individual care and guided creative practice for young minds." },
+              { id: 4, src: "/images/gallery_4.jpg", title: "Classroom Problem Solving", sub: "In-depth whiteboard concept breakdown and formula analysis." },
+              { id: 5, src: "/images/gallery_5.jpg", title: "Whiteboard Algebraic Practice", sub: "Student deriving step-by-step solutions to linear algebraic problems." },
+              { id: 6, src: "/images/gallery_6.jpg", title: "Peer Camaraderie & Support", sub: "Celebratory fist-bump milestone between learning peers." },
+              { id: 7, src: "/images/gallery_7.jpg", title: "Hands-on Creative Teamwork", sub: "Collaborative rainbow art and sensory craft session." },
+              { id: 8, src: "/images/gallery_8.jpg", title: "Senior Board Exam Cohort", sub: "Dedicated revision, mock testing, and core subject preparation." },
+              { id: 9, src: "/images/gallery_9.jpg", title: "MANTIF Friendship Circle", sub: "Lifelong student bonds, peer encouragement, and mutual support." },
               { id: 10, src: "/images/gallery_10.jpg", tag: "Foundations", title: "Foundational Math & Handwriting", sub: "Early geometric drawing and precision handwriting practice." },
-            ].map((item) => (
+            ].map((item, idx) => (
                 <div
                   key={item.id}
-                  onClick={() => setSelectedGalleryItem(item)}
+                  onClick={() => setSelectedGalleryIdx(idx)}
                   className="group relative h-[300px] sm:h-[340px] rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md hover:shadow-2xl hover:border-[#b89047]/80 transition-all duration-500 cursor-pointer flex flex-col justify-end transform hover:-translate-y-1.5"
                 >
                   <img
@@ -1622,40 +1622,102 @@ export default function HomePage() {
 
         </div>
 
-        {/* High-Resolution Interactive Lightbox Modal */}
-        {selectedGalleryItem && (
+        {/* Compact, High-Aesthetic Lightbox Modal */}
+        {selectedGalleryIdx !== null && (
           <div
-            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 transition-all"
-            onClick={() => setSelectedGalleryItem(null)}
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 transition-all"
+            onClick={() => setSelectedGalleryIdx(null)}
           >
             <div
-              className="relative max-w-4xl w-full bg-[#001726] rounded-3xl overflow-hidden shadow-2xl border border-[#dfb74a]/40 p-4 sm:p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200"
+              className="relative max-w-2xl w-full bg-[#001726] rounded-3xl overflow-hidden shadow-2xl border border-white/15 animate-in fade-in zoom-in-95 duration-200"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between">
-                <h3 className="text-base sm:text-lg font-black text-white truncate pr-4">
-                  {selectedGalleryItem.title}
-                </h3>
+              {/* Floating Top Controls (Counter Badge + Glass Close) */}
+              <div className="absolute top-3 inset-x-3 flex items-center justify-between z-20 pointer-events-none">
+                <span className="text-[11px] font-black px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-white/90 border border-white/10 pointer-events-auto">
+                  {selectedGalleryIdx + 1} / 10
+                </span>
                 <button
-                  onClick={() => setSelectedGalleryItem(null)}
-                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer shrink-0"
+                  onClick={() => setSelectedGalleryIdx(null)}
+                  className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md hover:bg-black/80 text-white flex items-center justify-center transition-all cursor-pointer border border-white/15 pointer-events-auto shadow-md hover:scale-105"
                   title="Close (Esc)"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="w-full max-h-[60vh] sm:max-h-[68vh] rounded-2xl overflow-hidden flex items-center justify-center bg-black/40 border border-white/10">
+              {/* Seamless Aspect-Ratio Photo Container */}
+              <div className="relative aspect-[4/3] w-full bg-black overflow-hidden flex items-center justify-center">
                 <img
-                  src={selectedGalleryItem.src}
-                  alt={selectedGalleryItem.title}
-                  className="max-h-[60vh] sm:max-h-[68vh] w-auto max-w-full object-contain rounded-xl"
+                  src={[
+                    "/images/gallery_1.jpg",
+                    "/images/gallery_2.jpg",
+                    "/images/gallery_3.jpg",
+                    "/images/gallery_4.jpg",
+                    "/images/gallery_5.jpg",
+                    "/images/gallery_6.jpg",
+                    "/images/gallery_7.jpg",
+                    "/images/gallery_8.jpg",
+                    "/images/gallery_9.jpg",
+                    "/images/gallery_10.jpg",
+                  ][selectedGalleryIdx]}
+                  alt="Gallery Moment"
+                  className="w-full h-full object-cover"
                 />
+
+                {/* Left/Right Smooth Navigation Arrows */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedGalleryIdx((prev) => (prev !== null ? (prev === 0 ? 9 : prev - 1) : 0));
+                  }}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md hover:bg-black/90 text-white flex items-center justify-center transition-all cursor-pointer border border-white/15 shadow-md hover:scale-110"
+                  title="Previous photo"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedGalleryIdx((prev) => (prev !== null ? (prev === 9 ? 0 : prev + 1) : 0));
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md hover:bg-black/90 text-white flex items-center justify-center transition-all cursor-pointer border border-white/15 shadow-md hover:scale-110"
+                  title="Next photo"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
               </div>
 
-              <div className="text-left">
-                <p className="text-xs sm:text-sm text-slate-300">
-                  {selectedGalleryItem.sub}
+              {/* Compact Sleek Bottom Caption */}
+              <div className="p-4 sm:p-5 bg-[#001726] border-t border-white/10 space-y-1 text-left">
+                <h3 className="text-sm sm:text-base font-black text-white leading-snug">
+                  {[
+                    "Creative Learning & Activity Circles",
+                    "Interactive Reading & Discovery",
+                    "Early Focus & Skill Building",
+                    "Classroom Problem Solving",
+                    "Whiteboard Algebraic Practice",
+                    "Peer Camaraderie & Support",
+                    "Hands-on Creative Teamwork",
+                    "Senior Board Exam Cohort",
+                    "MANTIF Friendship Circle",
+                    "Foundational Math & Handwriting",
+                  ][selectedGalleryIdx]}
+                </h3>
+                <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                  {[
+                    "Hands-on collaborative drawing and color studies at Tutoring Hub.",
+                    "Young students exploring science and nature literature together.",
+                    "Individual care and guided creative practice for young minds.",
+                    "In-depth whiteboard concept breakdown and formula analysis.",
+                    "Student deriving step-by-step solutions to linear algebraic problems.",
+                    "Celebratory fist-bump milestone between learning peers.",
+                    "Collaborative rainbow art and sensory craft session.",
+                    "Dedicated revision, mock testing, and core subject preparation.",
+                    "Lifelong student bonds, peer encouragement, and mutual support.",
+                    "Early geometric drawing and precision handwriting practice.",
+                  ][selectedGalleryIdx]}
                 </p>
               </div>
             </div>
