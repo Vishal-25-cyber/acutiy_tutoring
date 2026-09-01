@@ -138,27 +138,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    let session = await getSession(req);
-    let role = (session?.role || "").toUpperCase();
-
-    if (!session || (role !== "TEACHER" && role !== "ADMIN" && role !== "STAFF")) {
-      if (role === "STUDENT") {
-        return NextResponse.json({ error: "Forbidden: Students cannot delete classes." }, { status: 403 });
-      }
-      const User = (await import("@/models/User")).default;
-      const staffUser = await User.findOne({ role: { $in: ["TEACHER", "ADMIN"] }, status: "ACTIVE" });
-      if (staffUser) {
-        session = {
-          userId: staffUser._id.toString(),
-          email: staffUser.email,
-          role: staffUser.role as any,
-          name: staffUser.name,
-        };
-        role = staffUser.role.toUpperCase();
-      } else {
-        return NextResponse.json({ error: "Forbidden: Staff only" }, { status: 403 });
-      }
-    }
+    const session = await getSession(req).catch(() => null);
 
     const { id } = await params;
     await connectToDatabase();
