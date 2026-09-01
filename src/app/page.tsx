@@ -1728,12 +1728,8 @@ export default function HomePage() {
           {/* 3-Column Layout — equal visual weight */}
           <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-0">
 
-            {/* Column 1: Brand + Address + Hours */}
-            <div className="space-y-4 pr-8 lg:pr-14">
-              <div>
-                <span className="text-lg font-black tracking-tight text-white">MANTIF</span>
-                <p className="text-[10px] font-bold text-[#dfb74a] uppercase tracking-[0.18em] mt-0.5">Tutoring Hub · AI-Powered Education</p>
-              </div>
+            {/* Column 1: Address + Hours */}
+            <div className="space-y-3 pr-8 lg:pr-14">
               <div className="space-y-2">
                 <div className="flex items-start gap-2">
                   <MapPin className="w-3.5 h-3.5 mt-0.5 text-[#dfb74a] shrink-0" />
@@ -1767,7 +1763,7 @@ export default function HomePage() {
                     <div key={i}>
                       <a
                         href={h.tel}
-                        className="block py-3 text-base font-black font-mono text-white hover:text-[#dfb74a] transition-colors tracking-wide"
+                        className="block py-2 text-base font-black font-mono text-white hover:text-[#dfb74a] transition-colors tracking-wide"
                       >
                         {h.num}
                       </a>
