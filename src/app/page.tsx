@@ -1197,11 +1197,11 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           PAGE 4: TEAM (FOUNDER SPOTLIGHT ALONE - 100% SINGLE PAGE VIEW)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="team" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-white py-10 lg:py-16">
-        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 space-y-10 lg:space-y-12">
+      <section id="team" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-white py-6 lg:py-8">
+        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 space-y-6 lg:space-y-8">
           
           {/* Section Header */}
-          <div className="text-center max-w-3xl mx-auto space-y-2">
+          <div className="text-center max-w-3xl mx-auto space-y-1.5">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Our Team
             </h2>
@@ -1210,34 +1210,33 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Founder Spotlight (50/50 Split with Exact 292x365px Photo) */}
-          <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 xl:gap-20 items-center max-w-5xl mx-auto pb-4">
+          {/* Founder Spotlight (50/50 Split with Larger Photo & Precision Alignment) */}
+          <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 xl:gap-20 items-center max-w-6xl mx-auto">
             {/* Center Vertical Divider Line */}
             <div className="hidden lg:block absolute left-1/2 top-2 bottom-2 w-px bg-slate-200 -translate-x-1/2" />
 
-            {/* Left: Founder Portrait (Exact 292x365px with Ambient Glow) */}
-            <div className="flex justify-center lg:justify-end lg:pr-6 xl:pr-10">
+            {/* Left: Larger Founder Portrait */}
+            <div className="flex justify-center lg:justify-end lg:pr-8 xl:pr-12">
               <div className="relative group">
                 <div className="absolute -inset-2 bg-gradient-to-r from-[#dfb74a]/25 to-[#004b79]/20 rounded-3xl blur-xl opacity-70 group-hover:opacity-100 transition duration-500 pointer-events-none" />
 
-                <div className="relative shrink-0 w-[292px] h-[365px] rounded-2xl overflow-hidden shadow-2xl border-2 border-slate-200/90 bg-white">
+                <div className="relative shrink-0 w-[310px] h-[388px] sm:w-[340px] sm:h-[425px] lg:w-[350px] lg:h-[438px] rounded-3xl overflow-hidden shadow-2xl border-2 border-slate-200/90 bg-white">
                   <img
                     src="/images/founder_karunya.png"
                     alt="Karunya S - Founder of MANTIF"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    style={{ width: "292px", height: "365px" }}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Right: Executive Founder Profile */}
-            <div className="w-full space-y-5 lg:pl-6 xl:pl-10 text-center lg:text-left">
+            {/* Right: Executive Founder Profile (Balanced Spacing) */}
+            <div className="w-full space-y-4 lg:pl-8 xl:pl-12 text-center lg:text-left">
               <div className="space-y-1">
                 <span className="text-xs font-black uppercase text-[#b89047] tracking-widest">
                   Leadership &amp; Vision
                 </span>
-                <h3 className="text-4xl sm:text-5xl font-black text-[#002137] tracking-tight pt-1">
+                <h3 className="text-4xl sm:text-5xl font-black text-[#002137] tracking-tight pt-0.5">
                   Karunya S
                 </h3>
                 <p className="text-base sm:text-lg font-extrabold text-[#b89047]">
