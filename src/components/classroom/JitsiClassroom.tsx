@@ -694,7 +694,7 @@ export function JitsiClassroom({
       const targetClassId = classData?.id || classData?.livekitRoomId || classId;
       try {
         await fetch(`/api/classes/${targetClassId}/admit`, {
-          method: "PUT",
+          method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId, action }),
         });

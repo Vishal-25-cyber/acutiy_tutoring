@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import connectToDatabase from "@/lib/db/mongoose";
 import { getSession } from "@/lib/auth/session";
 import LiveSession from "@/models/LiveSession";
+import { getRoom, resolveCanonicalRoomId } from "../signal/route";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ async function resolveClassDoc(id: string) {
   });
   if (byMeetingId) return byMeetingId;
 
-  // Fallback: look for today's live or active session
+  // Fallback: look for today's active session
   const now = new Date();
   const todayDateStr = now.toISOString().split("T")[0];
   const liveSession = await LiveSession.findOne({
@@ -26,11 +27,11 @@ async function resolveClassDoc(id: string) {
   }).sort({ updatedAt: -1 });
   if (liveSession) return liveSession;
 
-  return await LiveSession.findOne({ status: "LIVE" }) || await LiveSession.findOne().sort({ updatedAt: -1 });
+  return (await LiveSession.findOne({ status: "LIVE" })) || (await LiveSession.findOne().sort({ updatedAt: -1 }));
 }
 
 // ─────────────────────────────────────────────────────────────────
-// POST — Student knocks (requests to join) or re-knocks after leaving/denial
+// POST — Student knocks (requests to join)
 // Body: { name?: string }
 // ─────────────────────────────────────────────────────────────────
 export async function POST(
@@ -49,44 +50,39 @@ export async function POST(
     const { id } = await params;
     const body = await req.json().catch(() => ({}));
     const studentName: string = body.name || session.name || "Student";
+    const userId = String(session.userId);
+
+    // Clear any prior memory state for fresh knock
+    try {
+      const canonicalId = await resolveCanonicalRoomId(id);
+      const room = getRoom(canonicalId);
+      if (room.admissions) delete room.admissions[userId];
+    } catch {}
 
     await connectToDatabase();
     const classDoc = await resolveClassDoc(id);
-
     if (!classDoc) {
       return NextResponse.json({ error: "Class not found." }, { status: 404 });
     }
 
-    const userId = session.userId;
+    // Atomic DB update
+    await LiveSession.findByIdAndUpdate(classDoc._id, {
+      $pull: {
+        deniedStudents: { userId },
+        admittedStudents: { userId },
+        pendingAdmissions: { userId },
+      },
+    });
 
-    if (!classDoc.admittedStudents) classDoc.admittedStudents = [];
-    if (!classDoc.deniedStudents) classDoc.deniedStudents = [];
-    if (!classDoc.pendingAdmissions) classDoc.pendingAdmissions = [];
-
-    // Reset previous states so every knock is a fresh request to the faculty
-    classDoc.deniedStudents = (classDoc.deniedStudents as any[]).filter(
-      (e: any) => e.userId !== userId
-    );
-    classDoc.admittedStudents = (classDoc.admittedStudents as any[]).filter(
-      (e: any) => e.userId !== userId
-    );
-
-    // Add to pending (idempotent — update timestamp if already pending)
-    const existingPending = (classDoc.pendingAdmissions as any[]).find(
-      (e: any) => e.userId === userId
-    );
-    if (!existingPending) {
-      (classDoc.pendingAdmissions as any[]).push({
-        userId,
-        name: studentName,
-        requestedAt: new Date(),
-      });
-    } else {
-      existingPending.requestedAt = new Date();
-      existingPending.name = studentName;
-    }
-
-    await classDoc.save();
+    await LiveSession.findByIdAndUpdate(classDoc._id, {
+      $push: {
+        pendingAdmissions: {
+          userId,
+          name: studentName,
+          requestedAt: new Date(),
+        },
+      },
+    });
 
     return NextResponse.json({ status: "PENDING" });
   } catch (err: any) {
@@ -96,7 +92,7 @@ export async function POST(
 }
 
 // ─────────────────────────────────────────────────────────────────
-// DELETE — Student cancels knock, leaves lobby, or leaves live classroom
+// DELETE — Student cancels knock or leaves
 // ─────────────────────────────────────────────────────────────────
 export async function DELETE(
   req: NextRequest,
@@ -109,26 +105,24 @@ export async function DELETE(
     }
 
     const { id } = await params;
+    const userId = String(session.userId);
+
+    try {
+      const canonicalId = await resolveCanonicalRoomId(id);
+      const room = getRoom(canonicalId);
+      if (room.admissions) delete room.admissions[userId];
+    } catch {}
+
     await connectToDatabase();
     const classDoc = await resolveClassDoc(id);
-    if (!classDoc) {
-      return NextResponse.json({ error: "Class not found." }, { status: 404 });
+    if (classDoc) {
+      await LiveSession.findByIdAndUpdate(classDoc._id, {
+        $pull: {
+          pendingAdmissions: { userId },
+          admittedStudents: { userId },
+        },
+      });
     }
-
-    const userId = session.userId;
-
-    // Remove student from both pending and admitted when they leave the classroom
-    if (classDoc.pendingAdmissions) {
-      classDoc.pendingAdmissions = (classDoc.pendingAdmissions as any[]).filter(
-        (e: any) => e.userId !== userId
-      );
-    }
-    if (classDoc.admittedStudents) {
-      classDoc.admittedStudents = (classDoc.admittedStudents as any[]).filter(
-        (e: any) => e.userId !== userId
-      );
-    }
-    await classDoc.save();
 
     return NextResponse.json({ success: true, message: "Participant left classroom" });
   } catch (err: any) {
@@ -139,8 +133,6 @@ export async function DELETE(
 
 // ─────────────────────────────────────────────────────────────────
 // GET — Poll admission status
-//   ?userId=...  → student polls for their own status
-//   (no userId)  → teacher fetches full pending list
 // ─────────────────────────────────────────────────────────────────
 export async function GET(
   req: NextRequest,
@@ -156,14 +148,23 @@ export async function GET(
     const { searchParams } = new URL(req.url);
     const queryUserId = searchParams.get("userId");
 
+    // 1. Check instant in-memory cache first
+    try {
+      const canonicalId = await resolveCanonicalRoomId(id);
+      const room = getRoom(canonicalId);
+      const checkId = String(queryUserId || session.userId);
+      if (room.admissions && room.admissions[checkId]) {
+        return NextResponse.json({ status: room.admissions[checkId] });
+      }
+    } catch {}
+
     await connectToDatabase();
     const classDoc = await resolveClassDoc(id);
-
     if (!classDoc) {
       return NextResponse.json({ error: "Class not found." }, { status: 404 });
     }
 
-    // STUDENT POLL: Check if this specific student is admitted or denied
+    // STUDENT POLL: Check if student is admitted or denied
     if (queryUserId || session.role === "STUDENT") {
       const studentIdToCheck = String(queryUserId || session.userId || "");
       const isAdmitted = (classDoc.admittedStudents || []).some(
@@ -186,12 +187,12 @@ export async function GET(
     // TEACHER POLL: Return full pending queue and admitted list
     return NextResponse.json({
       pendingAdmissions: (classDoc.pendingAdmissions || []).map((e: any) => ({
-        userId: e.userId,
+        userId: String(e.userId),
         name: e.name,
         requestedAt: e.requestedAt,
       })),
       admittedStudents: (classDoc.admittedStudents || []).map((e: any) => ({
-        userId: e.userId,
+        userId: String(e.userId),
         name: e.name,
         admittedAt: e.admittedAt,
       })),
@@ -230,67 +231,63 @@ export async function PATCH(
       );
     }
 
+    const targetUserId = String(userId);
+
+    // 1. Instantly record in in-memory room cache so student gets admitted on next poll
+    try {
+      const canonicalId = await resolveCanonicalRoomId(id);
+      const room = getRoom(canonicalId);
+      if (!room.admissions) room.admissions = {};
+      room.admissions[targetUserId] = action === "ADMIT" ? "ADMITTED" : "DENIED";
+    } catch {}
+
     await connectToDatabase();
     const classDoc = await resolveClassDoc(id);
-
     if (!classDoc) {
       return NextResponse.json({ error: "Class not found." }, { status: 404 });
     }
 
-    if (!classDoc.admittedStudents) classDoc.admittedStudents = [];
-    if (!classDoc.deniedStudents) classDoc.deniedStudents = [];
-    if (!classDoc.pendingAdmissions) classDoc.pendingAdmissions = [];
-
     // Find student name from pending
     const pendingItem = (classDoc.pendingAdmissions as any[]).find(
-      (e: any) => e.userId === userId
+      (e: any) => String(e.userId) === targetUserId
     );
     const studentName = pendingItem?.name || "Student";
 
-    // Remove from pending
-    classDoc.pendingAdmissions = (classDoc.pendingAdmissions as any[]).filter(
-      (e: any) => e.userId !== userId
-    );
-
+    // 2. Atomic MongoDB update
     if (action === "ADMIT") {
-      const alreadyAdmitted = (classDoc.admittedStudents as any[]).some(
-        (e: any) => e.userId === userId
-      );
-      if (!alreadyAdmitted) {
-        (classDoc.admittedStudents as any[]).push({
-          userId,
-          name: studentName,
-          admittedAt: new Date(),
-        });
-      }
-      // Remove from denied if previously denied
-      classDoc.deniedStudents = (classDoc.deniedStudents as any[]).filter(
-        (e: any) => e.userId !== userId
-      );
-    } else if (action === "DENY") {
-      const alreadyDenied = (classDoc.deniedStudents as any[]).some(
-        (e: any) => e.userId === userId
-      );
-      if (!alreadyDenied) {
-        (classDoc.deniedStudents as any[]).push({
-          userId,
-          name: studentName,
-          deniedAt: new Date(),
-        });
-      }
-      classDoc.admittedStudents = (classDoc.admittedStudents as any[]).filter(
-        (e: any) => e.userId !== userId
-      );
+      await LiveSession.findByIdAndUpdate(classDoc._id, {
+        $pull: {
+          pendingAdmissions: { userId: targetUserId },
+          deniedStudents: { userId: targetUserId },
+        },
+        $addToSet: {
+          admittedStudents: {
+            userId: targetUserId,
+            name: studentName,
+            admittedAt: new Date(),
+          },
+        },
+      });
+    } else {
+      await LiveSession.findByIdAndUpdate(classDoc._id, {
+        $pull: {
+          pendingAdmissions: { userId: targetUserId },
+          admittedStudents: { userId: targetUserId },
+        },
+        $addToSet: {
+          deniedStudents: {
+            userId: targetUserId,
+            name: studentName,
+            deniedAt: new Date(),
+          },
+        },
+      });
     }
-
-    await classDoc.save();
 
     return NextResponse.json({
       success: true,
       action,
-      userId,
-      pendingAdmissions: classDoc.pendingAdmissions,
-      admittedStudents: classDoc.admittedStudents,
+      userId: targetUserId,
     });
   } catch (err: any) {
     console.error("PATCH /api/classes/[id]/admit error:", err);
@@ -298,4 +295,9 @@ export async function PATCH(
   }
 }
 
-export const PUT = PATCH;
+export async function PUT(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  return PATCH(req, ctx);
+}

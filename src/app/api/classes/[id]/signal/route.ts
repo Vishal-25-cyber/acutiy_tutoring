@@ -11,13 +11,14 @@ export const roomSignals: Record<
   string,
   {
     isEnded?: boolean;
+    admissions?: Record<string, "ADMITTED" | "DENIED">;
     participants: Record<string, { id: string; name: string; role: string; lastSeen: number; isCameraOn?: boolean; isMicOn?: boolean; isScreenSharing?: boolean }>;
-    signals: Array<{ from: string; to?: string; type: "offer" | "answer" | "candidate" | "leave" | "CLASS_ENDED"; data?: any; timestamp: number }>;
+    signals: Array<{ from: string; to?: string; type: "offer" | "answer" | "candidate" | "leave" | "CLASS_ENDED" | "CLIENT_JOINED"; data?: any; timestamp: number }>;
   }
 > = {};
 
 // In-memory alias cache (meetingId / livekitRoomId -> canonical Mongo ID)
-const roomAliases: Record<string, string> = {};
+export const roomAliases: Record<string, string> = {};
 
 export async function resolveCanonicalRoomId(id: string): Promise<string> {
   if (!id) return "default-room";
@@ -50,7 +51,10 @@ export async function resolveCanonicalRoomId(id: string): Promise<string> {
 export function getRoom(roomId: string) {
   const targetId = roomAliases[roomId] || roomId;
   if (!roomSignals[targetId]) {
-    roomSignals[targetId] = { participants: {}, signals: [] };
+    roomSignals[targetId] = { participants: {}, signals: [], admissions: {} };
+  }
+  if (!roomSignals[targetId].admissions) {
+    roomSignals[targetId].admissions = {};
   }
   // Clean up old signals (>30s) and inactive participants (>20s)
   const now = Date.now();
@@ -102,8 +106,8 @@ export async function POST(
       isScreenSharing: isScreenSharing ?? false,
     };
 
-    // If signaling payload included (offer, answer, ICE candidate)
-    if (type && data) {
+    // If signaling payload included (offer, answer, ICE candidate, CLIENT_JOINED)
+    if (type) {
       room.signals.push({
         from: userId,
         to,
