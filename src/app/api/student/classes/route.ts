@@ -41,7 +41,8 @@ export async function GET(req: NextRequest) {
     }
 
     const now = new Date();
-    const currentDayName = DAYS_OF_WEEK[now.getDay()];
+    const dayFormatter = new Intl.DateTimeFormat("en-US", { weekday: "long", timeZone: "Asia/Kolkata" });
+    const currentDayName = dayFormatter.format(now);
     const todayDateStr = now.toISOString().split("T")[0];
 
     // Robust auto-cleanup: Any session that was live for >60 mins or from past days or generic session is auto-concluded

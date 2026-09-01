@@ -19,14 +19,28 @@ import { useFastFetch } from "@/lib/api-cache";
 import { downloadTimetableDoc } from "@/lib/download";
 import { useClassLiveTimer } from "@/lib/use-class-timer";
 
+const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
 export default function StudentClassesPage() {
   const { data } = useFastFetch("/api/student/classes");
   const [isDownloading, setIsDownloading] = React.useState(false);
   const [isDownloaded, setIsDownloaded] = React.useState(false);
 
+  // Live real-time current day from browser's local timezone
+  const [liveDay, setLiveDay] = React.useState<string>(() => {
+    return typeof window !== "undefined" ? DAYS_OF_WEEK[new Date().getDay()] : "Tuesday";
+  });
+
+  React.useEffect(() => {
+    const updateDay = () => setLiveDay(DAYS_OF_WEEK[new Date().getDay()]);
+    updateDay();
+    const interval = setInterval(updateDay, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const currentClass = data?.currentClass || "Class 10";
   const board = data?.board || "CBSE";
-  const currentDay = data?.currentDay || "Monday";
+  const currentDay = liveDay || data?.currentDay || "Tuesday";
   const batch = data?.batch;
   const batchName = batch?.name || "7:00 PM – 8:00 PM";
 
@@ -103,7 +117,8 @@ export default function StudentClassesPage() {
 
   const todayScheduleItem =
     weeklySchedule.find((s: any) => s.day.toLowerCase() === currentDay.toLowerCase()) ||
-    weeklySchedule[0];
+    weeklySchedule.find((s: any) => s.day.toLowerCase() === liveDay.toLowerCase()) ||
+    weeklySchedule[1];
 
   const todayDateStr = new Date().toISOString().split("T")[0];
   const liveDbClass = data?.classes?.find((c: any) => c.status === "LIVE" && (!c.date || c.date === todayDateStr));
