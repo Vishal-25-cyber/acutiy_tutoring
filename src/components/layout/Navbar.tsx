@@ -20,25 +20,21 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#001726]/95 backdrop-blur-md transition-all shadow-xs">
       <div className="w-full max-w-[1550px] mx-auto px-6 sm:px-10 lg:px-14 xl:px-16 h-20 flex items-center justify-between">
-        {/* Brand Logo & Name (Left Side - Clearly visible) */}
+        {/* Brand Logo & Name (Left Side - Clean Logo without box, Styled MANTIF with golden A, No MSME badge) */}
         <Link href="/" prefetch={true} className="flex items-center gap-3.5 group shrink-0">
-          <div className="w-11 h-11 rounded-2xl bg-white dark:bg-[#002137] p-1 shadow-sm border border-slate-200/80 dark:border-[#b89047]/30 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
-            <img
-              src="/images/mantif_logo.png"
-              alt="Mantif Logo"
-              className="w-full h-full object-contain"
-            />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-xl tracking-tight text-[#002137] dark:text-white">
-                MANTIF
-              </span>
-              <Badge variant="gold" className="text-[10px] px-2 py-0">
-                MSME Registered
-              </Badge>
-            </div>
-            <p className="text-[11px] font-medium text-[#b89047] dark:text-[#dfb74a] tracking-tight">
+          <img
+            src="/images/mantif_logo.png"
+            alt="Mantif Logo"
+            className="w-10 h-10 object-contain group-hover:scale-105 transition-transform shrink-0"
+          />
+          <div className="space-y-0.5">
+            <span
+              className="font-black text-2xl tracking-[0.14em] text-[#002137] dark:text-white block leading-none"
+              style={{ fontFamily: "'Montserrat', 'Plus Jakarta Sans', sans-serif" }}
+            >
+              M<span className="text-[#b89047] dark:text-[#dfb74a]">A</span>NTIF
+            </span>
+            <p className="text-[11px] font-bold text-[#b89047] dark:text-[#dfb74a] tracking-tight">
               Human x Artificial Intelligence
             </p>
           </div>
