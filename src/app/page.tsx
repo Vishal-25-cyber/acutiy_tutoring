@@ -388,94 +388,62 @@ export default function HomePage() {
       </header>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 1: ABOUT (HERO SPLIT: ABOUT MANTIF + LOGIN / SIGNUP CARD)
+          PAGE 1: ABOUT (HERO SPLIT: 2 SIDES - FOCUSED BRAND & 3 PILLARS + AUTH CARD)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="about" className="relative min-h-[calc(100vh-5rem)] flex items-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/50 to-white py-12 lg:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+      <section id="about" className="relative min-h-[calc(100vh-5rem)] flex items-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-12 lg:py-16">
+        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
 
-          {/* LEFT HALF (7 COLS): ABOUT MANTIF BRANDING & PILLARS */}
-          <div className="lg:col-span-7 space-y-7">
+          {/* LEFT HALF (7 COLS): FOCUSED BRAND STATEMENT & 3 PILLARS */}
+          <div className="lg:col-span-7 space-y-8">
             <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs font-black text-[#004b79] uppercase tracking-wider">
-                  <Shield className="w-3.5 h-3.5" />
-                  MSME-Registered EdTech Startup
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-xs font-extrabold text-emerald-800 uppercase tracking-wider">
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
-                  2-Day Free Trial Included
-                </span>
-              </div>
-
-              <div className="space-y-1">
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-[0.08em] leading-[1.08]">
+              <div className="space-y-1.5">
+                <h1
+                  className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black text-[#002137] tracking-[0.06em] leading-[1.02]"
+                  style={{ fontFamily: "'Montserrat', 'Plus Jakarta Sans', sans-serif" }}
+                >
                   M<span className="text-[#b89047]">Λ</span>NTIF
                 </h1>
-                <p className="text-xl sm:text-2xl font-extrabold text-[#b89047] tracking-tight">
+                <p className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#b89047] tracking-tight">
                   Human x Artificial Intelligence
                 </p>
               </div>
 
-              {/* Core Philosophy Callout */}
-              <div className="p-4 rounded-2xl bg-[#002137]/5 border-l-4 border-[#b89047] text-slate-800">
-                <p className="text-sm sm:text-base font-bold italic text-[#002137]">
-                  “Fusion — combining two different forms of intelligence”
-                </p>
-              </div>
-
-              <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">
+              <p className="text-slate-700 text-lg sm:text-xl lg:text-2xl leading-relaxed font-medium max-w-2xl pt-2">
                 MANTIF is an MSME-registered EdTech startup helping students learn better through personalised support from AI, educators, and real-world learning.
               </p>
             </div>
 
-            {/* 3 Core Pillars */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-1">
-              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-1.5 hover:border-[#004b79]/40 transition-colors">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#004b79] flex items-center justify-center font-bold">
-                  <Cpu className="w-4 h-4" />
+            {/* 3 Core Pillars Alone */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+              <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm hover:shadow-md hover:border-[#004b79]/40 transition-all space-y-2.5">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#004b79] flex items-center justify-center font-bold">
+                  <Cpu className="w-5 h-5" />
                 </div>
-                <h2 className="text-sm font-extrabold text-[#002137]">AI-Powered Learning</h2>
-                <p className="text-xs text-slate-500 font-medium">
+                <h2 className="text-base font-extrabold text-[#002137]">AI-Powered Learning</h2>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
                   Curated syllabus paths &amp; intelligent practice designed for mastery.
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-1.5 hover:border-[#004b79]/40 transition-colors">
-                <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
-                  <Brain className="w-4 h-4" />
+              <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm hover:shadow-md hover:border-[#b89047]/40 transition-all space-y-2.5">
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
+                  <Brain className="w-5 h-5" />
                 </div>
-                <h2 className="text-sm font-extrabold text-[#002137]">Learns With You</h2>
-                <p className="text-xs text-slate-500 font-medium">
+                <h2 className="text-base font-extrabold text-[#002137]">Learns With You</h2>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
                   Adapts in real-time to your individual learning pace and doubt patterns.
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-1.5 hover:border-[#004b79]/40 transition-colors">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
-                  <Award className="w-4 h-4" />
+              <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm hover:shadow-md hover:border-emerald-500/40 transition-all space-y-2.5">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                  <Award className="w-5 h-5" />
                 </div>
-                <h2 className="text-sm font-extrabold text-[#002137]">Track Real Progress</h2>
-                <p className="text-xs text-slate-500 font-medium">
+                <h2 className="text-base font-extrabold text-[#002137]">Track Real Progress</h2>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
                   Multi-dimensional reports &amp; full transparency for parents &amp; mentors.
                 </p>
               </div>
-            </div>
-
-            {/* Quick Section Nav Anchors */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <a
-                href="#tutoring-hub"
-                className="px-5 py-3 rounded-xl bg-[#004b79] hover:bg-[#003b60] text-white text-xs font-bold transition-all shadow-xs flex items-center gap-2"
-              >
-                <span>Discover Tutoring Hub Story</span>
-                <ChevronRight className="w-4 h-4" />
-              </a>
-              <a
-                href="#our-side"
-                className="px-5 py-3 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all flex items-center gap-2"
-              >
-                <span>School Outreach (Our Side)</span>
-              </a>
             </div>
           </div>
 
