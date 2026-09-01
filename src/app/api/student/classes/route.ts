@@ -43,16 +43,18 @@ export async function GET(req: NextRequest) {
     const now = new Date();
     const currentDayName = DAYS_OF_WEEK[now.getDay()];
     const todayDateStr = now.toISOString().split("T")[0];
-    const currentHourMin = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
 
-    // Auto-conclude any stale LIVE sessions where date < today or time is past endTime
+    // Robust auto-cleanup: Any session that was live for >60 mins or from past days or generic session is auto-concluded
     try {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
       await LiveSession.updateMany(
         {
           status: "LIVE",
           $or: [
+            { actualStartTime: { $lt: oneHourAgo } },
+            { updatedAt: { $lt: oneHourAgo } },
             { date: { $lt: todayDateStr } },
-            { date: todayDateStr, endTime: { $lt: currentHourMin } },
+            { title: /General Live Session/i },
           ],
         },
         {
