@@ -140,6 +140,7 @@ export default function StudentClassesPage() {
 
   const isClassCurrentlyLive = Boolean(liveClassDoc);
   const activeDoc = liveClassDoc || todayDbClass;
+  const liveOrTodayDbClass = activeDoc;
 
   const weeklySchedule = (
     Array.isArray(data?.weeklySchedule) && data.weeklySchedule.length > 0

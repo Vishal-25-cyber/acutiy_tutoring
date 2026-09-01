@@ -96,6 +96,27 @@ export function JitsiClassroom({
   const chatBottomRef      = useRef<HTMLDivElement | null>(null);
   const pollTimerRef       = useRef<NodeJS.Timeout | null>(null);
 
+  const stopAllMedia = useCallback(() => {
+    try {
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach((t) => {
+          t.stop();
+          t.enabled = false;
+        });
+        localStreamRef.current = null;
+      }
+      if (screenStreamRef.current) {
+        screenStreamRef.current.getTracks().forEach((t) => {
+          t.stop();
+          t.enabled = false;
+        });
+        screenStreamRef.current = null;
+      }
+    } catch (e) {
+      console.warn("Error stopping media tracks:", e);
+    }
+  }, []);
+
   /* ─────────────────────────────────────────────────
      1.  Load class data on mount
   ───────────────────────────────────────────────── */
@@ -363,28 +384,6 @@ export function JitsiClassroom({
     setNewMessage("");
     setTimeout(() => chatBottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
   };
-
-  /* ─────────────────────────────────────────────────
-  const stopAllMedia = useCallback(() => {
-    try {
-      if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach((t) => {
-          t.stop();
-          t.enabled = false;
-        });
-        localStreamRef.current = null;
-      }
-      if (screenStreamRef.current) {
-        screenStreamRef.current.getTracks().forEach((t) => {
-          t.stop();
-          t.enabled = false;
-        });
-        screenStreamRef.current = null;
-      }
-    } catch (e) {
-      console.warn("Error stopping media tracks:", e);
-    }
-  }, []);
 
   /* ─────────────────────────────────────────────────
      8.  Leave class
