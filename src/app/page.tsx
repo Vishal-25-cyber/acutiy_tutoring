@@ -1595,12 +1595,9 @@ export default function HomePage() {
                   {/* Subtle Gradient Backplate */}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/95 via-[#001726]/40 to-transparent transition-opacity duration-300 group-hover:from-[#001726]/98" />
 
-                  {/* Top Floating Badge & Expand Button */}
-                  <div className="absolute top-4 inset-x-4 flex items-center justify-between z-10">
-                    <span className="text-[10px] sm:text-xs uppercase font-black px-3 py-1 rounded-full bg-[#dfb74a] text-[#002137] shadow-md tracking-wider">
-                      {item.tag}
-                    </span>
-                    <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0">
+                  {/* Top Floating Expand Button */}
+                  <div className="absolute top-4 right-4 z-10">
+                    <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0 shadow-sm">
                       <Maximize2 className="w-4 h-4" />
                     </div>
                   </div>
@@ -1636,12 +1633,12 @@ export default function HomePage() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs uppercase font-black px-3 py-1 rounded-full bg-[#dfb74a] text-[#002137]">
-                  {selectedGalleryItem.tag}
-                </span>
+                <h3 className="text-base sm:text-lg font-black text-white truncate pr-4">
+                  {selectedGalleryItem.title}
+                </h3>
                 <button
                   onClick={() => setSelectedGalleryItem(null)}
-                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer shrink-0"
                   title="Close (Esc)"
                 >
                   <X className="w-5 h-5" />
@@ -1656,10 +1653,7 @@ export default function HomePage() {
                 />
               </div>
 
-              <div className="text-left space-y-1">
-                <h3 className="text-lg sm:text-xl font-black text-white">
-                  {selectedGalleryItem.title}
-                </h3>
+              <div className="text-left">
                 <p className="text-xs sm:text-sm text-slate-300">
                   {selectedGalleryItem.sub}
                 </p>
