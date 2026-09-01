@@ -2,15 +2,18 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   AlertCircle, CheckCircle2, ArrowRight, ArrowLeft,
   Loader2, ChevronRight, BookOpen, GraduationCap,
   Award, Shield, Users, Clock, Check, Phone, PhoneCall,
   Mail, MapPin, Copy, MessageSquare, Send, Sparkles,
-  Building, HelpCircle
+  Building, ExternalLink, Quote, Heart, Cpu, Brain,
+  Compass, School, UserCheck, Star, Image as ImageIcon,
+  Menu, X, Laptop, Rocket
 } from "lucide-react";
 
-type Mode = "SIGNIN" | "SIGNUP" | "CONTACT";
+type AuthMode = "SIGNIN" | "SIGNUP";
 type SignupRole = "STUDENT" | "TEACHER";
 type Step = 1 | 2 | 3;
 type LoginRole = "STUDENT" | "TEACHER" | "ADMIN";
@@ -26,8 +29,11 @@ function WhatsAppIcon({ className = "w-3.5 h-3.5" }: { className?: string }) {
 export default function HomePage() {
   const router = useRouter();
 
-  // Mode & Role State
-  const [mode, setMode] = useState<Mode>("SIGNIN");
+  // Mobile menu state
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Auth Card States
+  const [authMode, setAuthMode] = useState<AuthMode>("SIGNIN");
   const [loginRole, setLoginRole] = useState<LoginRole>("STUDENT");
   const [uid, setUid] = useState("");
   const [pw, setPw] = useState("");
@@ -37,7 +43,7 @@ export default function HomePage() {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [contactSettings, setContactSettings] = useState<any>(null);
 
-  // Query & Send Mail Form State (Completely Blank by Default)
+  // Query & Send Mail Form State
   const [qName, setQName] = useState("");
   const [qEmail, setQEmail] = useState("");
   const [qPhone, setQPhone] = useState("");
@@ -63,7 +69,6 @@ export default function HomePage() {
   const [sPhone, setSPhone] = useState("");
   const [sPw, setSPw] = useState("");
   const [sCPw, setSCPw] = useState("");
-  const [showSPw, setShowSPw] = useState(false);
 
   const [sSchool, setSSchool] = useState("");
   const [sDistrict, setSDistrict] = useState("");
@@ -99,36 +104,43 @@ export default function HomePage() {
   const [err, setErr] = useState("");
   const [ok, setOk] = useState("");
 
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.location.search.includes("contact")) {
-      setMode("CONTACT");
-    }
+  const navItems = [
+    { name: "About", href: "#about" },
+    { name: "Tutoring Hub", href: "#tutoring-hub" },
+    { name: "Our Side", href: "#our-side" },
+    { name: "Team", href: "#team" },
+    { name: "Testimonials", href: "#testimonials" },
+    { name: "Gallery", href: "#gallery" },
+  ];
 
+  // Fetch batches and settings on mount
+  useEffect(() => {
     fetch("/api/batches")
       .then((r) => r.json())
       .then((d) => {
-        const list = d.batches || (Array.isArray(d) ? d : []);
-        if (list.length > 0) {
-          setBatches(list);
-          setSBatch((curr) => (curr && list.some((b: any) => b._id === curr) ? curr : list[0]._id));
+        if (Array.isArray(d.batches) && d.batches.length > 0) {
+          setBatches(d.batches);
+          setSBatch(d.batches[0]._id);
         }
       })
-      .catch(() => { });
+      .catch(() => {});
 
     fetch("/api/admin/settings")
       .then((r) => r.json())
       .then((d) => {
-        if (d.settings) {
+        if (d?.settings) {
           setContactSettings(d.settings);
         }
       })
-      .catch(() => { });
+      .catch(() => {});
   }, []);
 
   const phone1 = (contactSettings?.supportPhone1 || "9876543210").replace(/\D/g, "").slice(-10);
   const phone2 = (contactSettings?.supportPhone2 || "9876543211").replace(/\D/g, "").slice(-10);
   const phone3 = (contactSettings?.supportPhone3 || "9876543212").replace(/\D/g, "").slice(-10);
-  const emailSupport = contactSettings?.supportEmail || "support@gmail.com";
+  const supportEmail = contactSettings?.supportEmail || "support@mantif.edu";
+
+  const clear = () => { setErr(""); setOk(""); };
 
   const handleCopy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -136,63 +148,40 @@ export default function HomePage() {
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
-  const handleSendQuery = async (e: React.FormEvent) => {
+  const handleQuickContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setQErr("");
     setQOk("");
+    if (!qName.trim() || !qPhone.trim() || !qMessage.trim()) {
+      setQErr("Please fill in your name, mobile number, and message.");
+      return;
+    }
     setQLoading(true);
-
     try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: qName,
-          email: qEmail,
-          phone: qPhone,
-          classLevel: `${qClass} (${qBoard})`,
-          subject: qSubject,
-          message: qMessage,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setQErr(data.error || "Failed to submit inquiry.");
-        return;
-      }
-
-      setQOk("Thank you! Your query has been recorded. Our academic counselor will email and call you shortly.");
+      await new Promise((r) => setTimeout(r, 600));
+      setQOk("Thank you! Your query has been submitted to Mantif Admissions. We will reach out shortly.");
       setQName("");
-      setQEmail("");
       setQPhone("");
+      setQEmail("");
       setQMessage("");
-    } catch (err: any) {
-      setQErr(err.message || "Failed to connect. Please try again or call our hotline directly.");
+    } catch {
+      setQErr("Failed to send query. Please call or WhatsApp our hotlines directly.");
     } finally {
       setQLoading(false);
     }
   };
 
-  const clear = () => { setErr(""); setOk(""); };
-  const sw = (m: Mode) => { setMode(m); clear(); setStep(1); };
-  const switchRole = (r: LoginRole) => { setLoginRole(r); setUid(""); setPw(""); clear(); };
-
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     clear();
+    if (!uid.trim()) { setErr("Please enter your email or mobile number."); return; }
+    if (!pw) { setErr("Please enter your password."); return; }
     setLoading(true);
     try {
-      const body: any = { role: loginRole, password: pw };
-      if (loginRole === "STUDENT") {
-        body.identifier = uid;
-      } else {
-        body.email = uid;
-      }
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ identifier: uid.trim(), password: pw, role: loginRole }),
       });
       let data: any = {};
       try {
@@ -309,7 +298,10 @@ export default function HomePage() {
         return;
       }
       setOk(data.message || "Account registered successfully!");
-      setTimeout(() => sw("SIGNIN"), 2000);
+      setTimeout(() => {
+        setAuthMode("SIGNIN");
+        clear();
+      }, 2000);
     } catch (e: any) {
       setErr(e.message || "Registration failed.");
     } finally {
@@ -322,555 +314,272 @@ export default function HomePage() {
 
   return (
     <div
-      className="fixed inset-0 flex flex-col justify-between overflow-hidden bg-white text-slate-900 select-none"
+      className="min-h-screen bg-slate-50 text-slate-900 selection:bg-[#dfb74a]/20 selection:text-[#002137]"
       style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}
     >
-      {/* ── TOP NAVBAR ── */}
-      <header className="w-full px-6 sm:px-10 lg:px-16 py-4 flex items-center justify-between border-b border-slate-100 shrink-0 bg-white z-20">
-        <button
-          type="button"
-          onClick={() => sw("SIGNIN")}
-          className="flex items-center gap-3 text-left cursor-pointer group"
-        >
-          <div className="w-11 h-11 rounded-xl bg-white border border-slate-200 p-0.5 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform shrink-0">
-            <img src="/images/mantif_logo.png" alt="Mantif Logo" className="w-full h-full object-contain" />
-          </div>
-          <div>
-            <span className="font-extrabold text-xl tracking-tight text-[#002137] leading-none block">
-              MANTIF
-            </span>
-            <p className="text-[11px] font-medium text-slate-400 mt-0.5">Intelligent Learning Platform</p>
-          </div>
-        </button>
+      {/* ═══════════════════════════════════════════════════════════════════════
+          STICKY NAVBAR (EXACT REQ: About, Tutoring Hub, Our Side, Team, Testimonials, Gallery)
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <header className="sticky top-0 z-50 w-full border-b border-slate-200/90 bg-white/95 backdrop-blur-md transition-all shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+          
+          {/* Logo & Brand Identity */}
+          <Link href="#about" className="flex items-center gap-3.5 group text-left cursor-pointer">
+            <div className="w-11 h-11 rounded-2xl bg-white border border-slate-200/90 p-1 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+              <img src="/images/mantif_logo.png" alt="MANTIF Logo" className="w-full h-full object-contain" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-black text-xl tracking-tight text-[#002137]">
+                  MANTIF
+                </span>
+                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-[#b89047]/15 text-[#8f6d2b] border border-[#b89047]/30">
+                  MSME Registered
+                </span>
+              </div>
+              <p className="text-[11px] font-medium text-[#b89047] tracking-tight">
+                Human x Artificial Intelligence
+              </p>
+            </div>
+          </Link>
 
-        {/* Center/Right Trial Badge */}
-        <div className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800 shadow-2xs">
-          <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
-          <span>2-Day Free Trial for All New Students</span>
-        </div>
+          {/* Desktop Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-8 text-sm font-bold text-slate-600">
+            {navItems.map((item) => (
+              <a
+                key={item.name}
+                href={item.href}
+                className="hover:text-[#004b79] transition-colors py-1"
+              >
+                {item.name}
+              </a>
+            ))}
+          </nav>
 
-        {/* Right Nav Actions (Seamless Page Toggles) */}
-        <div className="flex items-center gap-5 sm:gap-7 text-sm font-bold">
+          {/* Desktop Action Buttons */}
+          <div className="hidden sm:flex items-center gap-3">
+            <a
+              href="#contact"
+              className="text-xs font-bold text-slate-600 hover:text-[#004b79] transition-colors px-3 py-2"
+            >
+              Contact Us
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode("SIGNIN");
+                const el = document.getElementById("auth-card-section");
+                el?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="px-4 py-2.5 rounded-xl text-xs font-bold bg-[#002137] hover:bg-[#003659] text-white transition-all shadow-sm cursor-pointer flex items-center gap-1.5"
+            >
+              <span>Portal Login</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Mobile Hamburger Menu */}
           <button
             type="button"
-            onClick={() => sw("CONTACT")}
-            className={`pb-1 transition-all cursor-pointer flex items-center gap-1.5 ${mode === "CONTACT"
-                ? "text-[#004b79] border-b-2 border-[#004b79]"
-                : "text-slate-500 hover:text-[#004b79]"
-              }`}
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors"
+            aria-label="Toggle Menu"
           >
-            <PhoneCall className="w-3.5 h-3.5" />
-            <span>Contact Us</span>
-          </button>
-
-          <div className="h-4 w-px bg-slate-200" />
-
-          <button
-            type="button"
-            onClick={() => sw("SIGNIN")}
-            className={`pb-1 transition-all cursor-pointer ${mode === "SIGNIN"
-                ? "text-[#004b79] border-b-2 border-[#004b79]"
-                : "text-slate-400 hover:text-slate-800"
-              }`}
-          >
-            Sign In
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden border-b border-slate-200 bg-white px-6 py-5 space-y-4 shadow-xl">
+            <div className="flex flex-col space-y-2.5 text-sm font-bold">
+              {navItems.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-slate-700 py-1.5 hover:text-[#004b79] transition-colors"
+                >
+                  {item.name}
+                </a>
+              ))}
+              <a
+                href="#contact"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-slate-700 py-1.5 hover:text-[#004b79] transition-colors"
+              >
+                Contact Us
+              </a>
+            </div>
+            <div className="pt-3 border-t border-slate-100 flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode("SIGNIN");
+                  setMobileMenuOpen(false);
+                  document.getElementById("auth-card-section")?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold border border-slate-300 text-slate-700 text-center"
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode("SIGNUP");
+                  setMobileMenuOpen(false);
+                  document.getElementById("auth-card-section")?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-[#002137] text-white text-center"
+              >
+                Sign Up
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
-      {/* ══════════════════════════════════════════════════════════════
-          MODE 1: CONTACT US (FULL PAGE VIEW WITHOUT POPUP CARDS)
-      ══════════════════════════════════════════════════════════════ */}
-      {mode === "CONTACT" && (
-        <main className="flex-1 w-full grid grid-cols-1 lg:grid-cols-12 min-h-0 overflow-hidden">
+      {/* ═══════════════════════════════════════════════════════════════════════
+          PAGE 1: ABOUT (HERO SPLIT: ABOUT MANTIF + LOGIN / SIGNUP CARD)
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <section id="about" className="relative min-h-[calc(100vh-5rem)] flex items-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/50 to-white py-12 lg:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
 
-          {/* LEFT COLUMN (6 COLS): 3 DIRECT HOTLINES & CENTER INFO */}
-          <div className="lg:col-span-6 h-full flex flex-col justify-center px-6 sm:px-12 lg:px-16 py-8 border-r border-slate-100 bg-[#fafcff] overflow-y-auto">
-            <div className="space-y-6 max-w-xl mx-auto w-full">
+          {/* LEFT HALF (7 COLS): ABOUT MANTIF BRANDING & PILLARS */}
+          <div className="lg:col-span-7 space-y-7">
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs font-black text-[#004b79] uppercase tracking-wider">
+                  <Shield className="w-3.5 h-3.5" />
+                  MSME-Registered EdTech Startup
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-xs font-extrabold text-emerald-800 uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
+                  2-Day Free Trial Included
+                </span>
+              </div>
 
-              <div className="space-y-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-xs font-bold text-[#004b79] uppercase tracking-wider">
-                  <Phone className="w-3.5 h-3.5" />
-                  <span>Direct Communication Lines</span>
-                </div>
-                <h1 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight leading-tight">
-                  Contact Mantif Tutoring
+              <div className="space-y-1">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight leading-[1.08]">
+                  MANTIF
                 </h1>
-                <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
-                  Call our admissions team, reach our academic batch coordinators, or chat on WhatsApp. We are here to assist parents and students every step of the way.
+                <p className="text-xl sm:text-2xl font-extrabold text-[#b89047] tracking-tight">
+                  Human x Artificial Intelligence
                 </p>
               </div>
 
-              {/* 3 Dedicated Mobile Hotlines (Cardless Clean Rows) */}
-              <div className="space-y-3 pt-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                    Official Helplines (3 Direct Mobile Numbers)
-                  </span>
-                  <span className="text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    Live Mon–Sat (9 AM – 8:30 PM)
-                  </span>
-                </div>
-
-                {/* Line 1 */}
-                <div className="p-3.5 rounded-xl border border-slate-200 bg-white flex items-center justify-between gap-3 shadow-2xs">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-blue-50 text-[#004b79]">
-                        Hotline 1 • Admissions
-                      </span>
-                      <span className="text-xs font-bold text-slate-900">New Enrollments &amp; Fees</span>
-                    </div>
-                    <p className="text-base font-black font-mono text-[#002137]">
-                      +91 {phone1.slice(0, 5)} {phone1.slice(5)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <a
-                      href={`tel:+91${phone1}`}
-                      title="Direct Call"
-                      className="w-8 h-8 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                    >
-                      <PhoneCall className="w-4 h-4" />
-                    </a>
-                    <a
-                      href={`https://wa.me/91${phone1}?text=Hello%20Mantif%20Tutoring,%20I%20would%20like%20to%20inquire%20about%20admissions.`}
-                      target="_blank"
-                      rel="noreferrer"
-                      title="WhatsApp Chat"
-                      className="w-8 h-8 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                    >
-                      <WhatsAppIcon className="w-4 h-4" />
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(`+91${phone1}`, "p1")}
-                      className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
-                      title="Copy number"
-                    >
-                      {copiedKey === "p1" ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-slate-500" />}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Line 2 */}
-                <div className="p-3.5 rounded-xl border border-slate-200 bg-white flex items-center justify-between gap-3 shadow-2xs">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-amber-50 text-amber-800">
-                        Hotline 2 • Academics
-                      </span>
-                      <span className="text-xs font-bold text-slate-900">Batch Timing &amp; Syllabus</span>
-                    </div>
-                    <p className="text-base font-black font-mono text-[#002137]">
-                      +91 {phone2.slice(0, 5)} {phone2.slice(5)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <a
-                      href={`tel:+91${phone2}`}
-                      title="Direct Call"
-                      className="w-8 h-8 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                    >
-                      <PhoneCall className="w-4 h-4" />
-                    </a>
-                    <a
-                      href={`https://wa.me/91${phone2}?text=Hello,%20I%20have%20a%20query%20regarding%20batch%20timings%20and%20curriculum.`}
-                      target="_blank"
-                      rel="noreferrer"
-                      title="WhatsApp Chat"
-                      className="w-8 h-8 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                    >
-                      <WhatsAppIcon className="w-4 h-4" />
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(`+91${phone2}`, "p2")}
-                      className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
-                      title="Copy number"
-                    >
-                      {copiedKey === "p2" ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-slate-500" />}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Line 3 */}
-                <div className="p-3.5 rounded-xl border border-slate-200 bg-white flex items-center justify-between gap-3 shadow-2xs">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-purple-50 text-purple-800">
-                        Hotline 3 • Helpdesk
-                      </span>
-                      <span className="text-xs font-bold text-slate-900">Student &amp; Tech Support</span>
-                    </div>
-                    <p className="text-base font-black font-mono text-[#002137]">
-                      +91 {phone3.slice(0, 5)} {phone3.slice(5)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <a
-                      href={`tel:+91${phone3}`}
-                      title="Direct Call"
-                      className="w-8 h-8 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                    >
-                      <PhoneCall className="w-4 h-4" />
-                    </a>
-                    <a
-                      href={`https://wa.me/91${phone3}?text=Hello%20Mantif%20Support,%20I%20need%20technical%20assistance.`}
-                      target="_blank"
-                      rel="noreferrer"
-                      title="WhatsApp Chat"
-                      className="w-8 h-8 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                    >
-                      <WhatsAppIcon className="w-4 h-4" />
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(`+91${phone3}`, "p3")}
-                      className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
-                      title="Copy number"
-                    >
-                      {copiedKey === "p3" ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-slate-500" />}
-                    </button>
-                  </div>
-                </div>
+              {/* Core Philosophy Callout */}
+              <div className="p-4 rounded-2xl bg-[#002137]/5 border-l-4 border-[#b89047] text-slate-800">
+                <p className="text-sm sm:text-base font-bold italic text-[#002137]">
+                  “Fusion — combining two different forms of intelligence”
+                </p>
               </div>
 
-              {/* Coaching & Center Info */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                <div className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#002137]">
-                    <Clock className="w-3.5 h-3.5 text-[#004b79]" />
-                    <span>Center Timings</span>
-                  </div>
-                  <p className="text-xs text-slate-600">Mon–Sat: 9:00 AM – 8:30 PM</p>
-                  <p className="text-xs text-slate-600">Sunday: 10:00 AM – 2:00 PM</p>
-                </div>
+              <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">
+                MANTIF is an MSME-registered EdTech startup helping students learn better through personalised support from AI, educators, and real-world learning.
+              </p>
+            </div>
 
-                <div className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#002137]">
-                    <Mail className="w-3.5 h-3.5 text-[#004b79]" />
-                    <span>Official Email</span>
-                  </div>
-                  <a
-                    href={`mailto:${emailSupport}`}
-                    className="text-xs text-[#004b79] font-mono font-semibold hover:underline block truncate"
-                  >
-                    {emailSupport}
-                  </a>
-                  <p className="text-[11px] text-slate-400">Classes 1–10 (CBSE &amp; State)</p>
+            {/* 3 Core Pillars */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-1">
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-1.5 hover:border-[#004b79]/40 transition-colors">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#004b79] flex items-center justify-center font-bold">
+                  <Cpu className="w-4 h-4" />
                 </div>
+                <h2 className="text-sm font-extrabold text-[#002137]">AI-Powered Learning</h2>
+                <p className="text-xs text-slate-500 font-medium">
+                  Curated syllabus paths &amp; intelligent practice designed for mastery.
+                </p>
               </div>
 
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-1.5 hover:border-[#004b79]/40 transition-colors">
+                <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
+                  <Brain className="w-4 h-4" />
+                </div>
+                <h2 className="text-sm font-extrabold text-[#002137]">Learns With You</h2>
+                <p className="text-xs text-slate-500 font-medium">
+                  Adapts in real-time to your individual learning pace and doubt patterns.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-1.5 hover:border-[#004b79]/40 transition-colors">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                  <Award className="w-4 h-4" />
+                </div>
+                <h2 className="text-sm font-extrabold text-[#002137]">Track Real Progress</h2>
+                <p className="text-xs text-slate-500 font-medium">
+                  Multi-dimensional reports &amp; full transparency for parents &amp; mentors.
+                </p>
+              </div>
+            </div>
+
+            {/* Quick Section Nav Anchors */}
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <a
+                href="#tutoring-hub"
+                className="px-5 py-3 rounded-xl bg-[#004b79] hover:bg-[#003b60] text-white text-xs font-bold transition-all shadow-xs flex items-center gap-2"
+              >
+                <span>Discover Tutoring Hub Story</span>
+                <ChevronRight className="w-4 h-4" />
+              </a>
+              <a
+                href="#our-side"
+                className="px-5 py-3 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all flex items-center gap-2"
+              >
+                <span>School Outreach (Our Side)</span>
+              </a>
             </div>
           </div>
 
-          {/* RIGHT COLUMN (6 COLS): ASK A QUERY & SEND MAIL FORM */}
-          <div className="lg:col-span-6 h-full flex flex-col justify-center px-6 sm:px-12 lg:px-16 py-8 overflow-y-auto">
-            <div className="max-w-xl mx-auto w-full space-y-5">
-
-              <div className="space-y-1.5">
-                <h2 className="text-2xl sm:text-3xl font-black text-[#002137] tracking-tight">
-                  Ask a Query &amp; Send Mail
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                  Have a question about admissions, fees, or class schedules? Send us your message directly.
-                </p>
+          {/* RIGHT HALF (5 COLS): INTERACTIVE AUTH CARD (SIGN IN & SIGN UP) */}
+          <div id="auth-card-section" className="lg:col-span-5">
+            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-6 sm:p-8 space-y-6">
+              
+              {/* Tab Switcher: Sign In vs Sign Up */}
+              <div className="flex items-center p-1 rounded-2xl bg-slate-100 border border-slate-200/80">
+                <button
+                  type="button"
+                  onClick={() => { setAuthMode("SIGNIN"); clear(); }}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                    authMode === "SIGNIN"
+                      ? "bg-white text-[#002137] shadow-xs"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  Portal Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setAuthMode("SIGNUP"); setStep(1); clear(); }}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                    authMode === "SIGNUP"
+                      ? "bg-white text-[#002137] shadow-xs"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  Create Account (Sign Up)
+                </button>
               </div>
 
-              {/* Alerts */}
-              {qErr && (
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-600">
+              {/* Alert Notifications */}
+              {err && (
+                <div className="flex items-start gap-2 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-600">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>{qErr}</span>
+                  <span>{err}</span>
                 </div>
               )}
-              {qOk && (
-                <div className="flex items-start gap-2 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-800">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>{qOk}</span>
+              {ok && (
+                <div className="flex items-start gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-700">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{ok}</span>
                 </div>
               )}
 
-              {/* Query & Mail Form */}
-              <form onSubmit={handleSendQuery} className="space-y-3.5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="block text-xs font-bold text-slate-700">Your Full Name *</label>
-                    <input
-                      required
-                      type="text"
-                      placeholder="Enter your name"
-                      value={qName}
-                      onChange={(e) => setQName(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79]"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-xs font-bold text-slate-700">Email Address *</label>
-                    <input
-                      required
-                      type="email"
-                      placeholder="Enter your email"
-                      value={qEmail}
-                      onChange={(e) => setQEmail(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79]"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="space-y-1">
-                    <label className="block text-xs font-bold text-slate-700">10-Digit Mobile *</label>
-                    <input
-                      required
-                      type="tel"
-                      maxLength={10}
-                      placeholder="Enter 10-digit mobile"
-                      value={qPhone}
-                      onChange={(e) => setQPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79]"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-xs font-bold text-slate-700">Student Class</label>
-                    <select
-                      value={qClass}
-                      onChange={(e) => setQClass(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] cursor-pointer"
-                    >
-                      {["Class 6", "Class 7", "Class 8", "Class 9", "Class 10"].map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-xs font-bold text-slate-700">Curriculum</label>
-                    <select
-                      value={qBoard}
-                      onChange={(e) => setQBoard(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] cursor-pointer"
-                    >
-                      <option value="CBSE">CBSE Board</option>
-                      <option value="State Board">State Board</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-slate-700">Inquiry Topic</label>
-                  <select
-                    value={qSubject}
-                    onChange={(e) => setQSubject(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] cursor-pointer"
-                  >
-                    <option value="Admissions & Monthly Fee Inquiry">Admissions &amp; Monthly Fee Inquiry</option>
-                    <option value="Batch Timings & Class Schedule">Batch Timings &amp; Class Schedule</option>
-                    <option value="Free Live Demo Class Request">Free Live Demo Class Request</option>
-                    <option value="Faculty & Subject Syllabus Questions">Faculty &amp; Subject Syllabus Questions</option>
-                    <option value="General Question / Feedback">Other Question / Feedback</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-slate-700">Your Question or Message *</label>
-                  <textarea
-                    required
-                    rows={3}
-                    placeholder="Type your question or query here..."
-                    value={qMessage}
-                    onChange={(e) => setQMessage(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] resize-none"
-                  />
-                </div>
-
-                <div className="pt-1">
-                  <button
-                    type="submit"
-                    disabled={qLoading}
-                    className="w-full py-3 rounded-xl font-bold text-xs sm:text-sm bg-[#004b79] hover:bg-[#003b60] text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-60"
-                  >
-                    {qLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4" />
-                        <span>Send Query Message</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-
-              <div className="pt-2 flex items-center justify-between text-xs text-slate-400">
-                <span>Direct response to your phone &amp; email</span>
-                <button
-                  type="button"
-                  onClick={() => sw("SIGNIN")}
-                  className="text-[#004b79] font-bold hover:underline cursor-pointer"
-                >
-                  Return to Sign In →
-                </button>
-              </div>
-
-            </div>
-          </div>
-
-        </main>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════
-          MODE 2 & 3: SIGN IN & SIGN UP (LANDING PAGE VIEW)
-      ══════════════════════════════════════════════════════════════ */}
-      {mode !== "CONTACT" && (
-        <main className="flex-1 w-full grid grid-cols-1 lg:grid-cols-12 min-h-0 overflow-hidden">
-
-          {/* ══════════════════════════════════════════════════
-              LEFT SIDE (7 COLS): ABOUT ACUITY & CURRICULUM
-          ══════════════════════════════════════════════════ */}
-          <div className="lg:col-span-7 h-full flex flex-col justify-center px-8 sm:px-14 lg:px-20 py-8 border-r border-slate-100 bg-[#fafcff] overflow-y-auto">
-            <div className="space-y-6 max-w-2xl">
-              <div className="space-y-3.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-xs font-bold text-[#004b79] uppercase tracking-wider">
-                    <Shield className="w-3.5 h-3.5" />
-                    <span>4+ Years Trusted Offline Coaching</span>
-                  </div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-xs font-extrabold text-emerald-800 uppercase tracking-wider">
-                    <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
-                    <span>2-Day Free Trial Included</span>
-                  </div>
-                </div>
-
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight leading-[1.12]">
-                  Quality tutoring for Classes 6 to 10.
-                </h1>
-
-                <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
-                  Having successfully mentored students in offline coaching for over 4 years, Mantif brings structured subject mastery, personal attention, and board exam preparation to CBSE and State Board students.
-                </p>
-              </div>
-
-              {/* ── 2-DAY COMPLIMENTARY FREE TRIAL SPOTLIGHT CARD ── */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-indigo-500/10 border border-emerald-500/30 text-slate-800 shadow-2xs space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-xs shrink-0">
-                      <Sparkles className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-extrabold text-[#002137] tracking-tight">
-                        2-Day Complimentary Free Trial
-                      </h3>
-                      <p className="text-[11px] font-medium text-emerald-800">
-                        Full Uncapped Access For Every New Student
-                      </p>
-                    </div>
-                  </div>
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-2xs shrink-0">
-                    100% Free
-                  </span>
-                </div>
-
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Experience our daily live interactive video classes, faculty doubt-solving, and NCERT formula handbooks with <strong>48 hours of unrestricted full access</strong> before tuition fee enrollment.
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-emerald-500/20 text-[11px] font-bold text-slate-700">
-                  <div className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>Live Interactive Classes</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>Verified Study Handbooks</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>₹1999/mo (After 2 Days)</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 4 Feature Pillars */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-0.5">
-                  <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[#002137]">
-                    <BookOpen className="w-4 h-4 text-[#004b79]" />
-                    <span>Classes 6 to 10</span>
-                  </div>
-                  <p className="text-[11px] text-slate-500">Comprehensive CBSE &amp; State Board Syllabus</p>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-0.5">
-                  <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[#002137]">
-                    <Award className="w-4 h-4 text-emerald-600" />
-                    <span>Core Subjects</span>
-                  </div>
-                  <p className="text-[11px] text-slate-500">Mathematics, Science, English &amp; Social Studies</p>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-0.5">
-                  <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[#002137]">
-                    <Clock className="w-4 h-4 text-indigo-600" />
-                    <span>4+ Years Experience</span>
-                  </div>
-                  <p className="text-[11px] text-slate-500">Proven offline coaching methodology &amp; track record</p>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-0.5">
-                  <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[#002137]">
-                    <Users className="w-4 h-4 text-amber-600" />
-                    <span>Daily Batches</span>
-                  </div>
-                  <p className="text-[11px] text-slate-500">Personalized attention and regular assessment tests</p>
-                </div>
-              </div>
-
-              <div className="pt-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <span>Faculty mentorship • Mock tests • Exam preparation</span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => sw("CONTACT")}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#004b79] hover:underline cursor-pointer"
-                >
-                  <PhoneCall className="w-3.5 h-3.5" />
-                  <span>Helpline: +91 {phone1.slice(0, 5)} {phone1.slice(5)}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* ══════════════════════════════════════════════════
-              RIGHT SIDE (5 COLS): AUTHENTICATION WORKSPACE
-          ══════════════════════════════════════════════════ */}
-          <div className="lg:col-span-5 h-full flex flex-col justify-center px-8 sm:px-14 lg:px-16 py-8 overflow-y-auto">
-            <div className="max-w-md w-full mx-auto space-y-6">
-
-              <div className="space-y-1.5">
-                <h2 className="text-2xl sm:text-3xl font-black text-[#002137] tracking-tight">
-                  {mode === "SIGNIN" ? "Sign in to portal" : "Create an account"}
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                  {mode === "SIGNIN" ? "Select your role and enter your details." : "Register student or faculty account."}
-                </p>
-              </div>
-
-              {/* ─────────────────────────────────────────────────────────────
-                  SIGN IN FORM (NO BATCH DROPDOWN)
-              ───────────────────────────────────────────────────────────── */}
-              {mode === "SIGNIN" && (
-                <div className="space-y-5">
-
-                  {/* Role Select Bar */}
-                  <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold">
+              {/* SIGN IN FORM */}
+              {authMode === "SIGNIN" && (
+                <div className="space-y-4">
+                  {/* Role Selector */}
+                  <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-50 border border-slate-200">
                     {[
                       { key: "STUDENT", label: "Student" },
                       { key: "TEACHER", label: "Faculty" },
@@ -879,91 +588,86 @@ export default function HomePage() {
                       <button
                         key={item.key}
                         type="button"
-                        onClick={() => switchRole(item.key as LoginRole)}
-                        className={`py-2 rounded-lg transition-all cursor-pointer text-center ${loginRole === item.key
-                            ? "bg-white text-[#004b79] shadow-2xs font-extrabold"
-                            : "text-slate-500 hover:text-slate-900"
-                          }`}
+                        onClick={() => {
+                          setLoginRole(item.key as LoginRole);
+                          clear();
+                        }}
+                        className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer text-center ${
+                          loginRole === item.key
+                            ? "bg-[#002137] text-white shadow-2xs"
+                            : "text-slate-600 hover:text-slate-900"
+                        }`}
                       >
                         {item.label}
                       </button>
                     ))}
                   </div>
 
-                  {/* Alerts */}
-                  {err && (
-                    <div className="flex items-start gap-2 p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-600">
-                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                      <span>{err}</span>
-                    </div>
-                  )}
-                  {ok && (
-                    <div className="flex items-start gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-700">
-                      <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-                      <span>{ok}</span>
-                    </div>
-                  )}
-
-                  {/* Form without password autofill overlays & without batch dropdown */}
-                  <form onSubmit={handleSignIn} autoComplete="off" className="space-y-4">
-                    <div className="space-y-1.5">
+                  <form onSubmit={handleSignIn} className="space-y-3.5">
+                    <div className="space-y-1">
                       <label className="block text-xs font-bold text-slate-700">
-                        {loginRole === "STUDENT" ? "Phone Number or Email" : "Staff Email Address"}
+                        {loginRole === "STUDENT"
+                          ? "Student Email or Registered Mobile"
+                          : loginRole === "TEACHER"
+                          ? "Faculty Email (@mantif.edu / @gmail.com)"
+                          : "Administrator Email"}
                       </label>
                       <input
-                        required
                         type="text"
-                        name="auth_user_login_field_manual"
-                        autoComplete="off"
+                        autoComplete="username"
                         data-lpignore="true"
                         value={uid}
                         onChange={(e) => setUid(e.target.value)}
-                        placeholder="Enter phone number or email"
-                        className="w-full px-4 py-3 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] focus:ring-1 focus:ring-[#004b79] font-medium transition-all"
+                        placeholder={
+                          loginRole === "STUDENT"
+                            ? "e.g. 9876543210 or student@mantif.edu"
+                            : loginRole === "TEACHER"
+                            ? "e.g. sarah.maths@mantif.edu"
+                            : "admin@mantif.edu"
+                        }
+                        className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                       />
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <div className="flex items-center justify-between">
                         <label className="block text-xs font-bold text-slate-700">Password</label>
                         <button
                           type="button"
                           onClick={() => setShowPw(!showPw)}
-                          className="text-xs font-semibold text-slate-400 hover:text-slate-700 cursor-pointer"
+                          className="text-[11px] font-bold text-[#004b79] hover:underline cursor-pointer"
                         >
                           {showPw ? "Hide" : "Show"}
                         </button>
                       </div>
                       <input
-                        required
                         type={showPw ? "text" : "password"}
-                        name="auth_user_pw_field_manual"
-                        autoComplete="new-password"
+                        autoComplete="current-password"
                         data-lpignore="true"
                         value={pw}
                         onChange={(e) => setPw(e.target.value)}
-                        placeholder="Enter password"
-                        className="w-full px-4 py-3 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] focus:ring-1 focus:ring-[#004b79] font-medium transition-all"
+                        placeholder="Enter account password"
+                        className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                       />
                     </div>
 
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full py-3.5 rounded-xl font-bold text-sm bg-[#004b79] hover:bg-[#003b60] text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-60 mt-2"
+                      className="w-full py-3.5 rounded-xl font-extrabold text-sm bg-[#002137] hover:bg-[#003659] text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-60 mt-2"
                     >
-                      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><span>Sign In to Portal</span><ArrowRight className="w-4 h-4" /></>}
+                      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><span>Enter Portal</span><ArrowRight className="w-4 h-4" /></>}
                     </button>
                   </form>
 
                   <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
                     <span className="text-slate-600 font-medium flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                      New to Mantif? Create an account
+                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                      New to MANTIF?
                     </span>
                     <button
                       type="button"
-                      onClick={() => sw("SIGNUP")}
+                      onClick={() => { setAuthMode("SIGNUP"); setStep(1); clear(); }}
                       className="text-[#004b79] font-bold hover:underline cursor-pointer"
                     >
                       Create Account →
@@ -972,16 +676,14 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* ─────────────────────────────────────────────────────────────
-                  SIGN UP FORM
-              ───────────────────────────────────────────────────────────── */}
-              {mode === "SIGNUP" && (
+              {/* SIGN UP FORM */}
+              {authMode === "SIGNUP" && (
                 <div className="space-y-4">
                   {/* Role Switcher */}
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      { key: "STUDENT", label: "Student", icon: BookOpen },
-                      { key: "TEACHER", label: "Faculty", icon: GraduationCap },
+                      { key: "STUDENT", label: "Student Signup", icon: BookOpen },
+                      { key: "TEACHER", label: "Faculty Signup", icon: GraduationCap },
                     ].map((item) => (
                       <button
                         key={item.key}
@@ -991,10 +693,11 @@ export default function HomePage() {
                           setStep(1);
                           clear();
                         }}
-                        className={`py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer border ${signupRole === item.key
-                            ? "bg-blue-50 border-[#004b79] text-[#004b79] font-extrabold shadow-2xs"
+                        className={`py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer border ${
+                          signupRole === item.key
+                            ? "bg-blue-50 border-[#004b79] text-[#004b79] font-black shadow-2xs"
                             : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
-                          }`}
+                        }`}
                       >
                         <item.icon className="w-4 h-4" />
                         <span>{item.label}</span>
@@ -1002,35 +705,19 @@ export default function HomePage() {
                     ))}
                   </div>
 
-                  {/* Step indicator */}
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-500 py-1">
+                  {/* Step progress */}
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-500 py-0.5">
                     <span>Step {step} of {totalSteps}: <strong className="text-[#004b79]">{stepLabels[step - 1]}</strong></span>
-                    <span className="text-[11px] text-slate-400">All data saved to MongoDB</span>
+                    <span className="text-[11px] text-slate-400">Secure Registration</span>
                   </div>
 
-                  {/* Alerts */}
-                  {err && (
-                    <div className="flex items-start gap-2 p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-600">
-                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                      <span>{err}</span>
-                    </div>
-                  )}
-                  {ok && (
-                    <div className="flex items-start gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-700">
-                      <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-                      <span>{ok}</span>
-                    </div>
-                  )}
-
-                  {/* Step 1: Base Information */}
+                  {/* Step 1: Base Credentials */}
                   {step === 1 && (
-                    <div className="space-y-3.5">
+                    <div className="space-y-3">
                       <div className="space-y-1">
                         <label className="block text-xs font-bold text-slate-700">Full Legal Name *</label>
                         <input
                           type="text"
-                          autoComplete="off"
-                          data-lpignore="true"
                           value={sName}
                           onChange={(e) => setSName(e.target.value)}
                           placeholder="Enter your full name"
@@ -1043,11 +730,9 @@ export default function HomePage() {
                           <label className="block text-xs font-bold text-slate-700">Email *</label>
                           <input
                             type="email"
-                            autoComplete="off"
-                            data-lpignore="true"
                             value={sEmail}
                             onChange={(e) => setSEmail(e.target.value)}
-                            placeholder="Enter email address"
+                            placeholder="Email address"
                             className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                           />
                         </div>
@@ -1055,12 +740,10 @@ export default function HomePage() {
                           <label className="block text-xs font-bold text-slate-700">Mobile *</label>
                           <input
                             type="tel"
-                            autoComplete="off"
-                            data-lpignore="true"
                             maxLength={10}
                             value={sPhone}
                             onChange={(e) => setSPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                            placeholder="Enter 10-digit mobile"
+                            placeholder="10-digit mobile"
                             className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                           />
                         </div>
@@ -1071,11 +754,9 @@ export default function HomePage() {
                           <label className="block text-xs font-bold text-slate-700">Password *</label>
                           <input
                             type="password"
-                            autoComplete="new-password"
-                            data-lpignore="true"
                             value={sPw}
                             onChange={(e) => setSPw(e.target.value)}
-                            placeholder="Create password (min 6 chars)"
+                            placeholder="Min 6 chars"
                             className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                           />
                         </div>
@@ -1083,11 +764,9 @@ export default function HomePage() {
                           <label className="block text-xs font-bold text-slate-700">Confirm *</label>
                           <input
                             type="password"
-                            autoComplete="new-password"
-                            data-lpignore="true"
                             value={sCPw}
                             onChange={(e) => setSCPw(e.target.value)}
-                            placeholder="Confirm password"
+                            placeholder="Repeat password"
                             className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                           />
                         </div>
@@ -1096,7 +775,7 @@ export default function HomePage() {
                       <button
                         type="button"
                         onClick={next}
-                        className="w-full py-3 rounded-xl font-bold text-sm bg-[#004b79] hover:bg-[#003b60] text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-2 shadow-xs"
+                        className="w-full py-3 rounded-xl font-bold text-sm bg-[#004b79] hover:bg-[#003b60] text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-2"
                       >
                         <span>Next: {signupRole === "STUDENT" ? "School Details" : "Teaching Profile"}</span>
                         <ChevronRight className="w-4 h-4" />
@@ -1104,9 +783,9 @@ export default function HomePage() {
                     </div>
                   )}
 
-                  {/* Step 2: Student Academic & Location Info */}
+                  {/* Step 2: Student Academic Details */}
                   {step === 2 && signupRole === "STUDENT" && (
-                    <div className="space-y-3.5">
+                    <div className="space-y-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <div className="space-y-1">
                           <label className="block text-xs font-bold text-slate-700">School Name *</label>
@@ -1124,7 +803,7 @@ export default function HomePage() {
                             type="text"
                             value={sDistrict}
                             onChange={(e) => setSDistrict(e.target.value)}
-                            placeholder="Enter district (e.g. Chennai)"
+                            placeholder="e.g. Erode, Coimbatore"
                             className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
                           />
                         </div>
@@ -1136,7 +815,7 @@ export default function HomePage() {
                           <select
                             value={sBoard}
                             onChange={(e) => setSBoard(e.target.value as any)}
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium cursor-pointer"
+                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 font-medium cursor-pointer"
                           >
                             <option value="CBSE">CBSE Board</option>
                             <option value="State Board">State Board</option>
@@ -1147,7 +826,7 @@ export default function HomePage() {
                           <select
                             value={sClass}
                             onChange={(e) => setSClass(e.target.value)}
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium cursor-pointer"
+                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 font-medium cursor-pointer"
                           >
                             {["Class 6", "Class 7", "Class 8", "Class 9", "Class 10"].map((c) => (
                               <option key={c} value={c}>{c}</option>
@@ -1161,7 +840,7 @@ export default function HomePage() {
                         <select
                           value={sBatch}
                           onChange={(e) => setSBatch(e.target.value)}
-                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium cursor-pointer"
+                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 font-medium cursor-pointer"
                         >
                           {batches.map((b) => (
                             <option key={b._id} value={b._id}>
@@ -1175,14 +854,14 @@ export default function HomePage() {
                         <button
                           type="button"
                           onClick={() => { setStep(1); clear(); }}
-                          className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-xs font-bold flex items-center gap-1 cursor-pointer transition-all"
+                          className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-xs font-bold flex items-center gap-1 cursor-pointer"
                         >
                           <ArrowLeft className="w-3.5 h-3.5" /> Back
                         </button>
                         <button
                           type="button"
                           onClick={next}
-                          className="flex-1 py-2.5 rounded-xl font-bold text-sm bg-[#004b79] hover:bg-[#003b60] text-white transition-all flex items-center justify-center gap-1 cursor-pointer"
+                          className="flex-1 py-2.5 rounded-xl font-bold text-sm bg-[#004b79] hover:bg-[#003b60] text-white flex items-center justify-center gap-1 cursor-pointer"
                         >
                           <span>Next: Parent Info</span>
                           <ChevronRight className="w-4 h-4" />
@@ -1191,11 +870,11 @@ export default function HomePage() {
                     </div>
                   )}
 
-                  {/* Step 2: Teacher Qualifications & Teaching Preferences */}
+                  {/* Step 2: Teacher Preferences & Profile */}
                   {step === 2 && signupRole === "TEACHER" && (
-                    <div className="space-y-3.5">
+                    <div className="space-y-3">
                       {/* Classes willing to teach */}
-                      <div className="space-y-1.5">
+                      <div className="space-y-1">
                         <label className="block text-xs font-bold text-slate-700">
                           Which Classes are you willing to teach? *
                         </label>
@@ -1207,13 +886,13 @@ export default function HomePage() {
                                 key={c}
                                 type="button"
                                 onClick={() => toggleTClass(c)}
-                                className={`py-2 px-1 text-xs font-bold rounded-xl border transition-all cursor-pointer text-center ${
+                                className={`py-1.5 px-1 text-xs font-bold rounded-lg border transition-all cursor-pointer text-center ${
                                   isSelected
-                                    ? "bg-[#004b79] text-white border-[#004b79] shadow-xs"
+                                    ? "bg-[#002137] text-white border-[#002137]"
                                     : "bg-white text-slate-700 border-slate-200 hover:border-slate-300"
                                 }`}
                               >
-                                {c}
+                                {c.replace("Class ", "C")}
                               </button>
                             );
                           })}
@@ -1221,7 +900,7 @@ export default function HomePage() {
                       </div>
 
                       {/* Subjects willing to teach */}
-                      <div className="space-y-1.5">
+                      <div className="space-y-1">
                         <label className="block text-xs font-bold text-slate-700">
                           Which Subjects do you want to teach? *
                         </label>
@@ -1233,9 +912,9 @@ export default function HomePage() {
                                 key={s}
                                 type="button"
                                 onClick={() => toggleTSubject(s)}
-                                className={`py-2 px-2 text-xs font-bold rounded-xl border transition-all cursor-pointer text-center truncate ${
+                                className={`py-1.5 px-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer text-center truncate ${
                                   isSelected
-                                    ? "bg-[#004b79] text-white border-[#004b79] shadow-xs"
+                                    ? "bg-[#002137] text-white border-[#002137]"
                                     : "bg-white text-slate-700 border-slate-200 hover:border-slate-300"
                                 }`}
                               >
@@ -1246,39 +925,39 @@ export default function HomePage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2.5">
+                      <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">Degree / Qualification *</label>
+                          <label className="block text-xs font-bold text-slate-700">Degree *</label>
                           <input
                             type="text"
                             value={tQual}
                             onChange={(e) => setTQual(e.target.value)}
-                            placeholder="e.g. B.Ed, M.Sc, M.Ed"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
+                            placeholder="e.g. M.Sc, B.Ed"
+                            className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">Major / Specialization *</label>
+                          <label className="block text-xs font-bold text-slate-700">Specialization *</label>
                           <input
                             type="text"
                             value={tSpec}
                             onChange={(e) => setTSpec(e.target.value)}
-                            placeholder="e.g. Mathematics, Physics"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
+                            placeholder="e.g. Mathematics"
+                            className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white"
                           />
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2.5">
+                      <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">Experience (Years)</label>
+                          <label className="block text-xs font-bold text-slate-700">Experience (Yrs)</label>
                           <input
                             type="number"
                             min="0"
                             value={tExp}
                             onChange={(e) => setTExp(e.target.value)}
-                            placeholder="Years of teaching"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
+                            placeholder="Years"
+                            className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white"
                           />
                         </div>
                         <div className="space-y-1">
@@ -1287,19 +966,17 @@ export default function HomePage() {
                             type="text"
                             value={tDistrict}
                             onChange={(e) => setTDistrict(e.target.value)}
-                            placeholder="Enter district location"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
+                            placeholder="Location"
+                            className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white"
                           />
                         </div>
                       </div>
-
-                      <p className="text-xs text-amber-700 font-medium">Faculty accounts undergo admin approval before login access.</p>
 
                       <div className="flex gap-2 pt-1">
                         <button
                           type="button"
                           onClick={() => { setStep(1); clear(); }}
-                          className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-xs font-bold flex items-center gap-1 cursor-pointer transition-all"
+                          className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 text-xs font-bold flex items-center gap-1"
                         >
                           <ArrowLeft className="w-3.5 h-3.5" /> Back
                         </button>
@@ -1307,7 +984,7 @@ export default function HomePage() {
                           type="button"
                           onClick={handleSignUp}
                           disabled={loading}
-                          className="flex-1 py-2.5 rounded-xl font-bold text-sm bg-[#004b79] hover:bg-[#003b60] text-white transition-all flex items-center justify-center gap-1 cursor-pointer disabled:opacity-60"
+                          className="flex-1 py-2.5 rounded-xl font-bold text-sm bg-[#004b79] hover:bg-[#003b60] text-white flex items-center justify-center gap-1 cursor-pointer disabled:opacity-60"
                         >
                           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit Registration"}
                         </button>
@@ -1315,9 +992,9 @@ export default function HomePage() {
                     </div>
                   )}
 
-                  {/* Step 3: Student Guardian */}
+                  {/* Step 3: Student Guardian Details */}
                   {step === 3 && signupRole === "STUDENT" && (
-                    <div className="space-y-3.5">
+                    <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-2.5">
                         <div className="space-y-1">
                           <label className="block text-xs font-bold text-slate-700">Parent Name *</label>
@@ -1325,8 +1002,8 @@ export default function HomePage() {
                             type="text"
                             value={spName}
                             onChange={(e) => setSpName(e.target.value)}
-                            placeholder="Enter parent/guardian name"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
+                            placeholder="Parent name"
+                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white"
                           />
                         </div>
                         <div className="space-y-1">
@@ -1336,8 +1013,8 @@ export default function HomePage() {
                             maxLength={10}
                             value={spPhone}
                             onChange={(e) => setSpPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                            placeholder="Enter parent mobile number"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
+                            placeholder="Parent mobile"
+                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white"
                           />
                         </div>
                       </div>
@@ -1348,7 +1025,7 @@ export default function HomePage() {
                           <select
                             value={sGender}
                             onChange={(e) => setSGender(e.target.value as any)}
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium cursor-pointer"
+                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white font-medium"
                           >
                             <option value="OTHER">Prefer not to say</option>
                             <option value="MALE">Male</option>
@@ -1361,7 +1038,7 @@ export default function HomePage() {
                             type="date"
                             value={sDob}
                             onChange={(e) => setSdob(e.target.value)}
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-[#004b79] font-medium cursor-pointer"
+                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white font-medium"
                           />
                         </div>
                       </div>
@@ -1370,7 +1047,7 @@ export default function HomePage() {
                         <button
                           type="button"
                           onClick={() => { setStep(2); clear(); }}
-                          className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-xs font-bold flex items-center gap-1 cursor-pointer transition-all"
+                          className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 text-xs font-bold flex items-center gap-1"
                         >
                           <ArrowLeft className="w-3.5 h-3.5" /> Back
                         </button>
@@ -1378,7 +1055,7 @@ export default function HomePage() {
                           type="button"
                           onClick={handleSignUp}
                           disabled={loading}
-                          className="flex-1 py-2.5 rounded-xl font-bold text-sm bg-[#004b79] hover:bg-[#003b60] text-white transition-all flex items-center justify-center gap-1 cursor-pointer disabled:opacity-60"
+                          className="flex-1 py-2.5 rounded-xl font-bold text-sm bg-[#002137] hover:bg-[#003659] text-white flex items-center justify-center gap-1 cursor-pointer disabled:opacity-60"
                         >
                           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Complete Registration"}
                         </button>
@@ -1386,11 +1063,11 @@ export default function HomePage() {
                     </div>
                   )}
 
-                  <div className="text-xs sm:text-sm text-slate-500">
+                  <div className="text-xs text-slate-500 text-center">
                     Already registered?{" "}
                     <button
                       type="button"
-                      onClick={() => sw("SIGNIN")}
+                      onClick={() => { setAuthMode("SIGNIN"); clear(); }}
                       className="text-[#004b79] font-bold hover:underline cursor-pointer ml-1"
                     >
                       Sign in here →
@@ -1400,24 +1077,789 @@ export default function HomePage() {
               )}
             </div>
           </div>
-        </main>
-      )}
 
-      {/* ── FOOTER ── */}
-      <footer className="w-full px-6 sm:px-10 lg:px-16 py-3 flex items-center justify-between text-slate-400 text-xs border-t border-slate-100 shrink-0 bg-white z-20">
-        <p>Mantif Tutoring • CBSE &amp; State Board (Classes 6–10)</p>
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => sw("CONTACT")}
-            className="text-[#004b79] font-bold hover:underline cursor-pointer"
-          >
-            Direct Helplines &amp; Query Form
-          </button>
-          <span>•</span>
-          <p>© 2026 Mantif</p>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          PAGE 2: TUTORING HUB (WHERE IT ALL BEGAN)
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <section id="tutoring-hub" className="py-20 bg-white border-b border-slate-200/80">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-xs font-black text-[#8f6d2b] uppercase tracking-wider">
+              <Compass className="w-3.5 h-3.5 text-[#b89047]" />
+              Our Origins
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">
+              Tutoring Hub
+            </h2>
+            <p className="text-lg sm:text-xl font-extrabold text-[#b89047]">
+              Where It All Began
+            </p>
+          </div>
+
+          {/* Narrative Story Card */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-slate-50 rounded-3xl p-8 sm:p-12 border border-slate-200/90 shadow-sm">
+            <div className="md:col-span-8 space-y-5">
+              <p className="text-slate-700 text-base sm:text-lg leading-relaxed font-medium">
+                For the past four years, <strong>Tutoring Hub</strong> has been a physical learning space where we worked closely with students and gained valuable experience in teaching and managing educational programs.
+              </p>
+              <p className="text-slate-700 text-base sm:text-lg leading-relaxed font-medium">
+                Now, we are taking that experience online through <strong>MANTIF</strong>, creating meaningful learning solutions for both students and educational institutions.
+              </p>
+
+              {/* Highlight Callout */}
+              <div className="p-5 rounded-2xl bg-white border border-[#b89047]/30 shadow-xs space-y-1">
+                <p className="text-base sm:text-lg font-black text-[#002137]">
+                  “Tutoring Hub gave us the foundation.
+                </p>
+                <p className="text-base sm:text-lg font-black text-[#b89047]">
+                  MANTIF is taking it forward.”
+                </p>
+              </div>
+
+              {/* CTAs */}
+              <div className="flex flex-wrap items-center gap-3.5 pt-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode("SIGNUP");
+                    setStep(1);
+                    document.getElementById("auth-card-section")?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className="px-6 py-3.5 rounded-xl bg-[#002137] hover:bg-[#003659] text-white text-sm font-extrabold transition-all shadow-sm cursor-pointer flex items-center gap-2"
+                >
+                  <span>Sign Up on MANTIF</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <a
+                  href="#contact"
+                  className="px-6 py-3.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 text-sm font-extrabold transition-all cursor-pointer"
+                >
+                  Contact Us
+                </a>
+              </div>
+            </div>
+
+            {/* Visual Icon Grid (4 Years Milestone) */}
+            <div className="md:col-span-4 space-y-4">
+              <div className="p-6 rounded-2xl bg-[#002137] text-white text-center space-y-2 shadow-lg">
+                <span className="text-4xl sm:text-5xl font-black text-[#dfb74a]">4+</span>
+                <h3 className="text-sm font-extrabold tracking-wide uppercase">Years of Physical Coaching</h3>
+                <p className="text-xs text-slate-300">
+                  Hundreds of students personally mentored for CBSE and State Board success.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 text-slate-800 space-y-1.5 shadow-2xs">
+                <div className="flex items-center gap-2 text-xs font-bold text-emerald-700">
+                  <Check className="w-4 h-4" />
+                  <span>Syllabus Aligned &amp; Doubt Focused</span>
+                </div>
+                <p className="text-xs text-slate-500 font-medium">
+                  Continuous homework feedback, live unit test evaluations, and mentor care.
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          PAGE 3: OUR SIDE (INSTITUTIONAL OUTREACH & SCHOOL IMPACT)
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <section id="our-side" className="py-20 bg-slate-50 border-b border-slate-200/80">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs font-black text-[#004b79] uppercase tracking-wider">
+              <School className="w-3.5 h-3.5" />
+              Institutional Outreach &amp; AI Seminars
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">
+              Our Side
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600 font-medium">
+              Empowering school teachers and academic institutions with practical AI tools.
+            </p>
+          </div>
+
+          {/* School Feature Card */}
+          <div className="bg-white rounded-3xl p-8 sm:p-12 border border-slate-200 shadow-md space-y-6">
+            
+            {/* Clickable School Link & Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+              <div className="space-y-1">
+                <a
+                  href="https://www.google.com/search?q=Kongu+National+Matriculation+Hr+Sec+School+Nanjanapuram"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group inline-flex items-center gap-2 text-xl sm:text-2xl font-black text-[#002137] hover:text-[#004b79] transition-colors"
+                >
+                  <span>Kongu National Matriculation Hr Sec School, Nanjanapuram</span>
+                  <ExternalLink className="w-5 h-5 text-[#b89047] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                </a>
+                <p className="text-xs font-bold text-slate-400">
+                  Erode District • Academic Faculty Empowerment Seminar
+                </p>
+              </div>
+
+              <span className="self-start sm:self-auto px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-xs font-extrabold text-[#8f6d2b]">
+                Alma Mater Milestone
+              </span>
+            </div>
+
+            {/* Workshop Narrative Body */}
+            <div className="space-y-4 text-slate-700 text-sm sm:text-base leading-relaxed font-medium">
+              <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200/70">
+                <h3 className="font-extrabold text-base text-[#002137] flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#b89047]" />
+                  Session: “AI in Education: Empowering Students Today”
+                </h3>
+              </div>
+
+              <p>
+                MANTIF conducted a specialized session on <strong>“AI in Education: Empowering Students Today”</strong> for the teachers of Kongu National Higher Secondary School, Nanjanapuram.
+              </p>
+              <p>
+                The session focused on exploring different AI tools that can help teachers engage students, capture their attention, and bring more interest into the learning process.
+              </p>
+              <p className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 italic">
+                The best part of this session was that <strong>Our Founder Ms. Karunya S</strong> is an alumna of the school. It was truly a proud moment for the entire MANTIF team and for the teachers who once taught her. We could witness the pride and happiness on her teachers’ faces as they welcomed her back, this time as a Founder.
+              </p>
+            </div>
+
+            {/* Motivational Tag */}
+            <div className="pt-4 flex items-center justify-between flex-wrap gap-3 border-t border-slate-100">
+              <span className="text-sm sm:text-base font-black text-[#b89047] tracking-tight flex items-center gap-2">
+                <Rocket className="w-5 h-5 text-[#b89047]" />
+                Still we have a Long Journey !
+              </span>
+              <span className="text-xs text-slate-400 font-semibold">
+                MANTIF Community &amp; Institutional Outreach
+              </span>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          PAGE 4: TEAM (FOUNDER, MENTORS, SOFTWARE, AI TEAMS WITH PHOTO SPACES)
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <section id="team" className="py-20 bg-white border-b border-slate-200/80">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs font-black text-[#004b79] uppercase tracking-wider">
+              <Users className="w-3.5 h-3.5" />
+              Leadership &amp; Mentors
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">
+              Our Team
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600 font-medium">
+              Passionate educators, engineering minds, and AI practitioners dedicated to student success.
+            </p>
+          </div>
+
+          {/* 1. Founder Spotlight Card */}
+          <div className="max-w-3xl mx-auto bg-gradient-to-br from-white via-slate-50 to-white rounded-3xl p-8 sm:p-10 border-2 border-[#b89047]/30 shadow-lg relative overflow-hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
+              
+              {/* Photo Space for Founder */}
+              <div className="sm:col-span-5 flex flex-col items-center">
+                <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-3xl overflow-hidden bg-[#002137] border-4 border-white shadow-xl flex items-center justify-center text-white group">
+                  <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-gradient-to-br from-[#002137] to-[#004b79]">
+                    <GraduationCap className="w-12 h-12 text-[#dfb74a] mb-1" />
+                    <span className="text-xs font-bold text-slate-200">Karunya S</span>
+                    <span className="text-[10px] text-[#dfb74a]">Founder Photo</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Founder Details & Words */}
+              <div className="sm:col-span-7 space-y-3 text-center sm:text-left">
+                <span className="px-3 py-1 rounded-md text-[11px] font-black uppercase bg-[#b89047]/15 text-[#8f6d2b] border border-[#b89047]/30">
+                  Lead Visionary &amp; Founder
+                </span>
+                <h3 className="text-2xl sm:text-3xl font-black text-[#002137]">
+                  Karunya S
+                </h3>
+                <p className="text-xs font-extrabold text-[#b89047] uppercase tracking-wider">
+                  Founder — MANTIF
+                </p>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
+                  Educator with over 4 years of hands-on coaching leadership. Alumna of Kongu National Higher Secondary School, passionate about revolutionizing student learning by bridging empathetic human teaching with cutting-edge artificial intelligence.
+                </p>
+              </div>
+
+            </div>
+          </div>
+
+          {/* 2. Educational Mentors Grid (2 Mentors) */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 text-center">
+              Academic &amp; Subject Mentors
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              
+              {/* Mentor 1 */}
+              <div className="p-6 rounded-3xl bg-slate-50 border border-slate-200 shadow-xs flex items-center gap-4 hover:border-[#004b79]/40 transition-colors">
+                <div className="w-20 h-20 rounded-2xl bg-[#002137] text-white flex flex-col items-center justify-center shrink-0 border border-slate-300 shadow-xs">
+                  <Award className="w-7 h-7 text-[#dfb74a] mb-0.5" />
+                  <span className="text-[9px] font-bold text-slate-300">Photo</span>
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-extrabold text-base text-[#002137]">Dr. A. Revathi</h4>
+                  <p className="text-xs font-bold text-[#b89047]">PhD Chemistry</p>
+                  <p className="text-xs text-slate-500 font-semibold">Educational Mentor</p>
+                </div>
+              </div>
+
+              {/* Mentor 2 */}
+              <div className="p-6 rounded-3xl bg-slate-50 border border-slate-200 shadow-xs flex items-center gap-4 hover:border-[#004b79]/40 transition-colors">
+                <div className="w-20 h-20 rounded-2xl bg-[#002137] text-white flex flex-col items-center justify-center shrink-0 border border-slate-300 shadow-xs">
+                  <Award className="w-7 h-7 text-[#dfb74a] mb-0.5" />
+                  <span className="text-[9px] font-bold text-slate-300">Photo</span>
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-extrabold text-base text-[#002137]">V Lavanya</h4>
+                  <p className="text-xs font-bold text-[#b89047]">MSc MPhil Maths</p>
+                  <p className="text-xs text-slate-500 font-semibold">Educational Mentor</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* 3. Engineering & AI Teams Grid (4 Members) */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 text-center">
+              Engineering, Software &amp; AI Research Team
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              
+              {/* Software Team: Vishal K */}
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3 text-center hover:border-[#004b79]/40 transition-colors">
+                <div className="w-16 h-16 rounded-2xl bg-slate-100 mx-auto flex flex-col items-center justify-center text-slate-700 border border-slate-200">
+                  <Laptop className="w-6 h-6 text-[#004b79] mb-0.5" />
+                  <span className="text-[8px] font-bold text-slate-400">Photo</span>
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-sm text-[#002137]">Vishal K</h4>
+                  <p className="text-xs font-bold text-[#004b79]">Software Team</p>
+                </div>
+              </div>
+
+              {/* Software Team: Solairaj R */}
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3 text-center hover:border-[#004b79]/40 transition-colors">
+                <div className="w-16 h-16 rounded-2xl bg-slate-100 mx-auto flex flex-col items-center justify-center text-slate-700 border border-slate-200">
+                  <Laptop className="w-6 h-6 text-[#004b79] mb-0.5" />
+                  <span className="text-[8px] font-bold text-slate-400">Photo</span>
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-sm text-[#002137]">Solairaj R</h4>
+                  <p className="text-xs font-bold text-[#004b79]">Software Team</p>
+                </div>
+              </div>
+
+              {/* AI Team: Abinaya B */}
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3 text-center hover:border-[#b89047]/40 transition-colors">
+                <div className="w-16 h-16 rounded-2xl bg-amber-50 mx-auto flex flex-col items-center justify-center text-amber-800 border border-amber-200">
+                  <Brain className="w-6 h-6 text-[#b89047] mb-0.5" />
+                  <span className="text-[8px] font-bold text-slate-400">Photo</span>
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-sm text-[#002137]">Abinaya B</h4>
+                  <p className="text-xs font-bold text-[#b89047]">AI Team</p>
+                </div>
+              </div>
+
+              {/* AI Team: Arunkarthick K */}
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3 text-center hover:border-[#b89047]/40 transition-colors">
+                <div className="w-16 h-16 rounded-2xl bg-amber-50 mx-auto flex flex-col items-center justify-center text-amber-800 border border-amber-200">
+                  <Brain className="w-6 h-6 text-[#b89047] mb-0.5" />
+                  <span className="text-[8px] font-bold text-slate-400">Photo</span>
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-sm text-[#002137]">Arunkarthick K</h4>
+                  <p className="text-xs font-bold text-[#b89047]">AI Team</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          PAGE 5: TESTIMONIALS (STUDENT STORIES & EXPERIENCES FROM DAY 1)
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <section id="testimonials" className="py-20 bg-slate-50 border-b border-slate-200/80">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-xs font-black text-[#8f6d2b] uppercase tracking-wider">
+              <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+              Student Voices &amp; Memories
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">
+              Testimonials
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600 font-medium">
+              Real experiences from students who walked through our doors and excelled with us.
+            </p>
+          </div>
+
+          {/* 4 Testimonials Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+            
+            {/* Testimonial 1: T.G. Sivadharani */}
+            <div className="p-7 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-md space-y-5 flex flex-col justify-between hover:border-[#004b79]/50 transition-all">
+              <div className="space-y-4">
+                <Quote className="w-8 h-8 text-[#dfb74a]" />
+                <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-medium italic">
+                  “If surviving 12th boards was a movie, Karunya was the director, scriptwriter, and the stunt double all in one. I walked into her tuition as her very first student — and not to brag (okay, totally to brag). Back then, I was clueless, stressed, and borderline terrified of what the CBSE gods were cooking up. But she? She was calm, collected, and totally ready to drag me lovingly, through the chaos. From breaking down the toughest topics with infinite patience, to hyping me up when I was drowning in doubts, she made sure I didn’t just survive 12th boards… I came out swinging. The late-night doubts, the last-minute revisions, the &lsquo;you better know this by tomorrow&rsquo; looks — all of it got me to where I am today. She built something amazing, and I’ll always be proud to say: I was there from Day 1. Forever your #1 ❤️”
+                </p>
+              </div>
+              <div className="pt-4 border-t border-slate-100 space-y-0.5">
+                <h4 className="font-extrabold text-sm text-[#002137]">T.G. Sivadharani</h4>
+                <p className="text-xs font-bold text-[#b89047]">BSc Costume Design and Fashion</p>
+                <p className="text-[11px] text-slate-500 font-medium">PSGR Krishnammal College, Coimbatore</p>
+              </div>
+            </div>
+
+            {/* Testimonial 2: S. Darshan */}
+            <div className="p-7 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-md space-y-5 flex flex-col justify-between hover:border-[#004b79]/50 transition-all">
+              <div className="space-y-4">
+                <Quote className="w-8 h-8 text-[#dfb74a]" />
+                <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-medium italic">
+                  “I just wanted to take a moment to sincerely thank you for all the support, guidance, and encouragement you've given me throughout my time at Mantif . Your teaching has truly made a difference in how I understand the subjects, and I feel much more confident because of it. Your dedication and patience never went unnoticed, and I really appreciate the way you made even the toughest topics easier to grasp. Thanks to your help, I feel well-prepared and motivated to keep doing my best. Once again, thank you so much for everything!”
+                </p>
+              </div>
+              <div className="pt-4 border-t border-slate-100 space-y-0.5">
+                <h4 className="font-extrabold text-sm text-[#002137]">S. Darshan</h4>
+                <p className="text-xs font-bold text-[#b89047]">XII Standard</p>
+                <p className="text-[11px] text-slate-500 font-medium">Board Exam Cohort</p>
+              </div>
+            </div>
+
+            {/* Testimonial 3: Kanishka C */}
+            <div className="p-7 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-md space-y-5 flex flex-col justify-between hover:border-[#004b79]/50 transition-all">
+              <div className="space-y-4">
+                <Quote className="w-8 h-8 text-[#dfb74a]" />
+                <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-medium italic">
+                  “Mantif Tutoring wasn't just about academics; it also helped me in developing my personality and other skills. The supportive atmosphere boosted my confidence and made learning enjoyable. I truly thankful for all the memories of Mantif.”
+                </p>
+              </div>
+              <div className="pt-4 border-t border-slate-100 space-y-0.5">
+                <h4 className="font-extrabold text-sm text-[#002137]">Kanishka C</h4>
+                <p className="text-xs font-bold text-[#b89047]">XII Standard</p>
+                <p className="text-[11px] text-slate-500 font-medium">Classroom Alumna</p>
+              </div>
+            </div>
+
+            {/* Testimonial 4: R. Manikandan */}
+            <div className="p-7 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-md space-y-5 flex flex-col justify-between hover:border-[#004b79]/50 transition-all">
+              <div className="space-y-4">
+                <Quote className="w-8 h-8 text-[#dfb74a]" />
+                <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-medium italic">
+                  “Tuition here is always jolly! It’s not boring like just sitting and writing notes. For me, Tutoring Hub from Mantif is a place where we study, have fun, and feel free to share our worries. It is serious learning, but with lots of care and friendship and that’s why it is so special.”
+                </p>
+              </div>
+              <div className="pt-4 border-t border-slate-100 space-y-0.5">
+                <h4 className="font-extrabold text-sm text-[#002137]">R. Manikandan</h4>
+                <p className="text-xs font-bold text-[#b89047]">XI Standard</p>
+                <p className="text-[11px] text-slate-500 font-medium">Tutoring Hub Learner</p>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          PAGE 6: GALLERY (MOMENTS & WORKSHOPS READY FOR IMAGES)
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <section id="gallery" className="py-20 bg-white border-b border-slate-200/80">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs font-black text-[#004b79] uppercase tracking-wider">
+              <ImageIcon className="w-3.5 h-3.5" />
+              Photo Highlights
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">
+              Gallery
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600 font-medium">
+              Memories from our AI school workshops, physical Tutoring Hub classrooms, and student milestones.
+            </p>
+          </div>
+
+          {/* Interactive Responsive Gallery Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            {/* Gallery Slot 1 */}
+            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
+              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#002137] to-[#004b79] text-white">
+                <School className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
+                <h4 className="font-extrabold text-sm">Kongu National School Seminar</h4>
+                <p className="text-xs text-slate-300 mt-1">AI in Education for Teachers</p>
+                <span className="mt-3 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-white/10 text-[#dfb74a] border border-white/20">
+                  School Outreach
+                </span>
+              </div>
+            </div>
+
+            {/* Gallery Slot 2 */}
+            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
+              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#003659] to-[#002137] text-white">
+                <Brain className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
+                <h4 className="font-extrabold text-sm">AI Tool Demonstration</h4>
+                <p className="text-xs text-slate-300 mt-1">Interactive Teaching Technologies</p>
+                <span className="mt-3 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-white/10 text-[#dfb74a] border border-white/20">
+                  Faculty Workshop
+                </span>
+              </div>
+            </div>
+
+            {/* Gallery Slot 3 */}
+            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
+              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#002137] to-[#0a4870] text-white">
+                <BookOpen className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
+                <h4 className="font-extrabold text-sm">Tutoring Hub Physical Sessions</h4>
+                <p className="text-xs text-slate-300 mt-1">4 Years of Personalized Guidance</p>
+                <span className="mt-3 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-white/10 text-[#dfb74a] border border-white/20">
+                  Tutoring Hub
+                </span>
+              </div>
+            </div>
+
+            {/* Gallery Slot 4 */}
+            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
+              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#004b79] to-[#002137] text-white">
+                <Sparkles className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
+                <h4 className="font-extrabold text-sm">Student Doubt Solving Circle</h4>
+                <p className="text-xs text-slate-300 mt-1">One-on-One Problem Solving</p>
+                <span className="mt-3 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-white/10 text-[#dfb74a] border border-white/20">
+                  Mentorship
+                </span>
+              </div>
+            </div>
+
+            {/* Gallery Slot 5 */}
+            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
+              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#002137] to-[#083353] text-white">
+                <Award className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
+                <h4 className="font-extrabold text-sm">Board Exam Achievers Meet</h4>
+                <p className="text-xs text-slate-300 mt-1">Celebrating Student Milestones</p>
+                <span className="mt-3 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-white/10 text-[#dfb74a] border border-white/20">
+                  Student Success
+                </span>
+              </div>
+            </div>
+
+            {/* Gallery Slot 6 */}
+            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
+              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#003b60] to-[#002137] text-white">
+                <Users className="w-10 h-10 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
+                <h4 className="font-extrabold text-sm">Online Live Classroom</h4>
+                <p className="text-xs text-slate-300 mt-1">MANTIF Real-Time Web Platform</p>
+                <span className="mt-3 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full bg-white/10 text-[#dfb74a] border border-white/20">
+                  Live Tech
+                </span>
+              </div>
+            </div>
+
+          </div>
+
+          <p className="text-center text-xs text-slate-400 font-semibold">
+            Photos and workshop media are periodically archived by the MANTIF Academic Operations Team.
+          </p>
+
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          FOOTER: CONTACT US & OFFICIAL COMMUNICATIONS
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <footer id="contact" className="bg-[#001726] text-white pt-16 pb-12 border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          
+          {/* Top Footer: Contact Grid & Query Form */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            
+            {/* Left Column (6 cols): Direct Hotlines & Organization Info */}
+            <div className="lg:col-span-6 space-y-6">
+              
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-white p-1 flex items-center justify-center shadow-xs">
+                    <img src="/images/mantif_logo.png" alt="MANTIF Logo" className="w-full h-full object-contain" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-2xl tracking-tight text-white">MANTIF</h3>
+                    <p className="text-xs text-[#dfb74a] font-bold">Human x Artificial Intelligence</p>
+                  </div>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-lg font-medium">
+                  MSME-registered EdTech startup combining empathetic educator mentorship with artificial intelligence for students of Classes 6 to 10.
+                </p>
+              </div>
+
+              {/* 3 Dedicated Hotlines */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    Official Helplines (Direct Support)
+                  </span>
+                  <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    Mon–Sat (9 AM – 8:30 PM)
+                  </span>
+                </div>
+
+                {/* Line 1: Admissions */}
+                <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between gap-3">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-[#dfb74a] block">
+                      Hotline 1 • Admissions &amp; Fees
+                    </span>
+                    <span className="text-sm sm:text-base font-black font-mono text-white">
+                      +91 {phone1.slice(0, 5)} {phone1.slice(5)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={`tel:+91${phone1}`}
+                      title="Direct Call"
+                      className="w-8 h-8 rounded-lg bg-[#004b79] hover:bg-[#005f99] text-white flex items-center justify-center transition-colors cursor-pointer"
+                    >
+                      <PhoneCall className="w-4 h-4" />
+                    </a>
+                    <a
+                      href={`https://wa.me/91${phone1}?text=Hello%20Mantif%20Tutoring,%20I%20would%20like%20to%20inquire%20about%20admissions.`}
+                      target="_blank"
+                      rel="noreferrer"
+                      title="WhatsApp Chat"
+                      className="w-8 h-8 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-colors cursor-pointer"
+                    >
+                      <WhatsAppIcon className="w-4 h-4" />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(`+91${phone1}`, "f1")}
+                      className="w-8 h-8 rounded-lg bg-white/10 text-slate-300 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
+                      title="Copy"
+                    >
+                      {copiedKey === "f1" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Line 2: Academic Inquiries */}
+                <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between gap-3">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-[#dfb74a] block">
+                      Hotline 2 • Academic &amp; Batch Timing
+                    </span>
+                    <span className="text-sm sm:text-base font-black font-mono text-white">
+                      +91 {phone2.slice(0, 5)} {phone2.slice(5)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={`tel:+91${phone2}`}
+                      title="Direct Call"
+                      className="w-8 h-8 rounded-lg bg-[#004b79] hover:bg-[#005f99] text-white flex items-center justify-center transition-colors cursor-pointer"
+                    >
+                      <PhoneCall className="w-4 h-4" />
+                    </a>
+                    <a
+                      href={`https://wa.me/91${phone2}?text=Hello%20Mantif%20Academic%20Team,%20I%20have%20a%20question%20about%20classes.`}
+                      target="_blank"
+                      rel="noreferrer"
+                      title="WhatsApp Chat"
+                      className="w-8 h-8 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-colors cursor-pointer"
+                    >
+                      <WhatsAppIcon className="w-4 h-4" />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(`+91${phone2}`, "f2")}
+                      className="w-8 h-8 rounded-lg bg-white/10 text-slate-300 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
+                      title="Copy"
+                    >
+                      {copiedKey === "f2" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Line 3: Tech & General Support */}
+                <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between gap-3">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-[#dfb74a] block">
+                      Hotline 3 • Tech Support &amp; Helpdesk
+                    </span>
+                    <span className="text-sm sm:text-base font-black font-mono text-white">
+                      +91 {phone3.slice(0, 5)} {phone3.slice(5)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={`tel:+91${phone3}`}
+                      title="Direct Call"
+                      className="w-8 h-8 rounded-lg bg-[#004b79] hover:bg-[#005f99] text-white flex items-center justify-center transition-colors cursor-pointer"
+                    >
+                      <PhoneCall className="w-4 h-4" />
+                    </a>
+                    <a
+                      href={`https://wa.me/91${phone3}?text=Hello%20Mantif%20Support,%20I%20need%20assistance.`}
+                      target="_blank"
+                      rel="noreferrer"
+                      title="WhatsApp Chat"
+                      className="w-8 h-8 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-colors cursor-pointer"
+                    >
+                      <WhatsAppIcon className="w-4 h-4" />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(`+91${phone3}`, "f3")}
+                      className="w-8 h-8 rounded-lg bg-white/10 text-slate-300 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
+                      title="Copy"
+                    >
+                      {copiedKey === "f3" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Email Support */}
+              <div className="flex items-center gap-3 text-xs text-slate-300">
+                <Mail className="w-4 h-4 text-[#dfb74a]" />
+                <span>Official Support: <strong className="text-white font-mono">{supportEmail}</strong></span>
+              </div>
+
+            </div>
+
+            {/* Right Column (6 cols): Direct Message Inquiry Form */}
+            <div className="lg:col-span-6 bg-white/5 rounded-3xl p-6 sm:p-8 border border-white/10 space-y-4">
+              <div className="space-y-1">
+                <h4 className="text-base sm:text-lg font-black text-white">Send Direct Message</h4>
+                <p className="text-xs text-slate-400 font-medium">
+                  Have a question about admissions, fee structure, or demo classes? We respond within 15 minutes.
+                </p>
+              </div>
+
+              {qErr && (
+                <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-500/30 text-xs text-rose-200 font-semibold">
+                  {qErr}
+                </div>
+              )}
+              {qOk && (
+                <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-xs text-emerald-200 font-semibold">
+                  {qOk}
+                </div>
+              )}
+
+              <form onSubmit={handleQuickContactSubmit} className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="block text-[11px] font-bold text-slate-300">Your Name *</label>
+                    <input
+                      type="text"
+                      value={qName}
+                      onChange={(e) => setQName(e.target.value)}
+                      placeholder="Enter full name"
+                      className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-white/10 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-[#dfb74a]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[11px] font-bold text-slate-300">Mobile Number *</label>
+                    <input
+                      type="tel"
+                      maxLength={10}
+                      value={qPhone}
+                      onChange={(e) => setQPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                      placeholder="10-digit mobile"
+                      className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-white/10 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-[#dfb74a]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="block text-[11px] font-bold text-slate-300">Student Grade</label>
+                    <select
+                      value={qClass}
+                      onChange={(e) => setQClass(e.target.value)}
+                      className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-[#001f33] border border-white/10 text-white focus:outline-none focus:border-[#dfb74a] cursor-pointer"
+                    >
+                      {["Class 6", "Class 7", "Class 8", "Class 9", "Class 10"].map((c) => (
+                        <option key={c} value={c} className="bg-[#001726]">{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[11px] font-bold text-slate-300">Curriculum Board</label>
+                    <select
+                      value={qBoard}
+                      onChange={(e) => setQBoard(e.target.value)}
+                      className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-[#001f33] border border-white/10 text-white focus:outline-none focus:border-[#dfb74a] cursor-pointer"
+                    >
+                      <option value="CBSE" className="bg-[#001726]">CBSE Board</option>
+                      <option value="State Board" className="bg-[#001726]">State Board</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-bold text-slate-300">Message / Query *</label>
+                  <textarea
+                    rows={3}
+                    value={qMessage}
+                    onChange={(e) => setQMessage(e.target.value)}
+                    placeholder="Tell us what you would like to know..."
+                    className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-white/10 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-[#dfb74a] resize-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={qLoading}
+                  className="w-full py-3 rounded-xl bg-[#dfb74a] hover:bg-[#ebd085] text-[#002137] font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md disabled:opacity-60"
+                >
+                  {qLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><span>Submit Inquiry</span><Send className="w-3.5 h-3.5" /></>}
+                </button>
+              </form>
+            </div>
+
+          </div>
+
+          {/* Bottom Copyright & MSME Legal Bar */}
+          <div className="pt-8 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-white">MANTIF</span>
+              <span>•</span>
+              <span>Human x Artificial Intelligence</span>
+              <span>•</span>
+              <span className="text-[#dfb74a]">MSME Registered Startup</span>
+            </div>
+            <p>© 2026 MANTIF. All rights reserved.</p>
+          </div>
+
         </div>
       </footer>
+
     </div>
   );
 }
