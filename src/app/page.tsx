@@ -999,101 +999,61 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 2: TUTORING HUB (WHERE IT ALL BEGAN - CARDLESS & FULL VIEWPORT)
+          PAGE 2: TUTORING HUB (WHERE IT ALL BEGAN - CENTERED FULL-PAGE CARDLESS)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="tutoring-hub" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center border-b border-slate-200/80 bg-white py-8 lg:py-12">
-        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 space-y-8">
+      <section id="tutoring-hub" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-white py-12 lg:py-16">
+        <div className="w-full max-w-5xl mx-auto px-6 sm:px-10 lg:px-16 text-center space-y-8">
           
-          {/* Section Header */}
+          {/* Centered Heading */}
           <div className="space-y-2">
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-xs font-black text-[#8f6d2b] uppercase tracking-wider">
-              <Compass className="w-3.5 h-3.5 text-[#b89047]" />
-              Our Origins
-            </span>
-            <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-4">
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight">
-                Tutoring Hub
-              </h2>
-              <span className="text-lg sm:text-xl lg:text-2xl font-extrabold text-[#b89047]">
-                — Where It All Began
-              </span>
-            </div>
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
+              Tutoring Hub
+            </h2>
+            <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#b89047] tracking-tight">
+              Where It All Began
+            </p>
           </div>
 
-          {/* Narrative Story (Cardless, Direct Editorial Flow) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
-            
-            {/* Left Narrative & CTAs (7 Cols) */}
-            <div className="lg:col-span-7 space-y-5">
-              <p className="text-slate-700 text-base sm:text-lg leading-relaxed font-medium">
-                For the past four years, <strong>Tutoring Hub</strong> has been a physical learning space where we worked closely with students and gained valuable experience in teaching and managing educational programs.
-              </p>
-              
-              <p className="text-slate-700 text-base sm:text-lg leading-relaxed font-medium">
-                Now, we are taking that experience online through <strong>MANTIF</strong>, creating meaningful learning solutions for both students and educational institutions.
-              </p>
+          {/* Centered Full-Width Narrative Content */}
+          <div className="max-w-3xl mx-auto space-y-5 text-slate-700 text-base sm:text-lg lg:text-xl leading-relaxed font-medium">
+            <p>
+              For the past four years, <strong>Tutoring Hub</strong> has been a physical learning space where we worked closely with students and gained valuable experience in teaching and managing educational programs.
+            </p>
+            <p>
+              Now, we are taking that experience online through <strong>MANTIF</strong>, creating meaningful learning solutions for both students and educational institutions.
+            </p>
+          </div>
 
-              {/* Seamless Quote Accent (No Box, Vertical Gold Bar) */}
-              <div className="border-l-4 border-[#b89047] pl-4 py-1 space-y-0.5 my-2">
-                <p className="text-base sm:text-lg font-black text-[#002137]">
-                  “Tutoring Hub gave us the foundation.
-                </p>
-                <p className="text-base sm:text-lg font-black text-[#b89047]">
-                  MANTIF is taking it forward.”
-                </p>
-              </div>
+          {/* Centered Quote */}
+          <div className="space-y-1 py-2">
+            <p className="text-lg sm:text-xl lg:text-2xl font-black text-[#002137]">
+              “Tutoring Hub gave us the foundation.
+            </p>
+            <p className="text-lg sm:text-xl lg:text-2xl font-black text-[#b89047]">
+              MANTIF is taking it forward.”
+            </p>
+          </div>
 
-              {/* CTAs */}
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthMode("SIGNUP");
-                    setStep(1);
-                    document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
-                  }}
-                  className="px-6 py-3 rounded-xl bg-[#002137] hover:bg-[#003659] text-white text-sm font-extrabold transition-all shadow-sm cursor-pointer flex items-center gap-2"
-                >
-                  <span>Sign Up on MANTIF</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-                <a
-                  href="#contact"
-                  className="px-6 py-3 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-sm font-extrabold transition-all cursor-pointer"
-                >
-                  Contact Us
-                </a>
-              </div>
-            </div>
-
-            {/* Right Highlights & Metrics (5 Cols - Cardless Organic Layout) */}
-            <div className="lg:col-span-5 space-y-6 lg:border-l lg:border-slate-200 lg:pl-10">
-              <div className="space-y-2">
-                <div className="flex items-baseline gap-3">
-                  <span className="text-5xl sm:text-6xl font-black text-[#b89047] tracking-tight">4+</span>
-                  <span className="text-sm sm:text-base font-black uppercase text-[#002137] tracking-wide">Years of Physical Coaching</span>
-                </div>
-                <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
-                  Hundreds of students personally mentored across Coimbatore and Erode for CBSE and State Board excellence.
-                </p>
-              </div>
-
-              <div className="space-y-3 pt-2 border-t border-slate-100">
-                <div className="flex items-start gap-2.5 text-xs sm:text-sm font-bold text-slate-800">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Syllabus Aligned &amp; Dedicated Doubt Clearing</span>
-                </div>
-                <div className="flex items-start gap-2.5 text-xs sm:text-sm font-bold text-slate-800">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Continuous Homework Feedback &amp; Unit Test Evaluations</span>
-                </div>
-                <div className="flex items-start gap-2.5 text-xs sm:text-sm font-bold text-slate-800">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Empathetic Mentor Guidance for Parent-Teacher Trust</span>
-                </div>
-              </div>
-            </div>
-
+          {/* Centered CTAs */}
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode("SIGNUP");
+                setStep(1);
+                document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="px-8 py-3.5 rounded-xl bg-[#002137] hover:bg-[#003659] text-white text-sm sm:text-base font-extrabold transition-all shadow-md cursor-pointer flex items-center gap-2"
+            >
+              <span>Sign Up on MANTIF</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <a
+              href="#contact"
+              className="px-8 py-3.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-sm sm:text-base font-extrabold transition-all cursor-pointer"
+            >
+              Contact Us
+            </a>
           </div>
 
         </div>
