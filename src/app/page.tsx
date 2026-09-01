@@ -1723,13 +1723,13 @@ export default function HomePage() {
           FOOTER: PROFESSIONAL CONTACT FOOTER
       ═══════════════════════════════════════════════════════════════════════ */}
       <footer id="contact" className="scroll-mt-20 bg-[#00111f] border-t border-white/10 text-white">
-        <div className="max-w-6xl mx-auto px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-          {/* 3-Equal-Column Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+          {/* 3-Equal-Column Grid with dividers */}
+          <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/8 items-start">
 
             {/* Col 1: Address + Hours */}
-            <div className="space-y-3">
+            <div className="space-y-3 pr-0 md:pr-10 pb-6 md:pb-0">
               <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#dfb74a]">Location</p>
               <div className="space-y-2">
                 <div className="flex items-start gap-2">
@@ -1747,7 +1747,7 @@ export default function HomePage() {
             </div>
 
             {/* Col 2: Helplines */}
-            <div className="space-y-3">
+            <div className="space-y-3 px-0 md:px-10 pt-6 md:pt-0">
               <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#dfb74a]">Helplines</p>
               <div>
                 {[
@@ -1769,7 +1769,7 @@ export default function HomePage() {
             </div>
 
             {/* Col 3: Email + Connect */}
-            <div className="space-y-5">
+            <div className="space-y-5 pl-0 md:pl-10 pt-6 md:pt-0">
               <div className="space-y-2">
                 <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#dfb74a]">Official Email</p>
                 <a
