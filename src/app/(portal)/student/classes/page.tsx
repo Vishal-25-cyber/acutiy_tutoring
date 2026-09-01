@@ -105,10 +105,11 @@ export default function StudentClassesPage() {
     weeklySchedule.find((s: any) => s.day.toLowerCase() === currentDay.toLowerCase()) ||
     weeklySchedule[0];
 
-  const liveDbClass = data?.classes?.find((c: any) => c.status === "LIVE");
+  const todayDateStr = new Date().toISOString().split("T")[0];
+  const liveDbClass = data?.classes?.find((c: any) => c.status === "LIVE" && (!c.date || c.date === todayDateStr));
   const todayUpcomingDbClass = data?.classes?.find(
     (c: any) =>
-      c.date === new Date().toISOString().split("T")[0] &&
+      c.date === todayDateStr &&
       (c.status === "PUBLISHED" || c.status === "SCHEDULED")
   );
 

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db/mongoose";
 import { getSession } from "@/lib/auth/session";
 import StudentProfile from "@/models/StudentProfile";
@@ -10,9 +10,9 @@ export const dynamic = "force-dynamic";
 
 const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const session = await getSession();
+    const session = await getSession(req);
     if (!session || session.role !== "STUDENT") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -42,22 +42,38 @@ export async function GET() {
 
     const now = new Date();
     const currentDayName = DAYS_OF_WEEK[now.getDay()];
+    const todayDateStr = now.toISOString().split("T")[0];
+    const currentHourMin = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+
+    // Auto-conclude any stale LIVE sessions where date < today or time is past endTime
+    try {
+      await LiveSession.updateMany(
+        {
+          status: "LIVE",
+          $or: [
+            { date: { $lt: todayDateStr } },
+            { date: todayDateStr, endTime: { $lt: currentHourMin } },
+          ],
+        },
+        {
+          $set: { status: "COMPLETED", actualEndTime: now },
+        }
+      );
+    } catch (cleanErr) {
+      console.warn("Auto-conclude stale classes error:", cleanErr);
+    }
 
     const batchName = (profile.batchId as any)?.name || "7:00 PM – 8:00 PM";
     const batchStart = (profile.batchId as any)?.startTime || "19:00";
     const batchEnd = (profile.batchId as any)?.endTime || "20:00";
-
     const batchId = (profile.batchId as any)?._id || profile.batchId;
 
-    const todayDateStr = now.toISOString().split("T")[0];
-
-    // Query published/scheduled/live/completed classes for this student's batch or class level
+    // Query published/scheduled/live/completed classes strictly for this student's batch or class level
     const sessionQuery: any = {
       status: { $in: ["PUBLISHED", "SCHEDULED", "LIVE", "COMPLETED"] },
       $or: [
         { classLevel: profile.currentClass },
         { batchId: batchId || null },
-        { status: "LIVE" },
       ],
     };
 
@@ -165,7 +181,7 @@ export async function GET() {
       },
     });
   } catch (error: any) {
-    console.error("Student Classes API Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("GET /api/student/classes error:", error);
+    return NextResponse.json({ error: error.message || "Failed to fetch classes" }, { status: 500 });
   }
 }
