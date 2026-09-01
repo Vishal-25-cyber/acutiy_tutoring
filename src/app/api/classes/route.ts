@@ -107,14 +107,20 @@ export async function POST(req: NextRequest) {
       attendanceThresholdPercent = 75,
     } = body;
 
-    if (!subject || !topic || !batchId || !date || !startTime || !endTime) {
+    await connectToDatabase();
+
+    let resolvedBatchId = batchId;
+    if (!resolvedBatchId) {
+      const defaultBatch = await Batch.findOne().lean();
+      resolvedBatchId = defaultBatch?._id;
+    }
+
+    if (!subject || !topic || !date || !startTime || !endTime) {
       return NextResponse.json(
-        { error: "Subject, topic, batch, date, start time, and end time are required." },
+        { error: "Subject, topic, date, start time, and end time are required." },
         { status: 400 }
       );
     }
-
-    await connectToDatabase();
 
     const cleanSubject = subject.toUpperCase().replace(/[^A-Z0-9]/g, "");
     const cleanTopic = topic.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 15);
@@ -129,7 +135,7 @@ export async function POST(req: NextRequest) {
       topic,
       description: description || "",
       classLevel: classLevel || "Class 10",
-      batchId,
+      batchId: resolvedBatchId,
       teacherId: session.userId,
       date,
       startTime,

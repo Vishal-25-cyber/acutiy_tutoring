@@ -86,17 +86,33 @@ export async function POST(
         .populate("teacherId", "name email avatarUrl");
 
       if (!liveClass) {
+        let fallbackBatch = await Batch.findOne().lean();
+        if (!fallbackBatch) {
+          fallbackBatch = await Batch.create({
+            name: "7:00 PM – 8:00 PM (Batch 2)",
+            startTime: "19:00",
+            endTime: "20:00",
+            capacity: 50,
+            activeCount: 1,
+            isLocked: false,
+          });
+        }
+        const resolvedBatchId =
+          studentProfile?.batchId?._id ||
+          studentProfile?.batchId ||
+          fallbackBatch?._id;
+
         const teacherUser = await User.findOne({ role: "TEACHER" }).lean();
         const newSession = await LiveSession.create({
           title: `${studentClass} ${subjectName} Live Class`,
           topic: `${subjectName} Daily Lecture & Interactive Problem Solving`,
           subject: subjectName,
           classLevel: studentClass,
-          batchId: studentProfile?.batchId?._id || studentProfile?.batchId,
-          teacherId: teacherUser?._id || userSession.userId,
+          batchId: resolvedBatchId,
+          teacherId: userSession.role === "TEACHER" ? userSession.userId : (teacherUser?._id || userSession.userId),
           date: todayDateStr,
-          startTime: (studentProfile?.batchId as any)?.startTime || "19:00",
-          endTime: (studentProfile?.batchId as any)?.endTime || "20:00",
+          startTime: (studentProfile?.batchId as any)?.startTime || fallbackBatch?.startTime || "19:00",
+          endTime: (studentProfile?.batchId as any)?.endTime || fallbackBatch?.endTime || "20:00",
           meetingId: id,
           livekitRoomId: id,
           status: "LIVE",
