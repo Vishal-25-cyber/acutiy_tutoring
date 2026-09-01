@@ -1576,7 +1576,6 @@ export default function HomePage() {
               { id: 7, src: "/images/gallery_7.jpg", title: "Hands-on Creative Teamwork", sub: "Collaborative rainbow art and sensory craft session." },
               { id: 8, src: "/images/gallery_8.jpg", title: "Senior Board Exam Cohort", sub: "Dedicated revision, mock testing, and core subject preparation." },
               { id: 9, src: "/images/gallery_9.jpg", title: "MANTIF Friendship Circle", sub: "Lifelong student bonds, peer encouragement, and mutual support." },
-              { id: 10, src: "/images/gallery_10.jpg", tag: "Foundations", title: "Foundational Math & Handwriting", sub: "Early geometric drawing and precision handwriting practice." },
             ].map((item, idx) => (
                 <div
                   key={item.id}
@@ -1632,7 +1631,7 @@ export default function HomePage() {
               {/* Floating Top Controls (Counter Badge + Glass Close) */}
               <div className="absolute top-3 inset-x-3 flex items-center justify-between z-20 pointer-events-none">
                 <span className="text-[11px] font-black px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-white/90 border border-white/10 pointer-events-auto">
-                  {selectedGalleryIdx + 1} / 10
+                  {selectedGalleryIdx + 1} / 9
                 </span>
                 <button
                   onClick={() => setSelectedGalleryIdx(null)}
@@ -1656,7 +1655,6 @@ export default function HomePage() {
                     "/images/gallery_7.jpg",
                     "/images/gallery_8.jpg",
                     "/images/gallery_9.jpg",
-                    "/images/gallery_10.jpg",
                   ][selectedGalleryIdx]}
                   alt="Gallery Moment"
                   className="w-full h-full object-cover"
@@ -1666,7 +1664,7 @@ export default function HomePage() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setSelectedGalleryIdx((prev) => (prev !== null ? (prev === 0 ? 9 : prev - 1) : 0));
+                    setSelectedGalleryIdx((prev) => (prev !== null ? (prev === 0 ? 8 : prev - 1) : 0));
                   }}
                   className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md hover:bg-black/90 text-white flex items-center justify-center transition-all cursor-pointer border border-white/15 shadow-md hover:scale-110"
                   title="Previous photo"
@@ -1677,7 +1675,7 @@ export default function HomePage() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setSelectedGalleryIdx((prev) => (prev !== null ? (prev === 9 ? 0 : prev + 1) : 0));
+                    setSelectedGalleryIdx((prev) => (prev !== null ? (prev === 8 ? 0 : prev + 1) : 0));
                   }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md hover:bg-black/90 text-white flex items-center justify-center transition-all cursor-pointer border border-white/15 shadow-md hover:scale-110"
                   title="Next photo"
@@ -1699,7 +1697,6 @@ export default function HomePage() {
                     "Hands-on Creative Teamwork",
                     "Senior Board Exam Cohort",
                     "MANTIF Friendship Circle",
-                    "Foundational Math & Handwriting",
                   ][selectedGalleryIdx]}
                 </h3>
                 <p className="text-xs text-slate-300 leading-relaxed font-medium">
@@ -1713,7 +1710,6 @@ export default function HomePage() {
                     "Collaborative rainbow art and sensory craft session.",
                     "Dedicated revision, mock testing, and core subject preparation.",
                     "Lifelong student bonds, peer encouragement, and mutual support.",
-                    "Early geometric drawing and precision handwriting practice.",
                   ][selectedGalleryIdx]}
                 </p>
               </div>
