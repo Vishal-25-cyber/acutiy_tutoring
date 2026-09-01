@@ -11,7 +11,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getSession();
+    const session = await getSession(req);
     if (!session || (session.role !== "TEACHER" && session.role !== "ADMIN")) {
       return NextResponse.json({ error: "Unauthorized. Staff access only." }, { status: 401 });
     }

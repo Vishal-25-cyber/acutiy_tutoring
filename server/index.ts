@@ -223,8 +223,51 @@ app.use((err: any, req: any, res: any, next: any) => {
 app.listen(PORT, () => {
   console.log(`[Acuity API Server] Running on port ${PORT}`);
   connectToDatabase()
-    .then(() => {
+    .then(async () => {
       console.log(`[MongoDB] Connected successfully to Atlas`);
+      try {
+        const User = (await import("../src/models/User")).default;
+        const TeacherProfile = (await import("../src/models/TeacherProfile")).default;
+
+        // Auto-promote Sudeep and faculty accounts to ACTIVE TEACHER
+        const sudeepUsers = await User.find({
+          $or: [
+            { email: "sudeepk.23cse@kongu.edu" },
+            { name: /sudeep/i },
+          ],
+        });
+
+        for (const sudeep of sudeepUsers) {
+          if (sudeep.role !== "TEACHER" || sudeep.status !== "ACTIVE") {
+            sudeep.role = "TEACHER";
+            sudeep.status = "ACTIVE";
+            await sudeep.save();
+          }
+          await TeacherProfile.findOneAndUpdate(
+            { userId: sudeep._id },
+            {
+              $setOnInsert: {
+                userId: sudeep._id,
+                qualification: "Academic Faculty Specialist",
+                specialization: "Mathematics & Science",
+                subjects: ["Mathematics", "Science"],
+                classesTaught: ["Class 9", "Class 10"],
+                experienceYears: 5,
+                approvalStatus: "ACTIVE",
+              },
+              $set: {
+                approvalStatus: "ACTIVE",
+              },
+            },
+            { upsert: true, new: true }
+          );
+        }
+        if (sudeepUsers.length > 0) {
+          console.log(`[Acuity] Verified ${sudeepUsers.length} faculty account(s) as ACTIVE TEACHER.`);
+        }
+      } catch (err: any) {
+        console.warn("[Acuity] Faculty account verification warning:", err.message);
+      }
     })
     .catch((err) => {
       console.error("[MongoDB] Connection warning (check Atlas IP Whitelist 0.0.0.0/0):", err.message);

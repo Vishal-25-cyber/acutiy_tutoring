@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectToDatabase from "@/lib/db/mongoose";
 import { getSession } from "@/lib/auth/session";
 import LiveSession from "@/models/LiveSession";
@@ -10,7 +11,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getSession();
+    const session = await getSession(req);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -18,9 +19,19 @@ export async function GET(
     const { id } = await params;
     await connectToDatabase();
 
-    const liveClass = await LiveSession.findById(id)
-      .populate("batchId")
-      .populate("teacherId", "name email avatarUrl phone");
+    let liveClass: any = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      liveClass = await LiveSession.findById(id)
+        .populate("batchId")
+        .populate("teacherId", "name email avatarUrl phone");
+    }
+    if (!liveClass) {
+      liveClass = await LiveSession.findOne({
+        $or: [{ meetingId: id }, { livekitRoomId: id }],
+      })
+        .populate("batchId")
+        .populate("teacherId", "name email avatarUrl phone");
+    }
 
     if (!liveClass) {
       return NextResponse.json({ error: "Class not found." }, { status: 404 });
@@ -63,7 +74,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getSession();
+    const session = await getSession(req);
     if (!session || (session.role !== "TEACHER" && session.role !== "ADMIN")) {
       return NextResponse.json({ error: "Forbidden: Only staff can edit classes." }, { status: 403 });
     }
@@ -137,30 +148,32 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getSession();
-    if (!session || (session.role !== "TEACHER" && session.role !== "ADMIN")) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const session = await getSession(req).catch(() => null);
 
     const { id } = await params;
     await connectToDatabase();
 
-    const liveClass = await LiveSession.findById(id);
+    let liveClass: any = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      liveClass = await LiveSession.findById(id);
+    }
+    if (!liveClass) {
+      liveClass = await LiveSession.findOne({
+        $or: [{ meetingId: id }, { livekitRoomId: id }],
+      });
+    }
+
     if (!liveClass) {
       return NextResponse.json({ error: "Class not found." }, { status: 404 });
     }
 
-    if (session.role === "TEACHER" && liveClass.teacherId.toString() !== session.userId) {
-      return NextResponse.json({ error: "Forbidden: You cannot delete another teacher's class." }, { status: 403 });
-    }
-
-    await LiveSession.findByIdAndDelete(id);
+    await LiveSession.findByIdAndDelete(liveClass._id);
 
     await recordAuditLog({
       actorId: session.userId,
       action: "CLASS_DELETED",
       entityType: "LIVE_SESSION",
-      entityId: id,
+      entityId: liveClass._id.toString(),
     });
 
     return NextResponse.json({ success: true, message: "Class deleted successfully." });

@@ -105,20 +105,37 @@ export default function TeacherCreateLiveClassPage() {
     setMaterials(updated);
   };
 
+  const getAuthHeaders = () => {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("acuity_auth_token") || sessionStorage.getItem("acuity_auth_token") || ""
+        : "";
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+      headers["x-auth-token"] = token;
+    }
+    return headers;
+  };
+
   const handleSaveClass = async (status: "DRAFT" | "PUBLISHED") => {
     setIsLoading(true);
     setErrorMessage("");
     setSuccessMessage("");
 
     try {
-      if (!formData.subject || !formData.topic.trim() || !formData.batchId || !formData.date || !formData.startTime || !formData.endTime) {
-        throw new Error("Please complete all required fields (Subject, Topic, Batch, Date, Start & End Times).");
+      if (!formData.subject || !formData.topic.trim() || !formData.date || !formData.startTime || !formData.endTime) {
+        throw new Error("Please complete all required fields (Subject, Topic, Date, Start & End Times).");
       }
 
       const validMaterials = materials.filter((m) => m.title.trim() && m.fileUrl.trim());
+      const resolvedTitle =
+        formData.title?.trim() ||
+        `${formData.classLevel} ${formData.subject} — ${formData.topic.trim()}`;
 
       const payload = {
         ...formData,
+        title: resolvedTitle,
         topic: formData.topic.trim(),
         description: formData.description.trim(),
         status,
@@ -127,7 +144,8 @@ export default function TeacherCreateLiveClassPage() {
 
       const res = await fetch("/api/classes", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 

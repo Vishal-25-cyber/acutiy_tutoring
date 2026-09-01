@@ -47,7 +47,7 @@ function TeacherScheduleClassRow({
   };
 
   const timing = useClassLiveTimer(batchData);
-  const targetRoomId = timing.permanentRoomId || cls.livekitRoomId || cls._id;
+  const targetRoomId = cls.livekitRoomId || cls.meetingId || cls._id || timing.permanentRoomId;
 
   return (
     <div className="py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors px-1">
@@ -64,17 +64,7 @@ function TeacherScheduleClassRow({
           <span className="text-xs text-slate-400">· {cls.date}</span>
           <span className="text-xs text-slate-400">· {cls.batchId?.name || "Batch Slot"}</span>
 
-          {timing.isLiveNow ? (
-            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 animate-pulse">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-              ● Live Now ({timing.countdownText})
-            </span>
-          ) : !isCancelled && !isCompleted && !isDraft ? (
-            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-              <Clock className="w-3 h-3 text-amber-500 animate-spin" />
-              {timing.countdownText}
-            </span>
-          ) : isCompleted ? (
+          {isCompleted ? (
             <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">
               Completed
             </span>
@@ -86,7 +76,17 @@ function TeacherScheduleClassRow({
             <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
               Draft
             </span>
-          ) : null}
+          ) : (cls.status === "LIVE" || timing.isLiveNow) ? (
+            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+              ● Live Now ({timing.countdownText})
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+              <Clock className="w-3 h-3 text-amber-500 animate-spin" />
+              {timing.countdownText}
+            </span>
+          )}
         </div>
 
         <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100">
@@ -101,7 +101,7 @@ function TeacherScheduleClassRow({
       {/* Actions */}
       <div className="flex items-center gap-2 shrink-0 flex-wrap">
         {!isCancelled && !isDraft && (
-          timing.canJoin ? (
+          !isCompleted ? (
             <Link href={`/classroom/${targetRoomId}`}>
               <button
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all cursor-pointer shadow-md shadow-emerald-500/25 animate-pulse"
@@ -110,22 +110,13 @@ function TeacherScheduleClassRow({
                 <span>Enter Live Class</span>
               </button>
             </Link>
-          ) : isCompleted ? (
+          ) : (
             <button
               disabled
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-200 dark:border-slate-700"
             >
               <Clock className="w-3.5 h-3.5" />
               <span>Concluded</span>
-            </button>
-          ) : (
-            <button
-              disabled
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-200 dark:border-slate-700"
-              title={timing.detailedCountdown}
-            >
-              <Clock className="w-3.5 h-3.5" />
-              <span>Opens at {cls.startTime} ({timing.countdownText})</span>
             </button>
           )
         )}
@@ -163,22 +154,20 @@ function TeacherScheduleClassRow({
         {!isCancelled && !isCompleted && !isDraft && (
           <button
             onClick={() => setCancelModalClass(cls)}
-            className="px-2.5 py-1.5 rounded-xl text-xs font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-            title="Cancel Class"
+            className="px-2.5 py-1.5 rounded-xl text-xs font-medium text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors cursor-pointer"
+            title="Cancel Class Session"
           >
             <Ban className="w-3.5 h-3.5" />
           </button>
         )}
 
-        {isDraft && (
-          <button
-            onClick={() => setDeleteModalClass(cls)}
-            className="px-2.5 py-1.5 rounded-xl text-xs font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-            title="Delete Draft"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
-        )}
+        <button
+          onClick={() => setDeleteModalClass(cls)}
+          className="px-2.5 py-1.5 rounded-xl text-xs font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+          title="Delete Class Permanently"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
       </div>
     </div>
   );
@@ -194,10 +183,26 @@ export default function TeacherSchedulePage() {
   const [deleteModalClass, setDeleteModalClass] = useState<any>(null);
   const [swapModalClass, setSwapModalClass] = useState<any>(null);
 
+  const getAuthHeaders = () => {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("acuity_auth_token") || sessionStorage.getItem("acuity_auth_token") || ""
+        : "";
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+      headers["x-auth-token"] = token;
+    }
+    return headers;
+  };
+
   const loadClasses = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch("/api/classes");
+      const res = await fetch("/api/classes", {
+        headers: getAuthHeaders(),
+        credentials: "include",
+      });
       const data = await res.json();
       if (data.classes) {
         setClasses(data.classes);
@@ -215,7 +220,11 @@ export default function TeacherSchedulePage() {
 
   const handlePublishClass = async (classId: string) => {
     try {
-      const res = await fetch(`/api/classes/${classId}/publish`, { method: "PUT" });
+      const res = await fetch(`/api/classes/${classId}/publish`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        credentials: "include",
+      });
       const data = await res.json();
       if (res.ok) {
         setActionMessage("Class published! Students in this batch have been notified.");
@@ -230,30 +239,52 @@ export default function TeacherSchedulePage() {
   };
 
   const handleCancelClass = async (classId: string) => {
+    if (!classId) return;
     try {
-      const res = await fetch(`/api/classes/${classId}/cancel`, { method: "PUT" });
+      const res = await fetch(`/api/classes/${classId}/cancel`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setCancelModalClass(null);
+        setClasses((prev) =>
+          prev.map((c) => (c._id === classId ? { ...c, status: "CANCELLED" } : c))
+        );
         setActionMessage("Class session cancelled successfully.");
         setTimeout(() => setActionMessage(""), 4000);
         loadClasses();
+      } else {
+        alert(data.error || "Failed to cancel class.");
       }
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error("Cancel class error:", e);
+      alert("Error cancelling class: " + (e.message || "Network error"));
     }
   };
 
   const handleDeleteClass = async (classId: string) => {
+    if (!classId) return;
     try {
-      const res = await fetch(`/api/classes/${classId}`, { method: "DELETE" });
+      const res = await fetch(`/api/classes/${classId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setDeleteModalClass(null);
-        setActionMessage("Class draft deleted permanently.");
+        setClasses((prev) => prev.filter((c) => c._id !== classId));
+        setActionMessage("Class deleted permanently.");
         setTimeout(() => setActionMessage(""), 4000);
         loadClasses();
+      } else {
+        alert(data.error || "Failed to delete class.");
       }
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error("Delete class error:", e);
+      alert("Error deleting class: " + (e.message || "Network error"));
     }
   };
 
@@ -402,23 +433,23 @@ export default function TeacherSchedulePage() {
         </Modal>
       )}
 
-      {/* Delete Draft Modal */}
+      {/* Delete Class Modal */}
       {deleteModalClass && (
         <Modal
           isOpen={!!deleteModalClass}
           onClose={() => setDeleteModalClass(null)}
-          title="Delete Draft Class"
+          title="Delete Class Session"
         >
           <div className="space-y-4 text-xs">
             <p className="text-slate-600 dark:text-slate-400">
-              Are you sure you want to permanently delete this draft class?
+              Are you sure you want to permanently delete <strong>{deleteModalClass.title || "this class"}</strong>? It will be removed from your schedule and the student timetable.
             </p>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" size="sm" onClick={() => setDeleteModalClass(null)}>
                 Cancel
               </Button>
               <Button variant="destructive" size="sm" onClick={() => handleDeleteClass(deleteModalClass._id)}>
-                Delete Draft
+                Delete Class
               </Button>
             </div>
           </div>

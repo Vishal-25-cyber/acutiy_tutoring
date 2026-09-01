@@ -230,10 +230,17 @@ export default function HomePage() {
         setErr(data.error || "Invalid login credentials.");
         return;
       }
+      if (data.token && typeof window !== "undefined") {
+        try {
+          localStorage.setItem("acuity_auth_token", data.token);
+          sessionStorage.setItem("acuity_auth_token", data.token);
+        } catch {}
+      }
       setOk("Login verified. Redirecting…");
       setTimeout(() => {
-        if (loginRole === "STUDENT") router.push("/student/dashboard");
-        else if (loginRole === "TEACHER") router.push("/teacher/dashboard");
+        const resolvedRole = data.user?.role || loginRole;
+        if (resolvedRole === "TEACHER") router.push("/teacher/dashboard");
+        else if (resolvedRole === "STUDENT") router.push("/student/dashboard");
         else router.push("/admin/dashboard");
       }, 300);
     } catch (e: any) {

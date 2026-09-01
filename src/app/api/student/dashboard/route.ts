@@ -70,7 +70,7 @@ export async function GET() {
           {
             $or: [
               { status: "LIVE" },
-              { date: todayDateStr },
+              { date: todayDateStr, status: { $in: ["PUBLISHED", "SCHEDULED", "LIVE"] } },
             ],
           },
         ],

@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectToDatabase from "@/lib/db/mongoose";
 import { getSession } from "@/lib/auth/session";
 import LiveSession from "@/models/LiveSession";
 import { recordAuditLog } from "@/lib/audit";
+
+export const dynamic = "force-dynamic";
 
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getSession();
+    const session = await getSession(req);
     if (!session || (session.role !== "TEACHER" && session.role !== "ADMIN")) {
       return NextResponse.json({ error: "Unauthorized. Staff access only." }, { status: 401 });
     }
@@ -17,7 +20,19 @@ export async function PUT(
     const { id } = await params;
     await connectToDatabase();
 
-    const liveClass = await LiveSession.findById(id);
+    let liveClass: any = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      liveClass = await LiveSession.findById(id);
+    }
+    if (!liveClass) {
+      liveClass = await LiveSession.findOne({
+        $or: [{ meetingId: id }, { livekitRoomId: id }],
+      });
+    }
+    if (!liveClass) {
+      liveClass = await LiveSession.findOne({ status: "LIVE" });
+    }
+
     if (!liveClass) {
       return NextResponse.json({ error: "Class not found." }, { status: 404 });
     }
@@ -25,6 +40,20 @@ export async function PUT(
     liveClass.status = "COMPLETED";
     liveClass.actualEndTime = new Date();
     await liveClass.save();
+
+    // Signal in-memory WebRTC rooms to terminate live calls instantly
+    try {
+      const { getRoom } = await import("../signal/route");
+      const r1 = getRoom(id);
+      r1.isEnded = true;
+      r1.signals.push({ from: session.userId, type: "CLASS_ENDED", timestamp: Date.now() });
+
+      if (liveClass.livekitRoomId && liveClass.livekitRoomId !== id) {
+        const r2 = getRoom(liveClass.livekitRoomId);
+        r2.isEnded = true;
+        r2.signals.push({ from: session.userId, type: "CLASS_ENDED", timestamp: Date.now() });
+      }
+    } catch {}
 
     // Automatically increment classes conducted for Teacher in StaffAttendance
     try {
@@ -62,7 +91,7 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      message: "Class session marked as COMPLETED.",
+      message: "Class session marked as COMPLETED and permanently closed.",
       class: liveClass,
     });
   } catch (error: any) {

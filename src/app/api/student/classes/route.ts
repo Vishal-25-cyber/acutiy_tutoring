@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db/mongoose";
 import { getSession } from "@/lib/auth/session";
 import StudentProfile from "@/models/StudentProfile";
@@ -10,9 +10,9 @@ export const dynamic = "force-dynamic";
 
 const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const session = await getSession();
+    const session = await getSession(req);
     if (!session || session.role !== "STUDENT") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -41,23 +41,42 @@ export async function GET() {
     }
 
     const now = new Date();
-    const currentDayName = DAYS_OF_WEEK[now.getDay()];
+    const dayFormatter = new Intl.DateTimeFormat("en-US", { weekday: "long", timeZone: "Asia/Kolkata" });
+    const currentDayName = dayFormatter.format(now);
+    const todayDateStr = now.toISOString().split("T")[0];
+
+    // Robust auto-cleanup: Any session that was live for >60 mins or from past days or generic session is auto-concluded
+    try {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      await LiveSession.updateMany(
+        {
+          status: "LIVE",
+          $or: [
+            { actualStartTime: { $lt: oneHourAgo } },
+            { updatedAt: { $lt: oneHourAgo } },
+            { date: { $lt: todayDateStr } },
+            { title: /General Live Session/i },
+          ],
+        },
+        {
+          $set: { status: "COMPLETED", actualEndTime: now },
+        }
+      );
+    } catch (cleanErr) {
+      console.warn("Auto-conclude stale classes error:", cleanErr);
+    }
 
     const batchName = (profile.batchId as any)?.name || "7:00 PM – 8:00 PM";
     const batchStart = (profile.batchId as any)?.startTime || "19:00";
     const batchEnd = (profile.batchId as any)?.endTime || "20:00";
-
     const batchId = (profile.batchId as any)?._id || profile.batchId;
 
-    const todayDateStr = now.toISOString().split("T")[0];
-
-    // Query published/scheduled/live/completed classes for this student's batch or class level
+    // Query published/scheduled/live/completed classes strictly for this student's batch or class level
     const sessionQuery: any = {
       status: { $in: ["PUBLISHED", "SCHEDULED", "LIVE", "COMPLETED"] },
       $or: [
         { classLevel: profile.currentClass },
         { batchId: batchId || null },
-        { status: "LIVE" },
       ],
     };
 
@@ -70,8 +89,13 @@ export async function GET() {
     const dbClasses = sortClassesByPriority(rawClasses as any[]);
 
     const todayClasses = dbClasses.filter(
-      (c: any) => c.status === "LIVE" || c.date === todayDateStr
+      (c: any) =>
+        c.status === "LIVE" ||
+        (c.date === todayDateStr && (c.status === "SCHEDULED" || c.status === "PUBLISHED"))
     );
+
+    const hasLiveClassNow = dbClasses.some((c: any) => c.status === "LIVE");
+    const activeLiveClass = dbClasses.find((c: any) => c.status === "LIVE");
 
     const weeklySchedule = [
       {
@@ -82,8 +106,8 @@ export async function GET() {
         subject: "Mathematics",
         topic: "Quadratic Equations — Discriminant & Real Roots Formula",
         faculty: "Dr. Sarah Jenkins",
-        status: currentDayName === "Monday" ? "LIVE" : "SCHEDULED",
-        roomId: "acuity-maths-live",
+        status: currentDayName === "Monday" && hasLiveClassNow ? "LIVE" : "SCHEDULED",
+        roomId: activeLiveClass?.livekitRoomId || "acuity-maths-live",
       },
       {
         day: "Tuesday",
@@ -93,8 +117,8 @@ export async function GET() {
         subject: "Science",
         topic: "Light: Reflection & Refraction — Ray Diagrams Exemplar",
         faculty: "Prof. Rajesh Kumar",
-        status: currentDayName === "Tuesday" ? "LIVE" : "SCHEDULED",
-        roomId: "acuity-science-live",
+        status: currentDayName === "Tuesday" && hasLiveClassNow ? "LIVE" : "SCHEDULED",
+        roomId: activeLiveClass?.livekitRoomId || "acuity-science-live",
       },
       {
         day: "Wednesday",
@@ -104,8 +128,8 @@ export async function GET() {
         subject: "Mathematics",
         topic: "Arithmetic Progressions — nth Term & Sum of Terms",
         faculty: "Dr. Sarah Jenkins",
-        status: currentDayName === "Wednesday" ? "LIVE" : "SCHEDULED",
-        roomId: "acuity-maths-live",
+        status: currentDayName === "Wednesday" && hasLiveClassNow ? "LIVE" : "SCHEDULED",
+        roomId: activeLiveClass?.livekitRoomId || "acuity-maths-live",
       },
       {
         day: "Thursday",
@@ -115,8 +139,8 @@ export async function GET() {
         subject: "English",
         topic: "Analytical Paragraph & Advanced Grammar Clauses",
         faculty: "Ms. Anita Desai",
-        status: currentDayName === "Thursday" ? "LIVE" : "SCHEDULED",
-        roomId: "acuity-english-live",
+        status: currentDayName === "Thursday" && hasLiveClassNow ? "LIVE" : "SCHEDULED",
+        roomId: activeLiveClass?.livekitRoomId || "acuity-english-live",
       },
       {
         day: "Friday",
@@ -126,8 +150,8 @@ export async function GET() {
         subject: "Social Science",
         topic: "Nationalism in India / Life Processes Core Concepts",
         faculty: "Prof. Rajesh Kumar",
-        status: currentDayName === "Friday" ? "LIVE" : "SCHEDULED",
-        roomId: "acuity-social-live",
+        status: currentDayName === "Friday" && hasLiveClassNow ? "LIVE" : "SCHEDULED",
+        roomId: activeLiveClass?.livekitRoomId || "acuity-social-live",
       },
       {
         day: "Saturday",
@@ -137,8 +161,8 @@ export async function GET() {
         subject: "Revision & Doubts",
         topic: "Weekly Test Analysis, Doubt Resolution & Worksheet Solving",
         faculty: "Senior Academic Faculty",
-        status: currentDayName === "Saturday" ? "LIVE" : "SCHEDULED",
-        roomId: "acuity-revision-live",
+        status: currentDayName === "Saturday" && hasLiveClassNow ? "LIVE" : "SCHEDULED",
+        roomId: activeLiveClass?.livekitRoomId || "acuity-revision-live",
       },
     ];
 
@@ -160,7 +184,7 @@ export async function GET() {
       },
     });
   } catch (error: any) {
-    console.error("Student Classes API Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("GET /api/student/classes error:", error);
+    return NextResponse.json({ error: error.message || "Failed to fetch classes" }, { status: 500 });
   }
 }

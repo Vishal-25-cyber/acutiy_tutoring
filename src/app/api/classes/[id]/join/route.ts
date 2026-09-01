@@ -16,7 +16,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userSession = await getSession();
+    const userSession = await getSession(req);
     if (!userSession) {
       return NextResponse.json({ error: "Unauthorized. Please log in to join the class." }, { status: 401 });
     }
@@ -54,33 +54,31 @@ export async function POST(
         .populate("teacherId", "name email avatarUrl");
     }
 
-    // 2. If not found by ObjectId, search by meetingId or livekitRoomId matching this class level
+    // 2. Search by meetingId or livekitRoomId
     if (!liveClass) {
       liveClass = await LiveSession.findOne({
         $or: [{ meetingId: id }, { livekitRoomId: id }],
-        ...(userSession.role === "STUDENT" ? { classLevel: studentClass } : {}),
       })
         .populate("batchId")
         .populate("teacherId", "name email avatarUrl");
     }
 
-    // 3. If still not found, handle slug/room alias by creating or linking today's live session
+    // 3. Fallback search / creation for batch alias
     if (!liveClass) {
       const now = new Date();
       const todayDateStr = now.toISOString().split("T")[0];
 
-      let subjectName = "General Live Session";
+      let subjectName = "Mathematics";
       if (id.toLowerCase().includes("math")) subjectName = "Mathematics";
       else if (id.toLowerCase().includes("science")) subjectName = "Science";
       else if (id.toLowerCase().includes("english")) subjectName = "English";
       else if (id.toLowerCase().includes("social")) subjectName = "Social Science";
       else if (id.toLowerCase().includes("revision")) subjectName = "Revision & Doubts";
 
-      // Look for existing session today with this subject and class level
       liveClass = await LiveSession.findOne({
         date: todayDateStr,
-        subject: subjectName,
         classLevel: studentClass,
+        status: { $ne: "CANCELLED" },
       })
         .populate("batchId")
         .populate("teacherId", "name email avatarUrl");
@@ -102,7 +100,7 @@ export async function POST(
           studentProfile?.batchId ||
           fallbackBatch?._id;
 
-        const teacherUser = await User.findOne({ role: "TEACHER" }).lean();
+        const teacherUser = await User.findOne({ role: { $in: ["TEACHER", "ADMIN"] } }).lean();
         const newSession = await LiveSession.create({
           title: `${studentClass} ${subjectName} Live Class`,
           topic: `${subjectName} Daily Lecture & Interactive Problem Solving`,
@@ -111,8 +109,8 @@ export async function POST(
           batchId: resolvedBatchId,
           teacherId: userSession.role === "TEACHER" ? userSession.userId : (teacherUser?._id || userSession.userId),
           date: todayDateStr,
-          startTime: (studentProfile?.batchId as any)?.startTime || fallbackBatch?.startTime || "19:00",
-          endTime: (studentProfile?.batchId as any)?.endTime || fallbackBatch?.endTime || "20:00",
+          startTime: (studentProfile?.batchId as any)?.startTime || fallbackBatch?.startTime || "18:00",
+          endTime: (studentProfile?.batchId as any)?.endTime || fallbackBatch?.endTime || "23:59",
           meetingId: id,
           livekitRoomId: id,
           status: "LIVE",
@@ -129,93 +127,33 @@ export async function POST(
       return NextResponse.json({ error: "Class session not found." }, { status: 404 });
     }
 
+    const isTeacher = userSession.role === "TEACHER" || userSession.role === "ADMIN";
+
+    // Re-open if teacher or active session today
+    if (liveClass.status === "COMPLETED") {
+      if (isTeacher) {
+        liveClass.status = "LIVE";
+        liveClass.actualStartTime = new Date();
+        await liveClass.save();
+      } else {
+        const now = new Date();
+        const todayDateStr = now.toISOString().split("T")[0];
+        if (liveClass.date === todayDateStr) {
+          liveClass.status = "LIVE";
+          await liveClass.save();
+        }
+      }
+    }
+
     if (liveClass.status === "CANCELLED") {
       return NextResponse.json(
-        { error: "This class has been cancelled by the teacher." },
-        { status: 400 }
+        { error: "This class has been cancelled by the faculty instructor." },
+        { status: 403 }
       );
     }
 
-    const teacherObj = liveClass.teacherId as any;
-    const isTeacher =
-      userSession.role === "TEACHER" &&
-      teacherObj &&
-      (teacherObj._id?.toString() === userSession.userId ||
-        teacherObj.id?.toString() === userSession.userId ||
-        teacherObj.toString() === userSession.userId);
-    const isAdmin = userSession.role === "ADMIN";
-
-    // 4. STUDENT 5-MINUTE EARLY JOIN & AUTHORIZATION VALIDATION
-    if (userSession.role === "STUDENT") {
-      if (liveClass.status === "DRAFT") {
-        return NextResponse.json(
-          { error: "This class is currently in draft and not yet available to students." },
-          { status: 403 }
-        );
-      }
-
-      // Check class level if specified (and if it wasn't opened via generic room slug)
-      if (
-        mongoose.Types.ObjectId.isValid(id) &&
-        liveClass.classLevel &&
-        studentProfile?.currentClass &&
-        studentProfile.currentClass !== liveClass.classLevel
-      ) {
-        return NextResponse.json(
-          {
-            error: `Class Access Denied: This session is reserved for ${liveClass.classLevel}. You are enrolled in ${studentProfile.currentClass}.`,
-          },
-          { status: 403 }
-        );
-      }
-
-      // Check 5-minute early window & session timing
-      const now = new Date();
-      let canEnterEarly = true;
-
-      if (liveClass.startTime && liveClass.date) {
-        const [startH, startM] = liveClass.startTime.split(":").map(Number);
-        const classDate = new Date(liveClass.date);
-        const scheduledStartDate = new Date(classDate);
-        scheduledStartDate.setHours(startH, startM, 0, 0);
-
-        // 5 minutes before scheduled start time
-        const fiveMinsBefore = new Date(scheduledStartDate.getTime() - 5 * 60 * 1000);
-
-        // End time
-        const [endH, endM] = (liveClass.endTime || "23:59").split(":").map(Number);
-        const scheduledEndDate = new Date(classDate);
-        scheduledEndDate.setHours(endH, endM + (liveClass.gracePeriodMinutes || 30), 0, 0);
-
-        // If today and within or after the 5-min mark, allow joining
-        if (now < fiveMinsBefore && liveClass.status !== "LIVE") {
-          canEnterEarly = false;
-        }
-      }
-
-      if (!canEnterEarly && liveClass.status !== "LIVE") {
-        return NextResponse.json(
-          {
-            error: `Classroom opens 5 minutes before scheduled start time (${liveClass.startTime}). Please join 5 mins before.`,
-            scheduledStartTime: liveClass.startTime,
-          },
-          { status: 400 }
-        );
-      }
-
-      if (liveClass.status === "COMPLETED") {
-        return NextResponse.json(
-          {
-            error: "This class session has already concluded. You can review the recording and study materials.",
-            completed: true,
-          },
-          { status: 400 }
-        );
-      }
-    }
-
-    // If teacher joins and session was SCHEDULED/PUBLISHED, update to LIVE
-    if ((isTeacher || isAdmin) && (liveClass.status === "PUBLISHED" || liveClass.status === "SCHEDULED")) {
+    // Teacher joining automatically starts live class
+    if (isTeacher && (liveClass.status === "PUBLISHED" || liveClass.status === "SCHEDULED")) {
       liveClass.status = "LIVE";
       if (!liveClass.actualStartTime) {
         liveClass.actualStartTime = new Date();
@@ -223,48 +161,73 @@ export async function POST(
       await liveClass.save();
     }
 
-    const roomName = liveClass.meetingId || liveClass.livekitRoomId || `MANTIF-CLASS-${liveClass._id}`;
-    const jitsiDomain = process.env.NEXT_PUBLIC_JITSI_DOMAIN || "meet.jit.si";
+    // Student early entry validation (IST-aware)
+    if (userSession.role === "STUDENT" && liveClass.status !== "LIVE") {
+      const now = new Date();
+      const istFormatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Kolkata",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: false,
+      });
+      const istParts = istFormatter.formatToParts(now);
+      const istHour = parseInt(istParts.find((p) => p.type === "hour")?.value || "0", 10);
+      const istMinute = parseInt(istParts.find((p) => p.type === "minute")?.value || "0", 10);
+      const currentMinutes = istHour * 60 + istMinute;
 
-    await recordAuditLog({
-      actorId: userSession.userId,
-      action: "CLASS_ROOM_ENTERED",
-      entityType: "LIVE_SESSION",
-      entityId: liveClass._id.toString(),
-      details: { role: userSession.role, roomName },
-    });
+      const [sh = "0", sm = "0"] = (liveClass.startTime || "00:00").split(":");
+      const [eh = "23", em = "59"] = (liveClass.endTime || "23:59").split(":");
+      const startMin = parseInt(sh, 10) * 60 + parseInt(sm, 10);
+      const endMin = parseInt(eh, 10) * 60 + parseInt(em, 10);
+
+      // If scheduled time hasn't started yet and more than 15 mins away:
+      if (currentMinutes < (startMin - 15)) {
+        return NextResponse.json(
+          {
+            error: `Classroom opens 15 minutes before scheduled start time (${liveClass.startTime} IST). Please join during session window.`,
+            scheduledStartTime: liveClass.startTime,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    try {
+      await recordAuditLog({
+        actorId: userSession.userId,
+        action: "CLASS_ENTERED",
+        entityType: "LIVE_SESSION",
+        entityId: liveClass._id.toString(),
+        details: { role: userSession.role, name: userSession.name },
+      });
+    } catch {}
 
     return NextResponse.json({
       success: true,
-      roomName,
-      meetingId: roomName,
-      jitsiDomain,
+      class: {
+        id: liveClass._id.toString(),
+        title: liveClass.title,
+        subject: liveClass.subject,
+        topic: liveClass.topic,
+        classLevel: liveClass.classLevel,
+        startTime: liveClass.startTime,
+        endTime: liveClass.endTime,
+        meetingId: liveClass.meetingId,
+        livekitRoomId: liveClass.livekitRoomId || liveClass.meetingId,
+        status: liveClass.status,
+        teacher: liveClass.teacherId,
+        materials: liveClass.materials || [],
+      },
       user: {
         id: userSession.userId,
         name: userSession.name,
         email: userSession.email,
         role: userSession.role,
-        isTeacher: Boolean(isTeacher || isAdmin),
-      },
-      class: {
-        id: liveClass._id,
-        title: liveClass.title,
-        subject: liveClass.subject,
-        topic: liveClass.topic,
-        description: liveClass.description,
-        classLevel: liveClass.classLevel,
-        date: liveClass.date,
-        startTime: liveClass.startTime,
-        endTime: liveClass.endTime,
-        status: liveClass.status,
-        teacher: liveClass.teacherId,
-        materials: liveClass.materials,
-        gracePeriodMinutes: liveClass.gracePeriodMinutes,
-        attendanceThresholdPercent: liveClass.attendanceThresholdPercent || 75,
+        isTeacher,
       },
     });
   } catch (error: any) {
-    console.error("POST /api/classes/[id]/join error:", error);
-    return NextResponse.json({ error: error.message || "Failed to enter classroom." }, { status: 500 });
+    console.error("Join Class API Error:", error);
+    return NextResponse.json({ error: error.message || "Failed to join class." }, { status: 500 });
   }
 }

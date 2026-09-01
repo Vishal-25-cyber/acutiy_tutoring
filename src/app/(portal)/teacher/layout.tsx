@@ -1,16 +1,35 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Outlet } from "react-router-dom";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { PortalSidebar } from "@/components/layout/PortalSidebar";
+import { useFastFetch } from "@/lib/api-cache";
 
 export default function TeacherLayout({ children }: { children?: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const isClassroom = pathname.includes("/classroom/");
+
+  // Verify role with /api/auth/me
+  const { data: authData } = useFastFetch("/api/auth/me");
+
+  useEffect(() => {
+    if (authData?.user) {
+      if (authData.user.role === "STUDENT") {
+        router.replace("/student/dashboard");
+      } else if (authData.user.role === "ADMIN") {
+        router.replace("/admin/dashboard");
+      }
+    }
+  }, [authData, router]);
 
   if (isClassroom) {
     return <>{children || <Outlet />}</>;
+  }
+
+  if (authData?.user && authData.user.role !== "TEACHER" && authData.user.role !== "ADMIN") {
+    return null;
   }
 
   return (

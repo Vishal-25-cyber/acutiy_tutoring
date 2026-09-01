@@ -19,14 +19,28 @@ import { useFastFetch } from "@/lib/api-cache";
 import { downloadTimetableDoc } from "@/lib/download";
 import { useClassLiveTimer } from "@/lib/use-class-timer";
 
+const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
 export default function StudentClassesPage() {
   const { data } = useFastFetch("/api/student/classes");
   const [isDownloading, setIsDownloading] = React.useState(false);
   const [isDownloaded, setIsDownloaded] = React.useState(false);
 
+  // Live real-time current day from browser's local timezone
+  const [liveDay, setLiveDay] = React.useState<string>(() => {
+    return typeof window !== "undefined" ? DAYS_OF_WEEK[new Date().getDay()] : "Tuesday";
+  });
+
+  React.useEffect(() => {
+    const updateDay = () => setLiveDay(DAYS_OF_WEEK[new Date().getDay()]);
+    updateDay();
+    const interval = setInterval(updateDay, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const currentClass = data?.currentClass || "Class 10";
   const board = data?.board || "CBSE";
-  const currentDay = data?.currentDay || "Monday";
+  const currentDay = liveDay || data?.currentDay || "Tuesday";
   const batch = data?.batch;
   const batchName = batch?.name || "7:00 PM – 8:00 PM";
 
@@ -40,7 +54,7 @@ export default function StudentClassesPage() {
       subject: "Mathematics",
       topic: "Quadratic Equations — Discriminant & Real Roots Formula",
       faculty: "Dr. Sarah Jenkins",
-      status: currentDay.toLowerCase() === "monday" ? "LIVE" : "SCHEDULED",
+      status: "SCHEDULED",
       roomId: timing.permanentRoomId,
       description: "Step-by-step problem solving on quadratic equations and discriminant analysis.",
     },
@@ -50,7 +64,7 @@ export default function StudentClassesPage() {
       subject: "Science",
       topic: "Light: Reflection & Refraction — Ray Diagrams Exemplar",
       faculty: "Prof. Rajesh Kumar",
-      status: currentDay.toLowerCase() === "tuesday" ? "LIVE" : "SCHEDULED",
+      status: "SCHEDULED",
       roomId: timing.permanentRoomId,
       description: "Concave and convex mirrors ray tracing with NCERT exemplar problems.",
     },
@@ -60,7 +74,7 @@ export default function StudentClassesPage() {
       subject: "Mathematics",
       topic: "Arithmetic Progressions — nth Term & Sum of Terms",
       faculty: "Dr. Sarah Jenkins",
-      status: currentDay.toLowerCase() === "wednesday" ? "LIVE" : "SCHEDULED",
+      status: "SCHEDULED",
       roomId: timing.permanentRoomId,
       description: "Derivations of Sn formulas and finding nth terms in arithmetic series.",
     },
@@ -70,7 +84,7 @@ export default function StudentClassesPage() {
       subject: "English",
       topic: "Analytical Paragraph & Advanced Grammar Clauses",
       faculty: "Ms. Anita Desai",
-      status: currentDay.toLowerCase() === "thursday" ? "LIVE" : "SCHEDULED",
+      status: "SCHEDULED",
       roomId: timing.permanentRoomId,
       description: "High-scoring writing techniques and active/passive voice application.",
     },
@@ -80,7 +94,7 @@ export default function StudentClassesPage() {
       subject: "Social Science",
       topic: "Nationalism in India / Life Processes Core Concepts",
       faculty: "Prof. Rajesh Kumar",
-      status: currentDay.toLowerCase() === "friday" ? "LIVE" : "SCHEDULED",
+      status: "SCHEDULED",
       roomId: timing.permanentRoomId,
       description: "Timeline of the freedom movement and important map markers.",
     },
@@ -90,42 +104,89 @@ export default function StudentClassesPage() {
       subject: "Revision & Doubts",
       topic: "Weekly Test Analysis, Doubt Resolution & Worksheet Solving",
       faculty: "Senior Academic Faculty",
-      status: currentDay.toLowerCase() === "saturday" ? "LIVE" : "SCHEDULED",
+      status: "SCHEDULED",
       roomId: timing.permanentRoomId,
       description: "Comprehensive review of the week's curriculum with live doubt solving.",
     },
   ];
 
-  const weeklySchedule =
+  const todayDateStr = new Date().toISOString().split("T")[0];
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const isWithinClassWindow = (c: any) => {
+    if (!c) return false;
+    if (c.status === "LIVE") return true;
+    if (c.status === "PUBLISHED" || c.status === "SCHEDULED") {
+      const [sh = "0", sm = "0"] = (c.startTime || "").split(":");
+      const [eh = "23", em = "59"] = (c.endTime || "").split(":");
+      const startMin = parseInt(sh, 10) * 60 + parseInt(sm, 10);
+      const endMin = parseInt(eh, 10) * 60 + parseInt(em, 10);
+      const isOvernight = endMin < startMin;
+      const effectiveEndMin = isOvernight ? endMin + 1440 : endMin;
+      const effectiveCurrentMin =
+        isOvernight && currentMinutes < startMin - 15
+          ? currentMinutes + 1440
+          : currentMinutes;
+      return effectiveCurrentMin >= (startMin - 15) && effectiveCurrentMin <= effectiveEndMin;
+    }
+    return false;
+  };
+
+  const todayDbClass = data?.classes?.find(
+    (c: any) =>
+      c.status !== "CANCELLED" &&
+      c.status !== "COMPLETED" &&
+      (!c.date || c.date === todayDateStr)
+  );
+
+  const liveClassDoc =
+    data?.classes?.find((c: any) => c.status === "LIVE") ||
+    data?.classes?.find((c: any) => (!c.date || c.date === todayDateStr) && isWithinClassWindow(c));
+
+  const isClassCurrentlyLive = Boolean(liveClassDoc) || Boolean(todayDbClass);
+  const activeDoc = liveClassDoc || todayDbClass;
+  const liveOrTodayDbClass = activeDoc;
+
+  const weeklySchedule = (
     Array.isArray(data?.weeklySchedule) && data.weeklySchedule.length > 0
       ? data.weeklySchedule.map((s: any) => ({ ...s, roomId: timing.permanentRoomId }))
-      : defaultWeeklySchedule;
+      : defaultWeeklySchedule
+  ).map((item: any) => {
+    const isToday = currentDay.toLowerCase() === item.day.toLowerCase() || liveDay.toLowerCase() === item.day.toLowerCase();
+    if (isToday && activeDoc) {
+      return {
+        ...item,
+        subject: activeDoc.subject || item.subject,
+        topic: activeDoc.topic || activeDoc.title || item.topic,
+        faculty: (typeof activeDoc.teacherId === "object" && activeDoc.teacherId?.name) || item.faculty,
+        startTime: activeDoc.startTime || item.startTime,
+        endTime: activeDoc.endTime || item.endTime,
+        time: activeDoc.startTime && activeDoc.endTime ? `${activeDoc.startTime} – ${activeDoc.endTime}` : item.time,
+        status: isClassCurrentlyLive ? "LIVE" : "SCHEDULED",
+        roomId: activeDoc.livekitRoomId || activeDoc.meetingId || timing.permanentRoomId,
+      };
+    }
+    return item;
+  });
 
   const todayScheduleItem =
     weeklySchedule.find((s: any) => s.day.toLowerCase() === currentDay.toLowerCase()) ||
-    weeklySchedule[0];
+    weeklySchedule.find((s: any) => s.day.toLowerCase() === liveDay.toLowerCase()) ||
+    weeklySchedule[1];
 
-  const liveOrTodayDbClass =
-    data?.classes?.find((c: any) => c.status === "LIVE") ||
-    data?.classes?.find(
-      (c: any) =>
-        c.date === new Date().toISOString().split("T")[0] &&
-        (c.status === "PUBLISHED" || c.status === "SCHEDULED")
-    );
-
-  const activeSubject = liveOrTodayDbClass?.subject || todayScheduleItem?.subject || "Mathematics";
+  const activeSubject = activeDoc?.subject || todayScheduleItem?.subject || "Mathematics";
   const activeTopic =
-    liveOrTodayDbClass?.topic ||
-    liveOrTodayDbClass?.title ||
+    activeDoc?.topic ||
+    activeDoc?.title ||
     todayScheduleItem?.topic ||
     "Quadratic Equations";
   const activeFaculty =
-    (typeof liveOrTodayDbClass?.teacherId === "object" && liveOrTodayDbClass?.teacherId?.name) ||
+    (typeof activeDoc?.teacherId === "object" && activeDoc?.teacherId?.name) ||
     todayScheduleItem?.faculty ||
     "Faculty Specialist";
   const activeRoomId =
-    liveOrTodayDbClass?.livekitRoomId || liveOrTodayDbClass?.meetingId || timing.permanentRoomId;
-  const isClassCurrentlyLive = liveOrTodayDbClass?.status === "LIVE" || timing.canJoin;
+    activeDoc?.livekitRoomId || activeDoc?.meetingId || todayScheduleItem?.roomId || timing.permanentRoomId;
 
   const getSubjectAccent = (subject?: string) => {
     switch (subject?.toLowerCase()) {
