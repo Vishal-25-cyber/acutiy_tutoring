@@ -80,13 +80,13 @@ export async function downloadMaterial(material: DownloadableMaterial): Promise<
       return true;
     }
 
-    // 2. Generate a structured, printable Acuity Study Notes PDF
+    // 2. Generate a structured, printable Mantif Study Notes PDF
     const facultyName =
       typeof material.uploadedBy === "object" && material.uploadedBy?.name
         ? material.uploadedBy.name
         : typeof material.uploadedBy === "string"
         ? material.uploadedBy
-        : "Acuity Senior Faculty Team";
+        : "Mantif Senior Faculty Team";
 
     const dateStr = material.createdAt
       ? new Date(material.createdAt).toLocaleDateString("en-IN", {
@@ -113,7 +113,7 @@ export async function downloadMaterial(material: DownloadableMaterial): Promise<
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.setTextColor(255, 255, 255);
-    doc.text("ACUITY TUTORING", 15, 14);
+    doc.text("MANTIF TUTORING", 15, 14);
 
     doc.setFontSize(9);
     doc.setTextColor(223, 183, 74); // Gold #dfb74a
@@ -144,7 +144,7 @@ export async function downloadMaterial(material: DownloadableMaterial): Promise<
     doc.setFontSize(10);
     doc.setTextColor(71, 85, 105);
     const splitDesc = doc.splitTextToSize(
-      material.description || "Official syllabus study material and structured reference notes designed for Acuity Tutoring students.",
+      material.description || "Official syllabus study material and structured reference notes designed for Mantif Tutoring students.",
       180
     );
     doc.text(splitDesc, 15, currentY);
@@ -202,7 +202,7 @@ export async function downloadMaterial(material: DownloadableMaterial): Promise<
     const finalY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 12 : 265;
     doc.setFontSize(8);
     doc.setTextColor(148, 163, 184);
-    doc.text("Acuity Live Online Tutoring • Verified Learning Hub Document • support@acuity.edu", 15, Math.min(finalY, 285));
+    doc.text("Mantif Live Online Tutoring • Verified Learning Hub Document • support@mantif.edu", 15, Math.min(finalY, 285));
 
     return triggerPdfDownload(doc, cleanFileName);
   } catch (error) {
@@ -246,7 +246,7 @@ export function downloadTimetableDoc(data: TimetableDocData): boolean {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.setTextColor(255, 255, 255);
-    doc.text("ACUITY TUTORING", 14, 15);
+    doc.text("MANTIF TUTORING", 14, 15);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
@@ -308,13 +308,13 @@ export function downloadTimetableDoc(data: TimetableDocData): boolean {
     doc.setFontSize(8);
     doc.setTextColor(148, 163, 184);
     doc.text(
-      "Acuity Tutoring System • Where Accuracy Meets Knowledge • 24/7 Helpline: +91 98765 43210 • support@acuity.edu",
+      "Mantif Tutoring System • Intelligent Learning Platform • 24/7 Helpline: +91 98765 43210 • support@mantif.edu",
       14,
       Math.min(finalY, 195)
     );
 
     // Force strict filename with .pdf extension
-    const cleanFileName = `Acuity_Timetable_${data.currentClass.replace(/\s+/g, "_")}_${data.board}.pdf`;
+    const cleanFileName = `Mantif_Timetable_${data.currentClass.replace(/\s+/g, "_")}_${data.board}.pdf`;
     return triggerPdfDownload(doc, cleanFileName);
   } catch (error) {
     console.error("Failed to generate PDF timetable:", error);
@@ -335,7 +335,7 @@ export interface ReceiptDocData {
 }
 
 /**
- * Generates and downloads the official Acuity Fee Payment Receipt in high-resolution PDF format.
+ * Generates and downloads the official Mantif Fee Payment Receipt in high-resolution PDF format.
  */
 export function downloadReceiptPDF(data: ReceiptDocData): boolean {
   try {
@@ -352,7 +352,7 @@ export function downloadReceiptPDF(data: ReceiptDocData): boolean {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.setTextColor(255, 255, 255);
-    doc.text("ACUITY TUTORING", 15, 14);
+    doc.text("MANTIF TUTORING", 15, 14);
 
     doc.setFontSize(9);
     doc.setTextColor(223, 183, 74); // Gold #dfb74a
@@ -428,12 +428,12 @@ export function downloadReceiptPDF(data: ReceiptDocData): boolean {
     doc.setFontSize(8);
     doc.setTextColor(148, 163, 184);
     doc.text(
-      "This is a computer-generated authentic fee receipt. No physical signature required. • Support: support@acuity.edu",
+      "This is a computer-generated authentic fee receipt. No physical signature required. • Support: support@mantif.edu",
       15,
       Math.min(finalY + 32, 270)
     );
 
-    const cleanFileName = `Acuity_Fee_Receipt_${data.receiptNumber.replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`;
+    const cleanFileName = `Mantif_Fee_Receipt_${data.receiptNumber.replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`;
     return triggerPdfDownload(doc, cleanFileName);
   } catch (error) {
     console.error("Failed to generate PDF receipt:", error);
@@ -471,7 +471,7 @@ export async function generateStudentPerformanceReportPdf(report: any): Promise<
     doc.setFont("helvetica", "bold");
     doc.setFontSize(15);
     doc.setTextColor(255, 255, 255);
-    doc.text("ACUITY TUTORING", 14, 12);
+    doc.text("MANTIF TUTORING", 14, 12);
 
     doc.setFontSize(8.5);
     doc.setTextColor(223, 183, 74); // Gold #dfb74a
@@ -785,12 +785,12 @@ export async function generateStudentPerformanceReportPdf(report: any): Promise<
     doc.setFontSize(7.5);
     doc.setTextColor(148, 163, 184);
     doc.text(
-      "Acuity Tutoring Academic Evaluation Report • Certified by Faculty Academic Board • support@acuity.edu",
+      "Mantif Tutoring Academic Evaluation Report • Certified by Faculty Academic Board • support@mantif.edu",
       14,
       288
     );
 
-    const cleanFileName = `Acuity_Performance_Report_${(student.name || "Student").replace(/[^a-zA-Z0-9_-]/g, "_")}_${
+    const cleanFileName = `Mantif_Performance_Report_${(student.name || "Student").replace(/[^a-zA-Z0-9_-]/g, "_")}_${
       student.studentId || "STU"
     }.pdf`;
     return triggerPdfDownload(doc, cleanFileName);
@@ -827,7 +827,7 @@ export async function generateSchoolPerformanceReportPdf(report: any): Promise<b
     doc.setFont("helvetica", "bold");
     doc.setFontSize(15);
     doc.setTextColor(255, 255, 255);
-    doc.text("ACUITY TUTORING", 14, 12);
+    doc.text("MANTIF TUTORING", 14, 12);
 
     doc.setFontSize(8.5);
     doc.setTextColor(223, 183, 74); // Gold #dfb74a
@@ -1130,12 +1130,12 @@ export async function generateSchoolPerformanceReportPdf(report: any): Promise<b
     doc.setFontSize(7.5);
     doc.setTextColor(148, 163, 184);
     doc.text(
-      "Acuity Tutoring Official School Academic Cohort Report • Certified by Academic Director • support@acuity.edu",
+      "Mantif Tutoring Official School Academic Cohort Report • Certified by Academic Director • support@mantif.edu",
       14,
       288
     );
 
-    const cleanFileName = `Acuity_School_Report_${(overview.schoolName || "School").replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`;
+    const cleanFileName = `Mantif_School_Report_${(overview.schoolName || "School").replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`;
     return triggerPdfDownload(doc, cleanFileName);
   } catch (err) {
     console.error("Failed to generate School Performance Report PDF:", err);

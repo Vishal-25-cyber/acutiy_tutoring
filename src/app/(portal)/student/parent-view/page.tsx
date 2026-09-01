@@ -23,7 +23,7 @@ export default function StudentParentViewPage() {
     phone1: "+91 98765 43210",
     phone2: "+91 98765 43211",
     phone3: "+91 98765 43212",
-    email: "support@acuity.edu",
+    email: "support@mantif.edu",
   };
 
   return (

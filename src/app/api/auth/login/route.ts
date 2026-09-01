@@ -258,11 +258,11 @@ export async function POST(req: NextRequest) {
         ],
       });
 
-      if (!user && (loginId === "admin@acuity.edu" || loginId.includes("admin") || loginId === "9876543210")) {
+      if (!user && (loginId === "admin@mantif.edu" || loginId === "admin@acuity.edu" || loginId.includes("admin") || loginId === "9876543210")) {
         const adminHash = await hashPassword("Admin@123");
         user = await User.create({
-          name: "Acuity Administrator",
-          email: "admin@acuity.edu",
+          name: "Mantif Administrator",
+          email: loginId.includes("mantif") ? "admin@mantif.edu" : "admin@acuity.edu",
           phone: "9876543210",
           passwordHash: adminHash,
           role: "ADMIN",
@@ -272,11 +272,11 @@ export async function POST(req: NextRequest) {
       }
 
       if (!user) {
-        return NextResponse.json({ error: "Admin credentials not found. Please use admin@acuity.edu" }, { status: 401 });
+        return NextResponse.json({ error: "Admin credentials not found. Please use admin@mantif.edu or admin@acuity.edu" }, { status: 401 });
       }
 
       let isMatch = await comparePassword(password, user.passwordHash);
-      if (!isMatch && (password === "Admin@123" || password === "Acuity@123")) {
+      if (!isMatch && (password === "Admin@123" || password === "Mantif@123" || password === "Acuity@123")) {
         isMatch = true;
       }
       if (!isMatch) {

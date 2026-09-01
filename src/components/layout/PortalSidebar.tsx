@@ -133,24 +133,24 @@ export function PortalSidebar({ role }: SidebarProps) {
     <aside className="w-64 border-r border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#001726] flex flex-col h-screen sticky top-0 shrink-0 select-none z-30 transition-colors">
       {/* Sidebar Header */}
       <div className="h-20 px-4 flex items-center gap-3 border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#00121e]/50">
-        <div className="w-11 h-11 rounded-2xl bg-white dark:bg-[#002137] p-1.5 shadow-sm border border-slate-200/80 dark:border-[#b89047]/30 flex items-center justify-center shrink-0">
+        <div className="w-11 h-11 rounded-2xl bg-white dark:bg-[#002137] p-1 shadow-sm border border-slate-200/80 dark:border-[#b89047]/30 flex items-center justify-center shrink-0">
           <img
-            src="/images/acuity_logo.png"
-            alt="Acuity Logo"
+            src="/images/mantif_logo.png"
+            alt="Mantif Logo"
             className="w-full h-full object-contain"
           />
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
             <span className="font-black text-base tracking-tight text-[#002137] dark:text-white">
-              ACUITY
+              MANTIF
             </span>
             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-[#b89047]/15 text-[#8f6d2b] dark:text-[#dfb74a] uppercase tracking-wider border border-[#b89047]/30">
               {role}
             </span>
           </div>
           <p className="text-[10px] font-medium text-[#b89047] dark:text-[#dfb74a] truncate tracking-tight">
-            Where Accuracy Meets Knowledge
+            Intelligent Tutoring
           </p>
         </div>
       </div>

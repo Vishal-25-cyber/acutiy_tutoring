@@ -12,7 +12,7 @@ export default function AdminLayout({ children }: { children?: React.ReactNode }
 
       <div className="flex-1 flex flex-col min-w-0" id="admin-portal-scroll-area">
         <PortalHeader
-          userName="Acuity Admin"
+          userName="Mantif Admin"
           userRole="ADMIN"
         />
 

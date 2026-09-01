@@ -6,7 +6,7 @@ import { JitsiClassroom } from "@/components/classroom/JitsiClassroom";
 
 export default function ClassroomPage() {
   const routerParams = useParams();
-  const classId = (routerParams?.classId as string) || "acuity-live-classroom";
+  const classId = (routerParams?.classId as string) || "mantif-live-classroom";
 
   return <JitsiClassroom classId={classId} />;
 }

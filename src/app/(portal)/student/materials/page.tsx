@@ -410,7 +410,7 @@ export default function StudentMaterialsPage() {
                     {previewMaterial.category || "PDF HANDBOOK"}
                   </span>
                   <span className="text-xs text-slate-400 font-mono ml-auto">
-                    Acuity Verified Study Pack
+                    Mantif Verified Study Pack
                   </span>
                 </div>
 
@@ -509,7 +509,7 @@ export default function StudentMaterialsPage() {
 
                     <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
                       <span className="text-xs text-slate-400 font-mono">
-                        Acuity Learning Hub
+                        Mantif Learning Hub
                       </span>
                       <button
                         onClick={() => setPreviewMaterial(null)}

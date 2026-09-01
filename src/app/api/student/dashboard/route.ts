@@ -255,7 +255,7 @@ export async function GET() {
         student: {
           id: session.userId,
           name: user?.name || session.name || "Student",
-          email: user?.email || session.email || "student@acuity.edu",
+          email: user?.email || session.email || "student@mantif.edu",
           phone: user?.phone || profile?.parentPhone || "",
           classLevel: currentClass,
           board: board,

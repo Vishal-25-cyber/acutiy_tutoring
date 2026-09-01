@@ -62,7 +62,7 @@ export async function GET() {
         phone1: settings?.supportPhone1 || "+91 98765 43210",
         phone2: settings?.supportPhone2 || "+91 98765 43211",
         phone3: settings?.supportPhone3 || "+91 98765 43212",
-        email: settings?.supportEmail || "support@acuity.edu",
+        email: settings?.supportEmail || "support@mantif.edu",
       },
       teacherRemarks: [
         "Consistent attendance in evening batches.",

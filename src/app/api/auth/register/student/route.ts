@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     // Send Welcome Notification
     await Notification.create({
       userId: user._id,
-      title: "Welcome to Acuity Tutoring!",
+      title: "Welcome to Mantif Tutoring!",
       message: `You are enrolled in ${data.currentClass} (${batch.name}). Live classes and learning hub materials are now accessible.`,
       type: "SYSTEM",
     });

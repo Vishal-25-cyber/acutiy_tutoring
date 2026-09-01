@@ -650,7 +650,7 @@ export default function TeacherStudentReportsPage() {
                       Subject-Wise School Averages vs Institute Benchmark
                     </h3>
                     <p className="text-xs text-slate-500">
-                      Comparative variance against Acuity Tutoring overall standards
+                      Comparative variance against Mantif Tutoring overall standards
                     </p>
                   </div>
 

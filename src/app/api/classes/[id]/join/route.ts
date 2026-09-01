@@ -223,7 +223,7 @@ export async function POST(
       await liveClass.save();
     }
 
-    const roomName = liveClass.meetingId || liveClass.livekitRoomId || `ACUITY-CLASS-${liveClass._id}`;
+    const roomName = liveClass.meetingId || liveClass.livekitRoomId || `MANTIF-CLASS-${liveClass._id}`;
     const jitsiDomain = process.env.NEXT_PUBLIC_JITSI_DOMAIN || "meet.jit.si";
 
     await recordAuditLog({

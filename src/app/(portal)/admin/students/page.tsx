@@ -121,7 +121,7 @@ export default function AdminStudentsPage() {
     if (!editStudent) return;
 
     if (editForm.email && !isValidAcuityOrGmail(editForm.email)) {
-      alert("Email address must end with @acuity.edu or @gmail.com.");
+      alert("Email address must end with @mantif.edu, @acuity.edu, or @gmail.com.");
       return;
     }
     if (editForm.phone && !isValid10DigitPhone(editForm.phone)) {
@@ -196,7 +196,7 @@ export default function AdminStudentsPage() {
   const handleAddStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newStudent.email && !isValidAcuityOrGmail(newStudent.email)) {
-      alert("Student email must end with @acuity.edu or @gmail.com.");
+      alert("Student email must end with @mantif.edu, @acuity.edu, or @gmail.com.");
       return;
     }
     if (newStudent.phone && !isValid10DigitPhone(newStudent.phone)) {
@@ -686,7 +686,7 @@ export default function AdminStudentsPage() {
                   <Input
                     required
                     type="email"
-                    placeholder="priya@acuity.edu"
+                    placeholder="priya@mantif.edu"
                     value={newStudent.email}
                     onChange={(e) => setNewStudent({ ...newStudent, email: e.target.value })}
                   />

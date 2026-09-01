@@ -23,12 +23,12 @@ export async function runSeed() {
   // 1. System Settings
   await SystemSettings.deleteMany({});
   const settings = await SystemSettings.create({
-    companyName: "Acuity Tutoring & Live Learning",
-    logoUrl: "",
+    companyName: "Mantif Tutoring & Live Learning",
+    logoUrl: "/images/mantif_logo.png",
     supportPhone1: "+91 98765 43210",
     supportPhone2: "+91 98765 43211",
     supportPhone3: "+91 98765 43212",
-    supportEmail: "support@acuity.edu",
+    supportEmail: "support@mantif.edu",
     defaultGracePeriodMinutes: 5,
     minAttendanceThresholdPercent: 75,
     monthlyTuitionFee: 2500,

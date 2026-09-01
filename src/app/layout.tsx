@@ -15,9 +15,9 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Acuity Tutoring — Live Online Learning Platform (Class 6 to 10)",
+  title: "Mantif Tutoring — Live Online Learning Platform (Class 6 to 10)",
   description:
-    "Production-grade online tutoring and live classroom management platform for CBSE & State Board students from Class 6 to 10. Automated attendance, late entry control, and expert faculty.",
+    "Production-grade online tutoring and live classroom management platform for CBSE & State Board students from Class 6 to 10. Automated attendance, late entry control, and expert faculty by Mantif.",
   keywords: [
     "Online Tuition",
     "Live Classes",
@@ -26,7 +26,8 @@ export const metadata: Metadata = {
     "State Board Tuition",
     "Interactive Classroom",
     "EdTech Platform",
-    "Acuity Tutoring",
+    "Mantif Tutoring",
+    "Mantif",
   ],
 };
 

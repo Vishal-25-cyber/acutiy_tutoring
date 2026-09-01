@@ -330,16 +330,16 @@ export default function HomePage() {
         <button
           type="button"
           onClick={() => sw("SIGNIN")}
-          className="flex items-center gap-3.5 text-left cursor-pointer"
+          className="flex items-center gap-3 text-left cursor-pointer group"
         >
-          <div className="w-10 h-10 rounded-xl bg-[#004b79] flex items-center justify-center text-white font-black text-lg shadow-sm">
-            A
+          <div className="w-11 h-11 rounded-xl bg-white border border-slate-200 p-0.5 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform shrink-0">
+            <img src="/images/mantif_logo.png" alt="Mantif Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <span className="font-extrabold text-xl tracking-tight text-[#002137] leading-none block">
-              ACUITY
+              MANTIF
             </span>
-            <p className="text-[11px] font-medium text-slate-400 mt-0.5">Where Accuracy Meets Knowledge</p>
+            <p className="text-[11px] font-medium text-slate-400 mt-0.5">Intelligent Learning Platform</p>
           </div>
         </button>
 
@@ -394,7 +394,7 @@ export default function HomePage() {
                   <span>Direct Communication Lines</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight leading-tight">
-                  Contact Acuity Tutoring
+                  Contact Mantif Tutoring
                 </h1>
                 <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
                   Call our admissions team, reach our academic batch coordinators, or chat on WhatsApp. We are here to assist parents and students every step of the way.
@@ -435,7 +435,7 @@ export default function HomePage() {
                       <PhoneCall className="w-4 h-4" />
                     </a>
                     <a
-                      href={`https://wa.me/91${phone1}?text=Hello%20Acuity%20Tutoring,%20I%20would%20like%20to%20inquire%20about%20admissions.`}
+                      href={`https://wa.me/91${phone1}?text=Hello%20Mantif%20Tutoring,%20I%20would%20like%20to%20inquire%20about%20admissions.`}
                       target="_blank"
                       rel="noreferrer"
                       title="WhatsApp Chat"
@@ -517,7 +517,7 @@ export default function HomePage() {
                       <PhoneCall className="w-4 h-4" />
                     </a>
                     <a
-                      href={`https://wa.me/91${phone3}?text=Hello%20Acuity%20Support,%20I%20need%20technical%20assistance.`}
+                      href={`https://wa.me/91${phone3}?text=Hello%20Mantif%20Support,%20I%20need%20technical%20assistance.`}
                       target="_blank"
                       rel="noreferrer"
                       title="WhatsApp Chat"
@@ -750,7 +750,7 @@ export default function HomePage() {
                 </h1>
 
                 <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
-                  Having successfully mentored students in offline coaching for over 4 years, Acuity brings structured subject mastery, personal attention, and board exam preparation to CBSE and State Board students.
+                  Having successfully mentored students in offline coaching for over 4 years, Mantif brings structured subject mastery, personal attention, and board exam preparation to CBSE and State Board students.
                 </p>
               </div>
 
@@ -959,7 +959,7 @@ export default function HomePage() {
                   <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
                     <span className="text-slate-600 font-medium flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                      New to Acuity? Create an account
+                      New to Mantif? Create an account
                     </span>
                     <button
                       type="button"
@@ -1405,7 +1405,7 @@ export default function HomePage() {
 
       {/* ── FOOTER ── */}
       <footer className="w-full px-6 sm:px-10 lg:px-16 py-3 flex items-center justify-between text-slate-400 text-xs border-t border-slate-100 shrink-0 bg-white z-20">
-        <p>Acuity Tutoring • CBSE &amp; State Board (Classes 6–10)</p>
+        <p>Mantif Tutoring • CBSE &amp; State Board (Classes 6–10)</p>
         <div className="flex items-center gap-4">
           <button
             type="button"
@@ -1415,7 +1415,7 @@ export default function HomePage() {
             Direct Helplines &amp; Query Form
           </button>
           <span>•</span>
-          <p>© 2026 Acuity</p>
+          <p>© 2026 Mantif</p>
         </div>
       </footer>
     </div>

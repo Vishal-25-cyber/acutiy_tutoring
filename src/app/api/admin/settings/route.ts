@@ -12,11 +12,11 @@ export async function GET() {
 
     if (!settings) {
       settings = await SystemSettings.create({
-        companyName: "Acuity Tutoring & Live Learning",
+        companyName: "Mantif Tutoring & Live Learning",
         supportPhone1: "9876543210",
         supportPhone2: "9876543211",
         supportPhone3: "9876543212",
-        supportEmail: "support@acuity.edu",
+        supportEmail: "support@mantif.edu",
         defaultGracePeriodMinutes: 5,
         minAttendanceThresholdPercent: 75,
         monthlyTuitionFee: 2500,

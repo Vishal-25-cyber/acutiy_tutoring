@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
 
     const cleanSubject = subject.toUpperCase().replace(/[^A-Z0-9]/g, "");
     const cleanTopic = topic.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 15);
-    const uniqueMeetingId = `ACUITY-${cleanSubject || "CLASS"}-${cleanTopic || "SESSION"}-${Date.now()}`;
+    const uniqueMeetingId = `MANTIF-${cleanSubject || "CLASS"}-${cleanTopic || "SESSION"}-${Date.now()}`;
     const generatedTitle = title?.trim() || `${classLevel || "Class 10"} ${subject} — ${topic}`;
 
     const normalizedStatus = status.toUpperCase() === "DRAFT" ? "DRAFT" : "PUBLISHED";

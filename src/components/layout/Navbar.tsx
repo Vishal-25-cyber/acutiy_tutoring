@@ -14,24 +14,24 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         {/* Brand Logo */}
         <Link href="/" prefetch={true} className="flex items-center gap-3.5 group">
-          <div className="w-11 h-11 rounded-2xl bg-white dark:bg-[#002137] p-1.5 shadow-sm border border-slate-200/80 dark:border-[#b89047]/30 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
+          <div className="w-11 h-11 rounded-2xl bg-white dark:bg-[#002137] p-1 shadow-sm border border-slate-200/80 dark:border-[#b89047]/30 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
             <img
-              src="/images/acuity_logo.png"
-              alt="Acuity Logo"
+              src="/images/mantif_logo.png"
+              alt="Mantif Logo"
               className="w-full h-full object-contain"
             />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-xl tracking-tight text-[#002137] dark:text-white">
-                ACUITY
+                MANTIF
               </span>
               <Badge variant="gold" className="text-[10px] px-2 py-0">
-                Classes 1–10
+                Classes 6–10
               </Badge>
             </div>
             <p className="text-[11px] font-medium text-[#b89047] dark:text-[#dfb74a]">
-              Where Accuracy Meets Knowledge
+              Intelligent Tutoring Platform
             </p>
           </div>
         </Link>

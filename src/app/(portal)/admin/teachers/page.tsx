@@ -119,7 +119,7 @@ export default function AdminTeachersPage() {
     if (!editTeacher) return;
 
     if (editForm.email && !isValidAcuityOrGmail(editForm.email)) {
-      alert("Email address must end with @acuity.edu or @gmail.com.");
+      alert("Email address must end with @mantif.edu, @acuity.edu, or @gmail.com.");
       return;
     }
     if (editForm.phone && !isValid10DigitPhone(editForm.phone)) {

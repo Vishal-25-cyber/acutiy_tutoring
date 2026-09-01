@@ -44,10 +44,10 @@ export const optionalPhone10DigitSchema = z
 
 /**
  * Email Rules:
- * - Must end with @acuity.edu or @gmail.com
- * - Regex: ^[a-zA-Z0-9._%+-]+@(acuity\.edu|gmail\.com)$
+ * - Must end with @mantif.edu, @acuity.edu, or @gmail.com
+ * - Regex: ^[a-zA-Z0-9._%+-]+@(mantif\.edu|acuity\.edu|gmail\.com)$
  */
-export const EMAIL_DOMAIN_REGEX = /^[a-zA-Z0-9._%+-]+@(acuity\.edu|gmail\.com)$/i;
+export const EMAIL_DOMAIN_REGEX = /^[a-zA-Z0-9._%+-]+@(mantif\.edu|acuity\.edu|gmail\.com)$/i;
 
 export const isValidAcuityOrGmail = (email?: string | null): boolean => {
   if (!email) return false;
@@ -60,5 +60,5 @@ export const emailDomainSchema = z
   .email("Invalid email format")
   .refine(
     (val) => isValidAcuityOrGmail(val),
-    "Email address must end with @acuity.edu or @gmail.com."
+    "Email address must end with @mantif.edu, @acuity.edu, or @gmail.com."
   );

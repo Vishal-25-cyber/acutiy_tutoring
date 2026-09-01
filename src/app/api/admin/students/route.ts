@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
 
     if (!isValidAcuityOrGmail(email)) {
       return NextResponse.json(
-        { error: "Email address must end with @acuity.edu or @gmail.com." },
+        { error: "Email address must end with @mantif.edu, @acuity.edu, or @gmail.com." },
         { status: 400 }
       );
     }
@@ -186,7 +186,7 @@ export async function PATCH(req: NextRequest) {
 
     if (email && !isValidAcuityOrGmail(email)) {
       return NextResponse.json(
-        { error: "Email address must end with @acuity.edu or @gmail.com." },
+        { error: "Email address must end with @mantif.edu, @acuity.edu, or @gmail.com." },
         { status: 400 }
       );
     }

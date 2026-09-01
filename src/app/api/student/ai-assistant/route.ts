@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
         `2. **$F = ma$:** Acceleration depends on net force and mass.\n` +
         `3. **Action & Reaction:** For every action, there is an equal and opposite reaction.`;
     } else {
-      responseText = `📚 **Acuity AI Study Buddy (${studentClass} Curriculum):**\n\nHere is a structured explanation for **"${query}"** tailored to your ${studentClass} syllabus:\n\n` +
+      responseText = `📚 **Mantif AI Study Buddy (${studentClass} Curriculum):**\n\nHere is a structured explanation for **"${query}"** tailored to your ${studentClass} syllabus:\n\n` +
         `1. **Concept Overview:** Understanding this topic builds core foundations for your upcoming board assessments.\n` +
         `2. **Step-by-Step Breakdown:** Focus on defining the core terms first, then practice 2-3 solved examples from your textbook.\n` +
         `3. **Teacher Tip:** Don't hesitate to ask your teacher directly in your next live batch session at your scheduled time!\n\n` +
