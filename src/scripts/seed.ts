@@ -209,7 +209,7 @@ export async function runSeed() {
   await StudentProfile.create({
     userId: studentPriya._id,
     schoolName: "St. John's Matriculation Higher Sec School",
-    board: "Matriculation",
+    board: "State Board",
     currentClass: "Class 9",
     subjects: ["Mathematics", "Science", "English", "Tamil"],
     batchId: batch1._id, // 6:00 PM – 7:00 PM

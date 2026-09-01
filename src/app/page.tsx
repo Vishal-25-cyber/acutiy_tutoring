@@ -98,7 +98,7 @@ export default function HomePage() {
           setSBatch((curr) => (curr && list.some((b: any) => b._id === curr) ? curr : list[0]._id));
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     fetch("/api/admin/settings")
       .then((r) => r.json())
@@ -107,7 +107,7 @@ export default function HomePage() {
           setContactSettings(d.settings);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const phone1 = (contactSettings?.supportPhone1 || "9876543210").replace(/\D/g, "").slice(-10);
@@ -331,11 +331,10 @@ export default function HomePage() {
           <button
             type="button"
             onClick={() => sw("CONTACT")}
-            className={`pb-1 transition-all cursor-pointer flex items-center gap-1.5 ${
-              mode === "CONTACT"
+            className={`pb-1 transition-all cursor-pointer flex items-center gap-1.5 ${mode === "CONTACT"
                 ? "text-[#004b79] border-b-2 border-[#004b79]"
                 : "text-slate-500 hover:text-[#004b79]"
-            }`}
+              }`}
           >
             <PhoneCall className="w-3.5 h-3.5" />
             <span>Contact Us</span>
@@ -346,11 +345,10 @@ export default function HomePage() {
           <button
             type="button"
             onClick={() => sw("SIGNIN")}
-            className={`pb-1 transition-all cursor-pointer ${
-              mode === "SIGNIN"
+            className={`pb-1 transition-all cursor-pointer ${mode === "SIGNIN"
                 ? "text-[#004b79] border-b-2 border-[#004b79]"
                 : "text-slate-400 hover:text-slate-800"
-            }`}
+              }`}
           >
             Sign In
           </button>
@@ -362,11 +360,11 @@ export default function HomePage() {
       ══════════════════════════════════════════════════════════════ */}
       {mode === "CONTACT" && (
         <main className="flex-1 w-full grid grid-cols-1 lg:grid-cols-12 min-h-0 overflow-hidden">
-          
+
           {/* LEFT COLUMN (6 COLS): 3 DIRECT HOTLINES & CENTER INFO */}
           <div className="lg:col-span-6 h-full flex flex-col justify-center px-6 sm:px-12 lg:px-16 py-8 border-r border-slate-100 bg-[#fafcff] overflow-y-auto">
             <div className="space-y-6 max-w-xl mx-auto w-full">
-              
+
               <div className="space-y-2">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-xs font-bold text-[#004b79] uppercase tracking-wider">
                   <Phone className="w-3.5 h-3.5" />
@@ -548,7 +546,7 @@ export default function HomePage() {
           {/* RIGHT COLUMN (6 COLS): ASK A QUERY & SEND MAIL FORM */}
           <div className="lg:col-span-6 h-full flex flex-col justify-center px-6 sm:px-12 lg:px-16 py-8 overflow-y-auto">
             <div className="max-w-xl mx-auto w-full space-y-5">
-              
+
               <div className="space-y-1.5">
                 <h2 className="text-2xl sm:text-3xl font-black text-[#002137] tracking-tight">
                   Ask a Query &amp; Send Mail
@@ -706,7 +704,7 @@ export default function HomePage() {
       ══════════════════════════════════════════════════════════════ */}
       {mode !== "CONTACT" && (
         <main className="flex-1 w-full grid grid-cols-1 lg:grid-cols-12 min-h-0 overflow-hidden">
-          
+
           {/* ══════════════════════════════════════════════════
               LEFT SIDE (7 COLS): ABOUT ACUITY & CURRICULUM
           ══════════════════════════════════════════════════ */}
@@ -723,7 +721,7 @@ export default function HomePage() {
                     <span>2-Day Free Trial Included</span>
                   </div>
                 </div>
-                
+
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight leading-[1.12]">
                   Quality tutoring for Classes 1 to 10.
                 </h1>
@@ -814,7 +812,7 @@ export default function HomePage() {
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
                   <span>Faculty mentorship • Mock tests • Exam preparation</span>
                 </div>
-                
+
                 <button
                   type="button"
                   onClick={() => sw("CONTACT")}
@@ -832,7 +830,7 @@ export default function HomePage() {
           ══════════════════════════════════════════════════ */}
           <div className="lg:col-span-5 h-full flex flex-col justify-center px-8 sm:px-14 lg:px-16 py-8 overflow-y-auto">
             <div className="max-w-md w-full mx-auto space-y-6">
-              
+
               <div className="space-y-1.5">
                 <h2 className="text-2xl sm:text-3xl font-black text-[#002137] tracking-tight">
                   {mode === "SIGNIN" ? "Sign in to portal" : "Create an account"}
@@ -847,7 +845,7 @@ export default function HomePage() {
               ───────────────────────────────────────────────────────────── */}
               {mode === "SIGNIN" && (
                 <div className="space-y-5">
-                  
+
                   {/* Role Select Bar */}
                   <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold">
                     {[
@@ -859,11 +857,10 @@ export default function HomePage() {
                         key={item.key}
                         type="button"
                         onClick={() => switchRole(item.key as LoginRole)}
-                        className={`py-2 rounded-lg transition-all cursor-pointer text-center ${
-                          loginRole === item.key
+                        className={`py-2 rounded-lg transition-all cursor-pointer text-center ${loginRole === item.key
                             ? "bg-white text-[#004b79] shadow-2xs font-extrabold"
                             : "text-slate-500 hover:text-slate-900"
-                        }`}
+                          }`}
                       >
                         {item.label}
                       </button>
@@ -957,7 +954,7 @@ export default function HomePage() {
               ───────────────────────────────────────────────────────────── */}
               {mode === "SIGNUP" && (
                 <div className="space-y-4">
-                  
+
                   {/* 2-Day Free Trial Notice Banner for Students */}
                   {signupRole === "STUDENT" && (
                     <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 text-emerald-950 flex items-center gap-2.5 text-xs font-semibold">
@@ -982,11 +979,10 @@ export default function HomePage() {
                           setStep(1);
                           clear();
                         }}
-                        className={`py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer border ${
-                          signupRole === item.key
+                        className={`py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer border ${signupRole === item.key
                             ? "bg-blue-50 border-[#004b79] text-[#004b79] font-extrabold shadow-2xs"
                             : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
-                        }`}
+                          }`}
                       >
                         <item.icon className="w-4 h-4" />
                         <span>{item.label}</span>

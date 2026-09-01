@@ -320,11 +320,10 @@ export default function TeacherSchedulePage() {
             <button
               key={tab}
               onClick={() => setSelectedTab(tab)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                selectedTab === tab
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${selectedTab === tab
                   ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs"
                   : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
+                }`}
             >
               {tab === "ALL" ? "All Sessions" : tab}
             </button>
