@@ -401,12 +401,12 @@ export default function HomePage() {
             <div className="space-y-4">
               <div className="space-y-1.5">
                 <h1
-                  className="text-5xl sm:text-6xl lg:text-7xl font-black text-[#002137] tracking-[0.06em] leading-[1.04]"
+                  className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-[0.06em] leading-[1.04]"
                   style={{ fontFamily: "'Montserrat', 'Plus Jakarta Sans', sans-serif" }}
                 >
                   M<span className="text-[#b89047]">Λ</span>NTIF
                 </h1>
-                <p className="text-2xl sm:text-3xl font-extrabold text-[#b89047] tracking-tight">
+                <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#b89047] tracking-tight">
                   Human x Artificial Intelligence
                 </p>
               </div>
@@ -1200,15 +1200,11 @@ export default function HomePage() {
       <section id="team" className="scroll-mt-20 py-20 bg-white border-b border-slate-200/80">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
-          <div className="text-center max-w-3xl mx-auto space-y-3">
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs font-black text-[#004b79] uppercase tracking-wider">
-              <Users className="w-3.5 h-3.5" />
-              Leadership &amp; Mentors
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">
+          <div className="text-center max-w-3xl mx-auto space-y-2">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Our Team
             </h2>
-            <p className="text-sm sm:text-base text-slate-600 font-medium">
+            <p className="text-sm sm:text-base lg:text-lg font-bold text-[#b89047] tracking-normal max-w-2xl mx-auto">
               Passionate educators, engineering minds, and AI practitioners dedicated to student success.
             </p>
           </div>
@@ -1350,15 +1346,11 @@ export default function HomePage() {
       <section id="testimonials" className="scroll-mt-20 py-20 bg-slate-50 border-b border-slate-200/80">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
-          <div className="text-center max-w-3xl mx-auto space-y-3">
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-xs font-black text-[#8f6d2b] uppercase tracking-wider">
-              <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
-              Student Voices &amp; Memories
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">
+          <div className="text-center max-w-3xl mx-auto space-y-2">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Testimonials
             </h2>
-            <p className="text-sm sm:text-base text-slate-600 font-medium">
+            <p className="text-sm sm:text-base lg:text-lg font-bold text-[#b89047] tracking-normal max-w-2xl mx-auto">
               Real experiences from students who walked through our doors and excelled with us.
             </p>
           </div>
@@ -1437,15 +1429,11 @@ export default function HomePage() {
       <section id="gallery" className="scroll-mt-20 py-20 bg-white border-b border-slate-200/80">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
-          <div className="text-center max-w-3xl mx-auto space-y-3">
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs font-black text-[#004b79] uppercase tracking-wider">
-              <ImageIcon className="w-3.5 h-3.5" />
-              Photo Highlights
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">
+          <div className="text-center max-w-3xl mx-auto space-y-2">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Gallery
             </h2>
-            <p className="text-sm sm:text-base text-slate-600 font-medium">
+            <p className="text-sm sm:text-base lg:text-lg font-bold text-[#b89047] tracking-normal max-w-2xl mx-auto">
               Memories from our AI school workshops, physical Tutoring Hub classrooms, and student milestones.
             </p>
           </div>
