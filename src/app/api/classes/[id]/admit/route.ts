@@ -164,16 +164,17 @@ export async function GET(
     }
 
     // STUDENT POLL: Check if this specific student is admitted or denied
-    if (queryUserId) {
+    if (queryUserId || session.role === "STUDENT") {
+      const studentIdToCheck = String(queryUserId || session.userId || "");
       const isAdmitted = (classDoc.admittedStudents || []).some(
-        (e: any) => e.userId === queryUserId
+        (e: any) => String(e.userId) === studentIdToCheck || String(e.userId) === String(session.userId)
       );
       if (isAdmitted) {
         return NextResponse.json({ status: "ADMITTED" });
       }
 
       const isDenied = (classDoc.deniedStudents || []).some(
-        (e: any) => e.userId === queryUserId
+        (e: any) => String(e.userId) === studentIdToCheck || String(e.userId) === String(session.userId)
       );
       if (isDenied) {
         return NextResponse.json({ status: "DENIED" });

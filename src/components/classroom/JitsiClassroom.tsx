@@ -357,13 +357,20 @@ export function JitsiClassroom({
 
       // Handle incoming remote audio/video tracks
       pc.ontrack = (event) => {
-        if (event.streams && event.streams[0]) {
-          remoteStreamRef.current = event.streams[0];
-          setHasRemoteVideo(true);
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = event.streams[0];
-            remoteVideoRef.current.play().catch(() => {});
+        let stream = event.streams[0];
+        if (!stream) {
+          if (!remoteStreamRef.current) {
+            remoteStreamRef.current = new MediaStream();
           }
+          remoteStreamRef.current.addTrack(event.track);
+          stream = remoteStreamRef.current;
+        } else {
+          remoteStreamRef.current = stream;
+        }
+        setHasRemoteVideo(true);
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = stream;
+          remoteVideoRef.current.play().catch(() => {});
         }
       };
 
@@ -390,6 +397,21 @@ export function JitsiClassroom({
     const targetClassId = classData?.id || classData?.livekitRoomId || classId;
     let lastSignalTime = 0;
     let isCreatingOffer = false;
+
+    // Send immediate "I am in the classroom" broadcast so remote peer knows we entered
+    fetch(`/api/classes/${targetClassId}/signal`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        senderId: userInfo.id,
+        name: userInfo.name,
+        role: userInfo.role,
+        type: "CLIENT_JOINED",
+        isCameraOn: isCameraOnRef.current,
+        isMicOn: isMicOnRef.current,
+        isScreenSharing: isScreenSharingRef.current,
+      }),
+    }).catch(() => {});
 
     // Polling loop for WebRTC signals (Offers, Answers, ICE Candidates)
     const signalInterval = setInterval(async () => {
@@ -443,7 +465,26 @@ export function JitsiClassroom({
 
         // Process WebRTC signals
         for (const sig of data.signals || []) {
-          if (sig.type === "offer" && !userInfo.isTeacher && activePC) {
+          if (sig.type === "CLIENT_JOINED" && userInfo.isTeacher && activePC) {
+            if (activePC.signalingState === "have-local-offer") {
+              await activePC.setLocalDescription({ type: "rollback" } as any).catch(() => {});
+            }
+            addTracksToPeerConnection(activePC);
+            const offer = await activePC.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
+            await activePC.setLocalDescription(offer);
+            await fetch(`/api/classes/${targetClassId}/signal`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                senderId: userInfo.id,
+                name: userInfo.name,
+                role: userInfo.role,
+                to: sig.from,
+                type: "offer",
+                data: offer,
+              }),
+            });
+          } else if (sig.type === "offer" && !userInfo.isTeacher && activePC) {
             addTracksToPeerConnection(activePC);
             await activePC.setRemoteDescription(new RTCSessionDescription(sig.data));
 
@@ -488,31 +529,37 @@ export function JitsiClassroom({
         }
 
         // If Teacher and student is detected, initiate offer
-        if (userInfo.isTeacher && activePC && !isCreatingOffer && (activePC.signalingState === "stable" || activePC.signalingState === "have-local-offer")) {
+        if (userInfo.isTeacher && activePC && !isCreatingOffer) {
           const other = data.participants?.find((p: any) => p.id !== userInfo.id);
-          if (other && activePC.signalingState === "stable") {
-            isCreatingOffer = true;
-            addTracksToPeerConnection(activePC);
-            const offer = await activePC.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
-            await activePC.setLocalDescription(offer);
-            await fetch(`/api/classes/${targetClassId}/signal`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                senderId: userInfo.id,
-                name: userInfo.name,
-                role: userInfo.role,
-                type: "offer",
-                data: offer,
-              }),
-            });
-            isCreatingOffer = false;
+          if (other) {
+            if (activePC.signalingState === "have-local-offer" && !hasRemoteVideo) {
+              await activePC.setLocalDescription({ type: "rollback" } as any).catch(() => {});
+            }
+            if (activePC.signalingState === "stable") {
+              isCreatingOffer = true;
+              addTracksToPeerConnection(activePC);
+              const offer = await activePC.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
+              await activePC.setLocalDescription(offer);
+              await fetch(`/api/classes/${targetClassId}/signal`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  senderId: userInfo.id,
+                  name: userInfo.name,
+                  role: userInfo.role,
+                  to: other.id,
+                  type: "offer",
+                  data: offer,
+                }),
+              });
+              isCreatingOffer = false;
+            }
           }
         }
       } catch (err) {
         // quiet error handling
       }
-    }, 1200);
+    }, 1000);
 
     return () => {
       clearInterval(signalInterval);
@@ -543,7 +590,7 @@ export function JitsiClassroom({
       console.warn("Knock failed:", e);
     }
 
-    // Start polling every 2 seconds
+    // Start polling every 800ms for instant admission
     const poll = async () => {
       try {
         const res = await fetch(
@@ -553,6 +600,8 @@ export function JitsiClassroom({
         const data = await res.json();
         if (data.status === "ADMITTED") {
           clearInterval(pollTimerRef.current!);
+          setIsCameraOn(true);
+          setIsMicOn(true);
           setStage("LIVE_CLASS");
           recordAttendanceJoin(classData?.id || classId);
         } else if (data.status === "DENIED") {
@@ -562,7 +611,7 @@ export function JitsiClassroom({
       } catch (e) { /* ignore poll errors */ }
     };
 
-    pollTimerRef.current = setInterval(poll, 2000);
+    pollTimerRef.current = setInterval(poll, 800);
     // Also poll immediately
     poll();
   }, [classId, userInfo.id, userInfo.name, classData]);
