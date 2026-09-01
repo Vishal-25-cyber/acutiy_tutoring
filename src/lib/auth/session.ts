@@ -12,12 +12,16 @@ export async function getSession(req?: any): Promise<TokenPayload | null> {
   if (req) {
     if (typeof req.cookies?.get === "function") {
       token = req.cookies.get(AUTH_COOKIE_NAME)?.value;
-    } else if (req.headers) {
+    } else if (req.cookies && typeof req.cookies[AUTH_COOKIE_NAME] === "string") {
+      token = req.cookies[AUTH_COOKIE_NAME];
+    }
+
+    if (!token && req.headers) {
       const cookieHeader =
         typeof req.headers.get === "function"
           ? req.headers.get("cookie")
           : req.headers.cookie;
-      if (cookieHeader) {
+      if (cookieHeader && typeof cookieHeader === "string") {
         const matches = cookieHeader.match(
           new RegExp(`(?:^|;\\s*)${AUTH_COOKIE_NAME}=([^;]+)`)
         );
@@ -43,6 +47,19 @@ export async function getSession(req?: any): Promise<TokenPayload | null> {
       const store = requestContextStorage.getStore();
       if (store && store.cookies && store.cookies[AUTH_COOKIE_NAME]) {
         token = store.cookies[AUTH_COOKIE_NAME];
+      }
+      if (!token && store && store.headers) {
+        const cookieHdr = store.headers.get("cookie");
+        if (cookieHdr && typeof cookieHdr === "string") {
+          const matches = cookieHdr.match(
+            new RegExp(`(?:^|;\\s*)${AUTH_COOKIE_NAME}=([^;]+)`)
+          );
+          if (matches) token = decodeURIComponent(matches[1]);
+        }
+        const authHdr = store.headers.get("authorization");
+        if (!token && authHdr && authHdr.startsWith("Bearer ")) {
+          token = authHdr.slice(7).trim();
+        }
       }
     } catch {
       // Storage unavailable
