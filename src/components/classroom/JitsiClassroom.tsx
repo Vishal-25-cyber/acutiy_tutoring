@@ -263,7 +263,7 @@ export function JitsiClassroom({
     };
 
     fetchPending();
-    const timer = setInterval(fetchPending, 4000);
+    const timer = setInterval(fetchPending, 2000);
     return () => clearInterval(timer);
   }, [stage, userInfo.isTeacher, classId]);
 
@@ -663,6 +663,42 @@ export function JitsiClassroom({
           )}
         </div>
       </header>
+
+      {/* ── Teacher Floating Admission Alert Banner ── */}
+      {userInfo.isTeacher && pendingStudents.length > 0 && (
+        <div className="bg-amber-500 text-black px-4 py-2 flex items-center justify-between z-30 shadow-md animate-pulse">
+          <div className="flex items-center gap-2 text-xs font-bold">
+            <Bell className="w-4 h-4" />
+            <span>
+              {pendingStudents[0].name} is waiting to join the classroom ({pendingStudents.length} student{pendingStudents.length > 1 ? "s" : ""})
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleAdmitDeny(pendingStudents[0].userId, "ADMIT")}
+              disabled={admittingId === pendingStudents[0].userId}
+              className="px-3 py-1 bg-black hover:bg-slate-900 text-white text-xs font-bold rounded-md transition-colors cursor-pointer"
+            >
+              Admit Now
+            </button>
+            <button
+              onClick={() => handleAdmitDeny(pendingStudents[0].userId, "DENY")}
+              disabled={admittingId === pendingStudents[0].userId}
+              className="px-2.5 py-1 bg-red-700 hover:bg-red-800 text-white text-xs font-bold rounded-md transition-colors cursor-pointer"
+            >
+              Deny
+            </button>
+            {pendingStudents.length > 1 && (
+              <button
+                onClick={() => setActiveSidebar("PEOPLE")}
+                className="text-xs font-bold underline ml-1 cursor-pointer"
+              >
+                View All ({pendingStudents.length})
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Main: Video Grid + Sidebar ── */}
       <div className="flex-1 flex overflow-hidden">

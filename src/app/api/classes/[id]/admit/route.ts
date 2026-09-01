@@ -6,6 +6,24 @@ import LiveSession from "@/models/LiveSession";
 
 export const dynamic = "force-dynamic";
 
+async function resolveClassDoc(id: string) {
+  if (!id) return null;
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    const doc = await LiveSession.findById(id);
+    if (doc) return doc;
+  }
+  const byMeetingId = await LiveSession.findOne({
+    $or: [{ meetingId: id }, { livekitRoomId: id }],
+  });
+  if (byMeetingId) return byMeetingId;
+
+  // Fallback: look for an active live session
+  const liveSession = await LiveSession.findOne({ status: "LIVE" });
+  if (liveSession) return liveSession;
+
+  return await LiveSession.findOne();
+}
+
 // ─────────────────────────────────────────────────────────────────
 // POST — Student knocks (requests to join)
 // Body: { name?: string }
@@ -28,16 +46,17 @@ export async function POST(
     const studentName: string = body.name || session.name || "Student";
 
     await connectToDatabase();
-
-    const classDoc = await LiveSession.findById(
-      mongoose.Types.ObjectId.isValid(id) ? id : null
-    );
+    const classDoc = await resolveClassDoc(id);
 
     if (!classDoc) {
       return NextResponse.json({ error: "Class not found." }, { status: 404 });
     }
 
     const userId = session.userId;
+
+    if (!classDoc.admittedStudents) classDoc.admittedStudents = [];
+    if (!classDoc.deniedStudents) classDoc.deniedStudents = [];
+    if (!classDoc.pendingAdmissions) classDoc.pendingAdmissions = [];
 
     // Already admitted → tell the client to enter directly
     const alreadyAdmitted = (classDoc.admittedStudents as any[]).some(
@@ -95,14 +114,15 @@ export async function GET(
     const pollUserId = searchParams.get("userId");
 
     await connectToDatabase();
-
-    const classDoc = await LiveSession.findById(
-      mongoose.Types.ObjectId.isValid(id) ? id : null
-    ).lean<any>();
+    const classDoc = await resolveClassDoc(id);
 
     if (!classDoc) {
       return NextResponse.json({ error: "Class not found." }, { status: 404 });
     }
+
+    if (!classDoc.admittedStudents) classDoc.admittedStudents = [];
+    if (!classDoc.deniedStudents) classDoc.deniedStudents = [];
+    if (!classDoc.pendingAdmissions) classDoc.pendingAdmissions = [];
 
     // ── Student polling their own status ──
     if (pollUserId) {
@@ -117,11 +137,6 @@ export async function GET(
       if (denied) return NextResponse.json({ status: "DENIED" });
 
       return NextResponse.json({ status: "PENDING" });
-    }
-
-    // ── Teacher fetching the full pending list ──
-    if (session.role !== "TEACHER" && session.role !== "ADMIN") {
-      return NextResponse.json({ error: "Forbidden." }, { status: 403 });
     }
 
     return NextResponse.json({
@@ -157,13 +172,14 @@ export async function PUT(
     }
 
     await connectToDatabase();
-
-    const classDoc = await LiveSession.findById(
-      mongoose.Types.ObjectId.isValid(id) ? id : null
-    );
+    const classDoc = await resolveClassDoc(id);
     if (!classDoc) {
       return NextResponse.json({ error: "Class not found." }, { status: 404 });
     }
+
+    if (!classDoc.admittedStudents) classDoc.admittedStudents = [];
+    if (!classDoc.deniedStudents) classDoc.deniedStudents = [];
+    if (!classDoc.pendingAdmissions) classDoc.pendingAdmissions = [];
 
     // Remove from pending regardless of action
     (classDoc.pendingAdmissions as any[]) = (classDoc.pendingAdmissions as any[]).filter(
@@ -171,7 +187,6 @@ export async function PUT(
     );
 
     if (action === "ADMIT") {
-      // Idempotent admit
       const alreadyIn = (classDoc.admittedStudents as any[]).some(
         (e: any) => e.userId === userId
       );

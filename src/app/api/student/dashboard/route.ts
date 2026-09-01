@@ -59,22 +59,34 @@ export async function GET() {
       paymentsList,
     ] = await Promise.all([
       LiveSession.find({
-        ...liveSessionFilter,
-        date: todayDateStr,
-        status: "LIVE",
+        $or: [
+          { classLevel: currentClass },
+          { batchId: batchId || null },
+          { status: "LIVE" },
+        ],
+        $or: [
+          { status: "LIVE" },
+          { date: todayDateStr },
+        ],
       })
         .populate("teacherId", "name avatarUrl email")
-        .sort({ startTime: 1 })
+        .populate("batchId")
+        .sort({ date: 1, startTime: 1 })
         .lean(),
 
       LiveSession.find({
-        ...liveSessionFilter,
+        $or: [
+          { classLevel: currentClass },
+          { batchId: batchId || null },
+          { status: "LIVE" },
+        ],
         status: { $in: ["PUBLISHED", "SCHEDULED", "LIVE"] },
         date: { $gte: todayDateStr },
       })
         .populate("teacherId", "name avatarUrl")
+        .populate("batchId")
         .sort({ date: 1, startTime: 1 })
-        .limit(6)
+        .limit(8)
         .lean(),
 
       LiveSession.find({

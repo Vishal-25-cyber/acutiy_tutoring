@@ -49,26 +49,28 @@ export async function GET() {
 
     const batchId = (profile.batchId as any)?._id || profile.batchId;
 
+    const todayDateStr = now.toISOString().split("T")[0];
+
     // Query published/scheduled/live/completed classes for this student's batch or class level
     const sessionQuery: any = {
-      status: { $in: ["PUBLISHED", "SCHEDULED", "LIVE", "COMPLETED", "CANCELLED"] },
+      status: { $in: ["PUBLISHED", "SCHEDULED", "LIVE", "COMPLETED"] },
+      $or: [
+        { classLevel: profile.currentClass },
+        { batchId: batchId || null },
+        { status: "LIVE" },
+      ],
     };
-
-    if (batchId) {
-      sessionQuery.$or = [{ batchId }, { classLevel: profile.currentClass }];
-    } else {
-      sessionQuery.classLevel = profile.currentClass;
-    }
 
     const rawClasses = await LiveSession.find(sessionQuery)
       .populate("teacherId", "name avatarUrl email phone")
       .populate("batchId")
+      .sort({ date: 1, startTime: 1 })
       .lean();
 
     const dbClasses = sortClassesByPriority(rawClasses as any[]);
 
     const todayClasses = dbClasses.filter(
-      (c: any) => c.status === "LIVE"
+      (c: any) => c.status === "LIVE" || c.date === todayDateStr
     );
 
     const weeklySchedule = [
@@ -154,7 +156,7 @@ export async function GET() {
       feeStatus,
     }, {
       headers: {
-        "Cache-Control": "private, max-age=15, stale-while-revalidate=60",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
       },
     });
   } catch (error: any) {
