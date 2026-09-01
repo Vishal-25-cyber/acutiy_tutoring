@@ -26,6 +26,40 @@ function WhatsAppIcon({ className = "w-3.5 h-3.5" }: { className?: string }) {
   );
 }
 
+function InstagramIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  );
+}
+
+function LinkedInIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z" />
+    </svg>
+  );
+}
+
+function YouTubeIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+    </svg>
+  );
+}
+
+function XTwitterIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
+
 export default function HomePage() {
   const router = useRouter();
 
@@ -1681,268 +1715,256 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           FOOTER: CONTACT US & OFFICIAL COMMUNICATIONS
       ═══════════════════════════════════════════════════════════════════════ */}
-      <footer id="contact" className="scroll-mt-20 bg-[#001726] text-white pt-16 pb-12 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <footer id="contact" className="scroll-mt-20 bg-[#001726] text-white pt-14 pb-10 border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           
-          {/* Top Footer: Contact Grid & Query Form */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          {/* Main Footer: 2-Column Balanced Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
             
-            {/* Left Column (6 cols): Direct Hotlines & Organization Info */}
-            <div className="lg:col-span-6 space-y-6">
+            {/* Left Column (5 cols): Brand, Mission, Email & Socials */}
+            <div className="lg:col-span-5 space-y-6">
               
-              <div className="space-y-2">
+              {/* Logo & Brand */}
+              <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-white p-1 flex items-center justify-center shadow-xs">
+                  <div className="w-11 h-11 rounded-2xl bg-white/10 border border-white/20 p-2 flex items-center justify-center">
                     <img src="/images/mantif_logo.png" alt="MANTIF Logo" className="w-full h-full object-contain" />
                   </div>
                   <div>
-                    <h3 className="font-black text-2xl tracking-tight text-white">MANTIF</h3>
+                    <h3 className="font-black text-2xl tracking-tight text-white flex items-center">
+                      M<span className="text-[#b89047]">Λ</span>NTIF
+                    </h3>
                     <p className="text-xs text-[#dfb74a] font-bold">Human x Artificial Intelligence</p>
                   </div>
                 </div>
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-lg font-medium">
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
                   MSME-registered EdTech startup combining empathetic educator mentorship with artificial intelligence for students of Classes 6 to 10.
                 </p>
               </div>
 
-              {/* 3 Dedicated Hotlines */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                    Official Helplines (Direct Support)
-                  </span>
-                  <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    Mon–Sat (9 AM – 8:30 PM)
-                  </span>
-                </div>
-
-                {/* Line 1: Admissions */}
-                <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between gap-3">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase text-[#dfb74a] block">
-                      Hotline 1 • Admissions &amp; Fees
-                    </span>
-                    <span className="text-sm sm:text-base font-black font-mono text-white">
-                      +91 {phone1.slice(0, 5)} {phone1.slice(5)}
-                    </span>
+              {/* Official Email */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-[#dfb74a]/20 border border-[#dfb74a]/30 flex items-center justify-center flex-shrink-0">
+                    <Mail className="w-4 h-4 text-[#dfb74a]" />
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                      Official Email
+                    </span>
                     <a
-                      href={`tel:+91${phone1}`}
-                      title="Direct Call"
-                      className="w-8 h-8 rounded-lg bg-[#004b79] hover:bg-[#005f99] text-white flex items-center justify-center transition-colors cursor-pointer"
+                      href="mailto:info@mantif.com"
+                      className="text-sm font-bold text-white hover:text-[#dfb74a] transition-colors truncate block font-mono"
                     >
-                      <PhoneCall className="w-4 h-4" />
+                      info@mantif.com
                     </a>
-                    <a
-                      href={`https://wa.me/91${phone1}?text=Hello%20Mantif%20Tutoring,%20I%20would%20like%20to%20inquire%20about%20admissions.`}
-                      target="_blank"
-                      rel="noreferrer"
-                      title="WhatsApp Chat"
-                      className="w-8 h-8 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-colors cursor-pointer"
-                    >
-                      <WhatsAppIcon className="w-4 h-4" />
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(`+91${phone1}`, "f1")}
-                      className="w-8 h-8 rounded-lg bg-white/10 text-slate-300 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
-                      title="Copy"
-                    >
-                      {copiedKey === "f1" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                    </button>
                   </div>
                 </div>
-
-                {/* Line 2: Academic Inquiries */}
-                <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between gap-3">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase text-[#dfb74a] block">
-                      Hotline 2 • Academic &amp; Batch Timing
-                    </span>
-                    <span className="text-sm sm:text-base font-black font-mono text-white">
-                      +91 {phone2.slice(0, 5)} {phone2.slice(5)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <a
-                      href={`tel:+91${phone2}`}
-                      title="Direct Call"
-                      className="w-8 h-8 rounded-lg bg-[#004b79] hover:bg-[#005f99] text-white flex items-center justify-center transition-colors cursor-pointer"
-                    >
-                      <PhoneCall className="w-4 h-4" />
-                    </a>
-                    <a
-                      href={`https://wa.me/91${phone2}?text=Hello%20Mantif%20Academic%20Team,%20I%20have%20a%20question%20about%20classes.`}
-                      target="_blank"
-                      rel="noreferrer"
-                      title="WhatsApp Chat"
-                      className="w-8 h-8 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-colors cursor-pointer"
-                    >
-                      <WhatsAppIcon className="w-4 h-4" />
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(`+91${phone2}`, "f2")}
-                      className="w-8 h-8 rounded-lg bg-white/10 text-slate-300 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
-                      title="Copy"
-                    >
-                      {copiedKey === "f2" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Line 3: Tech & General Support */}
-                <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between gap-3">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase text-[#dfb74a] block">
-                      Hotline 3 • Tech Support &amp; Helpdesk
-                    </span>
-                    <span className="text-sm sm:text-base font-black font-mono text-white">
-                      +91 {phone3.slice(0, 5)} {phone3.slice(5)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <a
-                      href={`tel:+91${phone3}`}
-                      title="Direct Call"
-                      className="w-8 h-8 rounded-lg bg-[#004b79] hover:bg-[#005f99] text-white flex items-center justify-center transition-colors cursor-pointer"
-                    >
-                      <PhoneCall className="w-4 h-4" />
-                    </a>
-                    <a
-                      href={`https://wa.me/91${phone3}?text=Hello%20Mantif%20Support,%20I%20need%20assistance.`}
-                      target="_blank"
-                      rel="noreferrer"
-                      title="WhatsApp Chat"
-                      className="w-8 h-8 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-colors cursor-pointer"
-                    >
-                      <WhatsAppIcon className="w-4 h-4" />
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(`+91${phone3}`, "f3")}
-                      className="w-8 h-8 rounded-lg bg-white/10 text-slate-300 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
-                      title="Copy"
-                    >
-                      {copiedKey === "f3" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
+                <button
+                  type="button"
+                  onClick={() => handleCopy("info@mantif.com", "fmail")}
+                  className="w-8 h-8 rounded-lg bg-white/10 text-slate-300 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer flex-shrink-0"
+                  title="Copy Email"
+                >
+                  {copiedKey === "fmail" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-slate-300" />}
+                </button>
               </div>
 
-              {/* Email Support */}
-              <div className="flex items-center gap-3 text-xs text-slate-300">
-                <Mail className="w-4 h-4 text-[#dfb74a]" />
-                <span>Official Support: <strong className="text-white font-mono">{supportEmail}</strong></span>
+              {/* Connect With Us: Real Social Icons */}
+              <div className="space-y-2.5">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#dfb74a] block">
+                  Connect With Us
+                </span>
+                <div className="flex items-center gap-3">
+                  <a
+                    href="https://instagram.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    title="Instagram"
+                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#dc2743] hover:to-[#bc1888] border border-white/10 hover:border-transparent text-slate-300 hover:text-white flex items-center justify-center transition-all duration-300 group cursor-pointer shadow-sm hover:scale-105"
+                  >
+                    <InstagramIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  </a>
+                  <a
+                    href="https://linkedin.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    title="LinkedIn"
+                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-[#0077B5] border border-white/10 hover:border-transparent text-slate-300 hover:text-white flex items-center justify-center transition-all duration-300 group cursor-pointer shadow-sm hover:scale-105"
+                  >
+                    <LinkedInIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  </a>
+                  <a
+                    href="https://youtube.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    title="YouTube"
+                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-[#FF0000] border border-white/10 hover:border-transparent text-slate-300 hover:text-white flex items-center justify-center transition-all duration-300 group cursor-pointer shadow-sm hover:scale-105"
+                  >
+                    <YouTubeIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  </a>
+                  <a
+                    href="https://x.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    title="X (Twitter)"
+                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-black border border-white/10 hover:border-white/30 text-slate-300 hover:text-white flex items-center justify-center transition-all duration-300 group cursor-pointer shadow-sm hover:scale-105"
+                  >
+                    <XTwitterIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  </a>
+                  <a
+                    href={`https://wa.me/91${phone1}?text=Hello%20Mantif%20Team`}
+                    target="_blank"
+                    rel="noreferrer"
+                    title="WhatsApp"
+                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-[#25D366] border border-white/10 hover:border-transparent text-slate-300 hover:text-white flex items-center justify-center transition-all duration-300 group cursor-pointer shadow-sm hover:scale-105"
+                  >
+                    <WhatsAppIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  </a>
+                </div>
               </div>
 
             </div>
 
-            {/* Right Column (6 cols): Direct Message Inquiry Form */}
-            <div className="lg:col-span-6 bg-white/5 rounded-3xl p-6 sm:p-8 border border-white/10 space-y-4">
-              <div className="space-y-1">
-                <h4 className="text-base sm:text-lg font-black text-white">Send Direct Message</h4>
-                <p className="text-xs text-slate-400 font-medium">
-                  Have a question about admissions, fee structure, or demo classes? We respond within 15 minutes.
-                </p>
+            {/* Right Column (7 cols): 3 Dedicated Helplines */}
+            <div className="lg:col-span-7 space-y-4">
+              
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#dfb74a]">
+                  Official Helplines (Direct Support)
+                </span>
+                <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Mon–Sat (9 AM – 8:30 PM)
+                </span>
               </div>
 
-              {qErr && (
-                <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-500/30 text-xs text-rose-200 font-semibold">
-                  {qErr}
+              {/* Line 1: Admissions */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[#dfb74a]/40 transition-colors flex items-center justify-between gap-3">
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase text-[#dfb74a] block">
+                    Hotline 1 • Admissions &amp; Fees
+                  </span>
+                  <span className="text-base sm:text-lg font-black font-mono text-white tracking-wide">
+                    +91 {phone1.slice(0, 5)} {phone1.slice(5)}
+                  </span>
                 </div>
-              )}
-              {qOk && (
-                <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-xs text-emerald-200 font-semibold">
-                  {qOk}
+                <div className="flex items-center gap-2">
+                  <a
+                    href={`tel:+91${phone1}`}
+                    title="Direct Call"
+                    className="w-9 h-9 rounded-xl bg-[#004b79] hover:bg-[#005f99] text-white flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <PhoneCall className="w-4 h-4" />
+                  </a>
+                  <a
+                    href={`https://wa.me/91${phone1}?text=Hello%20Mantif%20Tutoring,%20I%20would%20like%20to%20inquire%20about%20admissions.`}
+                    target="_blank"
+                    rel="noreferrer"
+                    title="WhatsApp Chat"
+                    className="w-9 h-9 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <WhatsAppIcon className="w-4 h-4" />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(`+91${phone1}`, "f1")}
+                    className="w-9 h-9 rounded-xl bg-white/10 text-slate-300 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
+                    title="Copy Number"
+                  >
+                    {copiedKey === "f1" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                  </button>
                 </div>
-              )}
+              </div>
 
-              <form onSubmit={handleQuickContactSubmit} className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="block text-[11px] font-bold text-slate-300">Your Name *</label>
-                    <input
-                      type="text"
-                      value={qName}
-                      onChange={(e) => setQName(e.target.value)}
-                      placeholder="Enter full name"
-                      className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-white/10 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-[#dfb74a]"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-[11px] font-bold text-slate-300">Mobile Number *</label>
-                    <input
-                      type="tel"
-                      maxLength={10}
-                      value={qPhone}
-                      onChange={(e) => setQPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                      placeholder="10-digit mobile"
-                      className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-white/10 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-[#dfb74a]"
-                    />
-                  </div>
+              {/* Line 2: Academic Inquiries */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[#dfb74a]/40 transition-colors flex items-center justify-between gap-3">
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase text-[#dfb74a] block">
+                    Hotline 2 • Academic &amp; Batch Timing
+                  </span>
+                  <span className="text-base sm:text-lg font-black font-mono text-white tracking-wide">
+                    +91 {phone2.slice(0, 5)} {phone2.slice(5)}
+                  </span>
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="block text-[11px] font-bold text-slate-300">Student Grade</label>
-                    <select
-                      value={qClass}
-                      onChange={(e) => setQClass(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-[#001f33] border border-white/10 text-white focus:outline-none focus:border-[#dfb74a] cursor-pointer"
-                    >
-                      {["Class 6", "Class 7", "Class 8", "Class 9", "Class 10"].map((c) => (
-                        <option key={c} value={c} className="bg-[#001726]">{c}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-[11px] font-bold text-slate-300">Curriculum Board</label>
-                    <select
-                      value={qBoard}
-                      onChange={(e) => setQBoard(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-[#001f33] border border-white/10 text-white focus:outline-none focus:border-[#dfb74a] cursor-pointer"
-                    >
-                      <option value="CBSE" className="bg-[#001726]">CBSE Board</option>
-                      <option value="State Board" className="bg-[#001726]">State Board</option>
-                    </select>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={`tel:+91${phone2}`}
+                    title="Direct Call"
+                    className="w-9 h-9 rounded-xl bg-[#004b79] hover:bg-[#005f99] text-white flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <PhoneCall className="w-4 h-4" />
+                  </a>
+                  <a
+                    href={`https://wa.me/91${phone2}?text=Hello%20Mantif%20Academic%20Team,%20I%20have%20a%20question%20about%20classes.`}
+                    target="_blank"
+                    rel="noreferrer"
+                    title="WhatsApp Chat"
+                    className="w-9 h-9 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <WhatsAppIcon className="w-4 h-4" />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(`+91${phone2}`, "f2")}
+                    className="w-9 h-9 rounded-xl bg-white/10 text-slate-300 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
+                    title="Copy Number"
+                  >
+                    {copiedKey === "f2" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                  </button>
                 </div>
+              </div>
 
-                <div className="space-y-1">
-                  <label className="block text-[11px] font-bold text-slate-300">Message / Query *</label>
-                  <textarea
-                    rows={3}
-                    value={qMessage}
-                    onChange={(e) => setQMessage(e.target.value)}
-                    placeholder="Tell us what you would like to know..."
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-white/10 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-[#dfb74a] resize-none"
-                  />
+              {/* Line 3: Tech Support */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[#dfb74a]/40 transition-colors flex items-center justify-between gap-3">
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase text-[#dfb74a] block">
+                    Hotline 3 • Tech Support &amp; Helpdesk
+                  </span>
+                  <span className="text-base sm:text-lg font-black font-mono text-white tracking-wide">
+                    +91 {phone3.slice(0, 5)} {phone3.slice(5)}
+                  </span>
                 </div>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={`tel:+91${phone3}`}
+                    title="Direct Call"
+                    className="w-9 h-9 rounded-xl bg-[#004b79] hover:bg-[#005f99] text-white flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <PhoneCall className="w-4 h-4" />
+                  </a>
+                  <a
+                    href={`https://wa.me/91${phone3}?text=Hello%20Mantif%20Support,%20I%20need%20assistance.`}
+                    target="_blank"
+                    rel="noreferrer"
+                    title="WhatsApp Chat"
+                    className="w-9 h-9 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <WhatsAppIcon className="w-4 h-4" />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(`+91${phone3}`, "f3")}
+                    className="w-9 h-9 rounded-xl bg-white/10 text-slate-300 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
+                    title="Copy Number"
+                  >
+                    {copiedKey === "f3" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
 
-                <button
-                  type="submit"
-                  disabled={qLoading}
-                  className="w-full py-3 rounded-xl bg-[#dfb74a] hover:bg-[#ebd085] text-[#002137] font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md disabled:opacity-60"
-                >
-                  {qLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><span>Submit Inquiry</span><Send className="w-3.5 h-3.5" /></>}
-                </button>
-              </form>
             </div>
 
           </div>
 
           {/* Bottom Copyright & MSME Legal Bar */}
-          <div className="pt-8 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+          <div className="pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-white">MANTIF</span>
               <span>•</span>
               <span>Human x Artificial Intelligence</span>
               <span>•</span>
-              <span className="text-[#dfb74a]">MSME Registered Startup</span>
+              <span className="text-[#dfb74a]">MSME Registered EdTech Startup</span>
             </div>
             <p>© 2026 MANTIF. All rights reserved.</p>
           </div>
