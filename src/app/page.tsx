@@ -999,13 +999,13 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 2: TUTORING HUB (WHERE IT ALL BEGAN - CENTERED FULL-PAGE CARDLESS)
+          PAGE 2: TUTORING HUB (WHERE IT ALL BEGAN - EVOLUTION SHOWCASE)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="tutoring-hub" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-white py-12 lg:py-16">
-        <div className="w-full max-w-5xl mx-auto px-6 sm:px-10 lg:px-16 text-center space-y-8">
+      <section id="tutoring-hub" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/50 to-white py-10 lg:py-14">
+        <div className="w-full max-w-6xl mx-auto px-6 sm:px-10 lg:px-16 space-y-8">
           
-          {/* Centered Heading */}
-          <div className="space-y-2">
+          {/* Header */}
+          <div className="text-center space-y-2">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Tutoring Hub
             </h2>
@@ -1014,18 +1014,52 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Centered Full-Width Narrative Content */}
-          <div className="max-w-3xl mx-auto space-y-5 text-slate-700 text-base sm:text-lg lg:text-xl leading-relaxed font-medium">
-            <p>
-              For the past four years, <strong>Tutoring Hub</strong> has been a physical learning space where we worked closely with students and gained valuable experience in teaching and managing educational programs.
-            </p>
-            <p>
-              Now, we are taking that experience online through <strong>MANTIF</strong>, creating meaningful learning solutions for both students and educational institutions.
-            </p>
+          {/* Narrative Evolution Showcase (Connecting Physical to Online MANTIF) */}
+          <div className="grid grid-cols-1 md:grid-cols-11 gap-6 items-center pt-2">
+            
+            {/* Step 1: Physical Tutoring Hub (5 cols) */}
+            <div className="md:col-span-5 space-y-3 p-6 sm:p-7 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-[#002137]/30 transition-all">
+              <div className="flex items-center justify-between">
+                <span className="px-3 py-1 rounded-full bg-blue-50 text-[#004b79] text-xs font-black uppercase tracking-wider">
+                  Physical Space • 4 Years
+                </span>
+                <Building className="w-5 h-5 text-[#004b79]" />
+              </div>
+              <h3 className="text-lg font-black text-[#002137]">
+                Close Mentorship &amp; Teaching
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
+                For the past four years, <strong>Tutoring Hub</strong> has been a physical learning space where we worked closely with students and gained valuable experience in teaching and managing educational programs.
+              </p>
+            </div>
+
+            {/* Transition Indicator (1 col) */}
+            <div className="md:col-span-1 flex flex-col items-center justify-center text-[#b89047] py-2 md:py-0">
+              <div className="w-10 h-10 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center shadow-xs">
+                <ArrowRight className="w-5 h-5 text-[#b89047] rotate-90 md:rotate-0" />
+              </div>
+            </div>
+
+            {/* Step 2: MANTIF Online Forward (5 cols) */}
+            <div className="md:col-span-5 space-y-3 p-6 sm:p-7 rounded-2xl bg-[#002137] text-white shadow-md">
+              <div className="flex items-center justify-between">
+                <span className="px-3 py-1 rounded-full bg-white/15 text-[#dfb74a] text-xs font-black uppercase tracking-wider">
+                  Online Innovation • Today
+                </span>
+                <Rocket className="w-5 h-5 text-[#dfb74a]" />
+              </div>
+              <h3 className="text-lg font-black text-white">
+                MANTIF Taking It Forward
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
+                Now, we are taking that experience online through <strong>MANTIF</strong>, creating meaningful learning solutions for both students and educational institutions.
+              </p>
+            </div>
+
           </div>
 
-          {/* Centered Quote */}
-          <div className="space-y-1 py-2">
+          {/* Golden Highlight Statement */}
+          <div className="text-center py-2 space-y-1">
             <p className="text-lg sm:text-xl lg:text-2xl font-black text-[#002137]">
               “Tutoring Hub gave us the foundation.
             </p>
@@ -1034,8 +1068,8 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Centered CTAs */}
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+          {/* Action CTAs */}
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-1">
             <button
               type="button"
               onClick={() => {
