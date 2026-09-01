@@ -99,6 +99,14 @@ export function JitsiClassroom({
   const screenStreamRef    = useRef<MediaStream | null>(null);
   const chatBottomRef      = useRef<HTMLDivElement | null>(null);
   const pollTimerRef       = useRef<NodeJS.Timeout | null>(null);
+  const queuedIceCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
+
+  const isMicOnRef = useRef(isMicOn);
+  useEffect(() => { isMicOnRef.current = isMicOn; }, [isMicOn]);
+  const isCameraOnRef = useRef(isCameraOn);
+  useEffect(() => { isCameraOnRef.current = isCameraOn; }, [isCameraOn]);
+  const isScreenSharingRef = useRef(isScreenSharing);
+  useEffect(() => { isScreenSharingRef.current = isScreenSharing; }, [isScreenSharing]);
 
   /* ── WebRTC & Realtime State ── */
   const [remoteParticipant, setRemoteParticipant] = useState<{ id: string; name: string; role: string; isCameraOn?: boolean; isMicOn?: boolean } | null>(null);
@@ -236,6 +244,20 @@ export function JitsiClassroom({
   /* ─────────────────────────────────────────────────
      2b.  WebRTC Peer-to-Peer Streaming (Teacher <-> Student)
   ───────────────────────────────────────────────── */
+  const addTracksToPeerConnection = useCallback((pc: RTCPeerConnection) => {
+    const stream = screenStreamRef.current || localStreamRef.current;
+    if (!stream) return;
+    stream.getTracks().forEach((track) => {
+      const senders = pc.getSenders();
+      const existingSender = senders.find((s) => s.track?.kind === track.kind || s.kind === track.kind);
+      if (existingSender) {
+        existingSender.replaceTrack(track).catch(() => {});
+      } else {
+        pc.addTrack(track, stream);
+      }
+    });
+  }, []);
+
   useEffect(() => {
     if (stage !== "LIVE_CLASS") return;
 
@@ -246,16 +268,16 @@ export function JitsiClassroom({
           { urls: "stun:stun.l.google.com:19302" },
           { urls: "stun:stun1.l.google.com:19302" },
           { urls: "stun:stun2.l.google.com:19302" },
+          { urls: "stun:stun3.l.google.com:19302" },
+          { urls: "stun:stun4.l.google.com:19302" },
+          { urls: "stun:stun.services.mozilla.com" },
+          { urls: "stun:global.stun.twilio.com:3478" },
         ],
       });
       peerConnectionRef.current = pc;
 
       // Add local media tracks to peer connection
-      if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach((track) => {
-          pc?.addTrack(track, localStreamRef.current!);
-        });
-      }
+      addTracksToPeerConnection(pc);
 
       // Handle incoming remote audio/video tracks
       pc.ontrack = (event) => {
@@ -296,6 +318,9 @@ export function JitsiClassroom({
     // Polling loop for WebRTC signals (Offers, Answers, ICE Candidates)
     const signalInterval = setInterval(async () => {
       try {
+        const activePC = peerConnectionRef.current;
+        if (activePC) addTracksToPeerConnection(activePC);
+
         // Send heartbeat & presence
         await fetch(`/api/classes/${targetClassId}/signal`, {
           method: "POST",
@@ -304,8 +329,9 @@ export function JitsiClassroom({
             senderId: userInfo.id,
             name: userInfo.name,
             role: userInfo.role,
-            isCameraOn,
-            isMicOn,
+            isCameraOn: isCameraOnRef.current,
+            isMicOn: isMicOnRef.current,
+            isScreenSharing: isScreenSharingRef.current,
           }),
         });
 
@@ -313,6 +339,8 @@ export function JitsiClassroom({
         const res = await fetch(`/api/classes/${targetClassId}/signal?userId=${userInfo.id}&since=${lastSignalTime}`);
         if (!res.ok) return;
         const data = await res.json();
+        lastSignalTime = data.serverTime || Date.now();
+
         // Check if teacher concluded the class
         if (data.isEnded || (data.signals && data.signals.some((s: any) => s.type === "CLASS_ENDED"))) {
           if (!userInfo.isTeacher) {
@@ -330,15 +358,27 @@ export function JitsiClassroom({
         if (data.participants) {
           setRealtimeParticipants(data.participants);
           const other = data.participants.find((p: any) => p.id !== userInfo.id);
-          if (other) setRemoteParticipant(other);
+          if (other) {
+            setRemoteParticipant(other);
+          } else {
+            setRemoteParticipant(null);
+          }
         }
 
         // Process WebRTC signals
         for (const sig of data.signals || []) {
-          if (sig.type === "offer" && !userInfo.isTeacher && pc) {
-            await pc.setRemoteDescription(new RTCSessionDescription(sig.data));
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
+          if (sig.type === "offer" && !userInfo.isTeacher && activePC) {
+            addTracksToPeerConnection(activePC);
+            await activePC.setRemoteDescription(new RTCSessionDescription(sig.data));
+
+            // Flush queued candidates
+            while (queuedIceCandidatesRef.current.length > 0) {
+              const c = queuedIceCandidatesRef.current.shift();
+              if (c) try { await activePC.addIceCandidate(new RTCIceCandidate(c)); } catch (e) {}
+            }
+
+            const answer = await activePC.createAnswer();
+            await activePC.setLocalDescription(answer);
             await fetch(`/api/classes/${targetClassId}/signal`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -351,24 +391,34 @@ export function JitsiClassroom({
                 data: answer,
               }),
             });
-          } else if (sig.type === "answer" && userInfo.isTeacher && pc) {
-            if (pc.signalingState === "have-local-offer") {
-              await pc.setRemoteDescription(new RTCSessionDescription(sig.data));
+          } else if (sig.type === "answer" && userInfo.isTeacher && activePC) {
+            if (activePC.signalingState === "have-local-offer") {
+              await activePC.setRemoteDescription(new RTCSessionDescription(sig.data));
+              // Flush queued candidates
+              while (queuedIceCandidatesRef.current.length > 0) {
+                const c = queuedIceCandidatesRef.current.shift();
+                if (c) try { await activePC.addIceCandidate(new RTCIceCandidate(c)); } catch (e) {}
+              }
             }
-          } else if (sig.type === "candidate" && pc) {
-            try {
-              await pc.addIceCandidate(new RTCIceCandidate(sig.data));
-            } catch (e) {}
+          } else if (sig.type === "candidate" && activePC) {
+            if (activePC.remoteDescription && activePC.remoteDescription.type) {
+              try {
+                await activePC.addIceCandidate(new RTCIceCandidate(sig.data));
+              } catch (e) {}
+            } else {
+              queuedIceCandidatesRef.current.push(sig.data);
+            }
           }
         }
 
         // If Teacher and student is detected, initiate offer
-        if (userInfo.isTeacher && pc && !isCreatingOffer && (pc.signalingState === "stable" || pc.signalingState === "have-local-offer")) {
+        if (userInfo.isTeacher && activePC && !isCreatingOffer && (activePC.signalingState === "stable" || activePC.signalingState === "have-local-offer")) {
           const other = data.participants?.find((p: any) => p.id !== userInfo.id);
-          if (other && pc.signalingState === "stable") {
+          if (other && activePC.signalingState === "stable") {
             isCreatingOffer = true;
-            const offer = await pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
-            await pc.setLocalDescription(offer);
+            addTracksToPeerConnection(activePC);
+            const offer = await activePC.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
+            await activePC.setLocalDescription(offer);
             await fetch(`/api/classes/${targetClassId}/signal`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -395,7 +445,7 @@ export function JitsiClassroom({
         peerConnectionRef.current = null;
       }
     };
-  }, [stage, userInfo.id, userInfo.name, userInfo.role, userInfo.isTeacher, classId, classData, isCameraOn, isMicOn]);
+  }, [stage, userInfo.id, userInfo.name, userInfo.role, userInfo.isTeacher, classId, classData?.id, classData?.livekitRoomId, addTracksToPeerConnection, stopAllMedia]);
 
   /* ─────────────────────────────────────────────────
      3a.  STUDENT → knock & poll for admission
@@ -1106,7 +1156,7 @@ export function JitsiClassroom({
                       {initials(classData?.teacher?.name || "TC")}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-white">{classData?.teacher?.name || "Teacher"}</p>
+                      <p className="text-sm font-medium text-white">{classData?.teacher?.name || "Faculty Teacher"}</p>
                       <span className="text-xs text-slate-400">Connecting video feed...</span>
                     </div>
                   </div>
@@ -1115,60 +1165,62 @@ export function JitsiClassroom({
             )}
             <div className="absolute bottom-2 left-2 px-2 py-1 rounded-md bg-black/70 text-[11px] font-medium text-white flex items-center gap-1.5 z-10">
               <Mic className="w-3 h-3 text-emerald-400" />
-              <span>{classData?.teacher?.name || "Teacher"} · {isScreenSharing ? "Screen Sharing" : "Host"}</span>
+              <span>{userInfo.isTeacher ? `${userInfo.name} (You)` : (classData?.teacher?.name || "Teacher")} · {isScreenSharing && userInfo.isTeacher ? "Screen Sharing" : "Host"}</span>
             </div>
           </div>
 
-          {/* Student / Peer tile */}
-          <div className="flex-1 relative rounded-xl overflow-hidden bg-[#1e1e1e] border border-white/10 flex items-center justify-center min-w-0">
-            {!userInfo.isTeacher ? (
-              isCameraOn ? (
-                <video
-                  ref={localVideoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover -scale-x-100"
-                />
-              ) : (
-                <div className="flex flex-col items-center gap-3">
-                  <div className="w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center text-xl font-semibold text-slate-200">
-                    {initials(userInfo.name)}
-                  </div>
-                  <span className="text-xs text-slate-500">{userInfo.name} (You)</span>
-                </div>
-              )
-            ) : (
-              <div className="relative w-full h-full flex items-center justify-center">
-                <video
-                  ref={remoteVideoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
-                {!hasRemoteVideo && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#1e1e1e]">
+          {/* Student / Peer tile — Only render if a remote student exists or if user is student */}
+          {(!userInfo.isTeacher || remoteParticipant) && (
+            <div className="flex-1 relative rounded-xl overflow-hidden bg-[#1e1e1e] border border-white/10 flex items-center justify-center min-w-0">
+              {!userInfo.isTeacher ? (
+                isCameraOn ? (
+                  <video
+                    ref={localVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover -scale-x-100"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center gap-3">
                     <div className="w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center text-xl font-semibold text-slate-200">
-                      {initials(remoteParticipant?.name || "Student")}
+                      {initials(userInfo.name)}
                     </div>
-                    <span className="text-xs text-slate-400">{remoteParticipant?.name || "Connecting student..."}</span>
+                    <span className="text-xs text-slate-500">{userInfo.name} (You)</span>
                   </div>
-                )}
+                )
+              ) : (
+                <div className="relative w-full h-full flex items-center justify-center">
+                  <video
+                    ref={remoteVideoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                  {!hasRemoteVideo && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#1e1e1e]">
+                      <div className="w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center text-xl font-semibold text-slate-200">
+                        {initials(remoteParticipant?.name || "ST")}
+                      </div>
+                      <span className="text-xs text-slate-400">{remoteParticipant?.name || "Student"}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="absolute bottom-2 left-2 px-2 py-1 rounded-md bg-black/70 text-[11px] font-medium text-white flex items-center gap-1.5 z-10">
+                {(!userInfo.isTeacher ? isMicOn : remoteParticipant?.isMicOn !== false)
+                  ? <Mic className="w-3 h-3 text-emerald-400" />
+                  : <MicOff className="w-3 h-3 text-rose-400" />}
+                <span>{!userInfo.isTeacher ? `${userInfo.name} (You)` : (remoteParticipant?.name || "Student")}</span>
               </div>
-            )}
-            <div className="absolute bottom-2 left-2 px-2 py-1 rounded-md bg-black/70 text-[11px] font-medium text-white flex items-center gap-1.5 z-10">
-              {(!userInfo.isTeacher ? isMicOn : remoteParticipant?.isMicOn !== false)
-                ? <Mic className="w-3 h-3 text-emerald-400" />
-                : <MicOff className="w-3 h-3 text-rose-400" />}
-              <span>{!userInfo.isTeacher ? `${userInfo.name} (You)` : (remoteParticipant?.name || "Student")}</span>
+              {isHandRaised && !userInfo.isTeacher && (
+                <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-amber-500 text-[10px] font-bold text-black flex items-center gap-1 z-10">
+                  <Hand className="w-3 h-3" />
+                  Hand Raised
+                </div>
+              )}
             </div>
-            {isHandRaised && !userInfo.isTeacher && (
-              <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-amber-500 text-[10px] font-bold text-black flex items-center gap-1 z-10">
-                <Hand className="w-3 h-3" />
-                Hand Raised
-              </div>
-            )}
-          </div>
+          )}
         </div>
 
         {/* ── Sidebar ── */}
@@ -1182,7 +1234,7 @@ export function JitsiClassroom({
               </h3>
               <button
                 onClick={() => setActiveSidebar("NONE")}
-                className="w-7 h-7 rounded flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                className="w-7 h-7 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1191,32 +1243,36 @@ export function JitsiClassroom({
             <div className="flex-1 overflow-y-auto p-4">
               {/* ── Chat ── */}
               {activeSidebar === "CHAT" && (
-                <div className="flex flex-col h-full min-h-0">
-                  <div className="flex-1 space-y-3 overflow-y-auto mb-3">
-                    {messages.length === 0 && (
-                      <p className="text-xs text-slate-500 text-center mt-6">No messages yet. Say hi! 👋</p>
+                <div className="h-full flex flex-col justify-between">
+                  <div className="space-y-3 overflow-y-auto pr-1">
+                    {messages.length === 0 ? (
+                      <p className="text-xs text-slate-500 text-center py-8">No messages yet. Send a message to the class!</p>
+                    ) : (
+                      messages.map((m) => (
+                        <div
+                          key={m.id}
+                          className={`flex flex-col ${m.isSelf ? "items-end" : "items-start"}`}
+                        >
+                          <div className="flex items-baseline gap-1.5 mb-1">
+                            <span className="text-[10px] font-medium text-slate-400">{m.sender}</span>
+                            <span className="text-[9px] text-slate-600">{m.time}</span>
+                          </div>
+                          <div
+                            className={`max-w-[85%] px-3 py-2 rounded-xl text-xs ${
+                              m.isSelf
+                                ? "bg-blue-600 text-white rounded-br-xs"
+                                : "bg-white/10 text-slate-100 rounded-bl-xs"
+                            }`}
+                          >
+                            {m.text}
+                          </div>
+                        </div>
+                      ))
                     )}
-                    {messages.map((m) => (
-                      <div key={m.id} className={`space-y-1 ${m.isSelf ? "text-right" : ""}`}>
-                        <div
-                          className="flex items-center gap-1.5 text-[10px] text-slate-500"
-                          style={{ justifyContent: m.isSelf ? "flex-end" : "flex-start" }}
-                        >
-                          <span className="font-medium text-slate-400">{m.sender}</span>
-                          <span>{m.time}</span>
-                        </div>
-                        <div
-                          className={`inline-block px-3 py-2 rounded-xl text-xs text-white leading-relaxed max-w-[85%] ${
-                            m.isSelf ? "bg-blue-600" : "bg-slate-700"
-                          }`}
-                        >
-                          {m.text}
-                        </div>
-                      </div>
-                    ))}
                     <div ref={chatBottomRef} />
                   </div>
-                  <form onSubmit={handleSendMessage} className="flex gap-2 border-t border-white/10 pt-3 shrink-0">
+
+                  <form onSubmit={handleSendMessage} className="mt-3 flex gap-2">
                     <input
                       type="text"
                       placeholder="Message everyone…"
@@ -1282,24 +1338,12 @@ export function JitsiClassroom({
                     </div>
                   )}
 
-                  {/* In call */}
+                  {/* In call — Real Connected Participants Only */}
                   <div className="space-y-1.5">
                     <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">
-                      In This Call ({2 + admittedList.length})
+                      In This Call ({1 + realtimeParticipants.filter((p) => p.id !== userInfo.id).length})
                     </p>
-                    {/* Teacher row */}
-                    <div className="p-2.5 rounded-lg bg-white/5 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-semibold text-slate-200">
-                          {initials(classData?.teacher?.name || "TC")}
-                        </div>
-                        <div>
-                          <p className="text-xs font-medium text-white">{classData?.teacher?.name || "Teacher"}</p>
-                          <p className="text-[10px] text-amber-400 font-semibold">Host</p>
-                        </div>
-                      </div>
-                      <Mic className="w-3.5 h-3.5 text-emerald-400" />
-                    </div>
+
                     {/* Self */}
                     <div className="p-2.5 rounded-lg bg-white/5 flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -1315,13 +1359,22 @@ export function JitsiClassroom({
                         ? <Mic className="w-3.5 h-3.5 text-emerald-400" />
                         : <MicOff className="w-3.5 h-3.5 text-rose-400" />}
                     </div>
-                    {/* Admitted students */}
-                    {admittedList.map((s) => (
-                      <div key={s.userId} className="p-2.5 rounded-lg bg-white/5 flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-semibold text-slate-200">
-                          ST
+
+                    {/* Other connected real participants */}
+                    {realtimeParticipants.filter((p) => p.id !== userInfo.id).map((p) => (
+                      <div key={p.id} className="p-2.5 rounded-lg bg-white/5 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-semibold text-slate-200">
+                            {initials(p.name)}
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-white">{p.name}</p>
+                            <p className="text-[10px] text-slate-400">{p.role === "TEACHER" || p.role === "ADMIN" ? "Host" : "Student"}</p>
+                          </div>
                         </div>
-                        <p className="text-xs text-slate-300">Student</p>
+                        {p.isMicOn !== false
+                          ? <Mic className="w-3.5 h-3.5 text-emerald-400" />
+                          : <MicOff className="w-3.5 h-3.5 text-rose-400" />}
                       </div>
                     ))}
                   </div>
