@@ -102,10 +102,16 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getSession(req).catch(() => null);
     let teacherUserId = session?.userId;
-    if (!teacherUserId) {
+    if (!teacherUserId || teacherUserId === "staff") {
       const User = (await import("@/models/User")).default;
-      const staffUser = await User.findOne({ role: { $in: ["TEACHER", "ADMIN"] }, status: "ACTIVE" });
-      teacherUserId = staffUser?._id?.toString() || "staff";
+      const staffUser = await User.findOne({
+        $or: [
+          { role: { $in: ["TEACHER", "ADMIN"] }, status: "ACTIVE" },
+          { email: "sudeepk.23cse@kongu.edu" },
+          { name: /sudeep/i },
+        ],
+      });
+      teacherUserId = staffUser?._id?.toString() || session?.userId || "staff";
     }
 
     const body = await req.json();
