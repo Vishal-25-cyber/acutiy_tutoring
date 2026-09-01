@@ -112,7 +112,7 @@ export function PortalSidebar({ role }: SidebarProps) {
     if (item.href) {
       try {
         router.prefetch(item.href);
-      } catch (e) {}
+      } catch (e) { }
     }
     if (item.api) {
       prefetchApi(item.api);
@@ -142,7 +142,7 @@ export function PortalSidebar({ role }: SidebarProps) {
           <div className="flex flex-col justify-center min-w-0">
             <div className="flex items-center gap-1.5">
               <span
-                className="font-black text-[19px] tracking-[0.14em] text-[#002137] dark:text-white leading-tight select-none truncate"
+                className="font-black text-[18px] tracking-[0.14em] text-[#002137] dark:text-white leading-tight select-none truncate"
                 style={{ fontFamily: "'Montserrat', 'Plus Jakarta Sans', sans-serif" }}
               >
                 M<span className="text-[#b89047] dark:text-[#dfb74a]">Λ</span>NTIF
@@ -198,10 +198,10 @@ export function PortalSidebar({ role }: SidebarProps) {
                     item.badgeVariant === "warning"
                       ? "bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30"
                       : item.badgeVariant === "live"
-                      ? "bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/30"
-                      : isActive
-                      ? "bg-blue-200/60 dark:bg-blue-900/40 text-blue-700 dark:text-sky-300"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                        ? "bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/30"
+                        : isActive
+                          ? "bg-blue-200/60 dark:bg-blue-900/40 text-blue-700 dark:text-sky-300"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                   )}
                 >
                   {item.badge}
