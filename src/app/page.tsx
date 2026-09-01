@@ -73,8 +73,7 @@ export default function HomePage() {
   const [pw, setPw] = useState("");
   const [showPw, setShowPw] = useState(false);
 
-  // Gallery Lightbox Modal & Filter State
-  const [galleryCategory, setGalleryCategory] = useState<string>("ALL");
+  // Gallery Lightbox Modal State
   const [selectedGalleryItem, setSelectedGalleryItem] = useState<{ src: string; tag: string; title: string; sub: string } | null>(null);
 
   // Dynamic Contact & Phone State
@@ -1568,55 +1567,20 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Interactive Category Filter Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-            {[
-              { id: "ALL", label: "All Moments", count: 10 },
-              { id: "CLASSROOM", label: "Classroom & Math", count: 4 },
-              { id: "CREATIVE", label: "Creative & Art", count: 2 },
-              { id: "MENTORSHIP", label: "Mentorship & Focus", count: 2 },
-              { id: "COMMUNITY", label: "Student Community", count: 2 },
-            ].map((cat) => {
-              const active = galleryCategory === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setGalleryCategory(cat.id)}
-                  className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-extrabold transition-all duration-300 flex items-center gap-2 cursor-pointer ${
-                    active
-                      ? "bg-[#002137] text-white shadow-md shadow-[#002137]/20 border border-[#002137]"
-                      : "bg-white text-slate-600 hover:text-[#002137] hover:bg-slate-100 border border-slate-200"
-                  }`}
-                >
-                  <span>{cat.label}</span>
-                  <span
-                    className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${
-                      active ? "bg-[#dfb74a] text-[#002137]" : "bg-slate-100 text-slate-500"
-                    }`}
-                  >
-                    {cat.count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
           {/* Large-Format Responsive Dynamic Photo Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {[
-              { id: 1, category: "CREATIVE", src: "/images/gallery_1.jpg", tag: "Tutoring Hub", title: "Creative Learning & Activity Circles", sub: "Hands-on collaborative drawing and color studies at Tutoring Hub." },
-              { id: 2, category: "CLASSROOM", src: "/images/gallery_2.jpg", tag: "Active Learning", title: "Interactive Reading & Discovery", sub: "Young students exploring science and nature literature together." },
-              { id: 3, category: "MENTORSHIP", src: "/images/gallery_3.jpg", tag: "Mentorship", title: "Early Focus & Skill Building", sub: "Individual care and guided creative practice for young minds." },
-              { id: 4, category: "CLASSROOM", src: "/images/gallery_4.jpg", tag: "Academic Excellence", title: "Classroom Problem Solving", sub: "In-depth whiteboard concept breakdown and formula analysis." },
-              { id: 5, category: "CLASSROOM", src: "/images/gallery_5.jpg", tag: "Math Mastery", title: "Whiteboard Algebraic Practice", sub: "Student deriving step-by-step solutions to linear algebraic problems." },
-              { id: 6, category: "COMMUNITY", src: "/images/gallery_6.jpg", tag: "Student Life", title: "Peer Camaraderie & Support", sub: "Celebratory fist-bump milestone between learning peers." },
-              { id: 7, category: "CREATIVE", src: "/images/gallery_7.jpg", tag: "Team Craft", title: "Hands-on Creative Teamwork", sub: "Collaborative rainbow art and sensory craft session." },
-              { id: 8, category: "CLASSROOM", src: "/images/gallery_8.jpg", tag: "Board Prep", title: "Senior Board Exam Cohort", sub: "Dedicated revision, mock testing, and core subject preparation." },
-              { id: 9, category: "COMMUNITY", src: "/images/gallery_9.jpg", tag: "Community", title: "MANTIF Friendship Circle", sub: "Lifelong student bonds, peer encouragement, and mutual support." },
-              { id: 10, category: "MENTORSHIP", src: "/images/gallery_10.jpg", tag: "Foundations", title: "Foundational Math & Handwriting", sub: "Early geometric drawing and precision handwriting practice." },
-            ]
-              .filter((item) => galleryCategory === "ALL" || item.category === galleryCategory)
-              .map((item) => (
+              { id: 1, src: "/images/gallery_1.jpg", tag: "Tutoring Hub", title: "Creative Learning & Activity Circles", sub: "Hands-on collaborative drawing and color studies at Tutoring Hub." },
+              { id: 2, src: "/images/gallery_2.jpg", tag: "Active Learning", title: "Interactive Reading & Discovery", sub: "Young students exploring science and nature literature together." },
+              { id: 3, src: "/images/gallery_3.jpg", tag: "Mentorship", title: "Early Focus & Skill Building", sub: "Individual care and guided creative practice for young minds." },
+              { id: 4, src: "/images/gallery_4.jpg", tag: "Academic Excellence", title: "Classroom Problem Solving", sub: "In-depth whiteboard concept breakdown and formula analysis." },
+              { id: 5, src: "/images/gallery_5.jpg", tag: "Math Mastery", title: "Whiteboard Algebraic Practice", sub: "Student deriving step-by-step solutions to linear algebraic problems." },
+              { id: 6, src: "/images/gallery_6.jpg", tag: "Student Life", title: "Peer Camaraderie & Support", sub: "Celebratory fist-bump milestone between learning peers." },
+              { id: 7, src: "/images/gallery_7.jpg", tag: "Team Craft", title: "Hands-on Creative Teamwork", sub: "Collaborative rainbow art and sensory craft session." },
+              { id: 8, src: "/images/gallery_8.jpg", tag: "Board Prep", title: "Senior Board Exam Cohort", sub: "Dedicated revision, mock testing, and core subject preparation." },
+              { id: 9, src: "/images/gallery_9.jpg", tag: "Community", title: "MANTIF Friendship Circle", sub: "Lifelong student bonds, peer encouragement, and mutual support." },
+              { id: 10, src: "/images/gallery_10.jpg", tag: "Foundations", title: "Foundational Math & Handwriting", sub: "Early geometric drawing and precision handwriting practice." },
+            ].map((item) => (
                 <div
                   key={item.id}
                   onClick={() => setSelectedGalleryItem(item)}
