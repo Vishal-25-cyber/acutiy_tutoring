@@ -1493,18 +1493,18 @@ export default function HomePage() {
               ].map((item, idx) => (
                 <div
                   key={idx}
-                  className="w-[280px] sm:w-[320px] md:w-[350px] shrink-0 p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-[#004b79]/40 transition-all flex flex-col justify-between space-y-3 select-none"
+                  className="w-[300px] sm:w-[340px] md:w-[380px] min-h-[300px] sm:min-h-[320px] shrink-0 p-6 sm:p-7 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-[#004b79]/40 transition-all flex flex-col justify-between space-y-4 select-none"
                 >
-                  <div className="space-y-2.5">
-                    <Quote className="w-5 h-5 text-[#dfb74a] shrink-0" />
-                    <p className="text-slate-700 text-xs sm:text-[13px] leading-relaxed font-medium italic">
+                  <div className="space-y-3">
+                    <Quote className="w-6 h-6 text-[#dfb74a] shrink-0" />
+                    <p className="text-slate-700 text-xs sm:text-[13.5px] leading-relaxed font-medium italic">
                       “{item.quote.replace(/^“|”$/g, '')}”
                     </p>
                   </div>
-                  <div className="pt-2.5 border-t border-slate-100 space-y-0.5 shrink-0">
-                    <h4 className="font-black text-sm text-[#002137]">{item.name}</h4>
-                    <p className="text-xs font-bold text-[#b89047]">{item.role}</p>
-                    <p className="text-[11px] text-slate-500 font-medium">{item.sub}</p>
+                  <div className="pt-3.5 border-t border-slate-100 space-y-0.5 shrink-0">
+                    <h4 className="font-black text-sm sm:text-base text-[#002137]">{item.name}</h4>
+                    <p className="text-xs sm:text-sm font-bold text-[#b89047]">{item.role}</p>
+                    <p className="text-[11px] sm:text-xs text-slate-500 font-medium">{item.sub}</p>
                   </div>
                 </div>
               ))}
