@@ -139,7 +139,8 @@ export async function DELETE(
 ) {
   try {
     const session = await getSession(req);
-    if (!session || (session.role !== "TEACHER" && session.role !== "ADMIN")) {
+    const role = (session?.role || "").toUpperCase();
+    if (!session || (role !== "TEACHER" && role !== "ADMIN" && role !== "STAFF")) {
       return NextResponse.json({ error: "Forbidden: Staff only" }, { status: 403 });
     }
 

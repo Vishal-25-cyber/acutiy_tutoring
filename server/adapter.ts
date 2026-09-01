@@ -40,6 +40,7 @@ export function adaptRoute(handler: (req: any, ctx?: any) => Promise<any>) {
       };
 
       (webReq as any).nextUrl = new URL(fullUrl);
+      (webReq as any).expressReq = req;
 
       return await requestContextStorage.run(
         { cookies: parsedCookies, headers },

@@ -39,6 +39,13 @@ export async function getSession(req?: any): Promise<TokenPayload | null> {
         }
       }
     }
+
+    if (!token && req.expressReq?.headers?.cookie) {
+      const matches = req.expressReq.headers.cookie.match(
+        new RegExp(`(?:^|;\\s*)${AUTH_COOKIE_NAME}=([^;]+)`)
+      );
+      if (matches) token = decodeURIComponent(matches[1]);
+    }
   }
 
   // 2. Async Local Storage from express adapter context

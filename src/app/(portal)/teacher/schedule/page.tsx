@@ -195,7 +195,7 @@ export default function TeacherSchedulePage() {
   const loadClasses = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch("/api/classes");
+      const res = await fetch("/api/classes", { credentials: "include" });
       const data = await res.json();
       if (data.classes) {
         setClasses(data.classes);
@@ -213,7 +213,10 @@ export default function TeacherSchedulePage() {
 
   const handlePublishClass = async (classId: string) => {
     try {
-      const res = await fetch(`/api/classes/${classId}/publish`, { method: "PUT" });
+      const res = await fetch(`/api/classes/${classId}/publish`, {
+        method: "PUT",
+        credentials: "include",
+      });
       const data = await res.json();
       if (res.ok) {
         setActionMessage("Class published! Students in this batch have been notified.");
@@ -233,6 +236,7 @@ export default function TeacherSchedulePage() {
       const res = await fetch(`/api/classes/${classId}/cancel`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
@@ -258,6 +262,7 @@ export default function TeacherSchedulePage() {
       const res = await fetch(`/api/classes/${classId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
