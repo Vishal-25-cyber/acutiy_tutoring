@@ -1195,11 +1195,12 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 4: TEAM (FOUNDER, MENTORS, SOFTWARE, AI TEAMS WITH PHOTO SPACES)
+          PAGE 4: TEAM (FOUNDER, MENTORS, SOFTWARE, AI TEAMS - CARDLESS)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="team" className="scroll-mt-20 py-20 bg-white border-b border-slate-200/80">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <section id="team" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-white py-12 lg:py-16">
+        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 space-y-10 lg:space-y-12">
           
+          {/* Section Header */}
           <div className="text-center max-w-3xl mx-auto space-y-2">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Our Team
@@ -1209,132 +1210,95 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* 1. Founder Spotlight Card */}
-          <div className="max-w-3xl mx-auto bg-gradient-to-br from-white via-slate-50 to-white rounded-3xl p-8 sm:p-10 border-2 border-[#b89047]/30 shadow-lg relative overflow-hidden">
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
-              
-              {/* Photo Space for Founder */}
-              <div className="sm:col-span-5 flex flex-col items-center">
-                <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-3xl overflow-hidden bg-[#002137] border-4 border-white shadow-xl flex items-center justify-center text-white group">
-                  <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-gradient-to-br from-[#002137] to-[#004b79]">
-                    <GraduationCap className="w-12 h-12 text-[#dfb74a] mb-1" />
-                    <span className="text-xs font-bold text-slate-200">Karunya S</span>
-                    <span className="text-[10px] text-[#dfb74a]">Founder Photo</span>
-                  </div>
-                </div>
-              </div>
+          {/* 1. Founder Spotlight (Cardless, 292x365px Photo) */}
+          <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-14 max-w-5xl mx-auto pb-4">
+            
+            {/* Exact 292x365px Founder Image */}
+            <div className="shrink-0 w-[292px] h-[365px] rounded-2xl overflow-hidden shadow-xl border-2 border-slate-100 bg-slate-100 relative group">
+              <img
+                src="/images/founder_karunya.png"
+                alt="Karunya S - Founder of MANTIF"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                style={{ width: "292px", height: "365px" }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#002137]/30 via-transparent to-transparent pointer-events-none" />
+            </div>
 
-              {/* Founder Details & Words */}
-              <div className="sm:col-span-7 space-y-3 text-center sm:text-left">
-                <span className="px-3 py-1 rounded-md text-[11px] font-black uppercase bg-[#b89047]/15 text-[#8f6d2b] border border-[#b89047]/30">
-                  Lead Visionary &amp; Founder
-                </span>
-                <h3 className="text-2xl sm:text-3xl font-black text-[#002137]">
+            {/* Founder Biography & Vision (Cardless) */}
+            <div className="space-y-4 text-center lg:text-left">
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-50 text-[#8f6d2b] border border-amber-200">
+                Lead Visionary &amp; Founder
+              </span>
+              
+              <div className="space-y-1">
+                <h3 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">
                   Karunya S
                 </h3>
-                <p className="text-xs font-extrabold text-[#b89047] uppercase tracking-wider">
+                <p className="text-base sm:text-lg font-extrabold text-[#b89047]">
                   Founder — MANTIF
                 </p>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                  Educator with over 4 years of hands-on coaching leadership. Alumna of Kongu National Higher Secondary School, passionate about revolutionizing student learning by bridging empathetic human teaching with cutting-edge artificial intelligence.
+              </div>
+
+              <p className="text-slate-700 text-sm sm:text-base leading-relaxed font-medium">
+                Educator with over 4 years of hands-on coaching leadership. Alumna of Kongu National Higher Secondary School, passionate about revolutionizing student learning by bridging empathetic human teaching with cutting-edge artificial intelligence.
+              </p>
+
+              <div className="border-l-4 border-[#b89047] pl-4 py-1 text-slate-800 italic text-sm sm:text-base text-left">
+                <p>
+                  “Education is about empowering students with curiosity, confidence, and genuine human care.”
                 </p>
               </div>
-
             </div>
+
           </div>
 
-          {/* 2. Educational Mentors Grid (2 Mentors) */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 text-center">
-              Academic &amp; Subject Mentors
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              
-              {/* Mentor 1 */}
-              <div className="p-6 rounded-3xl bg-slate-50 border border-slate-200 shadow-xs flex items-center gap-4 hover:border-[#004b79]/40 transition-colors">
-                <div className="w-20 h-20 rounded-2xl bg-[#002137] text-white flex flex-col items-center justify-center shrink-0 border border-slate-300 shadow-xs">
-                  <Award className="w-7 h-7 text-[#dfb74a] mb-0.5" />
-                  <span className="text-[9px] font-bold text-slate-300">Photo</span>
-                </div>
-                <div className="space-y-1">
+          {/* 2. Academic Mentors & Engineering/AI Teams (Cardless, Clean Columns) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 pt-6 border-t border-slate-200">
+            
+            {/* Academic Mentors */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-wider text-[#b89047]">
+                Academic &amp; Subject Mentors
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1 pb-2">
                   <h4 className="font-extrabold text-base text-[#002137]">Dr. A. Revathi</h4>
                   <p className="text-xs font-bold text-[#b89047]">PhD Chemistry</p>
-                  <p className="text-xs text-slate-500 font-semibold">Educational Mentor</p>
+                  <p className="text-xs text-slate-500 font-medium">Educational Mentor</p>
                 </div>
-              </div>
-
-              {/* Mentor 2 */}
-              <div className="p-6 rounded-3xl bg-slate-50 border border-slate-200 shadow-xs flex items-center gap-4 hover:border-[#004b79]/40 transition-colors">
-                <div className="w-20 h-20 rounded-2xl bg-[#002137] text-white flex flex-col items-center justify-center shrink-0 border border-slate-300 shadow-xs">
-                  <Award className="w-7 h-7 text-[#dfb74a] mb-0.5" />
-                  <span className="text-[9px] font-bold text-slate-300">Photo</span>
-                </div>
-                <div className="space-y-1">
+                <div className="space-y-1 pb-2">
                   <h4 className="font-extrabold text-base text-[#002137]">V Lavanya</h4>
                   <p className="text-xs font-bold text-[#b89047]">MSc MPhil Maths</p>
-                  <p className="text-xs text-slate-500 font-semibold">Educational Mentor</p>
+                  <p className="text-xs text-slate-500 font-medium">Educational Mentor</p>
                 </div>
               </div>
-
             </div>
-          </div>
 
-          {/* 3. Engineering & AI Teams Grid (4 Members) */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 text-center">
-              Engineering, Software &amp; AI Research Team
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              
-              {/* Software Team: Vishal K */}
-              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3 text-center hover:border-[#004b79]/40 transition-colors">
-                <div className="w-16 h-16 rounded-2xl bg-slate-100 mx-auto flex flex-col items-center justify-center text-slate-700 border border-slate-200">
-                  <Laptop className="w-6 h-6 text-[#004b79] mb-0.5" />
-                  <span className="text-[8px] font-bold text-slate-400">Photo</span>
-                </div>
-                <div>
+            {/* Engineering & AI Team */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-wider text-[#004b79]">
+                Software &amp; AI Research Team
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="space-y-0.5">
                   <h4 className="font-extrabold text-sm text-[#002137]">Vishal K</h4>
                   <p className="text-xs font-bold text-[#004b79]">Software Team</p>
                 </div>
-              </div>
-
-              {/* Software Team: Solairaj R */}
-              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3 text-center hover:border-[#004b79]/40 transition-colors">
-                <div className="w-16 h-16 rounded-2xl bg-slate-100 mx-auto flex flex-col items-center justify-center text-slate-700 border border-slate-200">
-                  <Laptop className="w-6 h-6 text-[#004b79] mb-0.5" />
-                  <span className="text-[8px] font-bold text-slate-400">Photo</span>
-                </div>
-                <div>
+                <div className="space-y-0.5">
                   <h4 className="font-extrabold text-sm text-[#002137]">Solairaj R</h4>
                   <p className="text-xs font-bold text-[#004b79]">Software Team</p>
                 </div>
-              </div>
-
-              {/* AI Team: Abinaya B */}
-              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3 text-center hover:border-[#b89047]/40 transition-colors">
-                <div className="w-16 h-16 rounded-2xl bg-amber-50 mx-auto flex flex-col items-center justify-center text-amber-800 border border-amber-200">
-                  <Brain className="w-6 h-6 text-[#b89047] mb-0.5" />
-                  <span className="text-[8px] font-bold text-slate-400">Photo</span>
-                </div>
-                <div>
+                <div className="space-y-0.5">
                   <h4 className="font-extrabold text-sm text-[#002137]">Abinaya B</h4>
                   <p className="text-xs font-bold text-[#b89047]">AI Team</p>
                 </div>
-              </div>
-
-              {/* AI Team: Arunkarthick K */}
-              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3 text-center hover:border-[#b89047]/40 transition-colors">
-                <div className="w-16 h-16 rounded-2xl bg-amber-50 mx-auto flex flex-col items-center justify-center text-amber-800 border border-amber-200">
-                  <Brain className="w-6 h-6 text-[#b89047] mb-0.5" />
-                  <span className="text-[8px] font-bold text-slate-400">Photo</span>
-                </div>
-                <div>
+                <div className="space-y-0.5">
                   <h4 className="font-extrabold text-sm text-[#002137]">Arunkarthick K</h4>
                   <p className="text-xs font-bold text-[#b89047]">AI Team</p>
                 </div>
               </div>
-
             </div>
+
           </div>
 
         </div>
