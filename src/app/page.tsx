@@ -1362,7 +1362,6 @@ export default function HomePage() {
                   <div className="space-y-0.5">
                     <h4 className="font-black text-base sm:text-lg text-[#002137]">Vishal K</h4>
                     <p className="text-xs sm:text-sm font-extrabold text-[#004b79]">Software Team</p>
-                    <p className="text-xs text-slate-500 font-medium">Full Stack Architecture &amp; Platform</p>
                   </div>
                 </div>
 
@@ -1378,7 +1377,6 @@ export default function HomePage() {
                   <div className="space-y-0.5">
                     <h4 className="font-black text-base sm:text-lg text-[#002137]">Solairaj R</h4>
                     <p className="text-xs sm:text-sm font-extrabold text-[#004b79]">Software Team</p>
-                    <p className="text-xs text-slate-500 font-medium">Frontend &amp; UX Systems</p>
                   </div>
                 </div>
 
@@ -1394,7 +1392,6 @@ export default function HomePage() {
                   <div className="space-y-0.5">
                     <h4 className="font-black text-base sm:text-lg text-[#002137]">Abinaya B</h4>
                     <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">AI Team</p>
-                    <p className="text-xs text-slate-500 font-medium">AI Pedagogical Models &amp; Diagnostics</p>
                   </div>
                 </div>
 
@@ -1410,7 +1407,6 @@ export default function HomePage() {
                   <div className="space-y-0.5">
                     <h4 className="font-black text-base sm:text-lg text-[#002137]">Arunkarthick K</h4>
                     <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">AI Team</p>
-                    <p className="text-xs text-slate-500 font-medium">Machine Learning &amp; Adaptive Tutoring</p>
                   </div>
                 </div>
 
