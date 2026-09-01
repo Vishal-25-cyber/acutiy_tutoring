@@ -388,59 +388,59 @@ export default function HomePage() {
       </header>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 1: ABOUT (HERO SPLIT: 2 SIDES - FOCUSED BRAND & 3 PILLARS + AUTH CARD)
+          PAGE 1: ABOUT (HERO SPLIT: 2 SIDES WITH DIVIDER LINE & ATTRACTIVE CARD)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="about" className="relative min-h-[calc(100vh-5rem)] flex items-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-12 lg:py-16">
-        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+      <section id="about" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-8 lg:py-12">
+        <div className="w-full max-w-[1550px] mx-auto px-6 sm:px-10 lg:px-14 xl:px-16 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
 
-          {/* LEFT HALF (7 COLS): FOCUSED BRAND STATEMENT & 3 PILLARS */}
-          <div className="lg:col-span-7 space-y-8">
-            <div className="space-y-4">
-              <div className="space-y-1.5">
+          {/* LEFT HALF (7 COLS): REDUCED BALANCED PROPORTIONS & DIVIDER LINE */}
+          <div className="lg:col-span-7 space-y-6 lg:border-r lg:border-slate-200/80 lg:pr-12">
+            <div className="space-y-3">
+              <div className="space-y-1">
                 <h1
-                  className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black text-[#002137] tracking-[0.06em] leading-[1.02]"
+                  className="text-4xl sm:text-5xl lg:text-5xl font-black text-[#002137] tracking-[0.06em] leading-tight"
                   style={{ fontFamily: "'Montserrat', 'Plus Jakarta Sans', sans-serif" }}
                 >
                   M<span className="text-[#b89047]">Λ</span>NTIF
                 </h1>
-                <p className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#b89047] tracking-tight">
+                <p className="text-xl sm:text-2xl font-extrabold text-[#b89047] tracking-tight">
                   Human x Artificial Intelligence
                 </p>
               </div>
 
-              <p className="text-slate-700 text-lg sm:text-xl lg:text-2xl leading-relaxed font-medium max-w-2xl pt-2">
+              <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium max-w-xl">
                 MANTIF is an MSME-registered EdTech startup helping students learn better through personalised support from AI, educators, and real-world learning.
               </p>
             </div>
 
-            {/* 3 Core Pillars Alone */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-              <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm hover:shadow-md hover:border-[#004b79]/40 transition-all space-y-2.5">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#004b79] flex items-center justify-center font-bold">
-                  <Cpu className="w-5 h-5" />
+            {/* 3 Core Pillars Alone (Compact & Attractive) */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+              <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-1.5 hover:border-[#004b79]/40 hover:shadow-xs transition-all">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#004b79] flex items-center justify-center font-bold">
+                  <Cpu className="w-4 h-4" />
                 </div>
-                <h2 className="text-base font-extrabold text-[#002137]">AI-Powered Learning</h2>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                <h2 className="text-xs font-extrabold text-[#002137]">AI-Powered Learning</h2>
+                <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
                   Curated syllabus paths &amp; intelligent practice designed for mastery.
                 </p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm hover:shadow-md hover:border-[#b89047]/40 transition-all space-y-2.5">
-                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
-                  <Brain className="w-5 h-5" />
+              <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-1.5 hover:border-[#b89047]/40 hover:shadow-xs transition-all">
+                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
+                  <Brain className="w-4 h-4" />
                 </div>
-                <h2 className="text-base font-extrabold text-[#002137]">Learns With You</h2>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                <h2 className="text-xs font-extrabold text-[#002137]">Learns With You</h2>
+                <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
                   Adapts in real-time to your individual learning pace and doubt patterns.
                 </p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm hover:shadow-md hover:border-emerald-500/40 transition-all space-y-2.5">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
-                  <Award className="w-5 h-5" />
+              <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-1.5 hover:border-emerald-500/40 hover:shadow-xs transition-all">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                  <Award className="w-4 h-4" />
                 </div>
-                <h2 className="text-base font-extrabold text-[#002137]">Track Real Progress</h2>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                <h2 className="text-xs font-extrabold text-[#002137]">Track Real Progress</h2>
+                <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
                   Multi-dimensional reports &amp; full transparency for parents &amp; mentors.
                 </p>
               </div>
@@ -449,7 +449,7 @@ export default function HomePage() {
 
           {/* RIGHT HALF (5 COLS): INTERACTIVE AUTH CARD (SIGN IN & SIGN UP) */}
           <div id="auth-card-section" className="lg:col-span-5">
-            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-6 sm:p-8 space-y-6">
+            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-5 sm:p-7 space-y-4">
               
               {/* Tab Switcher: Sign In vs Sign Up */}
               <div className="flex items-center p-1 rounded-2xl bg-slate-100 border border-slate-200/80">
@@ -1000,7 +1000,7 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           PAGE 2: TUTORING HUB (WHERE IT ALL BEGAN)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="tutoring-hub" className="py-20 bg-white border-b border-slate-200/80">
+      <section id="tutoring-hub" className="scroll-mt-20 py-20 bg-white border-b border-slate-200/80">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
           <div className="text-center max-w-3xl mx-auto space-y-3">
@@ -1087,7 +1087,7 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           PAGE 3: OUR SIDE (INSTITUTIONAL OUTREACH & SCHOOL IMPACT)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="our-side" className="py-20 bg-slate-50 border-b border-slate-200/80">
+      <section id="our-side" className="scroll-mt-20 py-20 bg-slate-50 border-b border-slate-200/80">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
           <div className="text-center max-w-3xl mx-auto space-y-3">
@@ -1167,7 +1167,7 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           PAGE 4: TEAM (FOUNDER, MENTORS, SOFTWARE, AI TEAMS WITH PHOTO SPACES)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="team" className="py-20 bg-white border-b border-slate-200/80">
+      <section id="team" className="scroll-mt-20 py-20 bg-white border-b border-slate-200/80">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
           <div className="text-center max-w-3xl mx-auto space-y-3">
@@ -1317,7 +1317,7 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           PAGE 5: TESTIMONIALS (STUDENT STORIES & EXPERIENCES FROM DAY 1)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="testimonials" className="py-20 bg-slate-50 border-b border-slate-200/80">
+      <section id="testimonials" className="scroll-mt-20 py-20 bg-slate-50 border-b border-slate-200/80">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
           <div className="text-center max-w-3xl mx-auto space-y-3">
@@ -1404,7 +1404,7 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           PAGE 6: GALLERY (MOMENTS & WORKSHOPS READY FOR IMAGES)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="gallery" className="py-20 bg-white border-b border-slate-200/80">
+      <section id="gallery" className="scroll-mt-20 py-20 bg-white border-b border-slate-200/80">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
           <div className="text-center max-w-3xl mx-auto space-y-3">
@@ -1507,7 +1507,7 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           FOOTER: CONTACT US & OFFICIAL COMMUNICATIONS
       ═══════════════════════════════════════════════════════════════════════ */}
-      <footer id="contact" className="bg-[#001726] text-white pt-16 pb-12 border-t border-slate-800">
+      <footer id="contact" className="scroll-mt-20 bg-[#001726] text-white pt-16 pb-12 border-t border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
           {/* Top Footer: Contact Grid & Query Form */}
