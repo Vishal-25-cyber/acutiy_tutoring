@@ -1114,66 +1114,81 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 3: OUR SIDE (INSTITUTIONAL OUTREACH & SCHOOL IMPACT - CARDLESS)
+          PAGE 3: OUR SIDE (INSTITUTIONAL OUTREACH - FULL PAGE 50/50 SPLIT)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="our-side" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-white py-10 lg:py-14">
-        <div className="w-full max-w-5xl mx-auto px-6 sm:px-10 lg:px-16 space-y-6 lg:space-y-8">
+      <section id="our-side" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-10 lg:py-14">
+        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 space-y-8 lg:space-y-10">
           
-          {/* Centered Header */}
-          <div className="text-center space-y-2">
+          {/* Centered Heading at Top */}
+          <div className="text-center space-y-1.5">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Our Side
             </h2>
-            <p className="text-base sm:text-lg lg:text-xl font-extrabold text-[#b89047] tracking-tight">
+            <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#b89047] tracking-tight">
               Empowering school teachers and academic institutions with practical AI tools.
             </p>
           </div>
 
-          {/* School Milestone Header (Cardless) */}
-          <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b border-slate-200 pb-3">
-            <a
-              href="https://www.google.com/search?q=Kongu+National+Matriculation+Hr+Sec+School+Nanjanapuram"
-              target="_blank"
-              rel="noreferrer"
-              className="group inline-flex items-center gap-2 text-xl sm:text-2xl font-black text-[#002137] hover:text-[#004b79] transition-colors"
-            >
-              <span>Kongu National Matriculation Hr Sec School, Nanjanapuram</span>
-              <ExternalLink className="w-4 h-4 text-[#b89047] group-hover:translate-x-0.5 transition-transform shrink-0" />
-            </a>
-            <span className="text-xs font-black uppercase text-[#b89047] tracking-wider">
-              Alma Mater Milestone
-            </span>
-          </div>
+          {/* 50/50 Full-Width Split Layout with Center Divider */}
+          <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 xl:gap-20 items-center">
+            {/* Center Vertical Divider Line */}
+            <div className="hidden lg:block absolute left-1/2 top-2 bottom-2 w-px bg-slate-200 -translate-x-1/2" />
 
-          {/* Narrative Content (Cardless, Direct & Flowing) */}
-          <div className="space-y-4 text-slate-700 text-sm sm:text-base leading-relaxed font-medium">
-            <p className="font-extrabold text-[#002137] text-base sm:text-lg">
-              Session: <span className="text-[#004b79]">“AI in Education: Empowering Students Today”</span>
-            </p>
-            <p>
-              MANTIF conducted a specialized session on <strong>“AI in Education: Empowering Students Today”</strong> for the teachers of Kongu National Higher Secondary School, Nanjanapuram.
-            </p>
-            <p>
-              The session focused on exploring different AI tools that can help teachers engage students, capture their attention, and bring more interest into the learning process.
-            </p>
-            
-            {/* Founder Note Accent */}
-            <div className="border-l-4 border-[#b89047] pl-4 py-1 text-slate-800 italic space-y-1">
-              <p>
-                The best part of this session was that <strong>Our Founder Ms. Karunya S</strong> is an alumna of the school. It was truly a proud moment for the entire MANTIF team and for the teachers who once taught her. We could witness the pride and happiness on her teachers’ faces as they welcomed her back, this time as a Founder.
-              </p>
+            {/* Left Side (50%): School Feature & Seminar Narrative */}
+            <div className="w-full space-y-5 lg:pr-6 xl:pr-10">
+              <div className="space-y-2">
+                <a
+                  href="https://www.google.com/search?q=Kongu+National+Matriculation+Hr+Sec+School+Nanjanapuram"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group inline-flex items-center gap-2 text-xl sm:text-2xl font-black text-[#002137] hover:text-[#004b79] transition-colors leading-snug"
+                >
+                  <span>Kongu National Matriculation Hr Sec School, Nanjanapuram</span>
+                  <ExternalLink className="w-4 h-4 text-[#b89047] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                </a>
+                <p className="text-xs sm:text-sm font-bold text-[#b89047] uppercase tracking-wide">
+                  Erode District • Academic Faculty Empowerment Seminar
+                </p>
+              </div>
+
+              <div className="space-y-3 text-slate-700 text-sm sm:text-base leading-relaxed font-medium">
+                <p className="font-black text-[#002137]">
+                  Session: <span className="text-[#004b79]">“AI in Education: Empowering Students Today”</span>
+                </p>
+                <p>
+                  MANTIF conducted a specialized session on <strong>“AI in Education: Empowering Students Today”</strong> for the teachers of Kongu National Higher Secondary School, Nanjanapuram.
+                </p>
+                <p>
+                  The session focused on exploring different AI tools that can help teachers engage students, capture their attention, and bring more interest into the learning process.
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* Footer Motivational Accent */}
-          <div className="pt-2 flex items-center justify-between flex-wrap gap-3 border-t border-slate-200">
-            <span className="text-base sm:text-lg font-black text-[#b89047] tracking-tight flex items-center gap-2">
-              <Rocket className="w-5 h-5 text-[#b89047]" />
-              Still we have a Long Journey !
-            </span>
-            <span className="text-xs text-slate-400 font-semibold">
-              MANTIF Community &amp; Institutional Outreach
-            </span>
+            {/* Right Side (50%): Founder Milestone & Vision */}
+            <div className="w-full space-y-6 lg:pl-6 xl:pl-10">
+              <div className="space-y-3">
+                <span className="text-xs font-black uppercase text-[#b89047] tracking-wider">
+                  Alma Mater Milestone
+                </span>
+                <div className="border-l-4 border-[#b89047] pl-4 py-1.5 text-slate-800 text-sm sm:text-base italic leading-relaxed">
+                  <p>
+                    The best part of this session was that <strong>Our Founder Ms. Karunya S</strong> is an alumna of the school. It was truly a proud moment for the entire MANTIF team and for the teachers who once taught her. We could witness the pride and happiness on her teachers’ faces as they welcomed her back, this time as a Founder.
+                  </p>
+                </div>
+              </div>
+
+              {/* Motivational Tag */}
+              <div className="pt-4 flex items-center justify-between flex-wrap gap-3 border-t border-slate-200">
+                <span className="text-base sm:text-lg font-black text-[#b89047] tracking-tight flex items-center gap-2">
+                  <Rocket className="w-5 h-5 text-[#b89047]" />
+                  Still we have a Long Journey !
+                </span>
+                <span className="text-xs text-slate-400 font-semibold">
+                  MANTIF Community &amp; Institutional Outreach
+                </span>
+              </div>
+            </div>
+
           </div>
 
         </div>
