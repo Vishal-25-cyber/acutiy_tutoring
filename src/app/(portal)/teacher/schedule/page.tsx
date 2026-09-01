@@ -64,17 +64,7 @@ function TeacherScheduleClassRow({
           <span className="text-xs text-slate-400">· {cls.date}</span>
           <span className="text-xs text-slate-400">· {cls.batchId?.name || "Batch Slot"}</span>
 
-          {timing.isLiveNow ? (
-            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 animate-pulse">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-              ● Live Now ({timing.countdownText})
-            </span>
-          ) : !isCancelled && !isCompleted && !isDraft ? (
-            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-              <Clock className="w-3 h-3 text-amber-500 animate-spin" />
-              {timing.countdownText}
-            </span>
-          ) : isCompleted ? (
+          {isCompleted ? (
             <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">
               Completed
             </span>
@@ -86,7 +76,17 @@ function TeacherScheduleClassRow({
             <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
               Draft
             </span>
-          ) : null}
+          ) : (cls.status === "LIVE" || timing.isLiveNow) ? (
+            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+              ● Live Now ({timing.countdownText})
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+              <Clock className="w-3 h-3 text-amber-500 animate-spin" />
+              {timing.countdownText}
+            </span>
+          )}
         </div>
 
         <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100">
@@ -101,7 +101,7 @@ function TeacherScheduleClassRow({
       {/* Actions */}
       <div className="flex items-center gap-2 shrink-0 flex-wrap">
         {!isCancelled && !isDraft && (
-          (!isCompleted || cls.status === "LIVE" || timing.canJoin) ? (
+          !isCompleted ? (
             <Link href={`/classroom/${targetRoomId}`}>
               <button
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all cursor-pointer shadow-md shadow-emerald-500/25 animate-pulse"
