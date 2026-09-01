@@ -17,34 +17,56 @@ export async function getSession(req?: any): Promise<TokenPayload | null> {
     }
 
     if (!token && req.headers) {
-      const cookieHeader =
+      // Check Authorization: Bearer <token>
+      const authHeader =
         typeof req.headers.get === "function"
-          ? req.headers.get("cookie")
-          : req.headers.cookie;
-      if (cookieHeader && typeof cookieHeader === "string") {
-        const matches = cookieHeader.match(
-          new RegExp(`(?:^|;\\s*)${AUTH_COOKIE_NAME}=([^;]+)`)
-        );
-        if (matches) token = decodeURIComponent(matches[1]);
+          ? req.headers.get("authorization")
+          : req.headers.authorization;
+      if (authHeader && typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
+        token = authHeader.slice(7).trim();
       }
 
-      // Also check Authorization: Bearer token header
+      // Check x-auth-token header
       if (!token) {
-        const authHeader =
+        const xToken =
           typeof req.headers.get === "function"
-            ? req.headers.get("authorization")
-            : req.headers.authorization;
-        if (authHeader && typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
-          token = authHeader.slice(7).trim();
+            ? req.headers.get("x-auth-token")
+            : req.headers["x-auth-token"];
+        if (xToken && typeof xToken === "string") {
+          token = xToken.trim();
+        }
+      }
+
+      // Check Cookie header
+      if (!token) {
+        const cookieHeader =
+          typeof req.headers.get === "function"
+            ? req.headers.get("cookie")
+            : req.headers.cookie;
+        if (cookieHeader && typeof cookieHeader === "string") {
+          const matches = cookieHeader.match(
+            new RegExp(`(?:^|;\\s*)${AUTH_COOKIE_NAME}=([^;]+)`)
+          );
+          if (matches) token = decodeURIComponent(matches[1]);
         }
       }
     }
 
-    if (!token && req.expressReq?.headers?.cookie) {
-      const matches = req.expressReq.headers.cookie.match(
-        new RegExp(`(?:^|;\\s*)${AUTH_COOKIE_NAME}=([^;]+)`)
-      );
-      if (matches) token = decodeURIComponent(matches[1]);
+    // Direct check on Express request object
+    if (!token && req.expressReq?.headers) {
+      const expAuth = req.expressReq.headers.authorization;
+      if (expAuth && typeof expAuth === "string" && expAuth.startsWith("Bearer ")) {
+        token = expAuth.slice(7).trim();
+      }
+      if (!token && req.expressReq.headers["x-auth-token"]) {
+        token = String(req.expressReq.headers["x-auth-token"]).trim();
+      }
+      if (!token && req.expressReq.headers.cookie) {
+        const matches = req.expressReq.headers.cookie.match(
+          new RegExp(`(?:^|;\\s*)${AUTH_COOKIE_NAME}=([^;]+)`)
+        );
+        if (matches) token = decodeURIComponent(matches[1]);
+      }
     }
   }
 
@@ -56,16 +78,22 @@ export async function getSession(req?: any): Promise<TokenPayload | null> {
         token = store.cookies[AUTH_COOKIE_NAME];
       }
       if (!token && store && store.headers) {
-        const cookieHdr = store.headers.get("cookie");
-        if (cookieHdr && typeof cookieHdr === "string") {
-          const matches = cookieHdr.match(
-            new RegExp(`(?:^|;\\s*)${AUTH_COOKIE_NAME}=([^;]+)`)
-          );
-          if (matches) token = decodeURIComponent(matches[1]);
-        }
         const authHdr = store.headers.get("authorization");
-        if (!token && authHdr && authHdr.startsWith("Bearer ")) {
+        if (authHdr && authHdr.startsWith("Bearer ")) {
           token = authHdr.slice(7).trim();
+        }
+        if (!token) {
+          const xToken = store.headers.get("x-auth-token");
+          if (xToken) token = xToken.trim();
+        }
+        if (!token) {
+          const cookieHdr = store.headers.get("cookie");
+          if (cookieHdr && typeof cookieHdr === "string") {
+            const matches = cookieHdr.match(
+              new RegExp(`(?:^|;\\s*)${AUTH_COOKIE_NAME}=([^;]+)`)
+            );
+            if (matches) token = decodeURIComponent(matches[1]);
+          }
         }
       }
     } catch {
@@ -91,16 +119,4 @@ export async function requireRole(allowedRoles: UserRole[], req?: any): Promise<
     throw new Error("FORBIDDEN");
   }
   return session;
-}
-
-export function handleAuthError(error: unknown) {
-  const message = error instanceof Error ? error.message : "Unknown error";
-  if (message === "UNAUTHORIZED") {
-    return NextResponse.json({ error: "Unauthorized access. Please login." }, { status: 401 });
-  }
-  if (message === "FORBIDDEN") {
-    return NextResponse.json({ error: "Forbidden: You do not have permission for this resource." }, { status: 403 });
-  }
-  console.error("API Error:", error);
-  return NextResponse.json({ error: "Internal Server Error", details: message }, { status: 500 });
 }

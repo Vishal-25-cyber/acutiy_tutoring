@@ -192,10 +192,26 @@ export default function TeacherSchedulePage() {
   const [deleteModalClass, setDeleteModalClass] = useState<any>(null);
   const [swapModalClass, setSwapModalClass] = useState<any>(null);
 
+  const getAuthHeaders = () => {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("acuity_auth_token") || sessionStorage.getItem("acuity_auth_token") || ""
+        : "";
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+      headers["x-auth-token"] = token;
+    }
+    return headers;
+  };
+
   const loadClasses = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch("/api/classes", { credentials: "include" });
+      const res = await fetch("/api/classes", {
+        headers: getAuthHeaders(),
+        credentials: "include",
+      });
       const data = await res.json();
       if (data.classes) {
         setClasses(data.classes);
@@ -215,6 +231,7 @@ export default function TeacherSchedulePage() {
     try {
       const res = await fetch(`/api/classes/${classId}/publish`, {
         method: "PUT",
+        headers: getAuthHeaders(),
         credentials: "include",
       });
       const data = await res.json();
@@ -235,7 +252,7 @@ export default function TeacherSchedulePage() {
     try {
       const res = await fetch(`/api/classes/${classId}/cancel`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         credentials: "include",
       });
       const data = await res.json().catch(() => ({}));
@@ -261,7 +278,7 @@ export default function TeacherSchedulePage() {
     try {
       const res = await fetch(`/api/classes/${classId}`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         credentials: "include",
       });
       const data = await res.json().catch(() => ({}));

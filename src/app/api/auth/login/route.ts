@@ -137,6 +137,7 @@ export async function POST(req: NextRequest) {
           batchId: assignedBatchId,
           batchName: assignedBatchName,
         },
+        token,
       });
 
       response.cookies.set({
@@ -206,6 +207,7 @@ export async function POST(req: NextRequest) {
           role: user.role,
           status: user.status,
         },
+        token,
       });
 
       response.cookies.set({
@@ -299,6 +301,7 @@ export async function POST(req: NextRequest) {
           email: user.email,
           role: user.role,
         },
+        token,
       });
 
       response.cookies.set({
