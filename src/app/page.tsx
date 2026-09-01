@@ -388,77 +388,77 @@ export default function HomePage() {
       </header>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 1: ABOUT (HERO SPLIT: 2 SIDES WITH DIVIDER LINE & ATTRACTIVE CARD)
+          PAGE 1: ABOUT (HERO SPLIT: 2 SIDES - FULL WIDTH BALANCED & PRO CARD)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="about" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-8 lg:py-12">
-        <div className="w-full max-w-[1550px] mx-auto px-6 sm:px-10 lg:px-14 xl:px-16 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+      <section id="about" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-12 lg:py-16">
+        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 grid grid-cols-1 lg:grid-cols-2 gap-12 xl:gap-16 items-center">
 
-          {/* LEFT HALF (7 COLS): REDUCED BALANCED PROPORTIONS & DIVIDER LINE */}
-          <div className="lg:col-span-7 space-y-6 lg:border-r lg:border-slate-200/80 lg:pr-12">
-            <div className="space-y-3">
-              <div className="space-y-1">
+          {/* LEFT HALF (50%): GRAND MANTIF STATEMENT & 3 PILLARS (WITH DIVIDER) */}
+          <div className="w-full space-y-8 lg:border-r lg:border-slate-200/90 lg:pr-12 xl:pr-16">
+            <div className="space-y-4">
+              <div className="space-y-1.5">
                 <h1
-                  className="text-4xl sm:text-5xl lg:text-5xl font-black text-[#002137] tracking-[0.06em] leading-tight"
+                  className="text-5xl sm:text-6xl lg:text-7xl font-black text-[#002137] tracking-[0.06em] leading-[1.04]"
                   style={{ fontFamily: "'Montserrat', 'Plus Jakarta Sans', sans-serif" }}
                 >
                   M<span className="text-[#b89047]">Λ</span>NTIF
                 </h1>
-                <p className="text-xl sm:text-2xl font-extrabold text-[#b89047] tracking-tight">
+                <p className="text-2xl sm:text-3xl font-extrabold text-[#b89047] tracking-tight">
                   Human x Artificial Intelligence
                 </p>
               </div>
 
-              <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium max-w-xl">
+              <p className="text-slate-700 text-base sm:text-lg lg:text-xl leading-relaxed font-medium pt-1">
                 MANTIF is an MSME-registered EdTech startup helping students learn better through personalised support from AI, educators, and real-world learning.
               </p>
             </div>
 
-            {/* 3 Core Pillars Alone (Compact & Attractive) */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-              <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-1.5 hover:border-[#004b79]/40 hover:shadow-xs transition-all">
-                <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#004b79] flex items-center justify-center font-bold">
-                  <Cpu className="w-4 h-4" />
+            {/* 3 Core Pillars Alone (Wide, Attractive & Balanced) */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1 w-full">
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-[#004b79]/40 transition-all space-y-2.5">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#004b79] flex items-center justify-center font-bold">
+                  <Cpu className="w-5 h-5" />
                 </div>
-                <h2 className="text-xs font-extrabold text-[#002137]">AI-Powered Learning</h2>
-                <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                <h2 className="text-sm font-extrabold text-[#002137]">AI-Powered Learning</h2>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
                   Curated syllabus paths &amp; intelligent practice designed for mastery.
                 </p>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-1.5 hover:border-[#b89047]/40 hover:shadow-xs transition-all">
-                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
-                  <Brain className="w-4 h-4" />
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-[#b89047]/40 transition-all space-y-2.5">
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
+                  <Brain className="w-5 h-5" />
                 </div>
-                <h2 className="text-xs font-extrabold text-[#002137]">Learns With You</h2>
-                <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                <h2 className="text-sm font-extrabold text-[#002137]">Learns With You</h2>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
                   Adapts in real-time to your individual learning pace and doubt patterns.
                 </p>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-1.5 hover:border-emerald-500/40 hover:shadow-xs transition-all">
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
-                  <Award className="w-4 h-4" />
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-500/40 transition-all space-y-2.5">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                  <Award className="w-5 h-5" />
                 </div>
-                <h2 className="text-xs font-extrabold text-[#002137]">Track Real Progress</h2>
-                <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                <h2 className="text-sm font-extrabold text-[#002137]">Track Real Progress</h2>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
                   Multi-dimensional reports &amp; full transparency for parents &amp; mentors.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* RIGHT HALF (5 COLS): INTERACTIVE AUTH CARD (SIGN IN & SIGN UP) */}
-          <div id="auth-card-section" className="lg:col-span-5">
-            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-5 sm:p-7 space-y-4">
+          {/* RIGHT HALF (50%): ULTRA-PROFESSIONAL AUTH CARD */}
+          <div id="auth-card-section" className="w-full flex justify-center lg:justify-end">
+            <div className="w-full max-w-lg bg-white rounded-3xl border border-slate-200 shadow-[0_20px_50px_rgba(0,33,55,0.09)] p-7 sm:p-9 space-y-6">
               
               {/* Tab Switcher: Sign In vs Sign Up */}
-              <div className="flex items-center p-1 rounded-2xl bg-slate-100 border border-slate-200/80">
+              <div className="flex items-center p-1.5 rounded-2xl bg-slate-100/90 border border-slate-200/80">
                 <button
                   type="button"
                   onClick={() => { setAuthMode("SIGNIN"); clear(); }}
                   className={`flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
                     authMode === "SIGNIN"
-                      ? "bg-white text-[#002137] shadow-xs"
+                      ? "bg-white text-[#002137] shadow-sm font-black"
                       : "text-slate-500 hover:text-slate-800"
                   }`}
                 >
@@ -469,7 +469,7 @@ export default function HomePage() {
                   onClick={() => { setAuthMode("SIGNUP"); setStep(1); clear(); }}
                   className={`flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
                     authMode === "SIGNUP"
-                      ? "bg-white text-[#002137] shadow-xs"
+                      ? "bg-white text-[#002137] shadow-sm font-black"
                       : "text-slate-500 hover:text-slate-800"
                   }`}
                 >
@@ -479,13 +479,13 @@ export default function HomePage() {
 
               {/* Alert Notifications */}
               {err && (
-                <div className="flex items-start gap-2 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-600">
+                <div className="flex items-start gap-2 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-600">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{err}</span>
                 </div>
               )}
               {ok && (
-                <div className="flex items-start gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-700">
+                <div className="flex items-start gap-2 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-700">
                   <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{ok}</span>
                 </div>
@@ -494,8 +494,8 @@ export default function HomePage() {
               {/* SIGN IN FORM */}
               {authMode === "SIGNIN" && (
                 <div className="space-y-4">
-                  {/* Role Selector */}
-                  <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-50 border border-slate-200">
+                  {/* Role Selector Pills */}
+                  <div className="grid grid-cols-3 gap-1.5 p-1.5 rounded-xl bg-slate-50 border border-slate-200">
                     {[
                       { key: "STUDENT", label: "Student" },
                       { key: "TEACHER", label: "Faculty" },
@@ -510,7 +510,7 @@ export default function HomePage() {
                         }}
                         className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer text-center ${
                           loginRole === item.key
-                            ? "bg-[#002137] text-white shadow-2xs"
+                            ? "bg-[#002137] text-white shadow-xs"
                             : "text-slate-600 hover:text-slate-900"
                         }`}
                       >
@@ -519,8 +519,8 @@ export default function HomePage() {
                     ))}
                   </div>
 
-                  <form onSubmit={handleSignIn} className="space-y-3.5">
-                    <div className="space-y-1">
+                  <form onSubmit={handleSignIn} className="space-y-4 pt-1">
+                    <div className="space-y-1.5">
                       <label className="block text-xs font-bold text-slate-700">
                         {loginRole === "STUDENT"
                           ? "Student Email or Registered Mobile"
@@ -541,17 +541,17 @@ export default function HomePage() {
                             ? "e.g. sarah.maths@mantif.edu"
                             : "admin@mantif.edu"
                         }
-                        className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
+                        className="w-full px-4 py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-3 focus:ring-[#004b79]/15 focus:border-[#004b79] transition-all font-medium"
                       />
                     </div>
 
-                    <div className="space-y-1">
+                    <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
                         <label className="block text-xs font-bold text-slate-700">Password</label>
                         <button
                           type="button"
                           onClick={() => setShowPw(!showPw)}
-                          className="text-[11px] font-bold text-[#004b79] hover:underline cursor-pointer"
+                          className="text-xs font-bold text-[#004b79] hover:underline cursor-pointer"
                         >
                           {showPw ? "Hide" : "Show"}
                         </button>
@@ -563,14 +563,14 @@ export default function HomePage() {
                         value={pw}
                         onChange={(e) => setPw(e.target.value)}
                         placeholder="Enter account password"
-                        className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
+                        className="w-full px-4 py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-3 focus:ring-[#004b79]/15 focus:border-[#004b79] transition-all font-medium"
                       />
                     </div>
 
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full py-3.5 rounded-xl font-extrabold text-sm bg-[#002137] hover:bg-[#003659] text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-60 mt-2"
+                      className="w-full py-3.5 rounded-xl font-black text-sm bg-gradient-to-r from-[#002137] to-[#004b79] hover:from-[#001726] hover:to-[#003659] text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-[#002137]/20 disabled:opacity-60 mt-2"
                     >
                       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><span>Enter Portal</span><ArrowRight className="w-4 h-4" /></>}
                     </button>
@@ -584,7 +584,7 @@ export default function HomePage() {
                     <button
                       type="button"
                       onClick={() => { setAuthMode("SIGNUP"); setStep(1); clear(); }}
-                      className="text-[#004b79] font-bold hover:underline cursor-pointer"
+                      className="text-[#004b79] font-black hover:underline cursor-pointer"
                     >
                       Create Account →
                     </button>
@@ -629,7 +629,7 @@ export default function HomePage() {
 
                   {/* Step 1: Base Credentials */}
                   {step === 1 && (
-                    <div className="space-y-3">
+                    <div className="space-y-3.5">
                       <div className="space-y-1">
                         <label className="block text-xs font-bold text-slate-700">Full Legal Name *</label>
                         <input
@@ -637,7 +637,7 @@ export default function HomePage() {
                           value={sName}
                           onChange={(e) => setSName(e.target.value)}
                           placeholder="Enter your full name"
-                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
+                          className="w-full px-4 py-2.5 sm:py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-3 focus:ring-[#004b79]/15 focus:border-[#004b79] transition-all font-medium"
                         />
                       </div>
 
@@ -649,7 +649,7 @@ export default function HomePage() {
                             value={sEmail}
                             onChange={(e) => setSEmail(e.target.value)}
                             placeholder="Email address"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
+                            className="w-full px-4 py-2.5 sm:py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-3 focus:ring-[#004b79]/15 focus:border-[#004b79] transition-all font-medium"
                           />
                         </div>
                         <div className="space-y-1">
@@ -660,7 +660,7 @@ export default function HomePage() {
                             value={sPhone}
                             onChange={(e) => setSPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
                             placeholder="10-digit mobile"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
+                            className="w-full px-4 py-2.5 sm:py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-3 focus:ring-[#004b79]/15 focus:border-[#004b79] transition-all font-medium"
                           />
                         </div>
                       </div>
@@ -673,7 +673,7 @@ export default function HomePage() {
                             value={sPw}
                             onChange={(e) => setSPw(e.target.value)}
                             placeholder="Min 6 chars"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
+                            className="w-full px-4 py-2.5 sm:py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-3 focus:ring-[#004b79]/15 focus:border-[#004b79] transition-all font-medium"
                           />
                         </div>
                         <div className="space-y-1">
@@ -683,7 +683,7 @@ export default function HomePage() {
                             value={sCPw}
                             onChange={(e) => setSCPw(e.target.value)}
                             placeholder="Repeat password"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
+                            className="w-full px-4 py-2.5 sm:py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-3 focus:ring-[#004b79]/15 focus:border-[#004b79] transition-all font-medium"
                           />
                         </div>
                       </div>
@@ -691,7 +691,7 @@ export default function HomePage() {
                       <button
                         type="button"
                         onClick={next}
-                        className="w-full py-3 rounded-xl font-bold text-sm bg-[#004b79] hover:bg-[#003b60] text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-2"
+                        className="w-full py-3.5 rounded-xl font-black text-sm bg-gradient-to-r from-[#002137] to-[#004b79] hover:from-[#001726] hover:to-[#003659] text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-[#002137]/20 mt-2"
                       >
                         <span>Next: {signupRole === "STUDENT" ? "School Details" : "Teaching Profile"}</span>
                         <ChevronRight className="w-4 h-4" />
@@ -701,7 +701,7 @@ export default function HomePage() {
 
                   {/* Step 2: Student Academic Details */}
                   {step === 2 && signupRole === "STUDENT" && (
-                    <div className="space-y-3">
+                    <div className="space-y-3.5">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <div className="space-y-1">
                           <label className="block text-xs font-bold text-slate-700">School Name *</label>
@@ -710,7 +710,7 @@ export default function HomePage() {
                             value={sSchool}
                             onChange={(e) => setSSchool(e.target.value)}
                             placeholder="Enter school name"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
+                            className="w-full px-4 py-2.5 sm:py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-3 focus:ring-[#004b79]/15 focus:border-[#004b79] transition-all font-medium"
                           />
                         </div>
                         <div className="space-y-1">
@@ -720,7 +720,7 @@ export default function HomePage() {
                             value={sDistrict}
                             onChange={(e) => setSDistrict(e.target.value)}
                             placeholder="e.g. Erode, Coimbatore"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#004b79] font-medium"
+                            className="w-full px-4 py-2.5 sm:py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-3 focus:ring-[#004b79]/15 focus:border-[#004b79] transition-all font-medium"
                           />
                         </div>
                       </div>
@@ -731,7 +731,7 @@ export default function HomePage() {
                           <select
                             value={sBoard}
                             onChange={(e) => setSBoard(e.target.value as any)}
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 font-medium cursor-pointer"
+                            className="w-full px-3.5 py-2.5 sm:py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white text-slate-900 font-medium cursor-pointer"
                           >
                             <option value="CBSE">CBSE Board</option>
                             <option value="State Board">State Board</option>
@@ -742,7 +742,7 @@ export default function HomePage() {
                           <select
                             value={sClass}
                             onChange={(e) => setSClass(e.target.value)}
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 font-medium cursor-pointer"
+                            className="w-full px-3.5 py-2.5 sm:py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white text-slate-900 font-medium cursor-pointer"
                           >
                             {["Class 6", "Class 7", "Class 8", "Class 9", "Class 10"].map((c) => (
                               <option key={c} value={c}>{c}</option>
@@ -756,7 +756,7 @@ export default function HomePage() {
                         <select
                           value={sBatch}
                           onChange={(e) => setSBatch(e.target.value)}
-                          className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white text-slate-900 font-medium cursor-pointer"
+                          className="w-full px-3.5 py-2.5 sm:py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white text-slate-900 font-medium cursor-pointer"
                         >
                           {batches.map((b) => (
                             <option key={b._id} value={b._id}>
@@ -766,18 +766,18 @@ export default function HomePage() {
                         </select>
                       </div>
 
-                      <div className="flex gap-2 pt-1">
+                      <div className="flex gap-2.5 pt-1">
                         <button
                           type="button"
                           onClick={() => { setStep(1); clear(); }}
-                          className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                          className="px-4 py-3 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-bold flex items-center gap-1 cursor-pointer"
                         >
                           <ArrowLeft className="w-3.5 h-3.5" /> Back
                         </button>
                         <button
                           type="button"
                           onClick={next}
-                          className="flex-1 py-2.5 rounded-xl font-bold text-sm bg-[#004b79] hover:bg-[#003b60] text-white flex items-center justify-center gap-1 cursor-pointer"
+                          className="flex-1 py-3 rounded-xl font-black text-sm bg-gradient-to-r from-[#002137] to-[#004b79] hover:from-[#001726] hover:to-[#003659] text-white flex items-center justify-center gap-1 cursor-pointer shadow-md"
                         >
                           <span>Next: Parent Info</span>
                           <ChevronRight className="w-4 h-4" />
@@ -788,7 +788,7 @@ export default function HomePage() {
 
                   {/* Step 2: Teacher Preferences & Profile */}
                   {step === 2 && signupRole === "TEACHER" && (
-                    <div className="space-y-3">
+                    <div className="space-y-3.5">
                       {/* Classes willing to teach */}
                       <div className="space-y-1">
                         <label className="block text-xs font-bold text-slate-700">
@@ -802,9 +802,9 @@ export default function HomePage() {
                                 key={c}
                                 type="button"
                                 onClick={() => toggleTClass(c)}
-                                className={`py-1.5 px-1 text-xs font-bold rounded-lg border transition-all cursor-pointer text-center ${
+                                className={`py-2 px-1 text-xs font-bold rounded-xl border transition-all cursor-pointer text-center ${
                                   isSelected
-                                    ? "bg-[#002137] text-white border-[#002137]"
+                                    ? "bg-[#002137] text-white border-[#002137] shadow-xs"
                                     : "bg-white text-slate-700 border-slate-200 hover:border-slate-300"
                                 }`}
                               >
@@ -828,9 +828,9 @@ export default function HomePage() {
                                 key={s}
                                 type="button"
                                 onClick={() => toggleTSubject(s)}
-                                className={`py-1.5 px-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer text-center truncate ${
+                                className={`py-2 px-1.5 text-xs font-bold rounded-xl border transition-all cursor-pointer text-center truncate ${
                                   isSelected
-                                    ? "bg-[#002137] text-white border-[#002137]"
+                                    ? "bg-[#002137] text-white border-[#002137] shadow-xs"
                                     : "bg-white text-slate-700 border-slate-200 hover:border-slate-300"
                                 }`}
                               >
@@ -849,7 +849,7 @@ export default function HomePage() {
                             value={tQual}
                             onChange={(e) => setTQual(e.target.value)}
                             placeholder="e.g. M.Sc, B.Ed"
-                            className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white"
+                            className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white"
                           />
                         </div>
                         <div className="space-y-1">
@@ -859,7 +859,7 @@ export default function HomePage() {
                             value={tSpec}
                             onChange={(e) => setTSpec(e.target.value)}
                             placeholder="e.g. Mathematics"
-                            className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white"
+                            className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white"
                           />
                         </div>
                       </div>
@@ -873,7 +873,7 @@ export default function HomePage() {
                             value={tExp}
                             onChange={(e) => setTExp(e.target.value)}
                             placeholder="Years"
-                            className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white"
+                            className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white"
                           />
                         </div>
                         <div className="space-y-1">
@@ -883,16 +883,16 @@ export default function HomePage() {
                             value={tDistrict}
                             onChange={(e) => setTDistrict(e.target.value)}
                             placeholder="Location"
-                            className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white"
+                            className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white"
                           />
                         </div>
                       </div>
 
-                      <div className="flex gap-2 pt-1">
+                      <div className="flex gap-2.5 pt-1">
                         <button
                           type="button"
                           onClick={() => { setStep(1); clear(); }}
-                          className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 text-xs font-bold flex items-center gap-1"
+                          className="px-4 py-3 rounded-xl border border-slate-300 text-slate-700 text-xs font-bold flex items-center gap-1"
                         >
                           <ArrowLeft className="w-3.5 h-3.5" /> Back
                         </button>
@@ -900,7 +900,7 @@ export default function HomePage() {
                           type="button"
                           onClick={handleSignUp}
                           disabled={loading}
-                          className="flex-1 py-2.5 rounded-xl font-bold text-sm bg-[#004b79] hover:bg-[#003b60] text-white flex items-center justify-center gap-1 cursor-pointer disabled:opacity-60"
+                          className="flex-1 py-3 rounded-xl font-black text-sm bg-gradient-to-r from-[#002137] to-[#004b79] hover:from-[#001726] hover:to-[#003659] text-white flex items-center justify-center gap-1 cursor-pointer shadow-md disabled:opacity-60"
                         >
                           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit Registration"}
                         </button>
@@ -910,7 +910,7 @@ export default function HomePage() {
 
                   {/* Step 3: Student Guardian Details */}
                   {step === 3 && signupRole === "STUDENT" && (
-                    <div className="space-y-3">
+                    <div className="space-y-3.5">
                       <div className="grid grid-cols-2 gap-2.5">
                         <div className="space-y-1">
                           <label className="block text-xs font-bold text-slate-700">Parent Name *</label>
@@ -919,7 +919,7 @@ export default function HomePage() {
                             value={spName}
                             onChange={(e) => setSpName(e.target.value)}
                             placeholder="Parent name"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white"
+                            className="w-full px-4 py-2.5 sm:py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white"
                           />
                         </div>
                         <div className="space-y-1">
@@ -930,7 +930,7 @@ export default function HomePage() {
                             value={spPhone}
                             onChange={(e) => setSpPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
                             placeholder="Parent mobile"
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white"
+                            className="w-full px-4 py-2.5 sm:py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white"
                           />
                         </div>
                       </div>
@@ -941,7 +941,7 @@ export default function HomePage() {
                           <select
                             value={sGender}
                             onChange={(e) => setSGender(e.target.value as any)}
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white font-medium"
+                            className="w-full px-3.5 py-2.5 sm:py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white font-medium"
                           >
                             <option value="OTHER">Prefer not to say</option>
                             <option value="MALE">Male</option>
@@ -954,16 +954,16 @@ export default function HomePage() {
                             type="date"
                             value={sDob}
                             onChange={(e) => setSdob(e.target.value)}
-                            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white font-medium"
+                            className="w-full px-3.5 py-2.5 sm:py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white font-medium"
                           />
                         </div>
                       </div>
 
-                      <div className="flex gap-2 pt-2">
+                      <div className="flex gap-2.5 pt-2">
                         <button
                           type="button"
                           onClick={() => { setStep(2); clear(); }}
-                          className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 text-xs font-bold flex items-center gap-1"
+                          className="px-4 py-3 rounded-xl border border-slate-300 text-slate-700 text-xs font-bold flex items-center gap-1 cursor-pointer"
                         >
                           <ArrowLeft className="w-3.5 h-3.5" /> Back
                         </button>
@@ -971,7 +971,7 @@ export default function HomePage() {
                           type="button"
                           onClick={handleSignUp}
                           disabled={loading}
-                          className="flex-1 py-2.5 rounded-xl font-bold text-sm bg-[#002137] hover:bg-[#003659] text-white flex items-center justify-center gap-1 cursor-pointer disabled:opacity-60"
+                          className="flex-1 py-3 rounded-xl font-black text-sm bg-gradient-to-r from-[#002137] to-[#004b79] hover:from-[#001726] hover:to-[#003659] text-white flex items-center justify-center gap-1 cursor-pointer shadow-lg shadow-[#002137]/20 disabled:opacity-60"
                         >
                           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Complete Registration"}
                         </button>
