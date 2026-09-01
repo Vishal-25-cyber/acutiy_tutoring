@@ -129,10 +129,20 @@ export async function POST(
       return NextResponse.json({ error: "Class session not found." }, { status: 404 });
     }
 
+    if (liveClass.status === "COMPLETED") {
+      return NextResponse.json(
+        {
+          error: "CLASS_ENDED",
+          message: "This class session has already ended and is concluded. It cannot be reopened.",
+        },
+        { status: 403 }
+      );
+    }
+
     if (liveClass.status === "CANCELLED") {
       return NextResponse.json(
         { error: "This class has been cancelled by the teacher." },
-        { status: 400 }
+        { status: 403 }
       );
     }
 

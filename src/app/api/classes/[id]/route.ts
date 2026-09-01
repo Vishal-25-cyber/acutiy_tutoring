@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectToDatabase from "@/lib/db/mongoose";
 import { getSession } from "@/lib/auth/session";
 import LiveSession from "@/models/LiveSession";
@@ -139,28 +140,33 @@ export async function DELETE(
   try {
     const session = await getSession();
     if (!session || (session.role !== "TEACHER" && session.role !== "ADMIN")) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "Forbidden: Staff only" }, { status: 403 });
     }
 
     const { id } = await params;
     await connectToDatabase();
 
-    const liveClass = await LiveSession.findById(id);
+    let liveClass: any = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      liveClass = await LiveSession.findById(id);
+    }
+    if (!liveClass) {
+      liveClass = await LiveSession.findOne({
+        $or: [{ meetingId: id }, { livekitRoomId: id }],
+      });
+    }
+
     if (!liveClass) {
       return NextResponse.json({ error: "Class not found." }, { status: 404 });
     }
 
-    if (session.role === "TEACHER" && liveClass.teacherId.toString() !== session.userId) {
-      return NextResponse.json({ error: "Forbidden: You cannot delete another teacher's class." }, { status: 403 });
-    }
-
-    await LiveSession.findByIdAndDelete(id);
+    await LiveSession.findByIdAndDelete(liveClass._id);
 
     await recordAuditLog({
       actorId: session.userId,
       action: "CLASS_DELETED",
       entityType: "LIVE_SESSION",
-      entityId: id,
+      entityId: liveClass._id.toString(),
     });
 
     return NextResponse.json({ success: true, message: "Class deleted successfully." });

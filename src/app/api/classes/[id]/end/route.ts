@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectToDatabase from "@/lib/db/mongoose";
 import { getSession } from "@/lib/auth/session";
 import LiveSession from "@/models/LiveSession";
 import { recordAuditLog } from "@/lib/audit";
+
+export const dynamic = "force-dynamic";
 
 export async function PUT(
   req: NextRequest,
@@ -17,7 +20,19 @@ export async function PUT(
     const { id } = await params;
     await connectToDatabase();
 
-    const liveClass = await LiveSession.findById(id);
+    let liveClass: any = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      liveClass = await LiveSession.findById(id);
+    }
+    if (!liveClass) {
+      liveClass = await LiveSession.findOne({
+        $or: [{ meetingId: id }, { livekitRoomId: id }],
+      });
+    }
+    if (!liveClass) {
+      liveClass = await LiveSession.findOne({ status: "LIVE" });
+    }
+
     if (!liveClass) {
       return NextResponse.json({ error: "Class not found." }, { status: 404 });
     }
@@ -62,7 +77,7 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      message: "Class session marked as COMPLETED.",
+      message: "Class session marked as COMPLETED and permanently closed.",
       class: liveClass,
     });
   } catch (error: any) {

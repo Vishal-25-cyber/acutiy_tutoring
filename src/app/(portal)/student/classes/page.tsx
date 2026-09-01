@@ -105,13 +105,14 @@ export default function StudentClassesPage() {
     weeklySchedule.find((s: any) => s.day.toLowerCase() === currentDay.toLowerCase()) ||
     weeklySchedule[0];
 
-  const liveOrTodayDbClass =
-    data?.classes?.find((c: any) => c.status === "LIVE") ||
-    data?.classes?.find(
-      (c: any) =>
-        c.date === new Date().toISOString().split("T")[0] &&
-        (c.status === "PUBLISHED" || c.status === "SCHEDULED")
-    );
+  const liveDbClass = data?.classes?.find((c: any) => c.status === "LIVE");
+  const todayUpcomingDbClass = data?.classes?.find(
+    (c: any) =>
+      c.date === new Date().toISOString().split("T")[0] &&
+      (c.status === "PUBLISHED" || c.status === "SCHEDULED")
+  );
+
+  const liveOrTodayDbClass = liveDbClass || todayUpcomingDbClass;
 
   const activeSubject = liveOrTodayDbClass?.subject || todayScheduleItem?.subject || "Mathematics";
   const activeTopic =
@@ -125,7 +126,7 @@ export default function StudentClassesPage() {
     "Faculty Specialist";
   const activeRoomId =
     liveOrTodayDbClass?.livekitRoomId || liveOrTodayDbClass?.meetingId || timing.permanentRoomId;
-  const isClassCurrentlyLive = liveOrTodayDbClass?.status === "LIVE" || timing.canJoin;
+  const isClassCurrentlyLive = Boolean(liveDbClass);
 
   const getSubjectAccent = (subject?: string) => {
     switch (subject?.toLowerCase()) {

@@ -137,7 +137,10 @@ export function JitsiClassroom({
       }
     }
     load();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+      stopAllMedia();
+    };
   }, [classId]);
 
   /* ─────────────────────────────────────────────────
@@ -362,13 +365,45 @@ export function JitsiClassroom({
   };
 
   /* ─────────────────────────────────────────────────
+  const stopAllMedia = useCallback(() => {
+    try {
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach((t) => {
+          t.stop();
+          t.enabled = false;
+        });
+        localStreamRef.current = null;
+      }
+      if (screenStreamRef.current) {
+        screenStreamRef.current.getTracks().forEach((t) => {
+          t.stop();
+          t.enabled = false;
+        });
+        screenStreamRef.current = null;
+      }
+    } catch (e) {
+      console.warn("Error stopping media tracks:", e);
+    }
+  }, []);
+
+  /* ─────────────────────────────────────────────────
      8.  Leave class
   ───────────────────────────────────────────────── */
   const handleLeaveClass = async () => {
     if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-    localStreamRef.current?.getTracks().forEach((t) => t.stop());
-    screenStreamRef.current?.getTracks().forEach((t) => t.stop());
-    if (!userInfo.isTeacher) {
+    stopAllMedia();
+
+    if (userInfo.isTeacher) {
+      try {
+        await fetch(`/api/classes/${classId}/end`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (e) {
+        console.warn("Failed to mark class as ended:", e);
+      }
+      router.push("/teacher/schedule");
+    } else {
       try {
         await fetch("/api/attendance/leave", {
           method: "POST",
@@ -379,8 +414,8 @@ export function JitsiClassroom({
           }),
         });
       } catch (e) { console.warn(e); }
+      router.push("/student/classes");
     }
-    router.push(userInfo.isTeacher ? "/teacher/schedule" : "/student/classes");
   };
 
   /* ─────────────────────────────────────────────────

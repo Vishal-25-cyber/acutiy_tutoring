@@ -70,7 +70,9 @@ export async function GET() {
     const dbClasses = sortClassesByPriority(rawClasses as any[]);
 
     const todayClasses = dbClasses.filter(
-      (c: any) => c.status === "LIVE" || c.date === todayDateStr
+      (c: any) =>
+        c.status === "LIVE" ||
+        (c.date === todayDateStr && (c.status === "SCHEDULED" || c.status === "PUBLISHED"))
     );
 
     const weeklySchedule = [

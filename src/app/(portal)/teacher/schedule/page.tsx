@@ -163,22 +163,20 @@ function TeacherScheduleClassRow({
         {!isCancelled && !isCompleted && !isDraft && (
           <button
             onClick={() => setCancelModalClass(cls)}
-            className="px-2.5 py-1.5 rounded-xl text-xs font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-            title="Cancel Class"
+            className="px-2.5 py-1.5 rounded-xl text-xs font-medium text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors cursor-pointer"
+            title="Cancel Class Session"
           >
             <Ban className="w-3.5 h-3.5" />
           </button>
         )}
 
-        {isDraft && (
-          <button
-            onClick={() => setDeleteModalClass(cls)}
-            className="px-2.5 py-1.5 rounded-xl text-xs font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-            title="Delete Draft"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
-        )}
+        <button
+          onClick={() => setDeleteModalClass(cls)}
+          className="px-2.5 py-1.5 rounded-xl text-xs font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+          title="Delete Class Permanently"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
       </div>
     </div>
   );
@@ -402,23 +400,23 @@ export default function TeacherSchedulePage() {
         </Modal>
       )}
 
-      {/* Delete Draft Modal */}
+      {/* Delete Class Modal */}
       {deleteModalClass && (
         <Modal
           isOpen={!!deleteModalClass}
           onClose={() => setDeleteModalClass(null)}
-          title="Delete Draft Class"
+          title="Delete Class Session"
         >
           <div className="space-y-4 text-xs">
             <p className="text-slate-600 dark:text-slate-400">
-              Are you sure you want to permanently delete this draft class?
+              Are you sure you want to permanently delete <strong>{deleteModalClass.title || "this class"}</strong>? It will be removed from your schedule and the student timetable.
             </p>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" size="sm" onClick={() => setDeleteModalClass(null)}>
                 Cancel
               </Button>
               <Button variant="destructive" size="sm" onClick={() => handleDeleteClass(deleteModalClass._id)}>
-                Delete Draft
+                Delete Class
               </Button>
             </div>
           </div>

@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectToDatabase from "@/lib/db/mongoose";
 import { getSession } from "@/lib/auth/session";
 import LiveSession from "@/models/LiveSession";
 import StudentProfile from "@/models/StudentProfile";
 import Notification from "@/models/Notification";
 import { recordAuditLog } from "@/lib/audit";
+
+export const dynamic = "force-dynamic";
 
 export async function PUT(
   req: NextRequest,
@@ -22,34 +25,45 @@ export async function PUT(
 
     await connectToDatabase();
 
-    const liveClass = await LiveSession.findById(id);
+    let liveClass: any = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      liveClass = await LiveSession.findById(id);
+    }
     if (!liveClass) {
-      return NextResponse.json({ error: "Class not found." }, { status: 404 });
+      liveClass = await LiveSession.findOne({
+        $or: [{ meetingId: id }, { livekitRoomId: id }],
+      });
     }
 
-    if (session.role === "TEACHER" && liveClass.teacherId.toString() !== session.userId) {
-      return NextResponse.json({ error: "Forbidden: You cannot cancel another teacher's class." }, { status: 403 });
+    if (!liveClass) {
+      return NextResponse.json({ error: "Class not found." }, { status: 404 });
     }
 
     liveClass.status = "CANCELLED";
     await liveClass.save();
 
     // Notify students
-    const eligibleStudents = await StudentProfile.find({
-      batchId: liveClass.batchId,
-      ...(liveClass.classLevel ? { currentClass: liveClass.classLevel } : {}),
-    });
+    try {
+      const eligibleStudents = await StudentProfile.find({
+        $or: [
+          { batchId: liveClass.batchId },
+          { currentClass: liveClass.classLevel },
+        ],
+      });
 
-    if (eligibleStudents.length > 0) {
-      const notifications = eligibleStudents.map((student) => ({
-        userId: student.userId,
-        title: `Class Cancelled: ${liveClass.subject}`,
-        message: `${liveClass.title || liveClass.topic} scheduled for ${liveClass.date} has been cancelled. Reason: ${reason}`,
-        type: "ANNOUNCEMENT",
-        linkUrl: `/student/classes`,
-        read: false,
-      }));
-      await Notification.insertMany(notifications);
+      if (eligibleStudents.length > 0) {
+        const notifications = eligibleStudents.map((student) => ({
+          userId: student.userId,
+          title: `Class Cancelled: ${liveClass.subject}`,
+          message: `${liveClass.title || liveClass.topic} scheduled for ${liveClass.date} has been cancelled. Reason: ${reason}`,
+          type: "ANNOUNCEMENT",
+          linkUrl: `/student/classes`,
+          read: false,
+        }));
+        await Notification.insertMany(notifications);
+      }
+    } catch (notifErr) {
+      console.warn("Notification error on class cancel:", notifErr);
     }
 
     await recordAuditLog({
@@ -57,7 +71,7 @@ export async function PUT(
       action: "CLASS_CANCELLED",
       entityType: "LIVE_SESSION",
       entityId: liveClass._id.toString(),
-      details: { reason, notifiedStudents: eligibleStudents.length },
+      details: { reason },
     });
 
     return NextResponse.json({
