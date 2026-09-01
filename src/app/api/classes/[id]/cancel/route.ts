@@ -64,7 +64,7 @@ export async function PUT(
     }
 
     await recordAuditLog({
-      actorId: session.userId,
+      actorId: session?.userId || "staff",
       action: "CLASS_CANCELLED",
       entityType: "LIVE_SESSION",
       entityId: liveClass._id.toString(),

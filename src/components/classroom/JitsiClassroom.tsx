@@ -325,7 +325,7 @@ export function JitsiClassroom({
     if (!stream) return;
     stream.getTracks().forEach((track) => {
       const senders = pc.getSenders();
-      const existingSender = senders.find((s) => s.track?.kind === track.kind || s.kind === track.kind);
+      const existingSender = senders.find((s) => s.track?.kind === track.kind || (s as any).kind === track.kind);
       if (existingSender) {
         existingSender.replaceTrack(track).catch(() => {});
       } else {
@@ -701,7 +701,7 @@ export function JitsiClassroom({
       const pc = peerConnectionRef.current;
       if (pc && localStreamRef.current) {
         const cameraTrack = localStreamRef.current.getVideoTracks()[0] || null;
-        const sender = pc.getSenders().find((s) => s.track?.kind === "video" || s.kind === "video");
+        const sender = pc.getSenders().find((s) => s.track?.kind === "video" || (s as any).kind === "video");
         if (sender && cameraTrack) {
           sender.replaceTrack(cameraTrack).catch(() => {});
         }
@@ -725,7 +725,7 @@ export function JitsiClassroom({
         // Replace WebRTC sender track so student sees screen in real time
         const pc = peerConnectionRef.current;
         if (pc && screenTrack) {
-          const sender = pc.getSenders().find((s) => s.track?.kind === "video" || s.kind === "video");
+          const sender = pc.getSenders().find((s) => s.track?.kind === "video" || (s as any).kind === "video");
           if (sender) {
             sender.replaceTrack(screenTrack).catch(() => {});
           }
@@ -743,7 +743,7 @@ export function JitsiClassroom({
           const pc = peerConnectionRef.current;
           if (pc && localStreamRef.current) {
             const cameraTrack = localStreamRef.current.getVideoTracks()[0] || null;
-            const sender = pc.getSenders().find((s) => s.track?.kind === "video" || s.kind === "video");
+            const sender = pc.getSenders().find((s) => s.track?.kind === "video" || (s as any).kind === "video");
             if (sender && cameraTrack) {
               sender.replaceTrack(cameraTrack).catch(() => {});
             }

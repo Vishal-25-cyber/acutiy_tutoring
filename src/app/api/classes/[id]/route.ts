@@ -170,7 +170,7 @@ export async function DELETE(
     await LiveSession.findByIdAndDelete(liveClass._id);
 
     await recordAuditLog({
-      actorId: session.userId,
+      actorId: session?.userId || "staff",
       action: "CLASS_DELETED",
       entityType: "LIVE_SESSION",
       entityId: liveClass._id.toString(),
