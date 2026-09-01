@@ -1339,26 +1339,23 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* 2. Software Team */}
-            <div className="space-y-5">
+            {/* 2. Combined: Software Teams & AI Team */}
+            <div className="space-y-6">
               <div className="text-center">
                 <h3 className="text-xl sm:text-2xl font-black text-[#002137] tracking-tight">
-                  Software Team
+                  Software Teams &amp; AI Team
                 </h3>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
-                {/* Vishal K (With Real Photo 292x365px on Top & Details Underneath) */}
+              {/* 4 Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+                {/* Vishal K */}
                 <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-[#004b79]/40 transition-all flex flex-col items-center text-center space-y-4">
-                  <div
-                    className="shrink-0 rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group"
-                    style={{ width: "292px", height: "365px" }}
-                  >
+                  <div className="shrink-0 w-[240px] h-[300px] sm:w-[260px] sm:h-[325px] rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
                     <img
                       src="/images/team_vishal.jpg"
                       alt="Vishal K - Software Team"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      style={{ width: "292px", height: "365px" }}
                     />
                   </div>
                   <div className="space-y-1">
@@ -1368,48 +1365,29 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Solairaj R (With Real Photo 292x365px on Top & Details Underneath) */}
+                {/* Solairaj R */}
                 <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-[#004b79]/40 transition-all flex flex-col items-center text-center space-y-4">
-                  <div
-                    className="shrink-0 rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group"
-                    style={{ width: "292px", height: "365px" }}
-                  >
+                  <div className="shrink-0 w-[240px] h-[300px] sm:w-[260px] sm:h-[325px] rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
                     <img
                       src="/images/team_solairaj.jpg"
                       alt="Solairaj R - Software Team"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      style={{ width: "292px", height: "365px" }}
                     />
                   </div>
                   <div className="space-y-1">
                     <h4 className="font-black text-lg text-[#002137]">Solairaj R</h4>
                     <p className="text-sm font-extrabold text-[#004b79]">Software Team</p>
-                    <p className="text-xs text-slate-500 font-medium">Frontend &amp; User Experience Systems</p>
+                    <p className="text-xs text-slate-500 font-medium">Frontend &amp; UX Systems</p>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* 3. AI Team */}
-            <div className="space-y-5">
-              <div className="text-center">
-                <h3 className="text-xl sm:text-2xl font-black text-[#002137] tracking-tight">
-                  AI Team
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
-                {/* Abinaya B (With Real Photo 292x365px on Top & Details Underneath) */}
+                {/* Abinaya B */}
                 <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-[#b89047]/40 transition-all flex flex-col items-center text-center space-y-4">
-                  <div
-                    className="shrink-0 rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group"
-                    style={{ width: "292px", height: "365px" }}
-                  >
+                  <div className="shrink-0 w-[240px] h-[300px] sm:w-[260px] sm:h-[325px] rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
                     <img
                       src="/images/team_abinaya.png"
                       alt="Abinaya B - AI Team"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      style={{ width: "292px", height: "365px" }}
                     />
                   </div>
                   <div className="space-y-1">
@@ -1419,17 +1397,13 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Arunkarthick K (With Real Photo 292x365px on Top & Details Underneath) */}
+                {/* Arunkarthick K */}
                 <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-[#b89047]/40 transition-all flex flex-col items-center text-center space-y-4">
-                  <div
-                    className="shrink-0 rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group"
-                    style={{ width: "292px", height: "365px" }}
-                  >
+                  <div className="shrink-0 w-[240px] h-[300px] sm:w-[260px] sm:h-[325px] rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
                     <img
                       src="/images/team_arunkarthick.png"
                       alt="Arunkarthick K - AI Team"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      style={{ width: "292px", height: "365px" }}
                     />
                   </div>
                   <div className="space-y-1">
