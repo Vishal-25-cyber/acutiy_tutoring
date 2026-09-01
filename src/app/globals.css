@@ -129,6 +129,21 @@
   50% { box-shadow: 0 0 25px rgba(184, 144, 71, 0.45); }
 }
 
+@keyframes marquee-scroll {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee-slow {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 45s linear infinite;
+}
+
+.animate-marquee-slow:hover {
+  animation-play-state: paused;
+}
+
 .animate-float-slow {
   animation: float-slow 4s ease-in-out infinite;
 }

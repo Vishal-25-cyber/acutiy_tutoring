@@ -1423,10 +1423,10 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 6: TESTIMONIALS (STUDENT STORIES & EXPERIENCES FROM DAY 1)
+          PAGE 6: TESTIMONIALS (STUDENT STORIES & EXPERIENCES SLOW CAROUSEL)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="testimonials" className="scroll-mt-20 py-20 bg-slate-50 border-b border-slate-200/80">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <section id="testimonials" className="scroll-mt-20 py-16 lg:py-20 bg-slate-50 border-b border-slate-200/80 overflow-hidden">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           
           <div className="text-center max-w-3xl mx-auto space-y-2">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
@@ -1437,76 +1437,89 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* 4 Testimonials Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-            
-            {/* Testimonial 1: T.G. Sivadharani */}
-            <div className="p-7 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-md space-y-5 flex flex-col justify-between hover:border-[#004b79]/50 transition-all">
-              <div className="space-y-4">
-                <Quote className="w-8 h-8 text-[#dfb74a]" />
-                <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-medium italic">
-                  “If surviving 12th boards was a movie, Karunya was the director, scriptwriter, and the stunt double all in one. I walked into her tuition as her very first student — and not to brag (okay, totally to brag). Back then, I was clueless, stressed, and borderline terrified of what the CBSE gods were cooking up. But she? She was calm, collected, and totally ready to drag me lovingly, through the chaos. From breaking down the toughest topics with infinite patience, to hyping me up when I was drowning in doubts, she made sure I didn’t just survive 12th boards… I came out swinging. The late-night doubts, the last-minute revisions, the &lsquo;you better know this by tomorrow&rsquo; looks — all of it got me to where I am today. She built something amazing, and I’ll always be proud to say: I was there from Day 1. Forever your #1 ❤️”
-                </p>
-              </div>
-              <div className="pt-4 border-t border-slate-100 space-y-0.5">
-                <h4 className="font-extrabold text-sm text-[#002137]">T.G. Sivadharani</h4>
-                <p className="text-xs font-bold text-[#b89047]">BSc Costume Design and Fashion</p>
-                <p className="text-[11px] text-slate-500 font-medium">PSGR Krishnammal College, Coimbatore</p>
-              </div>
-            </div>
+          {/* Smooth Slow-Moving Carousel Container */}
+          <div className="relative w-full overflow-hidden py-4">
+            {/* Left & Right Fade Masks */}
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-12 sm:w-24 bg-gradient-to-r from-slate-50 to-transparent z-10" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-12 sm:w-24 bg-gradient-to-l from-slate-50 to-transparent z-10" />
 
-            {/* Testimonial 2: S. Darshan */}
-            <div className="p-7 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-md space-y-5 flex flex-col justify-between hover:border-[#004b79]/50 transition-all">
-              <div className="space-y-4">
-                <Quote className="w-8 h-8 text-[#dfb74a]" />
-                <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-medium italic">
-                  “I just wanted to take a moment to sincerely thank you for all the support, guidance, and encouragement you've given me throughout my time at Mantif . Your teaching has truly made a difference in how I understand the subjects, and I feel much more confident because of it. Your dedication and patience never went unnoticed, and I really appreciate the way you made even the toughest topics easier to grasp. Thanks to your help, I feel well-prepared and motivated to keep doing my best. Once again, thank you so much for everything!”
-                </p>
-              </div>
-              <div className="pt-4 border-t border-slate-100 space-y-0.5">
-                <h4 className="font-extrabold text-sm text-[#002137]">S. Darshan</h4>
-                <p className="text-xs font-bold text-[#b89047]">XII Standard</p>
-                <p className="text-[11px] text-slate-500 font-medium">Board Exam Cohort</p>
-              </div>
+            {/* Continuous Marquee Track */}
+            <div className="animate-marquee-slow flex items-stretch gap-6 sm:gap-8 cursor-grab active:cursor-grabbing hover:[animation-play-state:paused]">
+              {[
+                {
+                  quote: "If surviving 12th boards was a movie, Karunya was the director, scriptwriter, and the stunt double all in one. I walked into her tuition as her very first student — and not to brag (okay, totally to brag). Back then, I was clueless, stressed, and borderline terrified of what the CBSE gods were cooking up. But she? She was calm, collected, and totally ready to drag me lovingly, through the chaos. From breaking down the toughest topics with infinite patience, to hyping me up when I was drowning in doubts, she made sure I didn’t just survive 12th boards… I came out swinging. The late-night doubts, the last-minute revisions, the ‘you better know this by tomorrow’ looks — all of it got me to where I am today. She built something amazing, and I’ll always be proud to say: I was there from Day 1. Forever your #1 ❤️",
+                  name: "T.G. Sivadharani",
+                  role: "BSc Costume Design and Fashion",
+                  sub: "PSGR Krishnammal College, Coimbatore"
+                },
+                {
+                  quote: "I just wanted to take a moment to sincerely thank you for all the support, guidance, and encouragement you've given me throughout my time at Mantif . Your teaching has truly made a difference in how I understand the subjects, and I feel much more confident because of it. Your dedication and patience never went unnoticed, and I really appreciate the way you made even the toughest topics easier to grasp. Thanks to your help, I feel well-prepared and motivated to keep doing my best. Once again, thank you so much for everything!",
+                  name: "S. Darshan",
+                  role: "XII Standard",
+                  sub: "Board Exam Cohort"
+                },
+                {
+                  quote: "Mantif Tutoring wasn't just about academics; it also helped me in developing my personality and other skills. The supportive atmosphere boosted my confidence and made learning enjoyable. I truly thankful for all the memories of Mantif.",
+                  name: "Kanishka C",
+                  role: "XII Standard",
+                  sub: "Classroom Alumna"
+                },
+                {
+                  quote: "Tuition here is always jolly! It’s not boring like just sitting and writing notes. For me, Tutoring Hub from Mantif is a place where we study, have fun, and feel free to share our worries. It is serious learning, but with lots of care and friendship and that’s why it is so special.",
+                  name: "R. Manikandan",
+                  role: "XI Standard",
+                  sub: "Tutoring Hub Learner"
+                },
+                {
+                  quote: "If surviving 12th boards was a movie, Karunya was the director, scriptwriter, and the stunt double all in one. I walked into her tuition as her very first student — and not to brag (okay, totally to brag). Back then, I was clueless, stressed, and borderline terrified of what the CBSE gods were cooking up. But she? She was calm, collected, and totally ready to drag me lovingly, through the chaos. From breaking down the toughest topics with infinite patience, to hyping me up when I was drowning in doubts, she made sure I didn’t just survive 12th boards… I came out swinging. The late-night doubts, the last-minute revisions, the ‘you better know this by tomorrow’ looks — all of it got me to where I am today. She built something amazing, and I’ll always be proud to say: I was there from Day 1. Forever your #1 ❤️",
+                  name: "T.G. Sivadharani",
+                  role: "BSc Costume Design and Fashion",
+                  sub: "PSGR Krishnammal College, Coimbatore"
+                },
+                {
+                  quote: "I just wanted to take a moment to sincerely thank you for all the support, guidance, and encouragement you've given me throughout my time at Mantif . Your teaching has truly made a difference in how I understand the subjects, and I feel much more confident because of it. Your dedication and patience never went unnoticed, and I really appreciate the way you made even the toughest topics easier to grasp. Thanks to your help, I feel well-prepared and motivated to keep doing my best. Once again, thank you so much for everything!",
+                  name: "S. Darshan",
+                  role: "XII Standard",
+                  sub: "Board Exam Cohort"
+                },
+                {
+                  quote: "Mantif Tutoring wasn't just about academics; it also helped me in developing my personality and other skills. The supportive atmosphere boosted my confidence and made learning enjoyable. I truly thankful for all the memories of Mantif.",
+                  name: "Kanishka C",
+                  role: "XII Standard",
+                  sub: "Classroom Alumna"
+                },
+                {
+                  quote: "Tuition here is always jolly! It’s not boring like just sitting and writing notes. For me, Tutoring Hub from Mantif is a place where we study, have fun, and feel free to share our worries. It is serious learning, but with lots of care and friendship and that’s why it is so special.",
+                  name: "R. Manikandan",
+                  role: "XI Standard",
+                  sub: "Tutoring Hub Learner"
+                }
+              ].map((item, idx) => (
+                <div
+                  key={idx}
+                  className="w-[320px] sm:w-[360px] md:w-[400px] shrink-0 p-6 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-[#004b79]/40 transition-all flex flex-col justify-between space-y-4 select-none"
+                >
+                  <div className="space-y-3">
+                    <Quote className="w-6 h-6 text-[#dfb74a] shrink-0" />
+                    <p className="text-slate-700 text-xs sm:text-[13px] leading-relaxed font-medium italic">
+                      “{item.quote.replace(/^“|”$/g, '')}”
+                    </p>
+                  </div>
+                  <div className="pt-3 border-t border-slate-100 space-y-0.5 shrink-0">
+                    <h4 className="font-black text-sm text-[#002137]">{item.name}</h4>
+                    <p className="text-xs font-bold text-[#b89047]">{item.role}</p>
+                    <p className="text-[11px] text-slate-500 font-medium">{item.sub}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-
-            {/* Testimonial 3: Kanishka C */}
-            <div className="p-7 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-md space-y-5 flex flex-col justify-between hover:border-[#004b79]/50 transition-all">
-              <div className="space-y-4">
-                <Quote className="w-8 h-8 text-[#dfb74a]" />
-                <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-medium italic">
-                  “Mantif Tutoring wasn't just about academics; it also helped me in developing my personality and other skills. The supportive atmosphere boosted my confidence and made learning enjoyable. I truly thankful for all the memories of Mantif.”
-                </p>
-              </div>
-              <div className="pt-4 border-t border-slate-100 space-y-0.5">
-                <h4 className="font-extrabold text-sm text-[#002137]">Kanishka C</h4>
-                <p className="text-xs font-bold text-[#b89047]">XII Standard</p>
-                <p className="text-[11px] text-slate-500 font-medium">Classroom Alumna</p>
-              </div>
-            </div>
-
-            {/* Testimonial 4: R. Manikandan */}
-            <div className="p-7 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-md space-y-5 flex flex-col justify-between hover:border-[#004b79]/50 transition-all">
-              <div className="space-y-4">
-                <Quote className="w-8 h-8 text-[#dfb74a]" />
-                <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-medium italic">
-                  “Tuition here is always jolly! It’s not boring like just sitting and writing notes. For me, Tutoring Hub from Mantif is a place where we study, have fun, and feel free to share our worries. It is serious learning, but with lots of care and friendship and that’s why it is so special.”
-                </p>
-              </div>
-              <div className="pt-4 border-t border-slate-100 space-y-0.5">
-                <h4 className="font-extrabold text-sm text-[#002137]">R. Manikandan</h4>
-                <p className="text-xs font-bold text-[#b89047]">XI Standard</p>
-                <p className="text-[11px] text-slate-500 font-medium">Tutoring Hub Learner</p>
-              </div>
-            </div>
-
           </div>
 
         </div>
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 6: GALLERY (MOMENTS & WORKSHOPS READY FOR IMAGES)
+          PAGE 7: GALLERY (MOMENTS & WORKSHOPS READY FOR IMAGES)
       ═══════════════════════════════════════════════════════════════════════ */}
       <section id="gallery" className="scroll-mt-20 py-20 bg-white border-b border-slate-200/80">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
