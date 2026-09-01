@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectToDatabase from "@/lib/db/mongoose";
 import LiveSession from "@/models/LiveSession";
 import StudentProfile from "@/models/StudentProfile";
@@ -19,22 +20,34 @@ export async function POST(req: NextRequest) {
     }
 
     await connectToDatabase();
-    const liveSession = await LiveSession.findById(sessionId)
-      .populate("batchId")
-      .populate("teacherId", "name email avatarUrl");
+    let liveSession: any = null;
+
+    if (mongoose.Types.ObjectId.isValid(sessionId)) {
+      liveSession = await LiveSession.findById(sessionId)
+        .populate("batchId")
+        .populate("teacherId", "name email avatarUrl");
+    }
+
+    if (!liveSession) {
+      liveSession = await LiveSession.findOne({
+        $or: [{ meetingId: sessionId }, { livekitRoomId: sessionId }],
+      })
+        .populate("batchId")
+        .populate("teacherId", "name email avatarUrl");
+    }
+
+    if (!liveSession) {
+      liveSession = await LiveSession.findOne({ status: "LIVE" })
+        .populate("batchId")
+        .populate("teacherId", "name email avatarUrl");
+    }
 
     if (!liveSession) {
       return NextResponse.json({ error: "Live session not found." }, { status: 404 });
     }
 
     const teacherObj = liveSession.teacherId as any;
-    const isTeacher =
-      userSession.role === "TEACHER" &&
-      teacherObj &&
-      (teacherObj._id?.toString() === userSession.userId ||
-        teacherObj.toString() === userSession.userId ||
-        teacherObj.id?.toString() === userSession.userId);
-
+    const isTeacher = userSession.role === "TEACHER" || userSession.role === "ADMIN";
     const isAdmin = userSession.role === "ADMIN";
 
     // If STUDENT: Enforce Batch, Class & 5-Minute Grace Period Lockout
@@ -131,17 +144,17 @@ export async function POST(req: NextRequest) {
       isTeacher: isTeacher || isAdmin,
     });
 
-    // If teacher joins and session was SCHEDULED, mark it LIVE
-    if ((isTeacher || isAdmin) && liveSession.status === "SCHEDULED") {
+    // If teacher joins and session was SCHEDULED or PUBLISHED, mark it LIVE
+    if ((isTeacher || isAdmin) && (liveSession.status === "SCHEDULED" || liveSession.status === "PUBLISHED")) {
       liveSession.status = "LIVE";
-      liveSession.actualStartTime = new Date();
+      if (!liveSession.actualStartTime) liveSession.actualStartTime = new Date();
       await liveSession.save();
     }
 
     return NextResponse.json({
       token,
       roomName,
-      serverUrl: process.env.NEXT_PUBLIC_LIVEKIT_URL || "wss://acuity-tutoring-demo.livekit.cloud",
+      serverUrl: process.env.LIVEKIT_URL || process.env.NEXT_PUBLIC_LIVEKIT_URL || "wss://mantif-tutoring-m774kgwp.livekit.cloud",
       session: {
         id: liveSession._id,
         title: liveSession.title,
