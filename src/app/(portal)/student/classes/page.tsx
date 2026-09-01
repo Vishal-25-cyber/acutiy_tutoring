@@ -107,6 +107,9 @@ export default function StudentClassesPage() {
       status: "SCHEDULED",
       roomId: timing.permanentRoomId,
       description: "Comprehensive review of the week's curriculum with live doubt solving.",
+    },
+  ];
+
   const todayDateStr = new Date().toISOString().split("T")[0];
   const now = new Date();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
