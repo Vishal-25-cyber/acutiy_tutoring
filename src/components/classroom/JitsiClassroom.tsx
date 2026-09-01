@@ -67,7 +67,7 @@ export function JitsiClassroom({
 
   /* ── A/V Controls ── */
   const [isMicOn, setIsMicOn] = useState(false);
-  const [isCameraOn, setIsCameraOn] = useState(true);
+  const [isCameraOn, setIsCameraOn] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [isHandRaised, setIsHandRaised] = useState(false);
 
@@ -122,11 +122,13 @@ export function JitsiClassroom({
         });
 
         if (resolvedUser.role === "TEACHER" || resolvedUser.role === "ADMIN") {
-          // Teacher enters immediately
+          // Teacher enters immediately and activates camera
+          setIsCameraOn(true);
           setStage("LIVE_CLASS");
           recordAttendanceJoin(data.class?.id || classId);
         } else {
-          // Student goes to waiting room first
+          // Student goes to waiting room first with camera off until clicking Ask to Join
+          setIsCameraOn(false);
           setStage("WAITING_ROOM");
         }
       } catch (err: any) {
@@ -274,6 +276,7 @@ export function JitsiClassroom({
      3a.  STUDENT → knock & poll for admission
   ───────────────────────────────────────────────── */
   const askToJoin = useCallback(async () => {
+    setIsCameraOn(true);
     setStage("PENDING_ADMISSION");
 
     // Send knock
@@ -592,7 +595,7 @@ export function JitsiClassroom({
                     <div className="w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center text-xl font-semibold text-slate-200">
                       {initials(userInfo.name)}
                     </div>
-                    <span className="text-xs text-slate-500">Camera is off</span>
+                    <span className="text-xs text-slate-400 font-medium">Camera is standby (turns on when you click Ask to Join)</span>
                   </div>
                 )}
 
@@ -632,8 +635,8 @@ export function JitsiClassroom({
               </div>
               <p className="text-[11px] text-slate-500 mt-2 text-center">
                 {isPending
-                  ? "Your join request has been sent to the teacher"
-                  : "Check your audio and video before joining"}
+                  ? "Camera is live • Join request has been sent to the teacher"
+                  : "Camera will automatically activate when you click Ask to Join"}
               </p>
             </div>
 
