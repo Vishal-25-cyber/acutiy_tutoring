@@ -1709,62 +1709,42 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           FOOTER: CONTACT US & OFFICIAL COMMUNICATIONS
       ═══════════════════════════════════════════════════════════════════════ */}
-      <footer id="contact" className="scroll-mt-20 bg-[#001726] text-white pt-14 pb-10 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+      <footer id="contact" className="scroll-mt-20 bg-[#001726] text-white pt-12 pb-8 border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           
-          {/* Main Footer: 2-Column Balanced Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
+          {/* Main Footer: 2-Column Clean Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-start">
             
-            {/* Left Column (5 cols): Brand, Mission, Email & Socials */}
-            <div className="lg:col-span-5 space-y-6">
+            {/* Left Column (5 cols): Official Email & Social Connections */}
+            <div className="md:col-span-5 space-y-6">
               
-              {/* Logo & Brand */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-white/10 border border-white/20 p-2 flex items-center justify-center">
-                    <img src="/images/mantif_logo.png" alt="MANTIF Logo" className="w-full h-full object-contain" />
-                  </div>
-                  <div>
-                    <h3 className="font-black text-2xl tracking-tight text-white flex items-center">
-                      M<span className="text-[#b89047]">Λ</span>NTIF
-                    </h3>
-                    <p className="text-xs text-[#dfb74a] font-bold">Human x Artificial Intelligence</p>
-                  </div>
-                </div>
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
-                  MSME-registered EdTech startup combining empathetic educator mentorship with artificial intelligence for students of Classes 6 to 10.
-                </p>
-              </div>
-
               {/* Official Email */}
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-[#dfb74a]/20 border border-[#dfb74a]/30 flex items-center justify-center flex-shrink-0">
-                    <Mail className="w-4 h-4 text-[#dfb74a]" />
+              <div className="space-y-2">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#dfb74a] block">
+                  Official Email
+                </span>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#dfb74a]/20 flex items-center justify-center text-[#dfb74a] shrink-0">
+                    <Mail className="w-4 h-4" />
                   </div>
-                  <div className="min-w-0">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                      Official Email
-                    </span>
-                    <a
-                      href="mailto:info@mantif.com"
-                      className="text-sm font-bold text-white hover:text-[#dfb74a] transition-colors truncate block font-mono"
-                    >
-                      info@mantif.com
-                    </a>
-                  </div>
+                  <a
+                    href="mailto:info@mantif.com"
+                    className="text-base sm:text-lg font-bold text-white hover:text-[#dfb74a] transition-colors font-mono"
+                  >
+                    info@mantif.com
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy("info@mantif.com", "fmail")}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                    title="Copy Email"
+                  >
+                    {copiedKey === "fmail" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-slate-300" />}
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleCopy("info@mantif.com", "fmail")}
-                  className="w-8 h-8 rounded-lg bg-white/10 text-slate-300 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer flex-shrink-0"
-                  title="Copy Email"
-                >
-                  {copiedKey === "fmail" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-slate-300" />}
-                </button>
               </div>
 
-              {/* Connect With Us: Real Social Icons */}
+              {/* Connect With Us: Real Brand Colors */}
               <div className="space-y-2.5">
                 <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#dfb74a] block">
                   Connect With Us
@@ -1775,45 +1755,45 @@ export default function HomePage() {
                     target="_blank"
                     rel="noreferrer"
                     title="Instagram"
-                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#dc2743] hover:to-[#bc1888] border border-white/10 hover:border-transparent text-slate-300 hover:text-white flex items-center justify-center transition-all duration-300 group cursor-pointer shadow-sm hover:scale-105"
+                    className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white flex items-center justify-center hover:scale-110 transition-transform duration-300 shadow-md cursor-pointer"
                   >
-                    <InstagramIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    <InstagramIcon className="w-5 h-5" />
                   </a>
                   <a
                     href="https://linkedin.com"
                     target="_blank"
                     rel="noreferrer"
                     title="LinkedIn"
-                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-[#0077B5] border border-white/10 hover:border-transparent text-slate-300 hover:text-white flex items-center justify-center transition-all duration-300 group cursor-pointer shadow-sm hover:scale-105"
+                    className="w-10 h-10 rounded-xl bg-[#0077b5] text-white flex items-center justify-center hover:scale-110 transition-transform duration-300 shadow-md cursor-pointer"
                   >
-                    <LinkedInIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    <LinkedInIcon className="w-5 h-5" />
                   </a>
                   <a
                     href="https://youtube.com"
                     target="_blank"
                     rel="noreferrer"
                     title="YouTube"
-                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-[#FF0000] border border-white/10 hover:border-transparent text-slate-300 hover:text-white flex items-center justify-center transition-all duration-300 group cursor-pointer shadow-sm hover:scale-105"
+                    className="w-10 h-10 rounded-xl bg-[#ff0000] text-white flex items-center justify-center hover:scale-110 transition-transform duration-300 shadow-md cursor-pointer"
                   >
-                    <YouTubeIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    <YouTubeIcon className="w-5 h-5" />
                   </a>
                   <a
                     href="https://x.com"
                     target="_blank"
                     rel="noreferrer"
                     title="X (Twitter)"
-                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-black border border-white/10 hover:border-white/30 text-slate-300 hover:text-white flex items-center justify-center transition-all duration-300 group cursor-pointer shadow-sm hover:scale-105"
+                    className="w-10 h-10 rounded-xl bg-black border border-white/20 text-white flex items-center justify-center hover:scale-110 transition-transform duration-300 shadow-md cursor-pointer"
                   >
-                    <XTwitterIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    <XTwitterIcon className="w-4 h-4" />
                   </a>
                   <a
-                    href={`https://wa.me/91${phone1}?text=Hello%20Mantif%20Team`}
+                    href="https://wa.me/919842743538?text=Hello%20Mantif%20Team"
                     target="_blank"
                     rel="noreferrer"
                     title="WhatsApp"
-                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-[#25D366] border border-white/10 hover:border-transparent text-slate-300 hover:text-white flex items-center justify-center transition-all duration-300 group cursor-pointer shadow-sm hover:scale-105"
+                    className="w-10 h-10 rounded-xl bg-[#25d366] text-white flex items-center justify-center hover:scale-110 transition-transform duration-300 shadow-md cursor-pointer"
                   >
-                    <WhatsAppIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    <WhatsAppIcon className="w-5 h-5" />
                   </a>
                 </div>
               </div>
@@ -1821,38 +1801,38 @@ export default function HomePage() {
             </div>
 
             {/* Right Column (7 cols): 3 Dedicated Helplines */}
-            <div className="lg:col-span-7 space-y-4">
+            <div className="md:col-span-7 space-y-4">
               
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between pb-1 border-b border-white/10">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#dfb74a]">
                   Official Helplines (Direct Support)
                 </span>
-                <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   Mon–Sat (9 AM – 8:30 PM)
                 </span>
               </div>
 
-              {/* Line 1: Admissions */}
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[#dfb74a]/40 transition-colors flex items-center justify-between gap-3">
+              {/* Line 1 */}
+              <div className="py-2 flex items-center justify-between gap-3 border-b border-white/5">
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase text-[#dfb74a] block">
+                  <span className="text-[10px] font-bold uppercase text-slate-400 block">
                     Hotline 1 • Admissions &amp; Fees
                   </span>
                   <span className="text-base sm:text-lg font-black font-mono text-white tracking-wide">
-                    +91 {phone1.slice(0, 5)} {phone1.slice(5)}
+                    +91 98427 43538
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <a
-                    href={`tel:+91${phone1}`}
+                    href="tel:+919842743538"
                     title="Direct Call"
                     className="w-9 h-9 rounded-xl bg-[#004b79] hover:bg-[#005f99] text-white flex items-center justify-center transition-colors cursor-pointer"
                   >
                     <PhoneCall className="w-4 h-4" />
                   </a>
                   <a
-                    href={`https://wa.me/91${phone1}?text=Hello%20Mantif%20Tutoring,%20I%20would%20like%20to%20inquire%20about%20admissions.`}
+                    href="https://wa.me/919842743538?text=Hello%20Mantif%20Tutoring,%20I%20would%20like%20to%20inquire%20about%20admissions."
                     target="_blank"
                     rel="noreferrer"
                     title="WhatsApp Chat"
@@ -1862,7 +1842,7 @@ export default function HomePage() {
                   </a>
                   <button
                     type="button"
-                    onClick={() => handleCopy(`+91${phone1}`, "f1")}
+                    onClick={() => handleCopy("+919842743538", "f1")}
                     className="w-9 h-9 rounded-xl bg-white/10 text-slate-300 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
                     title="Copy Number"
                   >
@@ -1871,26 +1851,26 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Line 2: Academic Inquiries */}
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[#dfb74a]/40 transition-colors flex items-center justify-between gap-3">
+              {/* Line 2 */}
+              <div className="py-2 flex items-center justify-between gap-3 border-b border-white/5">
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase text-[#dfb74a] block">
+                  <span className="text-[10px] font-bold uppercase text-slate-400 block">
                     Hotline 2 • Academic &amp; Batch Timing
                   </span>
                   <span className="text-base sm:text-lg font-black font-mono text-white tracking-wide">
-                    +91 {phone2.slice(0, 5)} {phone2.slice(5)}
+                    +91 80564 53211
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <a
-                    href={`tel:+91${phone2}`}
+                    href="tel:+918056453211"
                     title="Direct Call"
                     className="w-9 h-9 rounded-xl bg-[#004b79] hover:bg-[#005f99] text-white flex items-center justify-center transition-colors cursor-pointer"
                   >
                     <PhoneCall className="w-4 h-4" />
                   </a>
                   <a
-                    href={`https://wa.me/91${phone2}?text=Hello%20Mantif%20Academic%20Team,%20I%20have%20a%20question%20about%20classes.`}
+                    href="https://wa.me/918056453211?text=Hello%20Mantif%20Academic%20Team,%20I%20have%20a%20question%20about%20classes."
                     target="_blank"
                     rel="noreferrer"
                     title="WhatsApp Chat"
@@ -1900,7 +1880,7 @@ export default function HomePage() {
                   </a>
                   <button
                     type="button"
-                    onClick={() => handleCopy(`+91${phone2}`, "f2")}
+                    onClick={() => handleCopy("+918056453211", "f2")}
                     className="w-9 h-9 rounded-xl bg-white/10 text-slate-300 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
                     title="Copy Number"
                   >
@@ -1909,26 +1889,26 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Line 3: Tech Support */}
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[#dfb74a]/40 transition-colors flex items-center justify-between gap-3">
+              {/* Line 3 */}
+              <div className="py-2 flex items-center justify-between gap-3">
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase text-[#dfb74a] block">
+                  <span className="text-[10px] font-bold uppercase text-slate-400 block">
                     Hotline 3 • Tech Support &amp; Helpdesk
                   </span>
                   <span className="text-base sm:text-lg font-black font-mono text-white tracking-wide">
-                    +91 {phone3.slice(0, 5)} {phone3.slice(5)}
+                    +91 63811 80488
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <a
-                    href={`tel:+91${phone3}`}
+                    href="tel:+916381180488"
                     title="Direct Call"
                     className="w-9 h-9 rounded-xl bg-[#004b79] hover:bg-[#005f99] text-white flex items-center justify-center transition-colors cursor-pointer"
                   >
                     <PhoneCall className="w-4 h-4" />
                   </a>
                   <a
-                    href={`https://wa.me/91${phone3}?text=Hello%20Mantif%20Support,%20I%20need%20assistance.`}
+                    href="https://wa.me/916381180488?text=Hello%20Mantif%20Support,%20I%20need%20assistance."
                     target="_blank"
                     rel="noreferrer"
                     title="WhatsApp Chat"
@@ -1938,7 +1918,7 @@ export default function HomePage() {
                   </a>
                   <button
                     type="button"
-                    onClick={() => handleCopy(`+91${phone3}`, "f3")}
+                    onClick={() => handleCopy("+916381180488", "f3")}
                     className="w-9 h-9 rounded-xl bg-white/10 text-slate-300 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
                     title="Copy Number"
                   >
