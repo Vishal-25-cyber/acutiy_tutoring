@@ -999,95 +999,105 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 2: TUTORING HUB (WHERE IT ALL BEGAN - EVOLUTION SHOWCASE)
+          PAGE 2: TUTORING HUB (WHERE IT ALL BEGAN - 50/50 SPLIT WITH CENTER LINE)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="tutoring-hub" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/50 to-white py-10 lg:py-14">
-        <div className="w-full max-w-6xl mx-auto px-6 sm:px-10 lg:px-16 space-y-8">
-          
-          {/* Header */}
-          <div className="text-center space-y-2">
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
-              Tutoring Hub
-            </h2>
-            <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#b89047] tracking-tight">
-              Where It All Began
-            </p>
-          </div>
+      <section id="tutoring-hub" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-10 lg:py-14">
+        {/* Exact Center Vertical Divider Line */}
+        <div className="hidden lg:block absolute left-1/2 top-12 bottom-12 w-px bg-slate-200 -translate-x-1/2" />
 
-          {/* Narrative Evolution Showcase (Connecting Physical to Online MANTIF) */}
-          <div className="grid grid-cols-1 md:grid-cols-11 gap-6 items-center pt-2">
-            
-            {/* Step 1: Physical Tutoring Hub (5 cols) */}
-            <div className="md:col-span-5 space-y-3 p-6 sm:p-7 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-[#002137]/30 transition-all">
-              <div className="flex items-center justify-between">
-                <span className="px-3 py-1 rounded-full bg-blue-50 text-[#004b79] text-xs font-black uppercase tracking-wider">
-                  Physical Space • 4 Years
-                </span>
-                <Building className="w-5 h-5 text-[#004b79]" />
-              </div>
-              <h3 className="text-lg font-black text-[#002137]">
-                Close Mentorship &amp; Teaching
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                For the past four years, <strong>Tutoring Hub</strong> has been a physical learning space where we worked closely with students and gained valuable experience in teaching and managing educational programs.
+        <div className="w-full px-6 sm:px-10 lg:px-14 xl:px-20 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 xl:gap-24 items-center">
+
+          {/* LEFT HALF (50%): TITLE, NARRATIVE & CTAs */}
+          <div className="w-full space-y-6 lg:pr-6 xl:pr-10">
+            <div className="space-y-1.5">
+              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
+                Tutoring Hub
+              </h2>
+              <p className="text-xl sm:text-2xl font-extrabold text-[#b89047] tracking-tight">
+                Where It All Began
               </p>
             </div>
 
-            {/* Transition Indicator (1 col) */}
-            <div className="md:col-span-1 flex flex-col items-center justify-center text-[#b89047] py-2 md:py-0">
-              <div className="w-10 h-10 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center shadow-xs">
-                <ArrowRight className="w-5 h-5 text-[#b89047] rotate-90 md:rotate-0" />
-              </div>
-            </div>
-
-            {/* Step 2: MANTIF Online Forward (5 cols) */}
-            <div className="md:col-span-5 space-y-3 p-6 sm:p-7 rounded-2xl bg-[#002137] text-white shadow-md">
-              <div className="flex items-center justify-between">
-                <span className="px-3 py-1 rounded-full bg-white/15 text-[#dfb74a] text-xs font-black uppercase tracking-wider">
-                  Online Innovation • Today
-                </span>
-                <Rocket className="w-5 h-5 text-[#dfb74a]" />
-              </div>
-              <h3 className="text-lg font-black text-white">
-                MANTIF Taking It Forward
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
+            <div className="space-y-3 text-slate-700 text-sm sm:text-base leading-relaxed font-medium">
+              <p>
+                For the past four years, <strong>Tutoring Hub</strong> has been a physical learning space where we worked closely with students and gained valuable experience in teaching and managing educational programs.
+              </p>
+              <p>
                 Now, we are taking that experience online through <strong>MANTIF</strong>, creating meaningful learning solutions for both students and educational institutions.
               </p>
             </div>
 
+            {/* Quote Accent */}
+            <div className="border-l-4 border-[#b89047] pl-4 py-1 space-y-0.5 my-2">
+              <p className="text-base sm:text-lg font-black text-[#002137]">
+                “Tutoring Hub gave us the foundation.
+              </p>
+              <p className="text-base sm:text-lg font-black text-[#b89047]">
+                MANTIF is taking it forward.”
+              </p>
+            </div>
+
+            {/* CTAs */}
+            <div className="flex flex-wrap items-center gap-3.5 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode("SIGNUP");
+                  setStep(1);
+                  document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="px-6 py-3 rounded-xl bg-[#002137] hover:bg-[#003659] text-white text-sm font-extrabold transition-all shadow-sm cursor-pointer flex items-center gap-2"
+              >
+                <span>Sign Up on MANTIF</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <a
+                href="#contact"
+                className="px-6 py-3 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-sm font-extrabold transition-all cursor-pointer"
+              >
+                Contact Us
+              </a>
+            </div>
           </div>
 
-          {/* Golden Highlight Statement */}
-          <div className="text-center py-2 space-y-1">
-            <p className="text-lg sm:text-xl lg:text-2xl font-black text-[#002137]">
-              “Tutoring Hub gave us the foundation.
-            </p>
-            <p className="text-lg sm:text-xl lg:text-2xl font-black text-[#b89047]">
-              MANTIF is taking it forward.”
-            </p>
-          </div>
+          {/* RIGHT HALF (50%): 4+ YEARS MILESTONE & HIGHLIGHTS */}
+          <div className="w-full space-y-4 lg:pl-6 xl:pl-10">
+            {/* Milestone Card */}
+            <div className="p-6 sm:p-7 rounded-3xl bg-[#002137] text-white space-y-2 shadow-lg relative overflow-hidden">
+              <div className="flex items-baseline gap-3">
+                <span className="text-5xl sm:text-6xl font-black text-[#dfb74a]">4+</span>
+                <div>
+                  <h3 className="text-base font-extrabold uppercase tracking-wide text-white">Years of Physical Coaching</h3>
+                  <p className="text-xs text-[#dfb74a] font-semibold">Classroom Excellence &amp; Academic Heritage</p>
+                </div>
+              </div>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed pt-1 font-medium">
+                Hundreds of students personally mentored across Coimbatore and Erode for CBSE and State Board success.
+              </p>
+            </div>
 
-          {/* Action CTAs */}
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-1">
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMode("SIGNUP");
-                setStep(1);
-                document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
-              }}
-              className="px-8 py-3.5 rounded-xl bg-[#002137] hover:bg-[#003659] text-white text-sm sm:text-base font-extrabold transition-all shadow-md cursor-pointer flex items-center gap-2"
-            >
-              <span>Sign Up on MANTIF</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-            <a
-              href="#contact"
-              className="px-8 py-3.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-sm sm:text-base font-extrabold transition-all cursor-pointer"
-            >
-              Contact Us
-            </a>
+            {/* Highlights Grid */}
+            <div className="grid grid-cols-1 gap-3">
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+                  <Check className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-extrabold text-[#002137]">Syllabus Aligned &amp; Doubt Focused</h4>
+                  <p className="text-xs text-slate-500 font-medium">Continuous homework feedback, live unit test evaluations, and mentor care.</p>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#004b79] flex items-center justify-center shrink-0 mt-0.5">
+                  <BookOpen className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-extrabold text-[#002137]">Empathetic Educator Leadership</h4>
+                  <p className="text-xs text-slate-500 font-medium">Four years of deep classroom experience translated into next-generation EdTech.</p>
+                </div>
+              </div>
+            </div>
           </div>
 
         </div>
