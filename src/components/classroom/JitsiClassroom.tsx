@@ -507,22 +507,12 @@ export function JitsiClassroom({
     setStage("WAITING_ROOM");
   }, [classId, classData]);
 
-  // Cleanup poll and remove pending knock on unmount
+  // Cleanup poll timer on unmount
   useEffect(() => {
     return () => {
       if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-      if (!userInfo.isTeacher) {
-        const targetClassId = classData?.id || classData?.livekitRoomId || classId;
-        try {
-          fetch(`/api/classes/${targetClassId}/admit`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            keepalive: true,
-          }).catch(() => {});
-        } catch {}
-      }
     };
-  }, [classId, classData, userInfo.isTeacher]);
+  }, []);
 
   /* ─────────────────────────────────────────────────
      3b.  TEACHER → poll pending list every 1.5 seconds & chime
