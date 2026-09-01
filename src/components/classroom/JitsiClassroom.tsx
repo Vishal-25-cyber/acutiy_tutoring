@@ -572,23 +572,73 @@ export function JitsiClassroom({
   }, [stage, classId, userInfo.isTeacher]);
 
   /* ─────────────────────────────────────────────────
-     6.  Screen share
+     6.  Screen share (WebRTC track replacement)
   ───────────────────────────────────────────────── */
   const toggleScreenShare = async () => {
     if (isScreenSharing) {
       screenStreamRef.current?.getTracks().forEach((t) => t.stop());
       screenStreamRef.current = null;
       setIsScreenSharing(false);
+
+      // Revert WebRTC sender to camera track
+      const pc = peerConnectionRef.current;
+      if (pc && localStreamRef.current) {
+        const cameraTrack = localStreamRef.current.getVideoTracks()[0] || null;
+        const sender = pc.getSenders().find((s) => s.track?.kind === "video" || s.kind === "video");
+        if (sender && cameraTrack) {
+          sender.replaceTrack(cameraTrack).catch(() => {});
+        }
+      }
+
+      // Revert local preview
+      if (teacherVideoRef.current && localStreamRef.current) {
+        teacherVideoRef.current.srcObject = localStreamRef.current;
+      }
     } else {
       try {
-        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: { cursor: "always" } as any,
+          audio: false,
+        });
         screenStreamRef.current = stream;
         setIsScreenSharing(true);
-        stream.getVideoTracks()[0].onended = () => {
+
+        const screenTrack = stream.getVideoTracks()[0];
+
+        // Replace WebRTC sender track so student sees screen in real time
+        const pc = peerConnectionRef.current;
+        if (pc && screenTrack) {
+          const sender = pc.getSenders().find((s) => s.track?.kind === "video" || s.kind === "video");
+          if (sender) {
+            sender.replaceTrack(screenTrack).catch(() => {});
+          }
+        }
+
+        // Update local teacher preview
+        if (teacherVideoRef.current) {
+          teacherVideoRef.current.srcObject = stream;
+        }
+
+        // Handle native browser stop sharing event
+        screenTrack.onended = () => {
           setIsScreenSharing(false);
           screenStreamRef.current = null;
+          const pc = peerConnectionRef.current;
+          if (pc && localStreamRef.current) {
+            const cameraTrack = localStreamRef.current.getVideoTracks()[0] || null;
+            const sender = pc.getSenders().find((s) => s.track?.kind === "video" || s.kind === "video");
+            if (sender && cameraTrack) {
+              sender.replaceTrack(cameraTrack).catch(() => {});
+            }
+          }
+          if (teacherVideoRef.current && localStreamRef.current) {
+            teacherVideoRef.current.srcObject = localStreamRef.current;
+          }
         };
-      } catch (e) { console.warn("Screen share cancelled:", e); }
+      } catch (e) {
+        console.warn("Screen share cancelled or unsupported:", e);
+        setIsScreenSharing(false);
+      }
     }
   };
 
@@ -1023,13 +1073,13 @@ export function JitsiClassroom({
           {/* Teacher tile */}
           <div className="flex-1 relative rounded-xl overflow-hidden bg-[#1e1e1e] border border-white/10 flex items-center justify-center min-w-0">
             {userInfo.isTeacher ? (
-              isCameraOn ? (
+              (isCameraOn || isScreenSharing) ? (
                 <video
                   ref={teacherVideoRef}
                   autoPlay
                   playsInline
                   muted
-                  className="w-full h-full object-cover -scale-x-100"
+                  className={`w-full h-full ${isScreenSharing ? "object-contain bg-black" : "object-cover -scale-x-100"}`}
                 />
               ) : (
                 <div className="flex flex-col items-center gap-3 text-center px-4">
@@ -1048,7 +1098,7 @@ export function JitsiClassroom({
                   ref={remoteVideoRef}
                   autoPlay
                   playsInline
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain bg-black"
                 />
                 {!hasRemoteVideo && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center px-4 bg-[#1e1e1e]">
@@ -1065,7 +1115,7 @@ export function JitsiClassroom({
             )}
             <div className="absolute bottom-2 left-2 px-2 py-1 rounded-md bg-black/70 text-[11px] font-medium text-white flex items-center gap-1.5 z-10">
               <Mic className="w-3 h-3 text-emerald-400" />
-              <span>{classData?.teacher?.name || "Teacher"} · Host</span>
+              <span>{classData?.teacher?.name || "Teacher"} · {isScreenSharing ? "Screen Sharing" : "Host"}</span>
             </div>
           </div>
 
