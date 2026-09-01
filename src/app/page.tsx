@@ -321,23 +321,23 @@ export default function HomePage() {
           STICKY NAVBAR (EXACT REQ: About, Tutoring Hub, Our Side, Team, Testimonials, Gallery)
       ═══════════════════════════════════════════════════════════════════════ */}
       <header className="sticky top-0 z-50 w-full border-b border-slate-200/90 bg-white/95 backdrop-blur-md transition-all shadow-xs">
-        <div className="w-full max-w-[1550px] mx-auto px-6 sm:px-10 lg:px-14 xl:px-16 h-20 flex items-center justify-between">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 h-20 flex items-center justify-between">
           
-          {/* Logo & Brand Identity (Left Side - Clean Logo without box, Styled MANTIF with golden A, No MSME badge) */}
-          <Link href="#about" className="flex items-center gap-3.5 group text-left cursor-pointer shrink-0">
+          {/* Logo & Brand Identity (Left Side - Clean Logo, Shifted Left, Stylized Λ matching the logo) */}
+          <Link href="#about" className="flex items-center gap-3 group text-left cursor-pointer shrink-0">
             <img
               src="/images/mantif_logo.png"
               alt="MANTIF Logo"
               className="w-10 h-10 object-contain group-hover:scale-105 transition-transform shrink-0"
             />
-            <div className="space-y-0.5">
+            <div className="flex flex-col justify-center">
               <span
-                className="font-black text-2xl tracking-[0.14em] text-[#002137] block leading-none"
+                className="font-black text-[22px] tracking-[0.16em] text-[#002137] leading-tight select-none"
                 style={{ fontFamily: "'Montserrat', 'Plus Jakarta Sans', sans-serif" }}
               >
-                M<span className="text-[#b89047]">A</span>NTIF
+                M<span className="text-[#b89047]">Λ</span>NTIF
               </span>
-              <p className="text-[11px] font-bold text-[#b89047] tracking-tight">
+              <p className="text-[11px] font-bold text-[#b89047] tracking-tight leading-none mt-0.5">
                 Human x Artificial Intelligence
               </p>
             </div>
@@ -408,8 +408,8 @@ export default function HomePage() {
               </div>
 
               <div className="space-y-1">
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight leading-[1.08]">
-                  MANTIF
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-[0.08em] leading-[1.08]">
+                  M<span className="text-[#b89047]">Λ</span>NTIF
                 </h1>
                 <p className="text-xl sm:text-2xl font-extrabold text-[#b89047] tracking-tight">
                   Human x Artificial Intelligence
