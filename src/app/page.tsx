@@ -1321,12 +1321,14 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* V Lavanya (Photo Placeholder on Top & Details Underneath) */}
+                {/* V Lavanya (With Real Photo on Top & Details Underneath) */}
                 <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-[#004b79]/40 transition-all flex flex-col items-center text-center space-y-4">
-                  <div className="w-full aspect-4/5 max-w-[260px] rounded-2xl bg-gradient-to-br from-[#002137] to-[#004b79] text-white flex flex-col items-center justify-center shadow-md border-2 border-slate-100 relative group">
-                    <Award className="w-12 h-12 text-[#dfb74a] mb-2 group-hover:scale-110 transition-transform" />
-                    <span className="text-xs font-bold text-slate-200">V Lavanya</span>
-                    <span className="text-[10px] text-[#dfb74a] uppercase font-black tracking-wider mt-1">Photo</span>
+                  <div className="w-full aspect-4/5 max-w-[260px] rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
+                    <img
+                      src="/images/mentor_lavanya.jpg"
+                      alt="V Lavanya - Educational Mentor"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
                   </div>
                   <div className="space-y-1">
                     <h4 className="font-black text-lg text-[#002137]">V Lavanya</h4>
