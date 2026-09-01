@@ -1754,21 +1754,19 @@ export default function HomePage() {
             {/* Column 2: Helplines */}
             <div className="space-y-3">
               <p className="text-[11px] font-extrabold uppercase tracking-widest text-[#dfb74a]">Helplines</p>
-              <div className="space-y-2.5">
+              <div className="divide-y divide-white/8">
                 {[
-                  { label: "Admissions & Fees", num: "+91 98427 43538", tel: "tel:+919842743538" },
-                  { label: "Academic & Batch Timing", num: "+91 80564 53211", tel: "tel:+918056453211" },
-                  { label: "Tech Support & Helpdesk", num: "+91 63811 80488", tel: "tel:+916381180488" },
+                  { num: "+91 98427 43538", tel: "tel:+919842743538" },
+                  { num: "+91 80564 53211", tel: "tel:+918056453211" },
+                  { num: "+91 63811 80488", tel: "tel:+916381180488" },
                 ].map((h, i) => (
-                  <div key={i}>
-                    <p className="text-[10px] font-bold uppercase text-slate-500 tracking-wider mb-0.5">{h.label}</p>
-                    <a
-                      href={h.tel}
-                      className="text-sm font-black font-mono text-white hover:text-[#dfb74a] transition-colors tracking-wide"
-                    >
-                      {h.num}
-                    </a>
-                  </div>
+                  <a
+                    key={i}
+                    href={h.tel}
+                    className="block py-2.5 text-sm font-black font-mono text-white hover:text-[#dfb74a] transition-colors tracking-wide"
+                  >
+                    {h.num}
+                  </a>
                 ))}
               </div>
             </div>
@@ -1804,10 +1802,7 @@ export default function HomePage() {
                     className="w-8 h-8 rounded-xl bg-black border border-white/20 text-white flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow">
                     <XTwitterIcon className="w-3.5 h-3.5" />
                   </a>
-                  <a href="https://wa.me/919842743538?text=Hello%20Mantif%20Team" target="_blank" rel="noreferrer" title="WhatsApp"
-                    className="w-8 h-8 rounded-xl bg-[#25d366] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow">
-                    <WhatsAppIcon className="w-4 h-4" />
-                  </a>
+
                 </div>
               </div>
             </div>
