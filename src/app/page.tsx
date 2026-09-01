@@ -1269,49 +1269,119 @@ export default function HomePage() {
 
           </div>
 
-          {/* 2. Academic Mentors & Engineering/AI Teams (Cardless, Clean Columns) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 pt-6 border-t border-slate-200">
+          {/* 2. Three Distinct Sub-Teams (Education Mentors, Software Team, AI Team) */}
+          <div className="pt-10 border-t border-slate-200 space-y-10">
             
-            {/* Academic Mentors */}
+            {/* SUB-TEAM 1: Education Mentors */}
             <div className="space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-wider text-[#b89047]">
-                Academic &amp; Subject Mentors
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1 pb-2">
-                  <h4 className="font-extrabold text-base text-[#002137]">Dr. A. Revathi</h4>
-                  <p className="text-xs font-bold text-[#b89047]">PhD Chemistry</p>
-                  <p className="text-xs text-slate-500 font-medium">Educational Mentor</p>
+              <div className="flex items-center gap-3">
+                <h3 className="text-xl sm:text-2xl font-black text-[#002137] tracking-tight">
+                  Education Mentors
+                </h3>
+                <div className="h-px flex-1 bg-slate-200" />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Dr. A. Revathi */}
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/60 border border-slate-200/80">
+                  <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-[#002137] text-white flex flex-col items-center justify-center shrink-0 shadow-sm border border-slate-300">
+                    <Award className="w-6 h-6 text-[#dfb74a] mb-0.5" />
+                    <span className="text-[8px] font-extrabold uppercase text-[#dfb74a]">Photo</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    <h4 className="font-black text-base sm:text-lg text-[#002137]">Dr. A. Revathi</h4>
+                    <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">PhD Chemistry</p>
+                    <p className="text-xs text-slate-500 font-medium">Educational Mentor</p>
+                  </div>
                 </div>
-                <div className="space-y-1 pb-2">
-                  <h4 className="font-extrabold text-base text-[#002137]">V Lavanya</h4>
-                  <p className="text-xs font-bold text-[#b89047]">MSc MPhil Maths</p>
-                  <p className="text-xs text-slate-500 font-medium">Educational Mentor</p>
+
+                {/* V Lavanya */}
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/60 border border-slate-200/80">
+                  <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-[#002137] text-white flex flex-col items-center justify-center shrink-0 shadow-sm border border-slate-300">
+                    <Award className="w-6 h-6 text-[#dfb74a] mb-0.5" />
+                    <span className="text-[8px] font-extrabold uppercase text-[#dfb74a]">Photo</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    <h4 className="font-black text-base sm:text-lg text-[#002137]">V Lavanya</h4>
+                    <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">MSc MPhil Maths</p>
+                    <p className="text-xs text-slate-500 font-medium">Educational Mentor</p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Engineering & AI Team */}
+            {/* SUB-TEAM 2: Software Team */}
             <div className="space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-wider text-[#004b79]">
-                Software &amp; AI Research Team
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="space-y-0.5">
-                  <h4 className="font-extrabold text-sm text-[#002137]">Vishal K</h4>
-                  <p className="text-xs font-bold text-[#004b79]">Software Team</p>
+              <div className="flex items-center gap-3">
+                <h3 className="text-xl sm:text-2xl font-black text-[#002137] tracking-tight">
+                  Software Team
+                </h3>
+                <div className="h-px flex-1 bg-slate-200" />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Vishal K */}
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/60 border border-slate-200/80">
+                  <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-[#003659] text-white flex flex-col items-center justify-center shrink-0 shadow-sm border border-slate-300">
+                    <Laptop className="w-6 h-6 text-blue-200 mb-0.5" />
+                    <span className="text-[8px] font-extrabold uppercase text-blue-200">Photo</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    <h4 className="font-black text-base sm:text-lg text-[#002137]">Vishal K</h4>
+                    <p className="text-xs sm:text-sm font-extrabold text-[#004b79]">Software Team</p>
+                    <p className="text-xs text-slate-500 font-medium">Full Stack Architecture &amp; Platform</p>
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  <h4 className="font-extrabold text-sm text-[#002137]">Solairaj R</h4>
-                  <p className="text-xs font-bold text-[#004b79]">Software Team</p>
+
+                {/* Solairaj R */}
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/60 border border-slate-200/80">
+                  <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-[#003659] text-white flex flex-col items-center justify-center shrink-0 shadow-sm border border-slate-300">
+                    <Laptop className="w-6 h-6 text-blue-200 mb-0.5" />
+                    <span className="text-[8px] font-extrabold uppercase text-blue-200">Photo</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    <h4 className="font-black text-base sm:text-lg text-[#002137]">Solairaj R</h4>
+                    <p className="text-xs sm:text-sm font-extrabold text-[#004b79]">Software Team</p>
+                    <p className="text-xs text-slate-500 font-medium">Frontend &amp; User Experience Systems</p>
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  <h4 className="font-extrabold text-sm text-[#002137]">Abinaya B</h4>
-                  <p className="text-xs font-bold text-[#b89047]">AI Team</p>
+              </div>
+            </div>
+
+            {/* SUB-TEAM 3: AI Team */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <h3 className="text-xl sm:text-2xl font-black text-[#002137] tracking-tight">
+                  AI Team
+                </h3>
+                <div className="h-px flex-1 bg-slate-200" />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Abinaya B */}
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/60 border border-slate-200/80">
+                  <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-[#1e293b] text-white flex flex-col items-center justify-center shrink-0 shadow-sm border border-slate-300">
+                    <Brain className="w-6 h-6 text-[#dfb74a] mb-0.5" />
+                    <span className="text-[8px] font-extrabold uppercase text-[#dfb74a]">Photo</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    <h4 className="font-black text-base sm:text-lg text-[#002137]">Abinaya B</h4>
+                    <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">AI Team</p>
+                    <p className="text-xs text-slate-500 font-medium">AI Pedagogical Models &amp; Diagnostics</p>
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  <h4 className="font-extrabold text-sm text-[#002137]">Arunkarthick K</h4>
-                  <p className="text-xs font-bold text-[#b89047]">AI Team</p>
+
+                {/* Arunkarthick K */}
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/60 border border-slate-200/80">
+                  <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-[#1e293b] text-white flex flex-col items-center justify-center shrink-0 shadow-sm border border-slate-300">
+                    <Brain className="w-6 h-6 text-[#dfb74a] mb-0.5" />
+                    <span className="text-[8px] font-extrabold uppercase text-[#dfb74a]">Photo</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    <h4 className="font-black text-base sm:text-lg text-[#002137]">Arunkarthick K</h4>
+                    <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">AI Team</p>
+                    <p className="text-xs text-slate-500 font-medium">Machine Learning &amp; Adaptive Tutoring</p>
+                  </div>
                 </div>
               </div>
             </div>
