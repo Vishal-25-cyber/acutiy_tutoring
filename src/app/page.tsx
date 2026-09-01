@@ -999,36 +999,42 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 2: TUTORING HUB (WHERE IT ALL BEGAN)
+          PAGE 2: TUTORING HUB (WHERE IT ALL BEGAN - CARDLESS & FULL VIEWPORT)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="tutoring-hub" className="scroll-mt-20 py-20 bg-white border-b border-slate-200/80">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <section id="tutoring-hub" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center border-b border-slate-200/80 bg-white py-8 lg:py-12">
+        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 space-y-8">
           
-          <div className="text-center max-w-3xl mx-auto space-y-3">
+          {/* Section Header */}
+          <div className="space-y-2">
             <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-xs font-black text-[#8f6d2b] uppercase tracking-wider">
               <Compass className="w-3.5 h-3.5 text-[#b89047]" />
               Our Origins
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">
-              Tutoring Hub
-            </h2>
-            <p className="text-lg sm:text-xl font-extrabold text-[#b89047]">
-              Where It All Began
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-4">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight">
+                Tutoring Hub
+              </h2>
+              <span className="text-lg sm:text-xl lg:text-2xl font-extrabold text-[#b89047]">
+                — Where It All Began
+              </span>
+            </div>
           </div>
 
-          {/* Narrative Story Card */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-slate-50 rounded-3xl p-8 sm:p-12 border border-slate-200/90 shadow-sm">
-            <div className="md:col-span-8 space-y-5">
+          {/* Narrative Story (Cardless, Direct Editorial Flow) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
+            
+            {/* Left Narrative & CTAs (7 Cols) */}
+            <div className="lg:col-span-7 space-y-5">
               <p className="text-slate-700 text-base sm:text-lg leading-relaxed font-medium">
                 For the past four years, <strong>Tutoring Hub</strong> has been a physical learning space where we worked closely with students and gained valuable experience in teaching and managing educational programs.
               </p>
+              
               <p className="text-slate-700 text-base sm:text-lg leading-relaxed font-medium">
                 Now, we are taking that experience online through <strong>MANTIF</strong>, creating meaningful learning solutions for both students and educational institutions.
               </p>
 
-              {/* Highlight Callout */}
-              <div className="p-5 rounded-2xl bg-white border border-[#b89047]/30 shadow-xs space-y-1">
+              {/* Seamless Quote Accent (No Box, Vertical Gold Bar) */}
+              <div className="border-l-4 border-[#b89047] pl-4 py-1 space-y-0.5 my-2">
                 <p className="text-base sm:text-lg font-black text-[#002137]">
                   “Tutoring Hub gave us the foundation.
                 </p>
@@ -1038,48 +1044,56 @@ export default function HomePage() {
               </div>
 
               {/* CTAs */}
-              <div className="flex flex-wrap items-center gap-3.5 pt-3">
+              <div className="flex flex-wrap items-center gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => {
                     setAuthMode("SIGNUP");
                     setStep(1);
-                    document.getElementById("auth-card-section")?.scrollIntoView({ behavior: "smooth" });
+                    document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
                   }}
-                  className="px-6 py-3.5 rounded-xl bg-[#002137] hover:bg-[#003659] text-white text-sm font-extrabold transition-all shadow-sm cursor-pointer flex items-center gap-2"
+                  className="px-6 py-3 rounded-xl bg-[#002137] hover:bg-[#003659] text-white text-sm font-extrabold transition-all shadow-sm cursor-pointer flex items-center gap-2"
                 >
                   <span>Sign Up on MANTIF</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
                 <a
                   href="#contact"
-                  className="px-6 py-3.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 text-sm font-extrabold transition-all cursor-pointer"
+                  className="px-6 py-3 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-sm font-extrabold transition-all cursor-pointer"
                 >
                   Contact Us
                 </a>
               </div>
             </div>
 
-            {/* Visual Icon Grid (4 Years Milestone) */}
-            <div className="md:col-span-4 space-y-4">
-              <div className="p-6 rounded-2xl bg-[#002137] text-white text-center space-y-2 shadow-lg">
-                <span className="text-4xl sm:text-5xl font-black text-[#dfb74a]">4+</span>
-                <h3 className="text-sm font-extrabold tracking-wide uppercase">Years of Physical Coaching</h3>
-                <p className="text-xs text-slate-300">
-                  Hundreds of students personally mentored for CBSE and State Board success.
+            {/* Right Highlights & Metrics (5 Cols - Cardless Organic Layout) */}
+            <div className="lg:col-span-5 space-y-6 lg:border-l lg:border-slate-200 lg:pl-10">
+              <div className="space-y-2">
+                <div className="flex items-baseline gap-3">
+                  <span className="text-5xl sm:text-6xl font-black text-[#b89047] tracking-tight">4+</span>
+                  <span className="text-sm sm:text-base font-black uppercase text-[#002137] tracking-wide">Years of Physical Coaching</span>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
+                  Hundreds of students personally mentored across Coimbatore and Erode for CBSE and State Board excellence.
                 </p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-white border border-slate-200 text-slate-800 space-y-1.5 shadow-2xs">
-                <div className="flex items-center gap-2 text-xs font-bold text-emerald-700">
-                  <Check className="w-4 h-4" />
-                  <span>Syllabus Aligned &amp; Doubt Focused</span>
+              <div className="space-y-3 pt-2 border-t border-slate-100">
+                <div className="flex items-start gap-2.5 text-xs sm:text-sm font-bold text-slate-800">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>Syllabus Aligned &amp; Dedicated Doubt Clearing</span>
                 </div>
-                <p className="text-xs text-slate-500 font-medium">
-                  Continuous homework feedback, live unit test evaluations, and mentor care.
-                </p>
+                <div className="flex items-start gap-2.5 text-xs sm:text-sm font-bold text-slate-800">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>Continuous Homework Feedback &amp; Unit Test Evaluations</span>
+                </div>
+                <div className="flex items-start gap-2.5 text-xs sm:text-sm font-bold text-slate-800">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>Empathetic Mentor Guidance for Parent-Teacher Trust</span>
+                </div>
               </div>
             </div>
+
           </div>
 
         </div>
