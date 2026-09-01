@@ -1676,6 +1676,22 @@ export default function HomePage() {
               </div>
             </div>
 
+            {/* Gallery Item 10 (Foundational Math & Handwriting) */}
+            <div className="group relative aspect-4/3 rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md">
+              <img
+                src="/images/gallery_10.jpg"
+                alt="Young students practicing math geometry and handwriting"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/90 via-[#001726]/30 to-transparent flex flex-col justify-end p-5 text-white">
+                <span className="self-start text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-[#dfb74a] text-[#002137] mb-2 shadow-sm">
+                  Foundations
+                </span>
+                <h4 className="font-extrabold text-sm sm:text-base leading-snug">Foundational Math &amp; Handwriting</h4>
+                <p className="text-xs text-slate-200 mt-0.5">Building strong early learning habits</p>
+              </div>
+            </div>
+
           </div>
 
           <p className="text-center text-xs text-slate-400 font-semibold">
