@@ -107,42 +107,76 @@ export default function StudentClassesPage() {
       status: "SCHEDULED",
       roomId: timing.permanentRoomId,
       description: "Comprehensive review of the week's curriculum with live doubt solving.",
-    },
-  ];
+  const todayDateStr = new Date().toISOString().split("T")[0];
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-  const weeklySchedule =
+  const isWithinClassWindow = (c: any) => {
+    if (!c) return false;
+    if (c.status === "LIVE") return true;
+    if (c.status === "PUBLISHED" || c.status === "SCHEDULED") {
+      const [sh = "0", sm = "0"] = (c.startTime || "").split(":");
+      const [eh = "23", em = "59"] = (c.endTime || "").split(":");
+      const startMin = parseInt(sh, 10) * 60 + parseInt(sm, 10);
+      const endMin = parseInt(eh, 10) * 60 + parseInt(em, 10);
+      return currentMinutes >= (startMin - 10) && currentMinutes <= endMin;
+    }
+    return false;
+  };
+
+  const todayDbClass = data?.classes?.find(
+    (c: any) =>
+      c.status !== "CANCELLED" &&
+      c.status !== "COMPLETED" &&
+      (!c.date || c.date === todayDateStr)
+  );
+
+  const liveClassDoc =
+    data?.classes?.find((c: any) => c.status === "LIVE") ||
+    data?.classes?.find((c: any) => (!c.date || c.date === todayDateStr) && isWithinClassWindow(c));
+
+  const isClassCurrentlyLive = Boolean(liveClassDoc);
+  const activeDoc = liveClassDoc || todayDbClass;
+
+  const weeklySchedule = (
     Array.isArray(data?.weeklySchedule) && data.weeklySchedule.length > 0
       ? data.weeklySchedule.map((s: any) => ({ ...s, roomId: timing.permanentRoomId }))
-      : defaultWeeklySchedule;
+      : defaultWeeklySchedule
+  ).map((item: any) => {
+    const isToday = currentDay.toLowerCase() === item.day.toLowerCase() || liveDay.toLowerCase() === item.day.toLowerCase();
+    if (isToday && activeDoc) {
+      return {
+        ...item,
+        subject: activeDoc.subject || item.subject,
+        topic: activeDoc.topic || activeDoc.title || item.topic,
+        faculty: (typeof activeDoc.teacherId === "object" && activeDoc.teacherId?.name) || item.faculty,
+        startTime: activeDoc.startTime || item.startTime,
+        endTime: activeDoc.endTime || item.endTime,
+        time: activeDoc.startTime && activeDoc.endTime ? `${activeDoc.startTime} – ${activeDoc.endTime}` : item.time,
+        status: isClassCurrentlyLive ? "LIVE" : "SCHEDULED",
+        roomId: activeDoc.livekitRoomId || activeDoc.meetingId || timing.permanentRoomId,
+      };
+    }
+    return item;
+  });
 
   const todayScheduleItem =
     weeklySchedule.find((s: any) => s.day.toLowerCase() === currentDay.toLowerCase()) ||
     weeklySchedule.find((s: any) => s.day.toLowerCase() === liveDay.toLowerCase()) ||
     weeklySchedule[1];
 
-  const todayDateStr = new Date().toISOString().split("T")[0];
-  const liveDbClass = data?.classes?.find((c: any) => c.status === "LIVE" && (!c.date || c.date === todayDateStr));
-  const todayUpcomingDbClass = data?.classes?.find(
-    (c: any) =>
-      c.date === todayDateStr &&
-      (c.status === "PUBLISHED" || c.status === "SCHEDULED")
-  );
-
-  const liveOrTodayDbClass = liveDbClass || todayUpcomingDbClass;
-
-  const activeSubject = liveOrTodayDbClass?.subject || todayScheduleItem?.subject || "Mathematics";
+  const activeSubject = activeDoc?.subject || todayScheduleItem?.subject || "Mathematics";
   const activeTopic =
-    liveOrTodayDbClass?.topic ||
-    liveOrTodayDbClass?.title ||
+    activeDoc?.topic ||
+    activeDoc?.title ||
     todayScheduleItem?.topic ||
     "Quadratic Equations";
   const activeFaculty =
-    (typeof liveOrTodayDbClass?.teacherId === "object" && liveOrTodayDbClass?.teacherId?.name) ||
+    (typeof activeDoc?.teacherId === "object" && activeDoc?.teacherId?.name) ||
     todayScheduleItem?.faculty ||
     "Faculty Specialist";
   const activeRoomId =
-    liveOrTodayDbClass?.livekitRoomId || liveOrTodayDbClass?.meetingId || timing.permanentRoomId;
-  const isClassCurrentlyLive = Boolean(liveDbClass);
+    activeDoc?.livekitRoomId || activeDoc?.meetingId || todayScheduleItem?.roomId || timing.permanentRoomId;
 
   const getSubjectAccent = (subject?: string) => {
     switch (subject?.toLowerCase()) {
