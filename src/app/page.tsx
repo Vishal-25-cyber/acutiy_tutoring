@@ -450,19 +450,19 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* RIGHT HALF (50%): ULTRA-PROFESSIONAL AUTH CARD (COMPACT REDUCED WIDTH) */}
+          {/* RIGHT HALF (50%): ULTRA-SLEEK MODERN AUTH PANEL */}
           <div id="auth-card-section" className="w-full flex justify-center lg:pl-6 xl:pl-10">
-            <div className="w-full max-w-[420px] bg-white rounded-3xl border border-slate-200 shadow-[0_20px_50px_rgba(0,33,55,0.08)] p-6 sm:p-7 space-y-5">
+            <div className="w-full max-w-[390px] bg-white rounded-2xl border border-slate-200/90 shadow-[0_12px_36px_-6px_rgba(0,33,55,0.08)] p-6 sm:p-7 space-y-4">
               
-              {/* Tab Switcher: Sign In vs Sign Up */}
-              <div className="flex items-center p-1.5 rounded-2xl bg-slate-100/90 border border-slate-200/80">
+              {/* Sleek Tab Switcher: Sign In vs Sign Up */}
+              <div className="flex border-b border-slate-200">
                 <button
                   type="button"
                   onClick={() => { setAuthMode("SIGNIN"); clear(); }}
-                  className={`flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                  className={`flex-1 pb-2.5 text-center text-xs font-black tracking-wide uppercase transition-all border-b-2 cursor-pointer ${
                     authMode === "SIGNIN"
-                      ? "bg-white text-[#002137] shadow-sm font-black"
-                      : "text-slate-500 hover:text-slate-800"
+                      ? "border-[#002137] text-[#002137]"
+                      : "border-transparent text-slate-400 hover:text-slate-700"
                   }`}
                 >
                   Portal Sign In
@@ -470,25 +470,25 @@ export default function HomePage() {
                 <button
                   type="button"
                   onClick={() => { setAuthMode("SIGNUP"); setStep(1); clear(); }}
-                  className={`flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                  className={`flex-1 pb-2.5 text-center text-xs font-black tracking-wide uppercase transition-all border-b-2 cursor-pointer ${
                     authMode === "SIGNUP"
-                      ? "bg-white text-[#002137] shadow-sm font-black"
-                      : "text-slate-500 hover:text-slate-800"
+                      ? "border-[#002137] text-[#002137]"
+                      : "border-transparent text-slate-400 hover:text-slate-700"
                   }`}
                 >
-                  Create Account (Sign Up)
+                  Create Account
                 </button>
               </div>
 
               {/* Alert Notifications */}
               {err && (
-                <div className="flex items-start gap-2 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-600">
+                <div className="flex items-start gap-2 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-600">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{err}</span>
                 </div>
               )}
               {ok && (
-                <div className="flex items-start gap-2 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-700">
+                <div className="flex items-start gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-700">
                   <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{ok}</span>
                 </div>
@@ -496,9 +496,9 @@ export default function HomePage() {
 
               {/* SIGN IN FORM */}
               {authMode === "SIGNIN" && (
-                <div className="space-y-4">
-                  {/* Role Selector Pills */}
-                  <div className="grid grid-cols-3 gap-1.5 p-1.5 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="space-y-3.5 pt-1">
+                  {/* Role Selector */}
+                  <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-100 text-xs">
                     {[
                       { key: "STUDENT", label: "Student" },
                       { key: "TEACHER", label: "Faculty" },
@@ -511,10 +511,10 @@ export default function HomePage() {
                           setLoginRole(item.key as LoginRole);
                           clear();
                         }}
-                        className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer text-center ${
+                        className={`py-1.5 rounded-lg font-bold transition-all cursor-pointer text-center ${
                           loginRole === item.key
-                            ? "bg-[#002137] text-white shadow-xs"
-                            : "text-slate-600 hover:text-slate-900"
+                            ? "bg-white text-[#002137] shadow-xs font-extrabold"
+                            : "text-slate-500 hover:text-slate-800"
                         }`}
                       >
                         {item.label}
@@ -522,8 +522,8 @@ export default function HomePage() {
                     ))}
                   </div>
 
-                  <form onSubmit={handleSignIn} className="space-y-4 pt-1">
-                    <div className="space-y-1.5">
+                  <form onSubmit={handleSignIn} className="space-y-3 pt-1">
+                    <div className="space-y-1">
                       <label className="block text-xs font-bold text-slate-700">
                         {loginRole === "STUDENT"
                           ? "Student Email or Registered Mobile"
@@ -544,11 +544,11 @@ export default function HomePage() {
                             ? "e.g. sarah.maths@mantif.edu"
                             : "admin@mantif.edu"
                         }
-                        className="w-full px-4 py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-3 focus:ring-[#004b79]/15 focus:border-[#004b79] transition-all font-medium"
+                        className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 bg-slate-50 hover:bg-white focus:bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#004b79]/20 focus:border-[#004b79] transition-all font-medium"
                       />
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <div className="flex items-center justify-between">
                         <label className="block text-xs font-bold text-slate-700">Password</label>
                         <button
@@ -566,28 +566,26 @@ export default function HomePage() {
                         value={pw}
                         onChange={(e) => setPw(e.target.value)}
                         placeholder="Enter account password"
-                        className="w-full px-4 py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-3 focus:ring-[#004b79]/15 focus:border-[#004b79] transition-all font-medium"
+                        className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 bg-slate-50 hover:bg-white focus:bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#004b79]/20 focus:border-[#004b79] transition-all font-medium"
                       />
                     </div>
 
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full py-3.5 rounded-xl font-black text-sm bg-gradient-to-r from-[#002137] to-[#004b79] hover:from-[#001726] hover:to-[#003659] text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-[#002137]/20 disabled:opacity-60 mt-2"
+                      className="w-full py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm bg-[#002137] hover:bg-[#003659] text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-60 mt-2"
                     >
                       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><span>Enter Portal</span><ArrowRight className="w-4 h-4" /></>}
                     </button>
                   </form>
 
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
-                    <span className="text-slate-600 font-medium flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                      New to MANTIF?
-                    </span>
+                  {/* Clean Bottom Footer Without AI Icon */}
+                  <div className="pt-2 text-center text-xs text-slate-500 font-medium">
+                    New to MANTIF?{" "}
                     <button
                       type="button"
                       onClick={() => { setAuthMode("SIGNUP"); setStep(1); clear(); }}
-                      className="text-[#004b79] font-black hover:underline cursor-pointer"
+                      className="text-[#004b79] font-bold hover:underline cursor-pointer ml-1"
                     >
                       Create Account →
                     </button>
