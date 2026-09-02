@@ -1237,7 +1237,7 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           PAGE 3: OUR SIDE (CLEAN SINGLE-LINE SCHOOL NAME + ACTION LINK)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="our-side" className="relative scroll-mt-20 border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/30 to-white py-14 lg:py-20">
+      <section id="our-side" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/30 to-white pt-8 sm:pt-10 lg:pt-14 pb-28 sm:pb-36 lg:pb-48 flex flex-col justify-start">
         <div className="w-full max-w-6xl mx-auto px-6 sm:px-10 lg:px-14 space-y-10 lg:space-y-14">
 
           {/* Section Heading */}
