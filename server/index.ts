@@ -205,9 +205,24 @@ import fs from "fs";
 // Static SPA Serving for Production (Render / Cloud)
 const distPath = path.join(process.cwd(), "dist");
 if (fs.existsSync(distPath)) {
-  app.use(express.static(distPath));
+  app.use(
+    express.static(distPath, {
+      setHeaders: (res: any, filePath: string) => {
+        if (filePath.endsWith("index.html")) {
+          res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+          res.setHeader("Pragma", "no-cache");
+          res.setHeader("Expires", "0");
+        } else if (filePath.includes("/assets/")) {
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        }
+      },
+    })
+  );
   app.use((req: any, res: any, next: any) => {
     if (req.method === "GET" && !req.path.startsWith("/api")) {
+      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
       return res.sendFile(path.join(distPath, "index.html"));
     }
     next();
