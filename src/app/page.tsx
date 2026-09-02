@@ -1187,9 +1187,10 @@ export default function HomePage() {
             <div className="w-full space-y-5 lg:pl-6 xl:pl-10">
               <div className="space-y-3">
                 <div className="flex items-center gap-4">
-                  <span className="text-5xl sm:text-6xl font-black text-[#b89047] leading-none shrink-0">
-                    4+
-                  </span>
+                  <div className="inline-flex items-center font-black text-[#b89047] leading-none shrink-0 select-none">
+                    <span className="text-5xl sm:text-6xl font-black">4</span>
+                    <span className="text-3xl sm:text-4xl font-black ml-0.5 -translate-y-1 sm:-translate-y-1.5 leading-none">+</span>
+                  </div>
                   <div className="space-y-0.5">
                     <h3 className="text-base sm:text-lg font-black uppercase text-[#002137] tracking-tight leading-tight">
                       Years of Physical Coaching
