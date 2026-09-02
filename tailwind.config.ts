@@ -114,8 +114,8 @@ const config: Config = {
         float: "float 4s ease-in-out infinite",
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', "system-ui", "-apple-system", "BlinkMacSystemFont", '"Segoe UI"', "Roboto", "sans-serif"],
-        heading: ['"Plus Jakarta Sans"', "sans-serif"],
+        sans: ['"Inter"', "system-ui", "-apple-system", "BlinkMacSystemFont", '"Segoe UI"', "Roboto", '"Helvetica Neue"', "Arial", "sans-serif"],
+        heading: ['"Inter"', "system-ui", "-apple-system", "BlinkMacSystemFont", '"Segoe UI"', "Roboto", "sans-serif"],
         logo: ['"Montserrat"', '"Outfit"', '"Inter"', "sans-serif"],
       },
     },
