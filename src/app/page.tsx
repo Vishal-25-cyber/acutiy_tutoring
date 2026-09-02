@@ -93,9 +93,12 @@ const outreachSchools = [
     milestoneQuote:
       "The best part of this session was that Our Founder Ms. Karunya S is an alumna of the school. It was truly a proud moment for the entire MANTIF team and for the teachers who once taught her. We could witness the pride and happiness on her teachers’ faces as they welcomed her back, this time as a Founder.",
     schoolUrl: "https://www.google.com/search?q=Kongu+National+Matriculation+Hr+Sec+School+Nanjanapuram",
-    videoUrl: "", // Paste YouTube / MP4 URL or configure via UI
+    videoTitle1: "Session Video 1: Faculty AI Workshop & Live Demo",
+    videoUrl1: "",
+    videoTitle2: "Session Video 2: Founder Address & Teacher Interaction",
+    videoUrl2: "",
   },
-  // To add another school, simply copy and paste the block below with details:
+  // To add another school, simply copy and paste the block below:
   /*
   {
     id: "next-school-id",
@@ -105,10 +108,13 @@ const outreachSchools = [
     sessionTitle: "Session Title Here",
     summary: "Brief overview of what MANTIF conducted for this school.",
     description: "Detailed session contents, AI tools introduced, and outcomes.",
-    milestoneTitle: "Milestone Story",
+    milestoneTitle: "Alma Mater Milestone",
     milestoneQuote: "Memorable milestone quote or key reflection from this session.",
     schoolUrl: "https://school-website-or-link.com",
-    videoUrl: "",
+    videoTitle1: "Session Video 1: Workshop Highlights",
+    videoUrl1: "",
+    videoTitle2: "Session Video 2: Interactive Q&A",
+    videoUrl2: "",
   },
   */
 ];
@@ -133,14 +139,15 @@ export default function HomePage() {
   const [selectedSchoolModal, setSelectedSchoolModal] = useState<any | null>(null);
   const [customVideoUrls, setCustomVideoUrls] = useState<Record<string, string>>({});
   const [videoModalOpen, setVideoModalOpen] = useState(false);
-  const [activeSchoolForVideo, setActiveSchoolForVideo] = useState("");
+  const [activeVideoSlotKey, setActiveVideoSlotKey] = useState("");
+  const [activeVideoSlotLabel, setActiveVideoSlotLabel] = useState("");
   const [videoInputUrl, setVideoInputUrl] = useState("");
-  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
+  const [playingVideoSlotId, setPlayingVideoSlotId] = useState<string | null>(null);
 
   const handleSaveVideoUrl = () => {
-    if (activeSchoolForVideo && videoInputUrl.trim()) {
-      setCustomVideoUrls((prev) => ({ ...prev, [activeSchoolForVideo]: videoInputUrl.trim() }));
-      setPlayingVideoId(activeSchoolForVideo);
+    if (activeVideoSlotKey && videoInputUrl.trim()) {
+      setCustomVideoUrls((prev) => ({ ...prev, [activeVideoSlotKey]: videoInputUrl.trim() }));
+      setPlayingVideoSlotId(activeVideoSlotKey);
       setVideoModalOpen(false);
       setVideoInputUrl("");
     }
@@ -1755,172 +1762,306 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* ─── School Detail Modal (Full Session Story, Contents & Video Screen INSIDE Link) ─── */}
+        {/* ─── School Detail Modal (Professional Editorial Layout with 2 Video Players & NO Nested Cards) ─── */}
         {selectedSchoolModal && (
           <div
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-y-auto"
             onClick={() => setSelectedSchoolModal(null)}
           >
             <div
-              className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white border border-slate-200 shadow-2xl p-6 sm:p-8 lg:p-10 space-y-6 text-left"
+              className="relative w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-3xl bg-white border border-slate-200/90 shadow-2xl p-6 sm:p-8 lg:p-10 space-y-8 text-left"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Top Header */}
-              <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-100">
-                <div className="space-y-1.5">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-50 text-[#b89047] border border-amber-200">
-                    <School className="w-3.5 h-3.5" />
-                    <span>{selectedSchoolModal.tag}</span>
-                  </span>
-                  <h3 className="text-2xl sm:text-3xl font-black text-[#002137] leading-tight">
+              <div className="flex items-start justify-between gap-6 pb-6 border-b border-slate-200/80">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-50 text-[#b89047] border border-amber-200/90">
+                      <School className="w-3.5 h-3.5" />
+                      <span>{selectedSchoolModal.tag}</span>
+                    </span>
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-[#b89047]" /> {selectedSchoolModal.district}
+                    </span>
+                  </div>
+
+                  <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#002137] tracking-tight leading-tight">
                     {selectedSchoolModal.name}
                   </h3>
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-[#b89047]" /> {selectedSchoolModal.district}
-                  </p>
                 </div>
 
                 <button
                   onClick={() => setSelectedSchoolModal(null)}
-                  className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0"
+                  className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0 shadow-xs hover:rotate-90 duration-200"
+                  title="Close Dialog"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* 2-Column Grid inside the Modal: Left Contents & Right Video */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-
-                {/* Left: Contents & Milestone */}
-                <div className="lg:col-span-6 space-y-4">
-                  {/* Session Focus */}
-                  <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                    <p className="text-xs font-black uppercase text-[#004b79] tracking-wider">
-                      Session Theme
-                    </p>
-                    <h4 className="text-base font-black text-[#002137]">
-                      {selectedSchoolModal.sessionTitle}
-                    </h4>
-                    <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-medium">
-                      {selectedSchoolModal.summary}
-                    </p>
-                    <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-medium pt-1">
-                      {selectedSchoolModal.description}
-                    </p>
-                  </div>
-
-                  {/* Alma Mater Milestone Box */}
-                  <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/60 border-l-4 border-[#b89047] border-y border-r border-amber-200/70 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-black uppercase text-[#b89047] tracking-wider">
-                        {selectedSchoolModal.milestoneTitle}
-                      </span>
-                      <span className="text-[10px] uppercase font-bold text-amber-800 bg-amber-200/60 px-2 py-0.5 rounded-full">
-                        Founder Moment
-                      </span>
-                    </div>
-                    <p className="text-slate-800 text-xs sm:text-sm italic leading-relaxed font-medium">
-                      “{selectedSchoolModal.milestoneQuote}”
-                    </p>
-                  </div>
+              {/* Seamless Editorial Content Section (No nested box cards!) */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                {/* Left: Session Academic Focus & Details */}
+                <div className="lg:col-span-7 space-y-3.5">
+                  <p className="text-xs font-black uppercase tracking-widest text-[#004b79]">
+                    Academic Focus &amp; Practical Training
+                  </p>
+                  <h4 className="text-xl sm:text-2xl font-black text-[#002137] leading-snug">
+                    “{selectedSchoolModal.sessionTitle}”
+                  </h4>
+                  <p className="text-slate-700 text-sm sm:text-base leading-relaxed font-normal">
+                    {selectedSchoolModal.summary}
+                  </p>
+                  <p className="text-slate-600 text-sm leading-relaxed font-normal">
+                    {selectedSchoolModal.description}
+                  </p>
                 </div>
 
-                {/* Right: Dedicated Video Screen inside Modal */}
-                <div className="lg:col-span-6 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black uppercase text-[#002137] tracking-wider flex items-center gap-1.5">
-                      <Video className="w-4 h-4 text-[#004b79]" />
-                      Session Video Stream
-                    </span>
-
-                    <button
-                      onClick={() => {
-                        setActiveSchoolForVideo(selectedSchoolModal.id);
-                        setVideoInputUrl(customVideoUrls[selectedSchoolModal.id] || "");
-                        setVideoModalOpen(true);
-                      }}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-[#004b79] hover:text-[#b89047] bg-slate-100 hover:bg-amber-50 px-2.5 py-1 rounded-lg border border-slate-200 transition-colors cursor-pointer"
-                    >
-                      <Plus className="w-3 h-3" />
-                      <span>Configure Video URL</span>
-                    </button>
+                {/* Right: Founder & Alma Mater Milestone (Executive Pull-Quote, NOT a card box) */}
+                <div className="lg:col-span-5 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#b89047]" />
+                    <p className="text-xs font-black uppercase tracking-wider text-[#b89047]">
+                      {selectedSchoolModal.milestoneTitle}
+                    </p>
                   </div>
 
-                  {/* Video Player Display Container */}
-                  {(() => {
-                    const effectiveVid = customVideoUrls[selectedSchoolModal.id] || selectedSchoolModal.videoUrl;
-                    const isVidPlaying = playingVideoId === selectedSchoolModal.id;
+                  <blockquote className="relative pl-5 border-l-4 border-[#b89047] italic text-slate-800 text-sm sm:text-base leading-relaxed font-medium">
+                    “{selectedSchoolModal.milestoneQuote}”
+                  </blockquote>
 
-                    return (
-                      <div className="relative rounded-2xl overflow-hidden shadow-xl border-2 border-slate-300 bg-slate-950 aspect-video flex items-center justify-center">
-                        {effectiveVid && isVidPlaying ? (
-                          effectiveVid.includes("youtube.com") || effectiveVid.includes("youtu.be") ? (
-                            <iframe
-                              src={getEmbedVideoUrl(effectiveVid)}
-                              title={selectedSchoolModal.name}
-                              className="w-full h-full border-0"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                            />
-                          ) : (
-                            <video
-                              src={effectiveVid}
-                              controls
-                              autoPlay
-                              className="w-full h-full object-contain"
-                            />
-                          )
-                        ) : (
-                          <div className="relative w-full h-full flex flex-col justify-between p-5 bg-gradient-to-br from-slate-900 via-[#002137] to-slate-950 text-white select-none">
-                            <div className="relative z-10 flex items-center justify-between">
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-600 text-white">
-                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                                Video
-                              </span>
-                              <span className="text-[10px] text-slate-300">1080p HD</span>
-                            </div>
-
-                            <div className="relative z-10 flex flex-col items-center justify-center my-auto text-center space-y-2">
-                              <button
-                                onClick={() => {
-                                  if (effectiveVid) {
-                                    setPlayingVideoId(selectedSchoolModal.id);
-                                  } else {
-                                    setActiveSchoolForVideo(selectedSchoolModal.id);
-                                    setVideoInputUrl("");
-                                    setVideoModalOpen(true);
-                                  }
-                                }}
-                                className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all cursor-pointer"
-                              >
-                                <Play className="w-6 h-6 fill-current ml-0.5" />
-                              </button>
-                              <p className="text-xs font-bold text-white">
-                                {effectiveVid ? "Play Session Video" : "Click to Add Video URL"}
-                              </p>
-                            </div>
-
-                            <div className="relative z-10 flex items-center justify-between text-[11px] text-slate-300 pt-1 border-t border-white/10">
-                              <span className="truncate max-w-[160px]">{selectedSchoolModal.sessionTitle}</span>
-                              <button
-                                onClick={() => {
-                                  setActiveSchoolForVideo(selectedSchoolModal.id);
-                                  setVideoInputUrl(customVideoUrls[selectedSchoolModal.id] || "");
-                                  setVideoModalOpen(true);
-                                }}
-                                className="text-[#dfb74a] hover:underline font-bold cursor-pointer"
-                              >
-                                + Edit Link
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
+                  <p className="text-xs font-extrabold text-[#002137] tracking-wide pt-1">
+                    — Ms. Karunya S, Founder &amp; Alumna
+                  </p>
                 </div>
 
               </div>
+
+              {/* ─── DUAL VIDEO SHOWCASE (2 DEDICATED VIDEOS) ─── */}
+              <div className="space-y-5 pt-6 border-t border-slate-200/80">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-[#002137] text-[#dfb74a] flex items-center justify-center shadow-xs">
+                      <Video className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-base sm:text-lg font-black text-[#002137]">
+                        Session Video Recordings
+                      </h4>
+                      <p className="text-xs text-slate-500 font-medium">
+                        2 Dedicated video streams covering workshop highlights &amp; founder interactions
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#004b79] bg-blue-50 border border-blue-200 px-3 py-1 rounded-full">
+                    2 Streams Available
+                  </span>
+                </div>
+
+                {/* 2-Column Responsive Video Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+                  
+                  {/* VIDEO SLOT 1 */}
+                  {(() => {
+                    const slotKey = `${selectedSchoolModal.id}_1`;
+                    const effectiveVid1 = customVideoUrls[slotKey] || selectedSchoolModal.videoUrl1 || selectedSchoolModal.videoUrl || "";
+                    const isVidPlaying1 = playingVideoSlotId === slotKey;
+                    const slotTitle1 = selectedSchoolModal.videoTitle1 || "Session Video 1: Faculty AI Workshop";
+
+                    return (
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-black uppercase text-[#002137] tracking-wide truncate max-w-[220px]">
+                            {slotTitle1}
+                          </span>
+                          <button
+                            onClick={() => {
+                              setActiveVideoSlotKey(slotKey);
+                              setActiveVideoSlotLabel(slotTitle1);
+                              setVideoInputUrl(customVideoUrls[slotKey] || "");
+                              setVideoModalOpen(true);
+                            }}
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-[#004b79] hover:text-[#b89047] bg-slate-100 hover:bg-amber-50 px-2 py-0.5 rounded-lg border border-slate-200 transition-colors cursor-pointer shrink-0"
+                          >
+                            <Plus className="w-3 h-3" />
+                            <span>Edit Video 1</span>
+                          </button>
+                        </div>
+
+                        {/* Player Container */}
+                        <div className="relative rounded-2xl overflow-hidden shadow-xl border-2 border-slate-300 bg-slate-950 aspect-video flex items-center justify-center">
+                          {effectiveVid1 && isVidPlaying1 ? (
+                            effectiveVid1.includes("youtube.com") || effectiveVid1.includes("youtu.be") ? (
+                              <iframe
+                                src={getEmbedVideoUrl(effectiveVid1)}
+                                title={slotTitle1}
+                                className="w-full h-full border-0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            ) : (
+                              <video
+                                src={effectiveVid1}
+                                controls
+                                autoPlay
+                                className="w-full h-full object-contain"
+                              />
+                            )
+                          ) : (
+                            <div className="relative w-full h-full flex flex-col justify-between p-4 sm:p-5 bg-gradient-to-br from-slate-900 via-[#002137] to-slate-950 text-white select-none">
+                              <div className="relative z-10 flex items-center justify-between">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-600 text-white">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                                  Stream 1
+                                </span>
+                                <span className="text-[10px] text-slate-300">1080p HD</span>
+                              </div>
+
+                              <div className="relative z-10 flex flex-col items-center justify-center my-auto text-center space-y-1.5">
+                                <button
+                                  onClick={() => {
+                                    if (effectiveVid1) {
+                                      setPlayingVideoSlotId(slotKey);
+                                    } else {
+                                      setActiveVideoSlotKey(slotKey);
+                                      setActiveVideoSlotLabel(slotTitle1);
+                                      setVideoInputUrl("");
+                                      setVideoModalOpen(true);
+                                    }
+                                  }}
+                                  className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all cursor-pointer"
+                                >
+                                  <Play className="w-5 h-5 fill-current ml-0.5" />
+                                </button>
+                                <p className="text-xs font-bold text-white">
+                                  {effectiveVid1 ? "Play Video 1" : "Click to Add Video URL"}
+                                </p>
+                              </div>
+
+                              <div className="relative z-10 flex items-center justify-between text-[11px] text-slate-300 pt-1 border-t border-white/10">
+                                <span className="truncate max-w-[150px]">{slotTitle1}</span>
+                                <button
+                                  onClick={() => {
+                                    setActiveVideoSlotKey(slotKey);
+                                    setActiveVideoSlotLabel(slotTitle1);
+                                    setVideoInputUrl(customVideoUrls[slotKey] || "");
+                                    setVideoModalOpen(true);
+                                  }}
+                                  className="text-[#dfb74a] hover:underline font-bold cursor-pointer"
+                                >
+                                  + URL
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* VIDEO SLOT 2 */}
+                  {(() => {
+                    const slotKey2 = `${selectedSchoolModal.id}_2`;
+                    const effectiveVid2 = customVideoUrls[slotKey2] || selectedSchoolModal.videoUrl2 || "";
+                    const isVidPlaying2 = playingVideoSlotId === slotKey2;
+                    const slotTitle2 = selectedSchoolModal.videoTitle2 || "Session Video 2: Founder Address & Q&A";
+
+                    return (
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-black uppercase text-[#002137] tracking-wide truncate max-w-[220px]">
+                            {slotTitle2}
+                          </span>
+                          <button
+                            onClick={() => {
+                              setActiveVideoSlotKey(slotKey2);
+                              setActiveVideoSlotLabel(slotTitle2);
+                              setVideoInputUrl(customVideoUrls[slotKey2] || "");
+                              setVideoModalOpen(true);
+                            }}
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-[#004b79] hover:text-[#b89047] bg-slate-100 hover:bg-amber-50 px-2 py-0.5 rounded-lg border border-slate-200 transition-colors cursor-pointer shrink-0"
+                          >
+                            <Plus className="w-3 h-3" />
+                            <span>Edit Video 2</span>
+                          </button>
+                        </div>
+
+                        {/* Player Container */}
+                        <div className="relative rounded-2xl overflow-hidden shadow-xl border-2 border-slate-300 bg-slate-950 aspect-video flex items-center justify-center">
+                          {effectiveVid2 && isVidPlaying2 ? (
+                            effectiveVid2.includes("youtube.com") || effectiveVid2.includes("youtu.be") ? (
+                              <iframe
+                                src={getEmbedVideoUrl(effectiveVid2)}
+                                title={slotTitle2}
+                                className="w-full h-full border-0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            ) : (
+                              <video
+                                src={effectiveVid2}
+                                controls
+                                autoPlay
+                                className="w-full h-full object-contain"
+                              />
+                            )
+                          ) : (
+                            <div className="relative w-full h-full flex flex-col justify-between p-4 sm:p-5 bg-gradient-to-br from-slate-900 via-[#002137] to-slate-950 text-white select-none">
+                              <div className="relative z-10 flex items-center justify-between">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-600 text-white">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                                  Stream 2
+                                </span>
+                                <span className="text-[10px] text-slate-300">1080p HD</span>
+                              </div>
+
+                              <div className="relative z-10 flex flex-col items-center justify-center my-auto text-center space-y-1.5">
+                                <button
+                                  onClick={() => {
+                                    if (effectiveVid2) {
+                                      setPlayingVideoSlotId(slotKey2);
+                                    } else {
+                                      setActiveVideoSlotKey(slotKey2);
+                                      setActiveVideoSlotLabel(slotTitle2);
+                                      setVideoInputUrl("");
+                                      setVideoModalOpen(true);
+                                    }
+                                  }}
+                                  className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all cursor-pointer"
+                                >
+                                  <Play className="w-5 h-5 fill-current ml-0.5" />
+                                </button>
+                                <p className="text-xs font-bold text-white">
+                                  {effectiveVid2 ? "Play Video 2" : "Click to Add Video URL"}
+                                </p>
+                              </div>
+
+                              <div className="relative z-10 flex items-center justify-between text-[11px] text-slate-300 pt-1 border-t border-white/10">
+                                <span className="truncate max-w-[150px]">{slotTitle2}</span>
+                                <button
+                                  onClick={() => {
+                                    setActiveVideoSlotKey(slotKey2);
+                                    setActiveVideoSlotLabel(slotTitle2);
+                                    setVideoInputUrl(customVideoUrls[slotKey2] || "");
+                                    setVideoModalOpen(true);
+                                  }}
+                                  className="text-[#dfb74a] hover:underline font-bold cursor-pointer"
+                                >
+                                  + URL
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                </div>
+              </div>
+
             </div>
           </div>
         )}
@@ -1939,13 +2080,13 @@ export default function HomePage() {
                 <div className="space-y-1">
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-amber-50 text-[#b89047] border border-amber-200">
                     <Video className="w-3.5 h-3.5" />
-                    <span>School Session Video</span>
+                    <span>School Session Video Stream</span>
                   </div>
                   <h3 className="text-xl sm:text-2xl font-black text-[#002137]">
                     Add / Configure Video URL
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                    Enter a YouTube link or MP4 video URL for this school session.
+                    {activeVideoSlotLabel ? `Configuring: ${activeVideoSlotLabel}` : "Enter YouTube link or MP4 direct video URL."}
                   </p>
                 </div>
                 <button
