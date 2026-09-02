@@ -1101,36 +1101,145 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 2: TUTORING HUB (WHERE IT ALL BEGAN - SEAMLESS CANVAS LAYOUT)
+          PAGE 2: TUTORING HUB (WHERE IT ALL BEGAN - ARCHITECTURAL DIVIDER LAYOUT)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="tutoring-hub" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-16 sm:py-20 lg:py-24">
-        <div className="w-full max-w-4xl mx-auto px-6 sm:px-10 lg:px-12 text-center space-y-8 sm:space-y-10">
+      <section id="tutoring-hub" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/50 to-white py-16 sm:py-20 lg:py-24">
+        <div className="w-full max-w-6xl mx-auto px-6 sm:px-10 lg:px-12 space-y-10 sm:space-y-12">
 
-          {/* Section Headings */}
-          <div className="space-y-2 text-center">
+          {/* Section Header */}
+          <div className="text-center space-y-3">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#002137]/5 border border-[#002137]/10 text-xs font-bold uppercase tracking-widest text-[#002137]">
+              <Sparkles className="w-3.5 h-3.5 text-[#b89047]" />
+              <span>Our Roots &amp; Evolution</span>
+            </div>
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Tutoring Hub
             </h2>
-            <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#b89047] tracking-tight">
+            <p className="text-xl sm:text-2xl font-extrabold text-[#b89047] tracking-tight">
               Where It All Began
             </p>
           </div>
 
-          {/* Narrative Story (Clean Perfectly Balanced Editorial Paragraph with text-balance) */}
-          <div className="max-w-4xl mx-auto text-slate-700 text-base sm:text-lg lg:text-xl leading-relaxed sm:leading-[1.9] font-normal text-center">
-            <p className="text-balance">
-              For the past four years, <strong className="text-slate-900 font-bold">Tutoring Hub</strong> has been a dedicated physical learning space where we worked closely with students, refining our methodology, and gaining valuable classroom experience. Today, we have evolved that foundational experience into <strong className="text-[#002137] font-extrabold">MANTIF</strong>—building modern, AI-enhanced learning solutions for students, educators, and institutions.
-            </p>
-          </div>
+          {/* Two-Column Card with Sleek Center Divider */}
+          <div className="relative rounded-3xl bg-white border border-slate-200/90 shadow-xl shadow-slate-900/5 p-6 sm:p-10 lg:p-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-24 relative">
 
-          {/* Seamless Gold Foundation Quote (Perfect Symmetrical Alignment) */}
-          <div className="py-2 max-w-2xl mx-auto text-center space-y-1">
-            <p className="text-xl sm:text-2xl lg:text-3xl font-black text-[#002137] leading-snug">
-              “Tutoring Hub gave us the foundation.
-            </p>
-            <p className="text-xl sm:text-2xl lg:text-3xl font-black text-[#b89047] leading-snug">
-              MANTIF is taking it forward.”
-            </p>
+              {/* LEFT COLUMN: The Physical Foundation (Tutoring Hub) */}
+              <div className="flex flex-col justify-between space-y-6 lg:pr-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-[#b89047] border border-[#b89047]/30 uppercase tracking-wider">
+                      2020 – 2024 • Physical Hub
+                    </span>
+                    <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200/60 flex items-center justify-center text-[#b89047] shrink-0 shadow-2xs">
+                      <GraduationCap className="w-5 h-5" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-2xl sm:text-3xl font-black text-[#002137] tracking-tight">
+                      Tutoring Hub
+                    </h3>
+                    <p className="text-xs sm:text-sm font-bold text-[#b89047] mt-0.5">
+                      4+ Years of Ground-Level Learning
+                    </p>
+                  </div>
+
+                  <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
+                    For the past four years, <strong className="text-slate-900 font-bold">Tutoring Hub</strong> served as our dedicated physical learning space. Working directly with students, we observed real classroom challenges, refined teaching methodology, and built a rock-solid pedagogical foundation.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-100 space-y-2 text-xs font-semibold text-amber-950">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#b89047] shrink-0" />
+                    <span>Side-by-side student mentoring &amp; doubt resolution</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#b89047] shrink-0" />
+                    <span>Real classroom experience across diverse curricula</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#b89047] shrink-0" />
+                    <span>Human-first pedagogy tested with hundreds of learners</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* CENTER DIVIDER (Desktop Vertical / Mobile Horizontal) */}
+              <div className="hidden lg:flex absolute left-1/2 top-0 bottom-0 -translate-x-1/2 flex-col items-center justify-center pointer-events-none">
+                <div className="w-[1px] flex-1 bg-gradient-to-b from-transparent via-slate-200 to-slate-200" />
+                <div className="my-4 px-3 py-1.5 rounded-full bg-[#002137] text-white text-[10px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 shrink-0 border border-[#b89047]/40 ring-4 ring-white">
+                  <ArrowRight className="w-3.5 h-3.5 text-[#dfb74a]" />
+                  <span>Evolved Into</span>
+                </div>
+                <div className="w-[1px] flex-1 bg-gradient-to-b from-slate-200 via-slate-200 to-transparent" />
+              </div>
+
+              {/* Mobile Divider */}
+              <div className="lg:hidden flex items-center gap-3 my-2">
+                <div className="h-[1px] flex-1 bg-slate-200" />
+                <span className="px-3 py-1 rounded-full bg-[#002137] text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                  <ArrowRight className="w-3 h-3 text-[#dfb74a]" />
+                  <span>Evolved Into</span>
+                </span>
+                <div className="h-[1px] flex-1 bg-slate-200" />
+              </div>
+
+              {/* RIGHT COLUMN: The AI Evolution (MANTIF) */}
+              <div className="flex flex-col justify-between space-y-6 lg:pl-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-[#004b79] border border-[#004b79]/30 uppercase tracking-wider">
+                      Present &amp; Future • AI Platform
+                    </span>
+                    <div className="w-10 h-10 rounded-2xl bg-[#002137] flex items-center justify-center text-[#dfb74a] shrink-0 shadow-sm">
+                      <Sparkles className="w-5 h-5" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-2xl sm:text-3xl font-black text-[#002137] tracking-tight">
+                      MANTIF
+                    </h3>
+                    <p className="text-xs sm:text-sm font-bold text-[#004b79] mt-0.5">
+                      Next-Gen AI-Enhanced Learning Ecosystem
+                    </p>
+                  </div>
+
+                  <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
+                    Today, we have evolved that foundational experience into <strong className="text-[#002137] font-extrabold">MANTIF</strong>. We combine genuine classroom empathy with modern, AI-enhanced learning solutions for students, educators, and institutions.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-100 space-y-2 text-xs font-semibold text-[#002137]">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#004b79] shrink-0" />
+                    <span>Intelligent proctored exams &amp; integrity monitoring</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#004b79] shrink-0" />
+                    <span>Automated paper grading &amp; teacher productivity tools</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#004b79] shrink-0" />
+                    <span>Classroom-proven pedagogy scaled for institutions</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Quote with Ornamental Divider */}
+            <div className="mt-10 pt-8 border-t border-slate-200/90 text-center space-y-2">
+              <Quote className="w-6 h-6 text-[#b89047] mx-auto opacity-70" />
+              <p className="text-xl sm:text-2xl lg:text-3xl font-black text-[#002137] leading-snug tracking-tight">
+                “Tutoring Hub gave us the foundation.
+              </p>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-black text-[#b89047] leading-snug tracking-tight">
+                MANTIF is taking it forward.”
+              </p>
+            </div>
           </div>
 
           {/* Action Buttons */}
@@ -1142,10 +1251,10 @@ export default function HomePage() {
                 setStep(1);
                 document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="px-8 py-3.5 rounded-xl bg-[#002137] hover:bg-[#003659] text-white text-sm sm:text-base font-extrabold transition-all shadow-md shadow-[#002137]/15 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer flex items-center gap-2"
+              className="px-8 py-3.5 rounded-xl bg-[#002137] hover:bg-[#003659] text-white text-sm sm:text-base font-extrabold transition-all shadow-md shadow-[#002137]/15 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer flex items-center gap-2 group"
             >
               <span>Sign Up on MANTIF</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4 text-[#dfb74a] group-hover:translate-x-1 transition-transform" />
             </button>
             <a
               href="#contact"
