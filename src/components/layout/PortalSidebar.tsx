@@ -61,7 +61,7 @@ export function PortalSidebar({ role }: SidebarProps) {
 
   const teacherLinks: SidebarLink[] = React.useMemo(() => [
     { href: "/teacher/dashboard", label: "Dashboard", icon: LayoutDashboard, api: "/api/teacher/dashboard" },
-    { href: "/teacher/reports", label: "Performance Reports", icon: Activity, api: "/api/teacher/reports" },
+    { href: "/teacher/reports", label: "Performance & Growth", icon: Activity, api: "/api/teacher/reports" },
     { href: "/teacher/schedule", label: "Schedule & Timetable", icon: CalendarCheck2, api: "/api/classes" },
     { href: "/teacher/live-class/create", label: "Launch Live Class", icon: Video, badge: "Host" },
     { href: "/teacher/assignments", label: "Assignments & Grading", icon: FileCheck, api: "/api/teacher/assignments" },
@@ -79,7 +79,7 @@ export function PortalSidebar({ role }: SidebarProps) {
 
   const adminLinks: SidebarLink[] = React.useMemo(() => [
     { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard, api: "/api/admin/dashboard" },
-    { href: "/admin/analytics", label: "Analytics & Growth", icon: Activity, api: "/api/admin/analytics" },
+    { href: "/admin/reports", label: "Performance & Growth", icon: Activity, api: "/api/teacher/reports" },
     {
       href: "/admin/students",
       label: "Student Approvals",

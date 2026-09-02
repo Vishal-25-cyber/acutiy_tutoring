@@ -1,5 +1,7 @@
-import { redirect } from "next/navigation";
+"use client";
 
-export default function AdminReportsRedirect() {
-  redirect("/admin/analytics");
+import TeacherStudentReportsPage from "@/app/(portal)/teacher/reports/page";
+
+export default function AdminReportsPage() {
+  return <TeacherStudentReportsPage />;
 }
