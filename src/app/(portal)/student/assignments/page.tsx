@@ -62,6 +62,10 @@ export default function StudentAssignmentsPage() {
   const [isTestLocked, setIsTestLocked] = useState(false);
   const [capturedProctoringSnapshot, setCapturedProctoringSnapshot] = useState<string | null>(null);
 
+  // Upload Window: 5 minutes after test ends (300 seconds countdown)
+  const [uploadWindowSeconds, setUploadWindowSeconds] = useState<number>(300);
+  const [uploadExpired, setUploadExpired] = useState<boolean>(false);
+
   // Security & Attention Monitor State
   const [isExamFullscreen, setIsExamFullscreen] = useState<boolean>(false);
   const [splitViewMode, setSplitViewMode] = useState<"SPLIT" | "PDF_FULL" | "SUBMIT_FULL">("SPLIT");
@@ -457,6 +461,23 @@ export default function StudentAssignmentsPage() {
       if (interval) clearInterval(interval);
     };
   }, [activeProctoredTest, isTestLocked, timeLeftSeconds]);
+
+  // ── 5-MINUTE POST-TEST UPLOAD COUNTDOWN ──
+  useEffect(() => {
+    if (!isTestLocked || uploadExpired) return;
+    setUploadWindowSeconds(300);
+    const interval = setInterval(() => {
+      setUploadWindowSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setUploadExpired(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isTestLocked]);
 
   // Cleanup camera stream when component unmounts or window closes
   useEffect(() => {
@@ -1124,94 +1145,126 @@ export default function StudentAssignmentsPage() {
                   </div>
                 </div>
 
-                {/* 2. Answer Sheet Photo & File Upload Card */}
-                <div className="p-4 rounded-2xl bg-blue-950/30 border border-blue-900/60 space-y-3 flex-1 flex flex-col justify-between">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#dfb74a] flex items-center gap-1.5">
-                        <Upload className="w-4 h-4" />
-                        <span>Upload Handwritten Solutions</span>
-                      </span>
-                      {isTestLocked && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-500/40">
-                          Time Completed — Upload Now
-                        </span>
-                      )}
+                {/* 2. Answer Sheet Upload Card — locked until test ends, expires after 5 min */}
+                <div className="rounded-2xl border overflow-hidden shadow-xl flex-1 flex flex-col" style={{background: "linear-gradient(135deg, #0d1f35 0%, #091525 100%)", borderColor: uploadExpired ? "#7f1d1d" : isTestLocked ? "#1d4ed8" : "#1e3a5f"}}>
+                  {/* Card Header */}
+                  <div className="px-4 py-3 border-b flex items-center justify-between gap-2" style={{borderColor: uploadExpired ? "#7f1d1d" : isTestLocked ? "#1d4ed8" : "#1e3a5f", background: uploadExpired ? "rgba(127,29,29,0.3)" : isTestLocked ? "rgba(29,78,216,0.2)" : "rgba(4,75,121,0.15)"}}>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${ uploadExpired ? "bg-rose-600/30" : isTestLocked ? "bg-blue-500/30" : "bg-slate-700/80" }`}>
+                        {uploadExpired ? <AlertCircle className="w-3.5 h-3.5 text-rose-400" /> : isTestLocked ? <Upload className="w-3.5 h-3.5 text-blue-300" /> : <Upload className="w-3.5 h-3.5 text-slate-500" />}
+                      </div>
+                      <div>
+                        <p className={`text-xs font-black tracking-wide ${ uploadExpired ? "text-rose-300" : isTestLocked ? "text-blue-200" : "text-slate-500" }`}>
+                          {uploadExpired ? "Upload Window Closed" : isTestLocked ? "Upload Answer Sheet" : "Upload Locked"}
+                        </p>
+                        <p className="text-[10px] text-slate-500 font-medium">
+                          {uploadExpired ? "Submission window has expired" : isTestLocked ? "5-min window · Submit your handwritten work" : "Available only after test ends"}
+                        </p>
+                      </div>
                     </div>
 
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileChange}
-                      accept="image/*,application/pdf"
-                      className="hidden"
-                    />
-
-                    {selectedFile ? (
-                      <div className="p-3 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2 truncate">
-                          <FileCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                          <span className="font-bold truncate text-slate-200">
-                            {selectedFile.name}
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-mono">({selectedFile.size})</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setSelectedFile(null)}
-                          className="p-1 text-slate-400 hover:text-rose-400 cursor-pointer"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="w-full py-4 border-2 border-dashed border-blue-500/40 rounded-xl flex flex-col items-center justify-center gap-1.5 text-xs text-[#dfb74a] font-bold hover:bg-slate-900 cursor-pointer transition-all"
-                      >
-                        <Camera className="w-5 h-5 text-blue-400" />
-                        <span>Take Photo / Upload Solution Sheet</span>
-                        <span className="text-[10px] text-slate-400 font-normal">PNG, JPG or PDF up to 25MB</span>
-                      </button>
-                    )}
-
-                    <textarea
-                      rows={2}
-                      value={submissionText}
-                      onChange={(e) => setSubmissionText(e.target.value)}
-                      placeholder="Optional final answers or working notes..."
-                      className="w-full p-2.5 text-xs rounded-xl border border-slate-700 bg-slate-900 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-[#004b79]"
-                    />
-
-                    {successMessage && (
-                      <div className="p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-800 text-xs text-emerald-200 font-bold flex items-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        <span>{successMessage}</span>
-                      </div>
-                    )}
-
-                    {errorMessage && (
-                      <div className="p-2.5 rounded-xl bg-rose-950/80 border border-rose-800 text-xs text-rose-200 font-bold flex items-center gap-1.5">
-                        <AlertCircle className="w-4 h-4 text-rose-400" />
-                        <span>{errorMessage}</span>
+                    {/* Upload countdown timer */}
+                    {isTestLocked && !uploadExpired && (
+                      <div className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 shrink-0 ${ uploadWindowSeconds <= 60 ? "bg-rose-950/70 border-rose-600 text-rose-300 animate-pulse" : "bg-blue-950/60 border-blue-600/60 text-blue-200" }`}>
+                        <Timer className="w-3 h-3" />
+                        <span className="font-mono font-black text-xs">{Math.floor(uploadWindowSeconds / 60).toString().padStart(2,"0")}:{(uploadWindowSeconds % 60).toString().padStart(2,"0")}</span>
                       </div>
                     )}
                   </div>
 
-                  <button
-                    type="button"
-                    disabled={isSubmitting || (!selectedFile && !submissionText.trim())}
-                    onClick={(e) => handleSubmitWork(e, true)}
-                    className="w-full py-3 rounded-xl text-xs font-bold bg-[#004b79] hover:bg-[#003b60] text-white flex items-center justify-center gap-2 cursor-pointer transition-all shadow-lg disabled:opacity-50 mt-2"
-                  >
-                    {isSubmitting ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Send className="w-4 h-4 text-emerald-300" />
+                  {/* Card Body */}
+                  <div className="p-4 flex flex-col gap-3 flex-1">
+                    {/* Locked State: test still running */}
+                    {!isTestLocked && (
+                      <div className="flex-1 flex flex-col items-center justify-center gap-3 py-4">
+                        <div className="w-14 h-14 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-center">
+                          <Timer className="w-7 h-7 text-slate-500" />
+                        </div>
+                        <div className="text-center space-y-1">
+                          <p className="text-xs font-bold text-slate-400">Complete your test first</p>
+                          <p className="text-[10px] text-slate-600 leading-relaxed">Upload will unlock once the timer reaches 0 or you click Finish / Exit</p>
+                        </div>
+                      </div>
                     )}
-                    <span>Submit Proctored Test Answers</span>
-                  </button>
+
+                    {/* Expired State */}
+                    {uploadExpired && (
+                      <div className="flex-1 flex flex-col items-center justify-center gap-3 py-4">
+                        <div className="w-14 h-14 rounded-2xl bg-rose-950/60 border border-rose-800 flex items-center justify-center">
+                          <AlertCircle className="w-7 h-7 text-rose-500" />
+                        </div>
+                        <div className="text-center space-y-1">
+                          <p className="text-xs font-bold text-rose-300">Upload window expired</p>
+                          <p className="text-[10px] text-slate-500 leading-relaxed">The 5-minute upload window has closed. Your submission cannot be accepted. Contact your teacher.</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Active Upload State: test done + window open */}
+                    {isTestLocked && !uploadExpired && (
+                      <>
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleFileChange}
+                          accept="image/*,application/pdf"
+                          className="hidden"
+                        />
+
+                        {selectedFile ? (
+                          <div className="p-3 rounded-xl bg-slate-900/80 border border-blue-700/60 flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-2 truncate">
+                              <FileCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                              <div className="truncate">
+                                <p className="font-bold truncate text-slate-200 text-xs">{selectedFile.name}</p>
+                                <p className="text-[10px] text-slate-500 font-mono">{selectedFile.size}</p>
+                              </div>
+                            </div>
+                            <button type="button" onClick={() => setSelectedFile(null)} className="p-1 text-slate-500 hover:text-rose-400 cursor-pointer shrink-0">
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-full py-5 border-2 border-dashed border-blue-500/50 rounded-xl flex flex-col items-center justify-center gap-2 text-xs font-bold hover:bg-blue-950/30 cursor-pointer transition-all group"
+                          >
+                            <Camera className="w-6 h-6 text-blue-400 group-hover:scale-110 transition-transform" />
+                            <span className="text-blue-200">Take Photo / Upload Answer Sheet</span>
+                            <span className="text-[10px] text-slate-500 font-normal">PNG, JPG or PDF · Max 25MB</span>
+                          </button>
+                        )}
+
+                        {successMessage && (
+                          <div className="p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-700 text-xs text-emerald-200 font-bold flex items-center gap-1.5">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                            <span>{successMessage}</span>
+                          </div>
+                        )}
+                        {errorMessage && (
+                          <div className="p-2.5 rounded-xl bg-rose-950/80 border border-rose-800 text-xs text-rose-200 font-bold flex items-center gap-1.5">
+                            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                            <span>{errorMessage}</span>
+                          </div>
+                        )}
+
+                        <button
+                          type="button"
+                          disabled={isSubmitting || !selectedFile}
+                          onClick={(e) => handleSubmitWork(e, true)}
+                          className="w-full py-3 rounded-xl text-xs font-black bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-600 text-white flex items-center justify-center gap-2 cursor-pointer transition-all shadow-lg disabled:cursor-not-allowed mt-auto"
+                        >
+                          {isSubmitting ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Send className="w-4 h-4" />
+                          )}
+                          <span>{isSubmitting ? "Submitting…" : "Submit Answer Sheet"}</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
