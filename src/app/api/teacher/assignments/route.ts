@@ -123,6 +123,8 @@ export async function POST(req: NextRequest) {
       dueDate,
       maxMarks,
       attachmentUrl,
+      attachmentName,
+      attachmentSize,
       type,
       durationMinutes,
       proctoringRequired,
@@ -153,6 +155,8 @@ export async function POST(req: NextRequest) {
       dueDate: finalDueDate,
       maxMarks: Number(maxMarks) || (taskType === "TEST" ? 50 : 20),
       attachmentUrl: attachmentUrl || "",
+      attachmentName: attachmentName || "",
+      attachmentSize: attachmentSize || "",
     });
 
     // Notify students

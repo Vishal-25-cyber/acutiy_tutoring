@@ -24,6 +24,8 @@ import {
   AlertTriangle,
   Loader2,
   ExternalLink,
+  Paperclip,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -430,6 +432,13 @@ export default function StudentAssignmentsPage() {
                       {task.title}
                     </h3>
                     <p className="text-xs text-slate-500 line-clamp-2">{task.description}</p>
+
+                    {task.attachmentUrl && (
+                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 dark:bg-blue-950/40 text-[#004b79] dark:text-[#dfb74a] border border-blue-200 dark:border-blue-900/60">
+                        <Paperclip className="w-3 h-3" />
+                        <span>Question Paper Attached</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Submission Status & Action Button */}
@@ -538,23 +547,52 @@ export default function StudentAssignmentsPage() {
             <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-y-auto flex-1">
               {/* Left Column: Test Instructions & Question Paper */}
               <div className="lg:col-span-7 space-y-4">
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 space-y-2">
-                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                    Test Guidelines &amp; Question Paper
-                  </span>
-                  <p className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
-                    {activeProctoredTest.description || "Solve all questions on paper. Show complete calculation steps."}
-                  </p>
-                  {activeProctoredTest.attachmentUrl && (
-                    <div className="pt-2">
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                      Test Questions &amp; Paper
+                    </span>
+                    {activeProctoredTest.attachmentUrl && (
                       <a
                         href={activeProctoredTest.attachmentUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:underline"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#004b79] hover:bg-[#003b60] text-white text-xs font-bold transition-colors shadow-xs"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
-                        <span>Open Supplementary Question Attachment</span>
+                        <span>Open Question Paper PDF</span>
+                      </a>
+                    )}
+                  </div>
+
+                  {activeProctoredTest.description && (
+                    <div className="p-3.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed font-mono">
+                      {activeProctoredTest.description}
+                    </div>
+                  )}
+
+                  {activeProctoredTest.attachmentUrl && (
+                    <div className="p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 flex items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-2 truncate">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-black bg-rose-500 text-white shrink-0 uppercase tracking-wider">
+                          PDF
+                        </span>
+                        <span className="font-bold text-slate-900 dark:text-slate-100 truncate">
+                          {activeProctoredTest.attachmentName || "Official Question Paper.pdf"}
+                        </span>
+                        {activeProctoredTest.attachmentSize && (
+                          <span className="text-[10px] text-slate-400 font-mono shrink-0">
+                            ({activeProctoredTest.attachmentSize})
+                          </span>
+                        )}
+                      </div>
+                      <a
+                        href={activeProctoredTest.attachmentUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs font-bold text-[#004b79] dark:text-[#dfb74a] hover:underline shrink-0"
+                      >
+                        View Questions
                       </a>
                     </div>
                   )}
@@ -708,11 +746,44 @@ export default function StudentAssignmentsPage() {
           title={`Submit ${activeCategory === "HOMEWORK" ? "Homework" : "Assignment"}`}
         >
           <form onSubmit={(e) => handleSubmitWork(e, false)} className="space-y-4 pt-2">
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-1 text-xs">
-              <span className="text-[11px] font-bold text-[#004b79] dark:text-[#dfb74a] block">
-                {selectedTask.subject} • {selectedTask.title}
-              </span>
-              <p className="text-slate-600 dark:text-slate-400">{selectedTask.description}</p>
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-2 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#004b79] dark:text-[#dfb74a]">
+                  {selectedTask.subject} • {selectedTask.title}
+                </span>
+                <span className="text-slate-500 font-semibold">Max: {selectedTask.maxMarks} Marks</span>
+              </div>
+              {selectedTask.description && (
+                <div className="p-2.5 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 whitespace-pre-wrap text-slate-700 dark:text-slate-300 font-mono text-[11px] leading-relaxed">
+                  {selectedTask.description}
+                </div>
+              )}
+              {selectedTask.attachmentUrl && (
+                <div className="p-2.5 rounded-lg bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-black bg-rose-500 text-white shrink-0 uppercase">
+                      PDF
+                    </span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 truncate">
+                      {selectedTask.attachmentName || "Question Paper Attachment"}
+                    </span>
+                    {selectedTask.attachmentSize && (
+                      <span className="text-[10px] text-slate-400 font-mono shrink-0">
+                        ({selectedTask.attachmentSize})
+                      </span>
+                    )}
+                  </div>
+                  <a
+                    href={selectedTask.attachmentUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-[#004b79] dark:text-[#dfb74a] hover:underline shrink-0"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Open Questions</span>
+                  </a>
+                </div>
+              )}
             </div>
 
             <div className="space-y-1">

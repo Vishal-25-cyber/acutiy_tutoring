@@ -200,6 +200,8 @@ export interface IAssignment {
   dueDate: Date;
   maxMarks: number;
   attachmentUrl?: string;
+  attachmentName?: string;
+  attachmentSize?: string;
   createdAt: Date;
 }
 

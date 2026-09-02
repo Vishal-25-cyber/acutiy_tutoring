@@ -34,6 +34,8 @@ const AssignmentSchema = new Schema<IAssignmentDocument>(
     dueDate: { type: Date, required: true },
     maxMarks: { type: Number, required: true, default: 20 },
     attachmentUrl: { type: String, default: "" },
+    attachmentName: { type: String, default: "" },
+    attachmentSize: { type: String, default: "" },
   },
   {
     timestamps: true,

@@ -21,8 +21,11 @@ import {
   Video,
   ShieldAlert,
   Camera,
-  AlertCircle,
   Timer,
+  UploadCloud,
+  Upload,
+  X,
+  Paperclip,
 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { getSubjectsForClassAndBoard, CLASS_LIST } from "@/lib/curriculum";
@@ -53,7 +56,31 @@ export default function TeacherAssignmentsPage() {
     dueTime: "21:00",
     maxMarks: 20,
     attachmentUrl: "",
+    attachmentName: "",
+    attachmentSize: "",
   });
+
+  const handleQuestionPaperUpload = (file: File) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      const defaultTitle = file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
+      const sizeStr =
+        file.size > 1024 * 1024
+          ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+          : `${Math.round(file.size / 1024)} KB`;
+
+      setFormData((prev) => ({
+        ...prev,
+        title: prev.title.trim() ? prev.title : defaultTitle,
+        attachmentUrl: dataUrl || `https://mantif.edu/materials/${file.name}`,
+        attachmentName: file.name,
+        attachmentSize: sizeStr,
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
   const [batches, setBatches] = useState<any[]>([]);
 
   const availableSubjects = Array.from(
@@ -160,6 +187,9 @@ export default function TeacherAssignmentsPage() {
           maxMarks: Number(formData.maxMarks) || (activeCategory === "TEST" ? 50 : 20),
           durationMinutes: activeCategory === "TEST" ? Number(formData.durationMinutes) || 45 : undefined,
           proctoringRequired: activeCategory === "TEST" ? formData.proctoringRequired : false,
+          attachmentUrl: formData.attachmentUrl || "",
+          attachmentName: formData.attachmentName || "",
+          attachmentSize: formData.attachmentSize || "",
         }),
       });
       if (res.ok) {
@@ -168,7 +198,7 @@ export default function TeacherAssignmentsPage() {
           type: activeCategory,
           title: "",
           description: "",
-          subject: "Mathematics",
+          subject: availableSubjects[0] || "Mathematics",
           classLevel: "Class 10",
           batchId: batches[0]?._id || "",
           durationMinutes: 45,
@@ -177,6 +207,8 @@ export default function TeacherAssignmentsPage() {
           dueTime: "21:00",
           maxMarks: activeCategory === "TEST" ? 50 : 20,
           attachmentUrl: "",
+          attachmentName: "",
+          attachmentSize: "",
         });
         invalidateCache("/api/teacher/assignments");
         invalidateCache("/api/student/assignments");
@@ -252,6 +284,8 @@ export default function TeacherAssignmentsPage() {
                 dueTime: "21:00",
                 maxMarks: activeCategory === "TEST" ? 50 : 20,
                 attachmentUrl: "",
+                attachmentName: "",
+                attachmentSize: "",
               });
               setIsCreateModal(true);
             }}
@@ -668,15 +702,74 @@ export default function TeacherAssignmentsPage() {
               </div>
             )}
 
+            {/* Upload Question Paper File */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                Upload Question Paper (PDF / Word Doc / Image)
+              </label>
+
+              {formData.attachmentUrl ? (
+                <div className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-black bg-rose-500 text-white shrink-0 uppercase tracking-wider">
+                      {formData.attachmentName?.endsWith(".pdf") ? "PDF" : "DOC"}
+                    </span>
+                    <span className="font-bold truncate text-slate-900 dark:text-slate-100">
+                      {formData.attachmentName || "Question_Paper.pdf"}
+                    </span>
+                    {formData.attachmentSize && (
+                      <span className="text-[10px] text-slate-400 font-mono shrink-0">
+                        ({formData.attachmentSize})
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <label className="text-[11px] font-bold text-[#004b79] dark:text-[#dfb74a] hover:underline cursor-pointer">
+                      <span>Change</span>
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files?.[0]) handleQuestionPaperUpload(e.target.files[0]);
+                        }}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, attachmentUrl: "", attachmentName: "", attachmentSize: "" }))}
+                      className="p-1 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
+                      title="Remove Attachment"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <label className="w-full py-3.5 px-4 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl flex items-center justify-center gap-2 text-xs font-bold text-[#004b79] dark:text-[#dfb74a] hover:border-[#004b79] hover:bg-slate-50 dark:hover:bg-slate-900 cursor-pointer transition-all group">
+                  <UploadCloud className="w-4 h-4 group-hover:scale-110 transition-transform text-[#004b79] dark:text-[#dfb74a]" />
+                  <span>Click to attach Question Paper (PDF or Image)</span>
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) handleQuestionPaperUpload(e.target.files[0]);
+                    }}
+                  />
+                </label>
+              )}
+            </div>
+
             <div className="space-y-1">
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                Instructions &amp; Question Paper Details
+                Questions &amp; Instructions (Type or Paste Questions)
               </label>
               <textarea
                 rows={3}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Enter instructions, question points, or rubric details..."
+                placeholder="Type question list (e.g. Q1. Solve 3x + 5 = 20, Q2. Find value of x...), marking rubric, or student instructions..."
                 className="w-full p-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100"
               />
             </div>
