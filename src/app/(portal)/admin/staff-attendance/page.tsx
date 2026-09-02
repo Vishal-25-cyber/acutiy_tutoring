@@ -46,7 +46,7 @@ export default function AdminStaffAttendancePage() {
     year: "numeric",
   }).format(new Date());
 
-  const handleMarkTeacherAttendance = async (teacherId: string, status: "PRESENT" | "ABSENT" | "LEAVE") => {
+  const handleMarkTeacherAttendance = async (teacherId: string, status: "PRESENT" | "HALF_DAY" | "ABSENT" | "LEAVE") => {
     setIsUpdating(teacherId);
     setLocalStatusMap((prev) => ({ ...prev, [teacherId]: status }));
 
@@ -234,15 +234,25 @@ export default function AdminStaffAttendancePage() {
                   <div className="col-span-3">
                     <span
                       className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
-                        isPresent
+                        currentStatus === "PRESENT"
                           ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300"
-                          : isLeave
+                          : currentStatus === "HALF_DAY"
+                          ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300"
+                          : currentStatus === "LEAVE"
                           ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300"
                           : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300"
                       }`}
                     >
                       <CheckCircle2 className="w-3 h-3" />
-                      <span>{isPresent ? "Present (Checked In)" : isLeave ? "On Leave" : "Absent"}</span>
+                      <span>
+                        {currentStatus === "PRESENT"
+                          ? "Present (Checked In)"
+                          : currentStatus === "HALF_DAY"
+                          ? "Half Day"
+                          : currentStatus === "LEAVE"
+                          ? "On Leave"
+                          : "Absent"}
+                      </span>
                     </span>
                   </div>
 
@@ -266,8 +276,8 @@ export default function AdminStaffAttendancePage() {
                       type="button"
                       disabled={isUpdating === st.id}
                       onClick={() => handleMarkTeacherAttendance(st.id, "PRESENT")}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        isPresent
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        currentStatus === "PRESENT"
                           ? "bg-emerald-600 text-white shadow-2xs"
                           : "border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                       }`}
@@ -277,9 +287,21 @@ export default function AdminStaffAttendancePage() {
                     <button
                       type="button"
                       disabled={isUpdating === st.id}
+                      onClick={() => handleMarkTeacherAttendance(st.id, "HALF_DAY")}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        currentStatus === "HALF_DAY"
+                          ? "bg-blue-600 text-white shadow-2xs"
+                          : "border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      Half Day
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isUpdating === st.id}
                       onClick={() => handleMarkTeacherAttendance(st.id, "LEAVE")}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        isLeave
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        currentStatus === "LEAVE"
                           ? "bg-amber-600 text-white shadow-2xs"
                           : "border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                       }`}
@@ -290,8 +312,8 @@ export default function AdminStaffAttendancePage() {
                       type="button"
                       disabled={isUpdating === st.id}
                       onClick={() => handleMarkTeacherAttendance(st.id, "ABSENT")}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        isAbsent
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        currentStatus === "ABSENT"
                           ? "bg-rose-600 text-white shadow-2xs"
                           : "border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                       }`}

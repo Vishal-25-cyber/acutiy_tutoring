@@ -4,6 +4,7 @@ import User from "@/models/User";
 import StudentProfile from "@/models/StudentProfile";
 import TeacherProfile from "@/models/TeacherProfile";
 import StaffAttendance from "@/models/StaffAttendance";
+import Notification from "@/models/Notification";
 import Batch from "@/models/Batch";
 import { comparePassword, hashPassword } from "@/lib/auth/passwords";
 import { signToken } from "@/lib/auth/jwt";
@@ -299,7 +300,7 @@ export async function POST(req: NextRequest) {
         maxAge: 7 * 24 * 60 * 60,
       });
 
-      // Automatically mark staff attendance as PRESENT on login
+      // Automatically mark staff attendance as PRESENT on login and notify admin
       try {
         const todayDateStr = new Date().toISOString().split("T")[0];
         await StaffAttendance.findOneAndUpdate(
@@ -314,6 +315,25 @@ export async function POST(req: NextRequest) {
           },
           { upsert: true, new: true }
         );
+
+        // Notify all Admins about staff login & on-time duty
+        const adminUsers = await User.find({ role: "ADMIN" }).select("_id").lean();
+        if (adminUsers.length > 0) {
+          const nowFormatted = new Date().toLocaleTimeString("en-IN", {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+          });
+          const notifs = adminUsers.map((adm) => ({
+            userId: adm._id,
+            title: `Faculty On-Time Check-In: ${user.name || "Teacher"}`,
+            message: `${user.name || "Faculty member"} logged in on time for today's duty at ${nowFormatted}. Attendance is ready for administrative verification.`,
+            type: "SYSTEM",
+            linkUrl: "/admin/staff-attendance",
+            read: false,
+          }));
+          await Notification.insertMany(notifs);
+        }
       } catch (attErr) {
         console.warn("Auto staff attendance recording error:", attErr);
       }

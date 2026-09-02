@@ -6,6 +6,8 @@ import Attendance from "@/models/Attendance";
 import StudentProfile from "@/models/StudentProfile";
 import TeacherProfile from "@/models/TeacherProfile";
 import StaffAttendance from "@/models/StaffAttendance";
+import User from "@/models/User";
+import Notification from "@/models/Notification";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -198,6 +200,9 @@ export async function POST(req: NextRequest) {
 
     const todayDateStr = new Date().toISOString().split("T")[0];
 
+    const teacherUser = await User.findById(session.userId).select("name email").lean();
+    const teacherName = teacherUser?.name || "Faculty Member";
+
     if (action === "CHECK_IN") {
       const record = await StaffAttendance.findOneAndUpdate(
         { teacherId: session.userId, date: todayDateStr },
@@ -209,9 +214,32 @@ export async function POST(req: NextRequest) {
         { upsert: true, new: true, setDefaultsOnInsert: true }
       );
 
+      // Notify Admins about on-time check-in
+      try {
+        const adminUsers = await User.find({ role: "ADMIN" }).select("_id").lean();
+        if (adminUsers.length > 0) {
+          const nowFormatted = new Date().toLocaleTimeString("en-IN", {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+          });
+          const notifs = adminUsers.map((adm) => ({
+            userId: adm._id,
+            title: `Faculty On-Time Check-In: ${teacherName}`,
+            message: `${teacherName} checked in on time for faculty duty at ${nowFormatted}. Attendance is verified & logged.`,
+            type: "SYSTEM",
+            linkUrl: "/admin/staff-attendance",
+            read: false,
+          }));
+          await Notification.insertMany(notifs);
+        }
+      } catch (notifErr) {
+        console.warn("Failed to notify admins on teacher check-in:", notifErr);
+      }
+
       return NextResponse.json({
         success: true,
-        message: "Staff Attendance: Check-in recorded successfully!",
+        message: "Staff Attendance: Check-in recorded successfully! Admin has been notified.",
         record,
       });
     } else if (action === "CHECK_OUT") {
@@ -227,6 +255,29 @@ export async function POST(req: NextRequest) {
         },
         { upsert: true, new: true }
       );
+
+      // Notify Admins about check-out
+      try {
+        const adminUsers = await User.find({ role: "ADMIN" }).select("_id").lean();
+        if (adminUsers.length > 0) {
+          const nowFormatted = new Date().toLocaleTimeString("en-IN", {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+          });
+          const notifs = adminUsers.map((adm) => ({
+            userId: adm._id,
+            title: `Faculty Duty Check-Out: ${teacherName}`,
+            message: `${teacherName} completed daily duty check-out at ${nowFormatted} (${Math.max(1, hours)} hrs logged).`,
+            type: "SYSTEM",
+            linkUrl: "/admin/staff-attendance",
+            read: false,
+          }));
+          await Notification.insertMany(notifs);
+        }
+      } catch (notifErr) {
+        console.warn("Failed to notify admins on teacher check-out:", notifErr);
+      }
 
       return NextResponse.json({
         success: true,

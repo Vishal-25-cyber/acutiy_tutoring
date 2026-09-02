@@ -256,11 +256,12 @@ export default function TeacherAttendancePage() {
           <Briefcase className="w-3.5 h-3.5" />
           <span>My Faculty Duty &amp; Staff Attendance</span>
           {todayRecord ? (
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-500 text-white font-bold">
-              ✓ Checked-In
+            <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500 text-white font-bold flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3" />
+              ✓ Checked-In On-Time
             </span>
           ) : (
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-500 text-white font-bold">
+            <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-500 text-white font-bold">
               Check-In Needed
             </span>
           )}
@@ -502,27 +503,33 @@ export default function TeacherAttendancePage() {
         <div className="space-y-6">
           {/* Today's Check-in Action Banner */}
           <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100">
                   Today&apos;s Faculty Presence Check-In
                 </h3>
                 {todayRecord ? (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3" />
-                    <span>PRESENT (Checked-In)</span>
+                    <span>PRESENT (Checked-In On-Time)</span>
                   </span>
                 ) : (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     <span>Pending Check-in</span>
+                  </span>
+                )}
+                {todayRecord && (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950 text-[#004b79] dark:text-[#dfb74a] border border-blue-200 dark:border-[#004b79]/40 flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3" />
+                    <span>Admin Notified &amp; Synced</span>
                   </span>
                 )}
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {todayRecord
-                  ? `Checked in at ${new Date(todayRecord.loginTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} • Recorded ${todayRecord.classesConducted || conductedSessions.filter((s: any) => s.date === new Date().toISOString().split("T")[0]).length} classes conducted today.`
-                  : "Mark your daily duty attendance to record lecture hours and faculty compliance."}
+                  ? `✓ Checked in on time at ${new Date(todayRecord.loginTime).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })} • Admin has been notified of your presence and can verify your attendance. Recorded ${todayRecord.classesConducted || conductedSessions.filter((s: any) => s.date === new Date().toISOString().split("T")[0]).length} classes conducted today.`
+                  : "Mark your daily duty attendance to record lecture hours and notify administration of on-time presence."}
               </p>
             </div>
 

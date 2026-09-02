@@ -5,6 +5,7 @@ import StaffAttendance from "@/models/StaffAttendance";
 import User from "@/models/User";
 import TeacherProfile from "@/models/TeacherProfile";
 import LiveSession from "@/models/LiveSession";
+import Notification from "@/models/Notification";
 
 export async function GET(req: NextRequest) {
   try {
@@ -182,11 +183,29 @@ export async function POST(req: NextRequest) {
       {
         $set: {
           status,
+        },
+        $setOnInsert: {
           loginTime: now,
+          classesConducted: 0,
+          workingHours: status === "PRESENT" ? 1.5 : status === "HALF_DAY" ? 1.0 : 0,
         },
       },
-      { upsert: true, new: true }
+      { upsert: true, new: true, setDefaultsOnInsert: true }
     );
+
+    // Notify the teacher about their confirmed attendance
+    try {
+      await Notification.create({
+        userId: teacherId,
+        title: "Faculty Attendance Confirmed",
+        message: `Admin has verified and recorded your daily faculty attendance as ${status} for ${targetDate}.`,
+        type: "SYSTEM",
+        linkUrl: "/teacher/attendance",
+        read: false,
+      });
+    } catch (notifErr) {
+      console.warn("Failed to notify teacher of attendance mark:", notifErr);
+    }
 
     return NextResponse.json({
       success: true,
