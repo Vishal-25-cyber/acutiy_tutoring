@@ -30,7 +30,7 @@ export function Navbar() {
           <div className="flex flex-col justify-center">
             <span
               className="font-black text-[22px] tracking-[0.16em] text-[#002137] dark:text-white leading-tight select-none"
-              style={{ fontFamily: "'Montserrat', 'Plus Jakarta Sans', sans-serif" }}
+              style={{ fontFamily: "'Montserrat', 'Outfit', 'Inter', sans-serif" }}
             >
               M<span className="text-[#b89047] dark:text-[#dfb74a]">Λ</span>NTIF
             </span>

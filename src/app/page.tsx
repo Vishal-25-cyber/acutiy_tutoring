@@ -459,7 +459,7 @@ export default function HomePage() {
             <div className="flex flex-col justify-center">
               <span
                 className="font-black text-[22px] tracking-[0.16em] text-[#002137] leading-tight select-none"
-                style={{ fontFamily: "'Montserrat', 'Plus Jakarta Sans', sans-serif" }}
+                style={{ fontFamily: "'Montserrat', 'Outfit', 'Inter', sans-serif" }}
               >
                 M<span className="text-[#b89047]">Λ</span>NTIF
               </span>
@@ -528,7 +528,7 @@ export default function HomePage() {
               <div className="space-y-1.5">
                 <h1
                   className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-[0.06em] leading-[1.04]"
-                  style={{ fontFamily: "'Montserrat', 'Plus Jakarta Sans', sans-serif" }}
+                  style={{ fontFamily: "'Montserrat', 'Outfit', 'Inter', sans-serif" }}
                 >
                   M<span className="text-[#b89047]">Λ</span>NTIF
                 </h1>

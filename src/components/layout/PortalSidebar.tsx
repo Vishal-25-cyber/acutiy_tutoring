@@ -143,7 +143,7 @@ export function PortalSidebar({ role }: SidebarProps) {
             <div className="flex items-center gap-1.5">
               <span
                 className="font-black text-[18px] tracking-[0.14em] text-[#002137] dark:text-white leading-tight select-none truncate"
-                style={{ fontFamily: "'Montserrat', 'Plus Jakarta Sans', sans-serif" }}
+                style={{ fontFamily: "'Montserrat', 'Outfit', 'Inter', sans-serif" }}
               >
                 M<span className="text-[#b89047] dark:text-[#dfb74a]">Λ</span>NTIF
               </span>

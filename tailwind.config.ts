@@ -116,6 +116,7 @@ const config: Config = {
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', "system-ui", "-apple-system", "BlinkMacSystemFont", '"Segoe UI"', "Roboto", "sans-serif"],
         heading: ['"Plus Jakarta Sans"', "sans-serif"],
+        logo: ['"Montserrat"', '"Outfit"', '"Inter"', "sans-serif"],
       },
     },
   },
