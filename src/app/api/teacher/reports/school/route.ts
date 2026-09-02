@@ -5,7 +5,7 @@ import { getDistinctSchoolsList, generateSchoolPerformanceReport } from "@/lib/p
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getSession(req);
+    const session = await getSession();
     if (!session || (session.role !== "TEACHER" && session.role !== "ADMIN")) {
       return NextResponse.json({ error: "Unauthorized. Staff/Teacher access required." }, { status: 401 });
     }

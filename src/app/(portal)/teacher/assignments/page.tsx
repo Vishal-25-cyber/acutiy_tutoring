@@ -112,8 +112,8 @@ export default function TeacherAssignmentsPage() {
     subTab === "PENDING"
       ? pendingSubmissions
       : subTab === "COMPLETED"
-      ? gradedSubmissions
-      : filteredCategorySubmissions;
+        ? gradedSubmissions
+        : filteredCategorySubmissions;
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,7 +129,7 @@ export default function TeacherAssignmentsPage() {
         body: JSON.stringify({
           ...formData,
           title: formData.title.trim(),
-          description: formData.description.trim(),
+          description: formData.description.trim() || `${formData.classLevel} ${formData.subject} — ${formData.title.trim()}`,
           type: activeCategory,
           maxMarks: Number(formData.maxMarks) || (activeCategory === "TEST" ? 50 : 20),
           durationMinutes: activeCategory === "TEST" ? Number(formData.durationMinutes) || 45 : undefined,
@@ -242,11 +242,10 @@ export default function TeacherAssignmentsPage() {
         <button
           type="button"
           onClick={() => setActiveCategory("ASSIGNMENT")}
-          className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-            activeCategory === "ASSIGNMENT"
+          className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${activeCategory === "ASSIGNMENT"
               ? "bg-[#004b79] text-white shadow-xs"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-          }`}
+            }`}
         >
           <FileCheck className="w-4 h-4 text-blue-300" />
           <span>Coursework Assignments</span>
@@ -258,11 +257,10 @@ export default function TeacherAssignmentsPage() {
         <button
           type="button"
           onClick={() => setActiveCategory("TEST")}
-          className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-            activeCategory === "TEST"
+          className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${activeCategory === "TEST"
               ? "bg-[#004b79] text-white shadow-xs"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-          }`}
+            }`}
         >
           <Timer className="w-4 h-4 text-[#dfb74a]" />
           <span>Timed Proctored Tests</span>
@@ -274,11 +272,10 @@ export default function TeacherAssignmentsPage() {
         <button
           type="button"
           onClick={() => setActiveCategory("HOMEWORK")}
-          className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-            activeCategory === "HOMEWORK"
+          className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${activeCategory === "HOMEWORK"
               ? "bg-[#004b79] text-white shadow-xs"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-          }`}
+            }`}
         >
           <FileText className="w-4 h-4 text-emerald-300" />
           <span>Daily Homework</span>
@@ -296,8 +293,8 @@ export default function TeacherAssignmentsPage() {
               {activeCategory === "TEST"
                 ? "Proctored Test Answer Submissions"
                 : activeCategory === "HOMEWORK"
-                ? "Homework Worksheet Submissions"
-                : "Assignment Solution Submissions"}
+                  ? "Homework Worksheet Submissions"
+                  : "Assignment Solution Submissions"}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               Review student answers, inspect webcam proctoring audit snapshots, and award marks.
@@ -308,11 +305,10 @@ export default function TeacherAssignmentsPage() {
           <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 self-start sm:self-auto">
             <button
               onClick={() => setSubTab("PENDING")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                subTab === "PENDING"
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${subTab === "PENDING"
                   ? "bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-300 shadow-xs"
                   : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-              }`}
+                }`}
             >
               <span>Awaiting Evaluation</span>
               <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 font-bold">
@@ -322,11 +318,10 @@ export default function TeacherAssignmentsPage() {
 
             <button
               onClick={() => setSubTab("COMPLETED")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                subTab === "COMPLETED"
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${subTab === "COMPLETED"
                   ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-300 shadow-xs"
                   : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-              }`}
+                }`}
             >
               <span>Graded</span>
               <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 font-bold">

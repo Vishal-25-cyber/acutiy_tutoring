@@ -79,18 +79,7 @@ export default function TeacherStudentReportsPage() {
     isLoading: isSchoolsLoading,
     refetch: refetchSchools,
   } = useFastFetch("/api/teacher/reports/school");
-
-  const defaultSchools = [
-    { schoolName: "Delhi Public School", studentCount: 14, district: "Metro District", board: "CBSE", classes: ["Class 8", "Class 9", "Class 10"] },
-    { schoolName: "National Public School", studentCount: 11, district: "Central District", board: "CBSE", classes: ["Class 8", "Class 9", "Class 10"] },
-    { schoolName: "DAV Public School", studentCount: 9, district: "South District", board: "CBSE", classes: ["Class 7", "Class 8", "Class 9", "Class 10"] },
-    { schoolName: "Kendriya Vidyalaya", studentCount: 16, district: "Main District", board: "CBSE", classes: ["Class 6", "Class 7", "Class 8", "Class 9", "Class 10"] },
-    { schoolName: "St. Joseph's Academy", studentCount: 8, district: "North District", board: "ICSE", classes: ["Class 9", "Class 10"] },
-  ];
-
-  const schools = Array.isArray(schoolsData?.schools) && schoolsData.schools.length > 0
-    ? schoolsData.schools
-    : defaultSchools;
+  const schools = Array.isArray(schoolsData?.schools) ? schoolsData.schools : [];
 
   // Auto-select first school if none selected
   useEffect(() => {
@@ -102,8 +91,8 @@ export default function TeacherStudentReportsPage() {
   // 2. Fetch full School-Wise Performance Report
   const schoolReportUrl = selectedSchool
     ? `/api/teacher/reports/school?schoolName=${encodeURIComponent(
-        selectedSchool
-      )}&classLevel=${schoolClassFilter}&period=${schoolPeriodFilter}`
+      selectedSchool
+    )}&classLevel=${schoolClassFilter}&period=${schoolPeriodFilter}`
     : "";
   const {
     data: schoolReportData,
@@ -266,6 +255,10 @@ export default function TeacherStudentReportsPage() {
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
               Academic Performance Reports
             </h1>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#dfb74a] border border-blue-200 dark:border-[#004b79]/60">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Institutional Hub
+            </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             Consolidated school-wise cohort marksheets, multi-student performance comparative analytics, and official PDF generation.
@@ -278,11 +271,10 @@ export default function TeacherStudentReportsPage() {
             <button
               type="button"
               onClick={() => setReportMode("SCHOOL")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                reportMode === "SCHOOL"
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${reportMode === "SCHOOL"
                   ? "bg-[#004b79] text-white shadow-xs"
                   : "text-slate-600 dark:text-slate-300 hover:text-slate-900"
-              }`}
+                }`}
             >
               <School className="w-3.5 h-3.5 text-[#dfb74a]" />
               <span>School Cohort Report</span>
@@ -290,11 +282,10 @@ export default function TeacherStudentReportsPage() {
             <button
               type="button"
               onClick={() => setReportMode("INDIVIDUAL")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                reportMode === "INDIVIDUAL"
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${reportMode === "INDIVIDUAL"
                   ? "bg-[#004b79] text-white shadow-xs"
                   : "text-slate-600 dark:text-slate-300 hover:text-slate-900"
-              }`}
+                }`}
             >
               <User className="w-3.5 h-3.5" />
               <span>Individual Student</span>
@@ -397,11 +388,10 @@ export default function TeacherStudentReportsPage() {
                     key={sc.schoolName}
                     type="button"
                     onClick={() => setSelectedSchool(sc.schoolName)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 flex items-center gap-2 transition-all cursor-pointer border ${
-                      isSelected
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 flex items-center gap-2 transition-all cursor-pointer border ${isSelected
                         ? "bg-[#004b79] text-white border-[#004b79] shadow-xs"
                         : "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700 hover:border-slate-400"
-                    }`}
+                      }`}
                   >
                     <School className="w-3.5 h-3.5 text-[#dfb74a]" />
                     <span>{sc.schoolName}</span>
@@ -579,11 +569,10 @@ export default function TeacherStudentReportsPage() {
                           >
                             <td className="py-3 font-bold">
                               <span
-                                className={`px-2 py-0.5 rounded text-[11px] font-black ${
-                                  isTop
+                                className={`px-2 py-0.5 rounded text-[11px] font-black ${isTop
                                     ? "bg-[#dfb74a] text-slate-950"
                                     : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-                                }`}
+                                  }`}
                               >
                                 #{st.schoolRank}
                               </span>
@@ -617,13 +606,12 @@ export default function TeacherStudentReportsPage() {
                             </td>
                             <td className="py-3">
                               <span
-                                className={`px-2 py-0.5 rounded-full text-xs font-black ${
-                                  st.overallScore >= 80
+                                className={`px-2 py-0.5 rounded-full text-xs font-black ${st.overallScore >= 80
                                     ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
                                     : st.overallScore >= 70
-                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300"
-                                    : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-                                }`}
+                                      ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300"
+                                      : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                                  }`}
                               >
                                 {st.overallScore}%
                               </span>
@@ -683,11 +671,10 @@ export default function TeacherStudentReportsPage() {
                             <td className="py-2.5 text-emerald-600 font-bold">{sb.comparison}</td>
                             <td className="py-2.5 text-right">
                               <span
-                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                  sb.status === "EXCELLENT"
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${sb.status === "EXCELLENT"
                                     ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
                                     : "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300"
-                                }`}
+                                  }`}
                               >
                                 {sb.status}
                               </span>
@@ -867,11 +854,10 @@ export default function TeacherStudentReportsPage() {
                       key={st.userId}
                       type="button"
                       onClick={() => setSelectedStudentId(st.userId)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 flex items-center gap-2 transition-all cursor-pointer border ${
-                        isSelected
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 flex items-center gap-2 transition-all cursor-pointer border ${isSelected
                           ? "bg-[#004b79] text-white border-[#004b79] shadow-xs"
                           : "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700 hover:border-slate-400"
-                      }`}
+                        }`}
                     >
                       <span className="w-2 h-2 rounded-full bg-emerald-400" />
                       <span>{st.name}</span>

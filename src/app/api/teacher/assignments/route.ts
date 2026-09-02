@@ -109,7 +109,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getSession();
+    const session = await getSession(req);
     if (!session || (session.role !== "TEACHER" && session.role !== "ADMIN")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -135,15 +135,17 @@ export async function POST(req: NextRequest) {
 
     const taskType = type || "ASSIGNMENT";
     const finalDueDate = dueDate ? new Date(dueDate) : new Date(Date.now() + 86400000 * 3);
+    const resolvedDescription = (description || "").trim() || `${classLevel} ${subject} — ${title.trim()}`;
+    const teacherUserId = session.userId || "staff";
 
     await connectToDatabase();
     const newAssignment = await Assignment.create({
-      title,
-      description: description || "",
+      title: title.trim(),
+      description: resolvedDescription,
       subject,
       classLevel,
       batchId,
-      teacherId: session.userId,
+      teacherId: teacherUserId,
       type: taskType,
       durationMinutes: taskType === "TEST" ? Number(durationMinutes) || 45 : undefined,
       proctoringRequired: taskType === "TEST" ? (proctoringRequired ?? true) : false,

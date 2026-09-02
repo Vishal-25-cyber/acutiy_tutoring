@@ -1,12 +1,12 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 import { IAssignment } from "@/types";
 
-export interface IAssignmentDocument extends Document, Omit<IAssignment, "_id"> {}
+export interface IAssignmentDocument extends Document, Omit<IAssignment, "_id"> { }
 
 const AssignmentSchema = new Schema<IAssignmentDocument>(
   {
     title: { type: String, required: true, trim: true },
-    description: { type: String, required: true, trim: true },
+    description: { type: String, required: false, trim: true, default: "" },
     subject: { type: String, required: true, trim: true, index: true },
     classLevel: {
       type: String,
