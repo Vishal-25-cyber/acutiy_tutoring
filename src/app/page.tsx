@@ -1133,29 +1133,27 @@ export default function HomePage() {
         <div className="w-full max-w-4xl mx-auto px-6 sm:px-10 lg:px-14 text-center space-y-8 sm:space-y-10">
 
           {/* Section Headings */}
-          <div className="space-y-1.5 text-center">
+          <div className="space-y-2 text-center">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Tutoring Hub
             </h2>
-            <p className="text-xl sm:text-2xl font-extrabold text-[#b89047] tracking-tight">
+            <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#b89047] tracking-tight">
               Where It All Began
             </p>
           </div>
 
-          {/* Narrative Story (Clean Proportional Balanced Paragraph) */}
-          <div className="max-w-2xl mx-auto text-slate-700 text-sm sm:text-base lg:text-[17px] leading-relaxed sm:leading-[1.85] font-normal text-center">
+          {/* Narrative Story (Clean Balanced Editorial Paragraph) */}
+          <div className="max-w-3xl mx-auto text-slate-700 text-base sm:text-lg lg:text-[19px] leading-relaxed sm:leading-[1.85] font-normal text-center [text-wrap:balance]">
             <p>
-              For the past four years, <strong>Tutoring Hub</strong> has been a dedicated physical learning space where we worked closely with students, refining our methodology, and gaining valuable classroom experience. Today, we have evolved that foundational experience into <strong className="text-[#002137] font-extrabold">MANTIF</strong>—building modern, AI-enhanced learning solutions for students, educators, and institutions.
+              For the past four years, <strong className="text-slate-900 font-bold">Tutoring Hub</strong> has been a dedicated physical learning space where we worked closely with students, refining our methodology, and gaining valuable classroom experience. Today, we have evolved that foundational experience into <strong className="text-[#002137] font-extrabold">MANTIF</strong>—building modern, AI-enhanced learning solutions for students, educators, and institutions.
             </p>
           </div>
 
-          {/* Seamless Gold Foundation Quote (Balanced Symmetrical Alignment) */}
-          <div className="py-2 max-w-lg mx-auto text-center space-y-1">
-            <p className="text-lg sm:text-xl font-black text-[#002137] leading-snug">
-              “Tutoring Hub gave us the foundation.
-            </p>
-            <p className="text-lg sm:text-xl font-black text-[#b89047] leading-snug">
-              MANTIF is taking it forward.”
+          {/* Seamless Gold Foundation Quote (Perfect Symmetrical Flow) */}
+          <div className="py-2 max-w-2xl mx-auto text-center">
+            <p className="text-xl sm:text-2xl lg:text-[26px] font-black text-[#002137] tracking-tight leading-snug">
+              “Tutoring Hub gave us the foundation.{" "}
+              <span className="text-[#b89047]">MANTIF is taking it forward.”</span>
             </p>
           </div>
 
