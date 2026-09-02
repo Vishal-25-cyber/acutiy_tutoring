@@ -79,7 +79,7 @@ export default function TeacherStudentsPage() {
 
     try {
       const res = await fetch(`/api/teacher/students`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           studentProfileId: editingStudent._id,
@@ -279,18 +279,10 @@ export default function TeacherStudentsPage() {
                         key={s._id}
                         className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors px-1"
                       >
-                        <div className="flex items-center gap-2.5 flex-wrap min-w-0 flex-1">
+                        <div className="min-w-0 flex-1">
                           <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100">
                             {s.userId?.name || "Student"}
                           </h3>
-
-                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#dfb74a] border border-blue-200 dark:border-[#004b79]/60">
-                            {s.currentClass} • {s.board}
-                          </span>
-
-                          <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                            Batch: {s.batchId?.name || "7:00 PM – 8:00 PM"}
-                          </span>
                         </div>
 
                         {/* Action Buttons (View Dossier & Edit Profile) */}
@@ -425,17 +417,6 @@ export default function TeacherStudentsPage() {
                   </span>
                 </div>
               </div>
-            </div>
-
-            <div className="flex items-center justify-end pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setViewingStudent(null)}
-                className="font-bold text-xs rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-              >
-                Close Dossier
-              </Button>
             </div>
           </div>
         </Modal>

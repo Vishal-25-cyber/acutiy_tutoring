@@ -83,6 +83,7 @@ app.get("/api/teacher/assignments", adaptRoute(TeacherAssignments.GET));
 app.post("/api/teacher/assignments", adaptRoute(TeacherAssignments.POST));
 app.get("/api/teacher/students", adaptRoute(TeacherStudents.GET));
 app.patch("/api/teacher/students", adaptRoute(TeacherStudents.PATCH));
+app.put("/api/teacher/students", adaptRoute(TeacherStudents.PUT || TeacherStudents.PATCH));
 app.get("/api/teacher/reports", adaptRoute(TeacherReports.GET));
 app.get("/api/teacher/reports/school", adaptRoute(TeacherSchoolReports.GET));
 app.get("/api/teacher/reports/:studentId", adaptRoute(TeacherStudentReportDetail.GET));
