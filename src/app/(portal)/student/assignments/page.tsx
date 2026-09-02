@@ -856,7 +856,7 @@ export default function StudentAssignmentsPage() {
 
       {/* ── 4. FULL-SCREEN SECURE PROCTORED EXAMINATION SUITE ── */}
       {activeProctoredTest && (
-        <div className="fixed inset-0 z-50 bg-gray-50 text-gray-900 flex flex-col h-screen w-screen overflow-hidden select-none">
+        <div className="fixed inset-0 z-[100] bg-gray-50 text-gray-900 flex flex-col h-screen w-screen overflow-hidden select-none">
           {/* Top Secure Examination Control Bar - Light Theme */}
           <div className="h-14 px-4 sm:px-6 bg-white border-b border-gray-200 shadow-sm flex items-center justify-between gap-3 shrink-0 z-20">
             {/* Left: Test ID */}
@@ -919,16 +919,14 @@ export default function StudentAssignmentsPage() {
                 )
               )}
 
-              {/* Warnings pill */}
-              <div className={`px-2.5 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1 transition-all ${
-                warningCount > 0
-                  ? "bg-rose-50 border-rose-300 text-rose-600 animate-pulse"
-                  : "bg-gray-100 border-gray-200 text-gray-500"
-              }`}>
-                <ShieldAlert className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Warnings:</span>
-                <span>{warningCount}</span>
-              </div>
+              {/* Warnings pill - only show when > 0 */}
+              {warningCount > 0 && (
+                <div className="px-2.5 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1 bg-rose-50 border-rose-300 text-rose-600 animate-pulse">
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Warnings:</span>
+                  <span>{warningCount}</span>
+                </div>
+              )}
 
               {/* Split View toggle - only during test */}
               {!isTestLocked && (
@@ -994,8 +992,139 @@ export default function StudentAssignmentsPage() {
             </div>
           )}
 
-          {/* Main Examination Workspace: Split Screen Layout */}
-          <div className="flex-1 p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-12 gap-3 overflow-hidden">
+          {/* Main Examination Workspace */}
+          {isTestLocked ? (
+            // POST-TEST: Camera (left) + Upload (right) side-by-side so both are always visible
+            <div className="flex-1 p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-12 gap-3 overflow-hidden">
+              {/* Camera - compact left col */}
+              <div className="lg:col-span-5 h-full flex flex-col rounded-2xl bg-white border border-gray-200 overflow-hidden shadow-md">
+                <div className="px-3 py-2 flex items-center justify-between bg-gray-50 border-b border-gray-200 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${ isCameraStarted ? "bg-emerald-500 animate-pulse" : "bg-amber-400" }`} />
+                    <span className="text-[11px] font-bold text-gray-700">Live Proctoring</span>
+                  </div>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ isFaceDetected ? "text-emerald-700 bg-emerald-100" : "text-rose-600 bg-rose-100 animate-pulse" }`}>
+                    {isFaceDetected ? "● In Frame" : `⚠ Away`}
+                  </span>
+                </div>
+                <div className="relative flex-1 bg-black overflow-hidden">
+                  <video ref={videoRef} autoPlay playsInline muted
+                    className="w-full h-full object-cover"
+                    style={{transform: "scaleX(-1)", filter: "brightness(1.15) contrast(1.05)"}}
+                  />
+                  <canvas ref={canvasRef} className="hidden" />
+                  {isCameraStarted && (
+                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                      <div className="w-36 h-48 relative">
+                        {["top-0 left-0 border-t-2 border-l-2 rounded-tl-xl", "top-0 right-0 border-t-2 border-r-2 rounded-tr-xl",
+                          "bottom-0 left-0 border-b-2 border-l-2 rounded-bl-xl", "bottom-0 right-0 border-b-2 border-r-2 rounded-br-xl"].map((cls, i) => (
+                          <div key={i} className={`absolute w-6 h-6 ${ isFaceDetected ? "border-emerald-400/70" : "border-rose-500 animate-pulse" } ${cls}`} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {!isCameraStarted && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center text-xs text-gray-400 bg-gray-900">
+                      <Camera className="w-7 h-7 text-blue-400 animate-pulse" />
+                      <span className="text-gray-300 font-medium">Camera initializing…</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Upload card - right col, full height */}
+              <div className={`lg:col-span-7 h-full flex flex-col rounded-2xl border overflow-hidden shadow-md bg-white ${ uploadExpired ? "border-rose-300" : "border-blue-300" }`}>
+                {/* Header */}
+                <div className={`px-4 py-3 border-b flex items-center justify-between gap-2 shrink-0 ${ uploadExpired ? "bg-rose-50 border-rose-200" : "bg-blue-50 border-blue-200" }`}>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${ uploadExpired ? "bg-rose-100" : "bg-blue-100" }`}>
+                      {uploadExpired ? <AlertCircle className="w-4 h-4 text-rose-500" /> : <Upload className="w-4 h-4 text-blue-600" />}
+                    </div>
+                    <div>
+                      <p className={`text-sm font-black ${ uploadExpired ? "text-rose-600" : "text-blue-700" }`}>
+                        {uploadExpired ? "Upload Window Closed" : "Upload Your Answer Sheet"}
+                      </p>
+                      <p className="text-[11px] text-gray-400">
+                        {uploadExpired ? "The 5-minute upload window has expired" : "Submit your handwritten answer sheet below"}
+                      </p>
+                    </div>
+                  </div>
+                  {!uploadExpired && (
+                    <div className={`px-3 py-1.5 rounded-xl border flex items-center gap-1.5 font-mono font-black text-sm ${ uploadWindowSeconds <= 60 ? "bg-rose-50 border-rose-300 text-rose-600 animate-pulse" : "bg-blue-50 border-blue-300 text-blue-600" }`}>
+                      <Timer className="w-4 h-4" />
+                      {Math.floor(uploadWindowSeconds/60).toString().padStart(2,"0")}:{(uploadWindowSeconds%60).toString().padStart(2,"0")}
+                    </div>
+                  )}
+                </div>
+
+                {/* Body */}
+                <div className="flex-1 flex flex-col gap-3 p-5">
+                  {uploadExpired ? (
+                    <div className="flex-1 flex flex-col items-center justify-center gap-3">
+                      <div className="w-16 h-16 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center">
+                        <AlertCircle className="w-8 h-8 text-rose-400" />
+                      </div>
+                      <p className="text-sm font-bold text-rose-600">Upload window expired</p>
+                      <p className="text-xs text-gray-400 text-center">Please contact your teacher.</p>
+                    </div>
+                  ) : (
+                    <>
+                      <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,application/pdf" className="hidden" />
+
+                      {selectedFile ? (
+                        <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between">
+                          <div className="flex items-center gap-3 truncate">
+                            <FileCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                            <div className="truncate">
+                              <p className="text-sm font-bold truncate text-gray-800">{selectedFile.name}</p>
+                              <p className="text-xs text-gray-400 font-mono">{selectedFile.size} bytes</p>
+                            </div>
+                          </div>
+                          <button type="button" onClick={() => setSelectedFile(null)} className="p-1.5 text-gray-400 hover:text-rose-500 cursor-pointer shrink-0">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button type="button" onClick={() => fileInputRef.current?.click()}
+                          className="w-full flex-1 min-h-[140px] border-2 border-dashed border-blue-300 rounded-2xl flex flex-col items-center justify-center gap-3 hover:bg-blue-50 cursor-pointer transition-all group bg-white">
+                          <div className="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Camera className="w-7 h-7 text-blue-600" />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-bold text-blue-600">Tap to Take Photo or Upload File</p>
+                            <p className="text-xs text-gray-400 mt-1">PNG, JPG or PDF · Max 25MB</p>
+                          </div>
+                        </button>
+                      )}
+
+                      {successMessage && (
+                        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-700 font-bold flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 shrink-0" />
+                          <span>{successMessage}</span>
+                        </div>
+                      )}
+                      {errorMessage && (
+                        <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-600 font-bold flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 shrink-0" />
+                          <span>{errorMessage}</span>
+                        </div>
+                      )}
+
+                      <button type="button"
+                        disabled={isSubmitting || !selectedFile}
+                        onClick={(e) => handleSubmitWork(e, true)}
+                        className="w-full py-3.5 rounded-xl text-sm font-black bg-[#004b79] hover:bg-[#003b60] disabled:bg-gray-100 disabled:text-gray-400 text-white flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md disabled:cursor-not-allowed">
+                        {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        <span>{isSubmitting ? "Submitting…" : "Submit Answer Sheet"}</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            // DURING TEST: normal PDF + camera split
+            <div className="flex-1 p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-12 gap-3 overflow-hidden">
             {/* LEFT PANE: QUESTION PAPER / PDF VIEWER - light theme */}
             {(splitViewMode === "SPLIT" || splitViewMode === "PDF_FULL") && (
               <div className={`${
@@ -1083,7 +1212,7 @@ export default function StudentAssignmentsPage() {
                   </div>
 
                   {/* Video Feed — full width, no text overlays, face-forward */}
-                  <div className="relative w-full" style={{aspectRatio: "4/3"}}>
+                  <div className="relative w-full bg-black" style={{aspectRatio: "4/3"}}>
                     <video
                       ref={videoRef}
                       autoPlay
@@ -1242,6 +1371,7 @@ export default function StudentAssignmentsPage() {
               </div>
             )}
           </div>
+          )}
         </div>
       )}
 
