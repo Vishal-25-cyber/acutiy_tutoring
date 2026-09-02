@@ -64,12 +64,13 @@ export function Modal({
       >
 
 
-        {/* Crisp Rectangular Close Button */}
+        {/* Sleek Modern Close Button */}
         <button
           onClick={onClose}
-          className="absolute right-5 top-5 w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-100 transition-all border border-slate-200/80 dark:border-slate-700/80 cursor-pointer shadow-2xs"
+          className="absolute right-4 sm:right-5 top-4 sm:top-5 w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:border-rose-900/60 dark:hover:text-rose-400 transition-all duration-200 border border-slate-200/90 dark:border-slate-800 cursor-pointer shadow-2xs hover:shadow-xs group"
+          title="Close"
         >
-          <X className="h-4 w-4" />
+          <X className="h-4 w-4 group-hover:rotate-90 transition-transform duration-200" />
           <span className="sr-only">Close</span>
         </button>
 
