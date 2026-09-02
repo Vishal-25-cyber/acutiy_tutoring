@@ -1471,8 +1471,8 @@ export function JitsiClassroom({
                     <div>
                       <p className="text-xs sm:text-sm font-medium text-white">{remoteParticipant?.name || admittedList[0]?.name || "Student"}</p>
                       <span className="text-[11px] sm:text-xs text-slate-400 flex items-center justify-center gap-1.5 mt-1">
-                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                        Connecting student live video...
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                        {remoteParticipant ? "Connecting student live video..." : "Class is live • Waiting for student to join..."}
                       </span>
                     </div>
                   </div>
