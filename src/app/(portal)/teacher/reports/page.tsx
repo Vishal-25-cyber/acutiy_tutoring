@@ -88,10 +88,15 @@ export default function TeacherStudentReportsPage() {
   const students = Array.isArray(listData?.students) ? listData.students : [];
   const classes = Array.isArray(listData?.classes) ? listData.classes : [];
 
-  // Auto-select first student if none selected
+  // Auto-select first student if none selected or if current student is not in filtered class
   useEffect(() => {
-    if (!selectedStudentId && students.length > 0) {
-      setSelectedStudentId(students[0].userId);
+    if (students.length > 0) {
+      const exists = students.some((st: any) => st.userId === selectedStudentId);
+      if (!selectedStudentId || !exists) {
+        setSelectedStudentId(students[0].userId);
+      }
+    } else {
+      setSelectedStudentId("");
     }
   }, [students, selectedStudentId]);
 
@@ -545,12 +550,26 @@ export default function TeacherStudentReportsPage() {
             </div>
           )}
 
-          {isStudentReportLoading ? (
+          {isStudentReportLoading && selectedStudentId ? (
             <div className="py-12 flex flex-col items-center justify-center gap-2 text-slate-400">
               <Loader2 className="w-6 h-6 animate-spin text-[#004b79]" />
               <span className="text-xs">Loading student performance…</span>
             </div>
-          ) : studentReport ? (
+          ) : students.length === 0 || !selectedStudentId || !studentReport || (classFilter !== "ALL" && studentReport.studentInfo?.classLevel !== classFilter) ? (
+            <div className="py-16 px-6 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#dfb74a] mx-auto flex items-center justify-center shadow-xs">
+                <GraduationCap className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                  No Students from {classFilter !== "ALL" ? classFilter : "this Class"}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                  There are currently no active students enrolled in {classFilter !== "ALL" ? classFilter : "the selected criteria"}. Select &ldquo;All Classes (6-10)&rdquo; or choose another class from the dropdown filter above.
+                </p>
+              </div>
+            </div>
+          ) : (
             <div className="space-y-8">
               {/* ── STUDENT DETAILS HEADER ── */}
               <div>
@@ -800,20 +819,6 @@ export default function TeacherStudentReportsPage() {
                 </form>
               </div>
 
-            </div>
-          ) : (
-            <div className="py-16 px-6 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#dfb74a] mx-auto flex items-center justify-center shadow-xs">
-                <User className="w-6 h-6" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                  No Students Found in {classFilter !== "ALL" ? classFilter : "this filter"}
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                  There are currently no enrolled students matching the selected class ({classFilter}). Select &ldquo;All Classes (6-10)&rdquo; or another grade.
-                </p>
-              </div>
             </div>
           )}
         </div>

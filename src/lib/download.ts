@@ -5,6 +5,7 @@
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { formatStudentId } from "@/lib/id-generator";
 
 export interface DownloadableMaterial {
   _id?: string;
@@ -705,7 +706,7 @@ export async function generateStudentPerformanceReportPdf(report: any): Promise<
     );
 
     const cleanFileName = `Mantif_Performance_Report_${(student.name || "Student").replace(/[^a-zA-Z0-9_-]/g, "_")}_${
-      student.studentId || "STU"
+      student.studentId || "STD_001"
     }.pdf`;
     return triggerPdfDownload(doc, cleanFileName);
   } catch (err) {
@@ -817,29 +818,44 @@ export async function generateSchoolPerformanceReportPdf(report: any): Promise<b
 
     currentY += 28;
 
-    // 3. Consolidated Student Marksheet Table (Only REAL students of this school)
+    // 3. Consolidated Student Marksheet Table (All REAL students from this school)
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(10.5);
+    doc.setFontSize(10);
     doc.setTextColor(0, 33, 55);
-    doc.text("1. Student Marksheet & Academic Record", 14, currentY);
+    doc.text("1. Consolidated Student Marksheet & Academic Record", 14, currentY);
 
-    const marksheetRows = students.map((st: any) => [
-      `#${st.schoolRank || 1}`,
-      st.name,
-      st.studentId,
-      st.classLevel,
-      `${st.subjectScores?.Mathematics ?? 90}%`,
-      `${st.subjectScores?.Science ?? 85}%`,
-      `${st.subjectScores?.English ?? 88}%`,
-      `${st.subjectScores?.["Social Science"] ?? 80}%`,
-      `${st.attendancePercentage ?? 90}%`,
-      `${st.overallScore ?? 88}%`,
-    ]);
+    const formatStudentId = (id: any, idx: number) => {
+      const raw = typeof id === 'string' ? id.replace(/\D/g, '') : (idx + 101);
+      return `STD_${raw}`;
+    };
+
+    const marksheetRows = students.map((st: any, idx: number) => {
+      const formattedId = formatStudentId(st.studentId || st, idx);
+      const mathScore = st.subjectScores?.Mathematics ?? st.subjectScores?.maths ?? 0;
+      const sciScore = st.subjectScores?.Science ?? st.subjectScores?.science ?? 0;
+      const engScore = st.subjectScores?.English ?? st.subjectScores?.english ?? 0;
+      const socScore = st.subjectScores?.["Social Science"] ?? st.subjectScores?.social ?? 0;
+      const attPercent = st.attendancePercentage ?? 0;
+      const ovScore = st.overallScore ?? 0;
+
+      return [
+        `#${st.schoolRank || idx + 1}`,
+        st.name || "Student",
+        formattedId,
+        st.classLevel || st.currentClass || "Class 10",
+        `${mathScore}%`,
+        `${sciScore}%`,
+        `${engScore}%`,
+        `${socScore}%`,
+        `${attPercent}%`,
+        `${ovScore}%`,
+      ];
+    });
 
     autoTable(doc, {
       startY: currentY + 3,
       head: [["Rank", "Student Name", "Student ID", "Grade", "Math", "Sci", "Eng", "Soc Sci", "Att %", "Overall"]],
-      body: marksheetRows,
+      body: marksheetRows.length > 0 ? marksheetRows : [["—", "No students listed", "—", "—", "—", "—", "—", "—", "—", "—"]],
       theme: "grid",
       headStyles: {
         fillColor: [0, 75, 121], // #004b79
@@ -861,11 +877,85 @@ export async function generateSchoolPerformanceReportPdf(report: any): Promise<b
 
     currentY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 8 : currentY + 45;
 
-    // 4. Remarks by the Staff / Faculty
+    // 4. Individual Student Profiles (Detailed cards for all students from this same school)
+    if (students.length > 0) {
+      if (currentY > 210) {
+        doc.addPage();
+        currentY = 20;
+      }
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(0, 33, 55);
+      doc.text("2. Individual Student Profiles & Cohort Breakdown", 14, currentY);
+
+      students.forEach((st: any, idx: number) => {
+        currentY += 4;
+        if (currentY > 240) {
+          doc.addPage();
+          currentY = 20;
+        }
+
+        const formattedId = formatStudentId(st.studentId || st, idx);
+        const mathScore = st.subjectScores?.Mathematics ?? st.subjectScores?.maths ?? 0;
+        const sciScore = st.subjectScores?.Science ?? st.subjectScores?.science ?? 0;
+        const engScore = st.subjectScores?.English ?? st.subjectScores?.english ?? 0;
+        const socScore = st.subjectScores?.["Social Science"] ?? st.subjectScores?.social ?? 0;
+
+        const studentProfileRows = [
+          [
+            "Student Name", st.name || "Student",
+            "Student ID", formattedId,
+          ],
+          [
+            "Grade & Board", `${st.classLevel || "Class 10"} (${st.board || overview.board || "CBSE"})`,
+            "Assigned Batch", st.batchName || "Standard Batch",
+          ],
+          [
+            "Subject Scores", `Math: ${mathScore}% | Sci: ${sciScore}% | Eng: ${engScore}% | Soc: ${socScore}%`,
+            "Academic Standing", `${st.overallScore ?? 0}% Overall (${st.attendancePercentage ?? 0}% Att. · Rank #${st.schoolRank || idx + 1})`,
+          ],
+        ];
+
+        autoTable(doc, {
+          startY: currentY,
+          head: [[`Student #${idx + 1}: ${st.name || "Student"} (${formattedId}) — School Rank #${st.schoolRank || idx + 1}`, "", "", ""]],
+          body: studentProfileRows,
+          theme: "grid",
+          headStyles: {
+            fillColor: [0, 33, 55],
+            textColor: [255, 255, 255],
+            fontSize: 7.8,
+            fontStyle: "bold",
+          },
+          styles: {
+            fontSize: 7.2,
+            cellPadding: 2.2,
+            lineColor: [226, 232, 240],
+            lineWidth: 0.2,
+          },
+          columnStyles: {
+            0: { fontStyle: "bold", cellWidth: 32, fillColor: [248, 250, 252], textColor: [71, 85, 105] },
+            1: { cellWidth: 58, textColor: [15, 23, 42], fontStyle: "bold" },
+            2: { fontStyle: "bold", cellWidth: 35, fillColor: [248, 250, 252], textColor: [71, 85, 105] },
+            3: { cellWidth: 57, textColor: [15, 23, 42] },
+          },
+        });
+
+        currentY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 4 : currentY + 28;
+      });
+    }
+
+    // 5. Remarks by the Staff / Faculty Cohort Assessment
+    if (currentY > 230) {
+      doc.addPage();
+      currentY = 20;
+    }
+
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.setTextColor(0, 33, 55);
-    doc.text("2. Remarks by Staff & Faculty Cohort Assessment", 14, currentY);
+    doc.text("3. Remarks by Staff & Faculty Cohort Assessment", 14, currentY);
 
     currentY += 3;
 
@@ -882,22 +972,26 @@ export async function generateSchoolPerformanceReportPdf(report: any): Promise<b
     doc.setFontSize(7.5);
     doc.setTextColor(51, 65, 85);
 
-    const schoolRemarks = `• Faculty Observation: Students from ${overview.schoolName || "this school"} demonstrate punctual attendance, consistent homework completion, and strong performance in core subjects.
-• Good Subject Focus: ${topSchoolSubj.subject} (${topSchoolSubj.schoolAverage}%) continues to be the strongest subject with high student interest.
-• Staff Recommendation: Continue weekly chapter tests and scheduled revision sessions to maintain academic excellence.`;
+    const schoolRemarks = `• Faculty Observation: All ${students.length} enrolled student(s) from ${overview.schoolName || "this school"} demonstrate active attendance and participation in core subject coaching.
+• Performance Highlight: Top performer ${overview.topPerformer || "Top Student"} achieved ${overview.highestScore || 0}% overall score across evaluations.
+• Staff Recommendation: Continue weekly chapter tests, revision sessions, and interactive doubt clearing to maintain cohort academic excellence.`;
 
     const splitSchoolRemarks = doc.splitTextToSize(schoolRemarks, 174);
     doc.text(splitSchoolRemarks, 18, currentY + 12);
 
-    // 5. Official Footer
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(148, 163, 184);
-    doc.text(
-      "Mantif Tutoring Official School Cohort Performance Report • Certified by Academic Faculty • support@mantif.edu",
-      14,
-      286
-    );
+    // 6. Add Official Footer to all pages
+    const totalPages = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(148, 163, 184);
+      doc.text(
+        `Mantif Tutoring Official School Cohort Performance Report • Certified by Academic Faculty • Page ${i} of ${totalPages}`,
+        14,
+        286
+      );
+    }
 
     const cleanFileName = `Mantif_School_Report_${(overview.schoolName || "School").replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`;
     return triggerPdfDownload(doc, cleanFileName);
