@@ -194,11 +194,6 @@ export default function StudentFeesPage() {
               <span>Founder's Payment Details</span>
             </button>
           )}
-
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Academic Cycle 2025–2026</span>
-          </span>
         </div>
       </div>
 
