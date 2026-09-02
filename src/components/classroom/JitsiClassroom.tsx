@@ -7,6 +7,14 @@ import {
   AlertCircle, Info, Hand, MonitorUp, MessageSquare, Send,
   Volume2, X, Loader2, CheckCircle2, XCircle, Bell, Smile,
 } from "lucide-react";
+import {
+  Room,
+  RoomEvent,
+  Track,
+  RemoteTrack,
+  RemoteTrackPublication,
+  RemoteParticipant,
+} from "livekit-client";
 
 /* ─────────────────────────────────────────────── */
 /*  Types                                          */
@@ -105,6 +113,7 @@ export function JitsiClassroom({
   const [admittingId, setAdmittingId] = useState<string | null>(null);
 
   /* ── Refs ── */
+  const livekitRoomRef     = useRef<Room | null>(null);
   const localVideoRef      = useRef<HTMLVideoElement | null>(null);
   const teacherVideoRef    = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef     = useRef<HTMLVideoElement | null>(null);
@@ -127,9 +136,9 @@ export function JitsiClassroom({
   useEffect(() => { isScreenSharingRef.current = isScreenSharing; }, [isScreenSharing]);
 
   /* ── WebRTC & Realtime State ── */
-  const [remoteParticipant, setRemoteParticipant] = useState<{ id: string; name: string; role: string; isCameraOn?: boolean; isMicOn?: boolean } | null>(null);
+  const [remoteParticipant, setRemoteParticipant] = useState<{ id: string; name: string; role: string; isCameraOn?: boolean; isMicOn?: boolean; lastSeen?: number } | null>(null);
   const [hasRemoteVideo, setHasRemoteVideo] = useState(false);
-  const [realtimeParticipants, setRealtimeParticipants] = useState<{ id: string; name: string; role: string; isCameraOn?: boolean; isMicOn?: boolean }[]>([]);
+  const [realtimeParticipants, setRealtimeParticipants] = useState<{ id: string; name: string; role: string; isCameraOn?: boolean; isMicOn?: boolean; lastSeen?: number }[]>([]);
 
   const stopAllMedia = useCallback(() => {
     try {
@@ -460,362 +469,229 @@ export function JitsiClassroom({
   }, [stopAllMediaTracks, stopAllMedia, classId, router, durationSeconds]);
 
   /* ─────────────────────────────────────────────────
-     2c.  Screen Sharing Handler
+     2c.  Camera, Mic & Screen Share Controls
   ───────────────────────────────────────────────── */
-  const toggleScreenShare = useCallback(async () => {
-    if (isScreenSharing) {
-      if (screenStreamRef.current) {
-        screenStreamRef.current.getTracks().forEach((t) => t.stop());
-        screenStreamRef.current = null;
-      }
-      setIsScreenSharing(false);
-      isScreenSharingRef.current = false;
-      if (peerConnectionRef.current && localStreamRef.current) {
-        const videoTrack = localStreamRef.current.getVideoTracks()[0];
-        if (videoTrack) {
-          const sender = peerConnectionRef.current.getSenders().find((s) => s.track?.kind === "video");
-          if (sender) sender.replaceTrack(videoTrack).catch(() => {});
-        }
-      }
-      if (teacherVideoRef.current && localStreamRef.current) {
-        teacherVideoRef.current.srcObject = localStreamRef.current;
-      }
-    } else {
+  const toggleCamera = useCallback(async () => {
+    const nextState = !isCameraOn;
+    setIsCameraOn(nextState);
+    isCameraOnRef.current = nextState;
+    if (livekitRoomRef.current) {
       try {
-        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-        screenStreamRef.current = screenStream;
-        setIsScreenSharing(true);
-        isScreenSharingRef.current = true;
-        const screenTrack = screenStream.getVideoTracks()[0];
-        if (peerConnectionRef.current && screenTrack) {
-          const sender = peerConnectionRef.current.getSenders().find((s) => s.track?.kind === "video");
-          if (sender) sender.replaceTrack(screenTrack).catch(() => {});
+        await livekitRoomRef.current.localParticipant.setCameraEnabled(nextState);
+        if (nextState) {
+          const camPub = livekitRoomRef.current.localParticipant.getTrackPublication(Track.Source.Camera);
+          if (camPub?.videoTrack) {
+            const el = userInfoRef.current.isTeacher ? teacherVideoRef.current : localVideoRef.current;
+            if (el) camPub.videoTrack.attach(el);
+          }
         }
-        if (teacherVideoRef.current) {
-          teacherVideoRef.current.srcObject = screenStream;
+      } catch (e) {
+        console.warn("LiveKit toggle camera error:", e);
+      }
+    }
+  }, [isCameraOn]);
+
+  const toggleMic = useCallback(async () => {
+    const nextState = !isMicOn;
+    setIsMicOn(nextState);
+    isMicOnRef.current = nextState;
+    if (livekitRoomRef.current) {
+      try {
+        await livekitRoomRef.current.localParticipant.setMicrophoneEnabled(nextState);
+      } catch (e) {
+        console.warn("LiveKit toggle mic error:", e);
+      }
+    }
+  }, [isMicOn]);
+
+  const toggleScreenShare = useCallback(async () => {
+    const nextState = !isScreenSharing;
+    setIsScreenSharing(nextState);
+    isScreenSharingRef.current = nextState;
+    if (livekitRoomRef.current) {
+      try {
+        await livekitRoomRef.current.localParticipant.setScreenShareEnabled(nextState);
+        if (nextState) {
+          const screenPub = livekitRoomRef.current.localParticipant.getTrackPublication(Track.Source.ScreenShare);
+          if (screenPub?.videoTrack && teacherVideoRef.current) {
+            screenPub.videoTrack.attach(teacherVideoRef.current);
+          }
+        } else {
+          const camPub = livekitRoomRef.current.localParticipant.getTrackPublication(Track.Source.Camera);
+          if (camPub?.videoTrack && teacherVideoRef.current) {
+            camPub.videoTrack.attach(teacherVideoRef.current);
+          }
         }
-        screenTrack.onended = () => {
-          if (screenStreamRef.current) {
-            screenStreamRef.current.getTracks().forEach((t) => t.stop());
-            screenStreamRef.current = null;
-          }
-          setIsScreenSharing(false);
-          isScreenSharingRef.current = false;
-          if (peerConnectionRef.current && localStreamRef.current) {
-            const videoTrack = localStreamRef.current.getVideoTracks()[0];
-            if (videoTrack) {
-              const sender = peerConnectionRef.current.getSenders().find((s) => s.track?.kind === "video");
-              if (sender) sender.replaceTrack(videoTrack).catch(() => {});
-            }
-          }
-          if (teacherVideoRef.current && localStreamRef.current) {
-            teacherVideoRef.current.srcObject = localStreamRef.current;
-          }
-        };
-      } catch (err) {
-        console.warn("Screen share cancelled or failed:", err);
+      } catch (e) {
+        console.warn("LiveKit screen share error:", e);
+        setIsScreenSharing(false);
+        isScreenSharingRef.current = false;
       }
     }
   }, [isScreenSharing]);
 
   /* ─────────────────────────────────────────────────
-     2d.  WebRTC Peer-to-Peer Live Streaming (Teacher <-> Student)
+     2d.  LiveKit Cloud Video & Audio Streaming (Teacher <-> Student)
   ───────────────────────────────────────────────── */
   useEffect(() => {
     if (stage !== "LIVE_CLASS") return;
 
-    let pc = peerConnectionRef.current;
-    if (!pc || pc.signalingState === "closed") {
-      pc = new RTCPeerConnection({
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:19302" },
-          { urls: "stun:stun2.l.google.com:19302" },
-          { urls: "stun:stun3.l.google.com:19302" },
-          { urls: "stun:stun.services.mozilla.com" },
-          { urls: "stun:global.stun.twilio.com:3478" },
-          { urls: "stun:stun.relay.metered.ca:80" },
-          {
-            urls: [
-              "turn:openrelay.metered.ca:80",
-              "turn:openrelay.metered.ca:443",
-              "turn:openrelay.metered.ca:443?transport=tcp",
-              "turns:openrelay.metered.ca:443?transport=tcp",
-            ],
-            username: "openrelayproject",
-            credential: "openrelayproject",
-          },
-        ],
-        bundlePolicy: "max-bundle",
-        rtcpMuxPolicy: "require",
-      });
-      peerConnectionRef.current = pc;
+    let isDisposed = false;
+    let roomInstance: Room | null = null;
 
-      addTracksToPeerConnection(pc);
-
-      pc.ontrack = (event) => {
-        let stream = event.streams[0];
-        if (!stream) {
-          if (!remoteStreamRef.current) {
-            remoteStreamRef.current = new MediaStream();
-          }
-          if (!remoteStreamRef.current.getTracks().some((t) => t.id === event.track.id)) {
-            remoteStreamRef.current.addTrack(event.track);
-          }
-          stream = remoteStreamRef.current;
-        } else {
-          remoteStreamRef.current = stream;
+    async function initLivekit() {
+      try {
+        const res = await fetch("/api/livekit/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId: classId }),
+        });
+        if (!res.ok) {
+          console.warn("Failed to fetch LiveKit token, status:", res.status);
+          return;
         }
-        setHasRemoteVideo(true);
-        hasRemoteVideoRef.current = true;
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = stream;
-          remoteVideoRef.current.play().catch(() => {
+        const { token, serverUrl } = await res.json();
+        if (!token || !serverUrl || isDisposed) return;
+
+        const room = new Room({
+          adaptiveStream: true,
+          dynacast: true,
+          publishDefaults: {
+            simulcast: true,
+          },
+        });
+        roomInstance = room;
+        livekitRoomRef.current = room;
+
+        // Remote track subscribed (Teacher or Student incoming feed)
+        room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant) => {
+          if (track.kind === Track.Kind.Video) {
+            setHasRemoteVideo(true);
+            hasRemoteVideoRef.current = true;
             if (remoteVideoRef.current) {
-              remoteVideoRef.current.muted = true;
-              remoteVideoRef.current.play().catch(() => {});
+              track.attach(remoteVideoRef.current);
+            }
+          }
+          if (track.kind === Track.Kind.Audio) {
+            const el = track.attach();
+            el.id = `lk-audio-${participant.identity}`;
+            document.body.appendChild(el);
+          }
+        });
+
+        // Remote track unsubscribed
+        room.on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant) => {
+          track.detach();
+          const el = document.getElementById(`lk-audio-${participant.identity}`);
+          if (el) el.remove();
+          if (track.kind === Track.Kind.Video) {
+            setHasRemoteVideo(false);
+            hasRemoteVideoRef.current = false;
+          }
+        });
+
+        // Remote participant joined
+        room.on(RoomEvent.ParticipantConnected, (participant: RemoteParticipant) => {
+          setRemoteParticipant({
+            id: participant.identity,
+            name: participant.name || "Participant",
+            role: participant.identity === classData?.teacherId ? "TEACHER" : "STUDENT",
+            isCameraOn: true,
+            isMicOn: true,
+            lastSeen: Date.now(),
+          });
+        });
+
+        // Remote participant left (Student leaves or closes browser)
+        room.on(RoomEvent.ParticipantDisconnected, (participant: RemoteParticipant) => {
+          setRemoteParticipant(null);
+          setHasRemoteVideo(false);
+          hasRemoteVideoRef.current = false;
+          if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = null;
+          }
+        });
+
+        // Realtime data messages (emoji reactions)
+        room.on(RoomEvent.DataReceived, (payload: Uint8Array, participant?: RemoteParticipant) => {
+          try {
+            const str = new TextDecoder().decode(payload);
+            const data = JSON.parse(str);
+            if (data.type === "REACTION") {
+              const rxId = `${Date.now()}-${Math.random()}`;
+              setReactions((prev) => [
+                ...prev.slice(-15),
+                {
+                  id: rxId,
+                  emoji: data.emoji,
+                  senderName: participant?.name || data.senderName || "Peer",
+                  x: 25 + Math.random() * 50,
+                },
+              ]);
+              setTimeout(() => {
+                setReactions((prev) => prev.filter((r) => r.id !== rxId));
+              }, 2800);
+            }
+          } catch {}
+        });
+
+        await room.connect(serverUrl, token);
+
+        // Check if other participant is already present in room
+        const existingParticipant = Array.from(room.remoteParticipants.values())[0];
+        if (existingParticipant) {
+          setRemoteParticipant({
+            id: existingParticipant.identity,
+            name: existingParticipant.name || "Participant",
+            role: existingParticipant.identity === classData?.teacherId ? "TEACHER" : "STUDENT",
+            isCameraOn: true,
+            isMicOn: true,
+            lastSeen: Date.now(),
+          });
+          existingParticipant.trackPublications.forEach((pub) => {
+            if (pub.track && pub.isSubscribed) {
+              if (pub.kind === Track.Kind.Video && remoteVideoRef.current) {
+                pub.track.attach(remoteVideoRef.current);
+                setHasRemoteVideo(true);
+                hasRemoteVideoRef.current = true;
+              }
+              if (pub.kind === Track.Kind.Audio) {
+                const el = pub.track.attach();
+                document.body.appendChild(el);
+              }
             }
           });
         }
-      };
 
-      pc.onconnectionstatechange = () => {
-        if (pc?.connectionState === "connected") {
-          setHasRemoteVideo(true);
-          hasRemoteVideoRef.current = true;
-        }
-      };
+        // Enable local camera and mic
+        await room.localParticipant.setCameraEnabled(isCameraOnRef.current);
+        await room.localParticipant.setMicrophoneEnabled(isMicOnRef.current);
 
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
-          const activeUserId = userInfoRef.current.id || currentUserId;
-          fetch(`/api/classes/${classId}/signal`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              senderId: activeUserId,
-              name: userInfoRef.current.name,
-              role: userInfoRef.current.role,
-              type: "candidate",
-              data: event.candidate,
-            }),
-          }).catch(() => {});
-        }
-      };
-    }
-
-    let isCreatingOffer = false;
-
-    // Send immediate "I am in the classroom" broadcast
-    const activeUserId = userInfoRef.current.id || currentUserId;
-    fetch(`/api/classes/${classId}/signal`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        senderId: activeUserId,
-        name: userInfoRef.current.name,
-        role: userInfoRef.current.role,
-        type: "CLIENT_JOINED",
-        isCameraOn: isCameraOnRef.current,
-        isMicOn: isMicOnRef.current,
-        isScreenSharing: isScreenSharingRef.current,
-      }),
-    }).catch(() => {});
-
-    // Polling loop for WebRTC signals (Offers, Answers, ICE Candidates, Reactions)
-    const signalInterval = setInterval(async () => {
-      try {
-        const activePC = peerConnectionRef.current;
-        if (activePC) addTracksToPeerConnection(activePC);
-
-        const curUserId = userInfoRef.current.id || currentUserId;
-
-        // Send heartbeat & presence
-        await fetch(`/api/classes/${classId}/signal`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            senderId: curUserId,
-            name: userInfoRef.current.name,
-            role: userInfoRef.current.role,
-            isCameraOn: isCameraOnRef.current,
-            isMicOn: isMicOnRef.current,
-            isScreenSharing: isScreenSharingRef.current,
-          }),
-        });
-
-        const res = await fetch(
-          `/api/classes/${classId}/signal?userId=${encodeURIComponent(curUserId)}&sinceSeq=${lastSignalSeqRef.current}`
-        );
-        if (!res.ok) return;
-        const data = await res.json();
-        if (typeof data.lastSeq === "number") {
-          lastSignalSeqRef.current = Math.max(lastSignalSeqRef.current, data.lastSeq);
-        }
-
-        if (data.isEnded || (data.signals && data.signals.some((s: any) => s.type === "CLASS_ENDED"))) {
-          if (!userInfoRef.current.isTeacher) {
-            stopAllMedia();
-            if (peerConnectionRef.current) {
-              peerConnectionRef.current.close();
-              peerConnectionRef.current = null;
-            }
-            setStage("ENDED");
-            return;
-          }
-        }
-
-        if (data.participants) {
-          setRealtimeParticipants(data.participants);
-          const other = data.participants.find((p: any) => p.id !== curUserId);
-          if (other) {
-            setRemoteParticipant(other);
-          } else {
-            setRemoteParticipant(null);
-            setHasRemoteVideo(false);
-            hasRemoteVideoRef.current = false;
-            if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-            remoteStreamRef.current = null;
-          }
-        }
-
-        for (const sig of data.signals || []) {
-          if (sig.type === "CLIENT_LEFT" && sig.from !== curUserId) {
-            setRemoteParticipant(null);
-            setHasRemoteVideo(false);
-            hasRemoteVideoRef.current = false;
-            if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-            remoteStreamRef.current = null;
-          } else if (sig.type === "CLIENT_JOINED" && userInfoRef.current.isTeacher && activePC) {
-            addTracksToPeerConnection(activePC);
-            if (activePC.signalingState === "stable" && !isCreatingOffer) {
-              isCreatingOffer = true;
-              lastOfferTimeRef.current = Date.now();
-              try {
-                const offer = await activePC.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
-                await activePC.setLocalDescription(offer);
-                await fetch(`/api/classes/${classId}/signal`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    senderId: curUserId,
-                    name: userInfoRef.current.name,
-                    role: userInfoRef.current.role,
-                    to: sig.from,
-                    type: "offer",
-                    data: offer,
-                  }),
-                });
-              } catch (e) {
-                console.warn("[WebRTC] Offer error on CLIENT_JOINED:", e);
-              } finally {
-                isCreatingOffer = false;
-              }
-            }
-          } else if (sig.type === "offer" && !userInfoRef.current.isTeacher && activePC) {
-            addTracksToPeerConnection(activePC);
-            if (activePC.signalingState !== "stable") {
-              await activePC.setLocalDescription({ type: "rollback" } as any).catch(() => {});
-            }
-            await activePC.setRemoteDescription(new RTCSessionDescription(sig.data));
-
-            while (queuedIceCandidatesRef.current.length > 0) {
-              const c = queuedIceCandidatesRef.current.shift();
-              if (c) try { await activePC.addIceCandidate(new RTCIceCandidate(c)); } catch (e) {}
-            }
-
-            const answer = await activePC.createAnswer();
-            await activePC.setLocalDescription(answer);
-            await fetch(`/api/classes/${classId}/signal`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                senderId: curUserId,
-                name: userInfoRef.current.name,
-                role: userInfoRef.current.role,
-                to: sig.from,
-                type: "answer",
-                data: answer,
-              }),
-            });
-          } else if (sig.type === "answer" && userInfoRef.current.isTeacher && activePC) {
-            if (activePC.signalingState === "have-local-offer") {
-              await activePC.setRemoteDescription(new RTCSessionDescription(sig.data));
-              while (queuedIceCandidatesRef.current.length > 0) {
-                const c = queuedIceCandidatesRef.current.shift();
-                if (c) try { await activePC.addIceCandidate(new RTCIceCandidate(c)); } catch (e) {}
-              }
-            }
-          } else if (sig.type === "candidate" && activePC) {
-            if (activePC.remoteDescription && activePC.remoteDescription.type) {
-              try {
-                await activePC.addIceCandidate(new RTCIceCandidate(sig.data));
-              } catch (e) {}
-            } else {
-              queuedIceCandidatesRef.current.push(sig.data);
-            }
-          } else if (sig.type === "REACTION" && sig.data?.emoji) {
-            const rxId = sig.data.id || `${Date.now()}-${Math.random()}`;
-            const newReaction: FloatingReaction = {
-              id: rxId,
-              emoji: sig.data.emoji,
-              senderName: sig.name || "Peer",
-              x: 25 + Math.random() * 50,
-            };
-            setReactions((prev) => [...prev.slice(-15), newReaction]);
-            setTimeout(() => {
-              setReactions((prev) => prev.filter((r) => r.id !== rxId));
-            }, 2800);
-          }
-        }
-
-        // Periodic offer retry if other participant is present but remote video not yet connected
-        if (userInfoRef.current.isTeacher && activePC && activePC.signalingState === "stable" && !isCreatingOffer) {
-          const other = data.participants?.find((p: any) => p.id !== curUserId);
-          if (other && !hasRemoteVideoRef.current) {
-            const timeSinceLastOffer = Date.now() - lastOfferTimeRef.current;
-            if (timeSinceLastOffer > 3000) {
-              isCreatingOffer = true;
-              lastOfferTimeRef.current = Date.now();
-              addTracksToPeerConnection(activePC);
-              try {
-                const offer = await activePC.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
-                await activePC.setLocalDescription(offer);
-                await fetch(`/api/classes/${classId}/signal`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    senderId: curUserId,
-                    name: userInfoRef.current.name,
-                    role: userInfoRef.current.role,
-                    to: other.id,
-                    type: "offer",
-                    data: offer,
-                  }),
-                });
-              } catch (e) {
-                console.warn("[WebRTC] Periodic offer error:", e);
-              } finally {
-                isCreatingOffer = false;
-              }
-            }
+        // Attach local camera video track to local preview
+        const camPub = room.localParticipant.getTrackPublication(Track.Source.Camera);
+        if (camPub?.videoTrack) {
+          const localEl = userInfoRef.current.isTeacher ? teacherVideoRef.current : localVideoRef.current;
+          if (localEl) {
+            camPub.videoTrack.attach(localEl);
           }
         }
       } catch (err) {
-        // quiet error handling
+        console.warn("LiveKit connection error:", err);
       }
-    }, 550);
+    }
+
+    initLivekit();
 
     return () => {
-      clearInterval(signalInterval);
-      if (peerConnectionRef.current) {
+      isDisposed = true;
+      if (roomInstance) {
         try {
-          peerConnectionRef.current.close();
+          roomInstance.disconnect();
         } catch (e) {}
-        peerConnectionRef.current = null;
       }
+      livekitRoomRef.current = null;
     };
-  }, [stage, classId, addTracksToPeerConnection, stopAllMedia, currentUserId]);
+  }, [stage, classId, classData?.teacherId]);
 
   /* ── Send Reaction Handler ── */
   const sendReaction = useCallback((emoji: string) => {
@@ -1799,7 +1675,7 @@ export function JitsiClassroom({
 
         <div className="flex items-center gap-2.5 mx-auto">
           <button
-            onClick={() => setIsMicOn(!isMicOn)}
+            onClick={toggleMic}
             className={`w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer ${
               isMicOn ? "bg-slate-700 hover:bg-slate-600 text-white" : "bg-red-600 hover:bg-red-500 text-white"
             }`}
@@ -1809,7 +1685,7 @@ export function JitsiClassroom({
           </button>
 
           <button
-            onClick={() => setIsCameraOn(!isCameraOn)}
+            onClick={toggleCamera}
             className={`w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer ${
               isCameraOn ? "bg-slate-700 hover:bg-slate-600 text-white" : "bg-red-600 hover:bg-red-500 text-white"
             }`}
