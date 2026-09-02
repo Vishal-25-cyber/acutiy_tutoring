@@ -1127,76 +1127,63 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 2: TUTORING HUB (WHERE IT ALL BEGAN - HEROIC SHOWCASE CARD)
+          PAGE 2: TUTORING HUB (WHERE IT ALL BEGAN - SEAMLESS CANVAS LAYOUT)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="tutoring-hub" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-slate-50/70 via-white to-slate-50/50 py-16 sm:py-20 lg:py-24 overflow-hidden">
-        {/* Subtle Ambient Background Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-gradient-to-r from-blue-100/40 via-[#dfb74a]/15 to-blue-50/30 blur-3xl rounded-full pointer-events-none -z-10" />
+      <section id="tutoring-hub" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-14 sm:py-20 lg:py-24">
+        <div className="w-full max-w-4xl mx-auto px-6 sm:px-10 lg:px-14 text-center space-y-8 sm:space-y-10">
 
-        <div className="w-full max-w-4xl mx-auto px-6 sm:px-10 lg:px-14">
-          {/* Main Showcase Card with Balanced Symmetrical Layout */}
-          <div className="relative bg-white/95 backdrop-blur-md rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 p-8 sm:p-12 lg:p-14 text-center space-y-8">
-            
-            {/* Tagline Pill */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-100/90 border border-slate-200/90 text-[#002137] text-xs font-black uppercase tracking-wider shadow-2xs">
-              <Sparkles className="w-3.5 h-3.5 text-[#b89047]" />
-              <span>Heritage &amp; Evolution</span>
-            </div>
-
-            {/* Section Headings */}
-            <div className="space-y-2">
-              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
-                Tutoring Hub
-              </h2>
-              <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#b89047] tracking-tight">
-                Where It All Began
-              </p>
-            </div>
-
-            {/* Narrative Story */}
-            <div className="max-w-2xl mx-auto space-y-4 text-slate-600 text-sm sm:text-base lg:text-lg leading-relaxed font-medium">
-              <p>
-                For the past four years, <strong className="text-slate-900 font-bold">Tutoring Hub</strong> has been a dedicated physical learning space where we worked closely with students, refining our methodology, and gaining valuable classroom experience.
-              </p>
-              <p>
-                Today, we have evolved that foundational experience into <strong className="text-[#002137] font-extrabold">MANTIF</strong>—building modern, AI-enhanced learning solutions for students, educators, and institutions.
-              </p>
-            </div>
-
-            {/* Featured Quote Callout */}
-            <div className="relative max-w-xl mx-auto bg-gradient-to-r from-amber-50/60 via-amber-50/30 to-amber-50/60 border border-amber-200/70 rounded-2xl p-6 sm:p-7 shadow-xs">
-              <Quote className="w-6 h-6 text-[#b89047]/40 mx-auto mb-2" />
-              <p className="text-lg sm:text-xl font-black text-[#002137] leading-snug">
-                “Tutoring Hub gave us the foundation.
-              </p>
-              <p className="text-lg sm:text-xl font-black text-[#b89047] leading-snug">
-                MANTIF is taking it forward.”
-              </p>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setAuthMode("SIGNUP");
-                  setStep(1);
-                  document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
-                }}
-                className="px-8 py-3.5 rounded-xl bg-[#002137] hover:bg-[#003659] text-white text-sm font-extrabold transition-all shadow-md shadow-[#002137]/15 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer flex items-center gap-2"
-              >
-                <span>Sign Up on MANTIF</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-              <a
-                href="#contact"
-                className="px-8 py-3.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-sm font-extrabold transition-all shadow-2xs hover:-translate-y-0.5 cursor-pointer"
-              >
-                Contact Us
-              </a>
-            </div>
-
+          {/* Section Headings */}
+          <div className="space-y-2">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
+              Tutoring Hub
+            </h2>
+            <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#b89047] tracking-tight">
+              Where It All Began
+            </p>
           </div>
+
+          {/* Narrative Story */}
+          <div className="max-w-3xl mx-auto space-y-4 text-slate-700 text-base sm:text-lg lg:text-xl leading-relaxed font-medium">
+            <p>
+              For the past four years, <strong>Tutoring Hub</strong> has been a dedicated physical learning space where we worked closely with students, refining our methodology, and gaining valuable classroom experience.
+            </p>
+            <p>
+              Today, we have evolved that foundational experience into <strong className="text-[#002137] font-extrabold">MANTIF</strong>—building modern, AI-enhanced learning solutions for students, educators, and institutions.
+            </p>
+          </div>
+
+          {/* Seamless Gold Foundation Quote */}
+          <div className="py-2 max-w-xl mx-auto space-y-1">
+            <p className="text-xl sm:text-2xl font-black text-[#002137] leading-snug">
+              “Tutoring Hub gave us the foundation.
+            </p>
+            <p className="text-xl sm:text-2xl font-black text-[#b89047] leading-snug">
+              MANTIF is taking it forward.”
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode("SIGNUP");
+                setStep(1);
+                document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="px-8 py-3.5 rounded-xl bg-[#002137] hover:bg-[#003659] text-white text-sm font-extrabold transition-all shadow-md shadow-[#002137]/15 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer flex items-center gap-2"
+            >
+              <span>Sign Up on MANTIF</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <a
+              href="#contact"
+              className="px-8 py-3.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-sm font-extrabold transition-all shadow-2xs hover:-translate-y-0.5 cursor-pointer"
+            >
+              Contact Us
+            </a>
+          </div>
+
         </div>
       </section>
 
@@ -1281,7 +1268,7 @@ export default function HomePage() {
               </div>
               <div className="space-y-0.5 pt-0.5">
                 <h4 className="font-black text-lg sm:text-xl text-[#002137]">Karunya S</h4>
-                <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">Founder &amp; CEO</p>
+                <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">Founder</p>
               </div>
             </div>
           </div>
@@ -1718,43 +1705,29 @@ export default function HomePage() {
                 </button>
               </div>
 
-              {/* Seamless Editorial Content Section (No nested box cards!) */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-
-                {/* Left: Session Academic Focus & Details */}
-                <div className="lg:col-span-7 space-y-3.5">
+              {/* Unified Full-Width Narrative Paragraph (Combined, not separate columns) */}
+              <div className="space-y-4 max-w-5xl">
+                <div className="space-y-1">
                   <p className="text-xs font-black uppercase tracking-widest text-[#004b79]">
                     Academic Focus &amp; Practical Training
                   </p>
-                  <h4 className="text-xl sm:text-2xl font-black text-[#002137] leading-snug">
+                  <h4 className="text-xl sm:text-2xl lg:text-3xl font-black text-[#002137] leading-snug">
                     “{selectedSchoolModal.sessionTitle}”
                   </h4>
-                  <p className="text-slate-700 text-sm sm:text-base leading-relaxed font-normal">
-                    {selectedSchoolModal.summary}
-                  </p>
-                  <p className="text-slate-600 text-sm leading-relaxed font-normal">
-                    {selectedSchoolModal.description}
-                  </p>
                 </div>
 
-                {/* Right: Founder & Alma Mater Milestone (Executive Pull-Quote, NOT a card box) */}
-                <div className="lg:col-span-5 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#b89047]" />
-                    <p className="text-xs font-black uppercase tracking-wider text-[#b89047]">
-                      {selectedSchoolModal.milestoneTitle}
-                    </p>
-                  </div>
+                <p className="text-slate-700 text-sm sm:text-base lg:text-[17px] leading-relaxed font-normal">
+                  {selectedSchoolModal.summary}{" "}
+                  {selectedSchoolModal.description}{" "}
+                  {selectedSchoolModal.milestoneQuote}
+                </p>
 
-                  <blockquote className="relative pl-5 border-l-4 border-[#b89047] italic text-slate-800 text-sm sm:text-base leading-relaxed font-medium">
-                    “{selectedSchoolModal.milestoneQuote}”
-                  </blockquote>
-
-                  <p className="text-xs font-extrabold text-[#002137] tracking-wide pt-1">
-                    — Ms. Karunya S, Founder &amp; CEO, Alumini
+                <div className="flex items-center gap-2 pt-1">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#b89047]" />
+                  <p className="text-xs sm:text-sm font-extrabold text-[#002137] tracking-wide">
+                    — Ms. Karunya S, Founder (Alumna)
                   </p>
                 </div>
-
               </div>
 
               {/* ─── DUAL VIDEO SHOWCASE (2 DEDICATED VIDEOS) ─── */}
@@ -2063,37 +2036,17 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          FOOTER: PROFESSIONAL CONTACT FOOTER
+          FOOTER: PROFESSIONAL CONTACT FOOTER (HELPLINES, EMAIL, INSTA & LINKEDIN)
       ═══════════════════════════════════════════════════════════════════════ */}
       <footer id="contact" className="scroll-mt-20 bg-[#00111f] border-t border-white/10 text-white">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-          {/* 3-Equal-Column Grid with dividers */}
-          <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/15">
+          {/* 2-Equal-Column Grid with divider */}
+          <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/15 items-center">
 
-            {/* Col 1: Address + Hours */}
+            {/* Col 1: Helplines */}
             <div className="flex justify-center items-center py-4 px-4 sm:px-6">
-              <div className="space-y-3 max-w-[270px]">
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#dfb74a]">Location</p>
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <MapPin className="w-3.5 h-3.5 mt-0.5 text-[#dfb74a] shrink-0" />
-                    <p className="text-xs text-slate-300 leading-relaxed">
-                      No. 14, 2nd Cross Street, Nehru Nagar,<br />
-                      Coimbatore – 641 020, Tamil Nadu, India.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                    <p className="text-xs font-semibold text-emerald-400">Mon – Sat &nbsp;|&nbsp; 9:00 AM – 8:30 PM</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Col 2: Helplines */}
-            <div className="flex justify-center items-center py-4 px-4 sm:px-6">
-              <div className="space-y-2">
+              <div className="space-y-2 text-center md:text-left">
                 <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#dfb74a]">Helplines</p>
                 <div>
                   {[
@@ -2115,14 +2068,14 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Col 3: Email + Connect */}
+            {/* Col 2: Email + Connect With Us (Insta & LinkedIn) */}
             <div className="flex justify-center items-center py-4 px-4 sm:px-6">
-              <div className="space-y-4">
+              <div className="space-y-4 text-center md:text-left">
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#dfb74a]">Official Email</p>
                   <a
                     href="mailto:info@mantif.com"
-                    className="flex items-center gap-2 text-sm font-bold font-mono text-slate-100 hover:text-[#dfb74a] transition-colors"
+                    className="inline-flex items-center gap-2 text-sm font-bold font-mono text-slate-100 hover:text-[#dfb74a] transition-colors"
                   >
                     <Mail className="w-3.5 h-3.5 text-[#dfb74a] shrink-0" />
                     info@mantif.com
@@ -2130,22 +2083,24 @@ export default function HomePage() {
                 </div>
                 <div className="space-y-2">
                   <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#dfb74a]">Connect With Us</p>
-                  <div className="flex items-center gap-2">
-                    <a href="https://instagram.com" target="_blank" rel="noreferrer" title="Instagram"
-                      className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200">
+                  <div className="flex items-center justify-center md:justify-start gap-2.5">
+                    <a
+                      href="https://instagram.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      title="Instagram"
+                      className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow-sm"
+                    >
                       <InstagramIcon className="w-4 h-4" />
                     </a>
-                    <a href="https://linkedin.com" target="_blank" rel="noreferrer" title="LinkedIn"
-                      className="w-8 h-8 rounded-lg bg-[#0077b5] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200">
+                    <a
+                      href="https://linkedin.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      title="LinkedIn"
+                      className="w-8 h-8 rounded-lg bg-[#0077b5] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow-sm"
+                    >
                       <LinkedInIcon className="w-4 h-4" />
-                    </a>
-                    <a href="https://youtube.com" target="_blank" rel="noreferrer" title="YouTube"
-                      className="w-8 h-8 rounded-lg bg-[#ff0000] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200">
-                      <YouTubeIcon className="w-4 h-4" />
-                    </a>
-                    <a href="https://x.com" target="_blank" rel="noreferrer" title="X (Twitter)"
-                      className="w-8 h-8 rounded-lg bg-black border border-white/20 text-white flex items-center justify-center hover:scale-110 transition-transform duration-200">
-                      <XTwitterIcon className="w-4 h-4" />
                     </a>
                   </div>
                 </div>
@@ -2155,8 +2110,8 @@ export default function HomePage() {
           </div>
 
           {/* Copyright */}
-          <div className="mt-7 pt-5 border-t border-white/8 text-center text-[11px] text-slate-500">
-            <p>© 2026 MANTIF Education Pvt. Ltd. All rights reserved.</p>
+          <div className="mt-7 pt-5 border-t border-white/8 text-center text-xs text-slate-400 font-medium">
+            <p>© 2026 @mantif</p>
           </div>
 
         </div>
