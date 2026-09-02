@@ -341,55 +341,44 @@ export default function AdminStudentsPage() {
         </div>
       </div>
 
-      {/* ── 2. CARDLESS SEARCH & FILTERS BAR WITH ENROLL BUTTON ── */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="flex-1 grid grid-cols-1 sm:grid-cols-4 gap-3">
-          <div className="sm:col-span-2 relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-            <input
-              type="text"
-              placeholder="Search by name, email, phone, school..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-10 pr-4 text-xs font-medium focus:outline-none focus:border-[#004b79] shadow-xs"
-            />
-          </div>
-
-          <div>
-            <select
-              value={selectedClass}
-              onChange={(e) => setSelectedClass(e.target.value)}
-              className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79] shadow-xs cursor-pointer"
-            >
-              <option value="ALL">All Classes (6-10)</option>
-              {CLASS_OPTIONS.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <select
-              value={selectedBoard}
-              onChange={(e) => setSelectedBoard(e.target.value)}
-              className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79] shadow-xs cursor-pointer"
-            >
-              <option value="ALL">All Boards</option>
-              {BOARD_OPTIONS.map((b) => (
-                <option key={b} value={b}>{b}</option>
-              ))}
-            </select>
-          </div>
+      {/* ── 2. CARDLESS SEARCH & FILTERS BAR ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+        <div className="sm:col-span-2 relative">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+          <input
+            type="text"
+            placeholder="Search by name, email, phone, school..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-10 pr-4 text-xs font-medium focus:outline-none focus:border-[#004b79] shadow-xs"
+          />
         </div>
 
-        <button
-          type="button"
-          className="inline-flex items-center justify-center gap-1.5 px-4 h-10 rounded-xl text-xs font-bold bg-[#004b79] hover:bg-[#003b60] text-white transition-all cursor-pointer shadow-sm shrink-0"
-          onClick={() => setIsAddModal(true)}
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Enroll New Student</span>
-        </button>
+        <div>
+          <select
+            value={selectedClass}
+            onChange={(e) => setSelectedClass(e.target.value)}
+            className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79] shadow-xs cursor-pointer"
+          >
+            <option value="ALL">All Classes (6-10)</option>
+            {CLASS_OPTIONS.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <select
+            value={selectedBoard}
+            onChange={(e) => setSelectedBoard(e.target.value)}
+            className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79] shadow-xs cursor-pointer"
+          >
+            <option value="ALL">All Boards</option>
+            {BOARD_OPTIONS.map((b) => (
+              <option key={b} value={b}>{b}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* ── 3. CARDLESS 12-COLUMN MASTER STUDENT TABLE ── */}
