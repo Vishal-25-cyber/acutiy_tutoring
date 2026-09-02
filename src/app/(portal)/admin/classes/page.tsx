@@ -199,10 +199,6 @@ export default function AdminClassesMonitorPage() {
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
               Live Session &amp; Lecture Monitor
             </h1>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 animate-pulse">
-              <Radio className="w-3.5 h-3.5" />
-              Live Telemetry
-            </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             Real-time live lecture monitor, scheduled batch dates, countdowns, and active student attendance turnout.

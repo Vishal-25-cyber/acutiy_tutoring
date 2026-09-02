@@ -259,9 +259,6 @@ export default function TeacherAssignmentsPage() {
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
               Assignments, Tests &amp; Homework Hub
             </h1>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#dfb74a] border border-blue-200 dark:border-[#004b79]/60">
-              Staff Portal
-            </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             Publish coursework assignments, schedule live proctored tests, and review student solution uploads separately.

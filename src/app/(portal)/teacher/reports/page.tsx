@@ -232,9 +232,11 @@ export default function TeacherStudentReportsPage() {
             type="button"
             onClick={() => {
               if (reportMode === "SCHOOL") {
+                invalidateCache("/api/teacher/reports/school");
                 refetchSchools();
                 refetchSchoolReport();
               } else {
+                invalidateCache("/api/teacher/reports");
                 refetchList();
                 refetchStudentReport();
               }

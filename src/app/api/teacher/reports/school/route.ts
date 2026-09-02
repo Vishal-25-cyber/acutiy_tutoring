@@ -3,6 +3,8 @@ import connectToDatabase from "@/lib/db/mongoose";
 import { getSession } from "@/lib/auth/session";
 import { getDistinctSchoolsList, generateSchoolPerformanceReport } from "@/lib/performance-engine";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
@@ -24,10 +26,17 @@ export async function GET(req: NextRequest) {
         period,
       });
 
-      return NextResponse.json({
-        success: true,
-        report,
-      });
+      return NextResponse.json(
+        {
+          success: true,
+          report,
+        },
+        {
+          headers: {
+            "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          },
+        }
+      );
     }
 
     // 2. Otherwise return the list of all distinct schools with student count

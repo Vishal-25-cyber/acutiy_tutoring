@@ -295,10 +295,6 @@ export default function StudentAssignmentsPage() {
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
               Tasks, Tests &amp; Homework Portal
             </h1>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              {studentClass} ({studentBoard})
-            </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             Submit coursework worksheets, take live camera-proctored chapter tests, and upload daily homework.

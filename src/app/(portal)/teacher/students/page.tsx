@@ -155,10 +155,6 @@ export default function TeacherStudentsPage() {
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
               Batch Student Roster &amp; Academic Dossier
             </h1>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Live Directory
-            </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             Class-wise directory of enrolled students across your live batches. Monitor attendance turnout, track submitted homework, and inspect student profiles.
@@ -273,7 +269,7 @@ export default function TeacherStudentsPage() {
 
                 {/* Class Student Rows (Cardless Hairline Table) */}
                 <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                  {classStudents.map((s: any) => {
+                  {classStudents.map((s: any, idx: number) => {
                     return (
                       <div
                         key={s._id}
@@ -281,7 +277,7 @@ export default function TeacherStudentsPage() {
                       >
                         <div className="min-w-0 flex-1">
                           <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100">
-                            {s.userId?.name || "Student"}
+                            {idx + 1}. {s.userId?.name || "Student"}
                           </h3>
                         </div>
 

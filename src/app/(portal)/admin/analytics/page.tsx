@@ -45,10 +45,6 @@ export default function AdminAnalyticsPage() {
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
               Platform Growth &amp; Academic Analytics
             </h1>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#dfb74a] border border-blue-200 dark:border-[#004b79]/60">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Live DB Analytics
-            </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             Real-time enrollment distribution across Class 6 to 10, faculty staff, and live batch occupancy.
