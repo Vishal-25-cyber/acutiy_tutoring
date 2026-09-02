@@ -143,11 +143,16 @@ export default function HomePage() {
   const [activeVideoSlotLabel, setActiveVideoSlotLabel] = useState("");
   const [videoInputUrl, setVideoInputUrl] = useState("");
   const [playingVideoSlotId, setPlayingVideoSlotId] = useState<string | null>(null);
+  const [fullscreenVideo, setFullscreenVideo] = useState<{ url: string; title: string } | null>(null);
 
   const handleSaveVideoUrl = () => {
     if (activeVideoSlotKey && videoInputUrl.trim()) {
       setCustomVideoUrls((prev) => ({ ...prev, [activeVideoSlotKey]: videoInputUrl.trim() }));
       setPlayingVideoSlotId(activeVideoSlotKey);
+      setFullscreenVideo({
+        url: videoInputUrl.trim(),
+        title: activeVideoSlotLabel || "School Session Video",
+      });
       setVideoModalOpen(false);
       setVideoInputUrl("");
     }
@@ -1297,9 +1302,9 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Centered Founder Card in Exact Same Compact Size as Team Member Cards */}
+          {/* Centered Founder Card in Optimal Size Matching Team Cards */}
           <div className="flex justify-center items-center">
-            <div className="p-4 sm:p-4.5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-[#b89047]/40 transition-all flex flex-col items-center text-center space-y-3 w-full max-w-[210px] sm:max-w-[230px]">
+            <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-[#b89047]/40 transition-all flex flex-col items-center text-center space-y-3 w-full max-w-[245px] sm:max-w-[265px]">
               <div className="w-full aspect-4/5 rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
                 <img
                   src="/images/founder_karunya.png"
@@ -1308,7 +1313,7 @@ export default function HomePage() {
                 />
               </div>
               <div className="space-y-0.5 pt-0.5">
-                <h4 className="font-black text-base sm:text-lg text-[#002137]">Karunya S</h4>
+                <h4 className="font-black text-lg sm:text-xl text-[#002137]">Karunya S</h4>
                 <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">Founder</p>
               </div>
             </div>
@@ -1318,7 +1323,7 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 5: MENTORS & TECH TEAM (EDUCATION MENTORS, SOFTWARE TEAM, AI TEAM)
+          PAGE 5: MENTORS & TECH TEAM (EDUCATIONAL MENTORS, SOFTWARE TEAM, AI TEAM)
       ═══════════════════════════════════════════════════════════════════════ */}
       <section id="mentors" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-slate-50/60 py-6 lg:py-8">
         <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 space-y-6 lg:space-y-8">
@@ -1336,11 +1341,11 @@ export default function HomePage() {
           {/* Categories with Centered Headings & Symmetrical Full-Width Layout */}
           <div className="space-y-8 max-w-7xl mx-auto w-full">
 
-            {/* 1. Education Mentors */}
+            {/* 1. Educational Mentors */}
             <div className="space-y-4">
               <div className="text-center">
                 <h3 className="text-xl sm:text-2xl font-black text-[#002137] tracking-tight">
-                  Education Mentors
+                  Educational Mentors
                 </h3>
               </div>
 
@@ -1357,7 +1362,6 @@ export default function HomePage() {
                   <div className="space-y-0.5">
                     <h4 className="font-black text-base sm:text-lg text-[#002137]">Dr. A. Revathi</h4>
                     <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">PhD Chemistry</p>
-                    <p className="text-xs text-slate-500 font-medium">Educational Mentor</p>
                   </div>
                 </div>
 
@@ -1373,7 +1377,6 @@ export default function HomePage() {
                   <div className="space-y-0.5">
                     <h4 className="font-black text-base sm:text-lg text-[#002137]">V Lavanya</h4>
                     <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">MSc MPhil Maths</p>
-                    <p className="text-xs text-slate-500 font-medium">Educational Mentor</p>
                   </div>
                 </div>
               </div>
@@ -1840,24 +1843,39 @@ export default function HomePage() {
                         </div>
 
                         {/* Player Container */}
-                        <div className="relative rounded-2xl overflow-hidden shadow-xl border-2 border-slate-300 bg-slate-950 aspect-video flex items-center justify-center">
+                        <div className="relative rounded-2xl overflow-hidden shadow-xl border-2 border-slate-300 bg-slate-950 aspect-video flex items-center justify-center group">
                           {effectiveVid1 && isVidPlaying1 ? (
-                            effectiveVid1.includes("youtube.com") || effectiveVid1.includes("youtu.be") ? (
-                              <iframe
-                                src={getEmbedVideoUrl(effectiveVid1)}
-                                title={slotTitle1}
-                                className="w-full h-full border-0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                              />
-                            ) : (
-                              <video
-                                src={effectiveVid1}
-                                controls
-                                autoPlay
-                                className="w-full h-full object-contain"
-                              />
-                            )
+                            <div className="relative w-full h-full">
+                              {effectiveVid1.includes("youtube.com") || effectiveVid1.includes("youtu.be") ? (
+                                <iframe
+                                  src={`${getEmbedVideoUrl(effectiveVid1)}?autoplay=1`}
+                                  title={slotTitle1}
+                                  className="w-full h-full border-0"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                                  allowFullScreen
+                                />
+                              ) : (
+                                <video
+                                  src={effectiveVid1}
+                                  controls
+                                  autoPlay
+                                  className="w-full h-full object-contain"
+                                />
+                              )}
+                              <button
+                                onClick={() =>
+                                  setFullscreenVideo({
+                                    url: effectiveVid1,
+                                    title: `${selectedSchoolModal.name} — ${slotTitle1}`,
+                                  })
+                                }
+                                className="absolute top-2.5 right-2.5 z-20 px-2.5 py-1 rounded-lg bg-black/80 hover:bg-[#002137] text-white text-[11px] font-bold border border-white/20 backdrop-blur-sm transition-all cursor-pointer flex items-center gap-1 shadow-lg"
+                                title="Expand to Fullscreen"
+                              >
+                                <Play className="w-3 h-3 fill-current text-amber-400" />
+                                <span>Fullscreen</span>
+                              </button>
+                            </div>
                           ) : (
                             <div className="relative w-full h-full flex flex-col justify-between p-4 sm:p-5 bg-gradient-to-br from-slate-900 via-[#002137] to-slate-950 text-white select-none">
                               <div className="relative z-10 flex items-center justify-between">
@@ -1872,7 +1890,10 @@ export default function HomePage() {
                                 <button
                                   onClick={() => {
                                     if (effectiveVid1) {
-                                      setPlayingVideoSlotId(slotKey);
+                                      setFullscreenVideo({
+                                        url: effectiveVid1,
+                                        title: `${selectedSchoolModal.name} — ${slotTitle1}`,
+                                      });
                                     } else {
                                       setActiveVideoSlotKey(slotKey);
                                       setActiveVideoSlotLabel(slotTitle1);
@@ -1880,12 +1901,13 @@ export default function HomePage() {
                                       setVideoModalOpen(true);
                                     }
                                   }}
-                                  className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all cursor-pointer"
+                                  className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all cursor-pointer group-hover:ring-4 group-hover:ring-amber-300/40"
+                                  title="Play in Fullscreen"
                                 >
-                                  <Play className="w-5 h-5 fill-current ml-0.5" />
+                                  <Play className="w-6 h-6 fill-current ml-0.5" />
                                 </button>
                                 <p className="text-xs font-bold text-white">
-                                  {effectiveVid1 ? "Play Video 1" : "Click to Add Video URL"}
+                                  {effectiveVid1 ? "Play Video in Fullscreen" : "Click to Add Video URL"}
                                 </p>
                               </div>
 
@@ -1938,24 +1960,39 @@ export default function HomePage() {
                         </div>
 
                         {/* Player Container */}
-                        <div className="relative rounded-2xl overflow-hidden shadow-xl border-2 border-slate-300 bg-slate-950 aspect-video flex items-center justify-center">
+                        <div className="relative rounded-2xl overflow-hidden shadow-xl border-2 border-slate-300 bg-slate-950 aspect-video flex items-center justify-center group">
                           {effectiveVid2 && isVidPlaying2 ? (
-                            effectiveVid2.includes("youtube.com") || effectiveVid2.includes("youtu.be") ? (
-                              <iframe
-                                src={getEmbedVideoUrl(effectiveVid2)}
-                                title={slotTitle2}
-                                className="w-full h-full border-0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                              />
-                            ) : (
-                              <video
-                                src={effectiveVid2}
-                                controls
-                                autoPlay
-                                className="w-full h-full object-contain"
-                              />
-                            )
+                            <div className="relative w-full h-full">
+                              {effectiveVid2.includes("youtube.com") || effectiveVid2.includes("youtu.be") ? (
+                                <iframe
+                                  src={`${getEmbedVideoUrl(effectiveVid2)}?autoplay=1`}
+                                  title={slotTitle2}
+                                  className="w-full h-full border-0"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                                  allowFullScreen
+                                />
+                              ) : (
+                                <video
+                                  src={effectiveVid2}
+                                  controls
+                                  autoPlay
+                                  className="w-full h-full object-contain"
+                                />
+                              )}
+                              <button
+                                onClick={() =>
+                                  setFullscreenVideo({
+                                    url: effectiveVid2,
+                                    title: `${selectedSchoolModal.name} — ${slotTitle2}`,
+                                  })
+                                }
+                                className="absolute top-2.5 right-2.5 z-20 px-2.5 py-1 rounded-lg bg-black/80 hover:bg-[#002137] text-white text-[11px] font-bold border border-white/20 backdrop-blur-sm transition-all cursor-pointer flex items-center gap-1 shadow-lg"
+                                title="Expand to Fullscreen"
+                              >
+                                <Play className="w-3 h-3 fill-current text-amber-400" />
+                                <span>Fullscreen</span>
+                              </button>
+                            </div>
                           ) : (
                             <div className="relative w-full h-full flex flex-col justify-between p-4 sm:p-5 bg-gradient-to-br from-slate-900 via-[#002137] to-slate-950 text-white select-none">
                               <div className="relative z-10 flex items-center justify-between">
@@ -1970,7 +2007,10 @@ export default function HomePage() {
                                 <button
                                   onClick={() => {
                                     if (effectiveVid2) {
-                                      setPlayingVideoSlotId(slotKey2);
+                                      setFullscreenVideo({
+                                        url: effectiveVid2,
+                                        title: `${selectedSchoolModal.name} — ${slotTitle2}`,
+                                      });
                                     } else {
                                       setActiveVideoSlotKey(slotKey2);
                                       setActiveVideoSlotLabel(slotTitle2);
@@ -1978,12 +2018,13 @@ export default function HomePage() {
                                       setVideoModalOpen(true);
                                     }
                                   }}
-                                  className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all cursor-pointer"
+                                  className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all cursor-pointer group-hover:ring-4 group-hover:ring-amber-300/40"
+                                  title="Play in Fullscreen"
                                 >
-                                  <Play className="w-5 h-5 fill-current ml-0.5" />
+                                  <Play className="w-6 h-6 fill-current ml-0.5" />
                                 </button>
                                 <p className="text-xs font-bold text-white">
-                                  {effectiveVid2 ? "Play Video 2" : "Click to Add Video URL"}
+                                  {effectiveVid2 ? "Play Video in Fullscreen" : "Click to Add Video URL"}
                                 </p>
                               </div>
 
@@ -2011,6 +2052,61 @@ export default function HomePage() {
                 </div>
               </div>
 
+            </div>
+          </div>
+        )}
+
+        {/* ─── Cinema Fullscreen Video Lightbox ─── */}
+        {fullscreenVideo && (
+          <div
+            className="fixed inset-0 z-60 bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center p-3 sm:p-6 lg:p-8 animate-in fade-in zoom-in-95 duration-200"
+            onClick={() => setFullscreenVideo(null)}
+          >
+            <div
+              className="relative w-full max-w-6xl aspect-video rounded-3xl overflow-hidden shadow-2xl border-2 border-white/20 bg-black flex flex-col justify-between"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Fullscreen Player Top Bar */}
+              <div className="absolute top-0 inset-x-0 z-30 flex items-center justify-between p-4 sm:p-5 bg-gradient-to-b from-black/90 via-black/50 to-transparent pointer-events-auto">
+                <div className="flex items-center gap-2.5">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-600 text-white shadow-md">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                    Cinema Player
+                  </span>
+                  <h3 className="text-white text-xs sm:text-sm md:text-base font-black truncate max-w-[280px] sm:max-w-[500px]">
+                    {fullscreenVideo.title}
+                  </h3>
+                </div>
+
+                <button
+                  onClick={() => setFullscreenVideo(null)}
+                  className="group relative inline-flex items-center gap-2 pl-3.5 pr-2 py-1.5 rounded-full bg-black/70 hover:bg-white/20 text-white border border-white/30 backdrop-blur-md shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  title="Close Fullscreen Video"
+                >
+                  <span className="text-xs font-black uppercase tracking-wider text-amber-300">Exit Fullscreen</span>
+                  <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-red-600 transition-colors">
+                    <X className="w-3.5 h-3.5" />
+                  </div>
+                </button>
+              </div>
+
+              {/* Video Screen Frame */}
+              {fullscreenVideo.url.includes("youtube.com") || fullscreenVideo.url.includes("youtu.be") ? (
+                <iframe
+                  src={`${getEmbedVideoUrl(fullscreenVideo.url)}?autoplay=1`}
+                  title={fullscreenVideo.title}
+                  className="w-full h-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                  allowFullScreen
+                />
+              ) : (
+                <video
+                  src={fullscreenVideo.url}
+                  controls
+                  autoPlay
+                  className="w-full h-full object-contain"
+                />
+              )}
             </div>
           </div>
         )}
