@@ -241,7 +241,7 @@ export interface INotification {
   userId: string | IUser | any;
   title: string;
   message: string;
-  type: "CLASS_REMINDER" | "NEW_MATERIAL" | "ASSIGNMENT" | "ATTENDANCE_WARNING" | "ANNOUNCEMENT" | "SYSTEM";
+  type: "CLASS_REMINDER" | "NEW_MATERIAL" | "ASSIGNMENT" | "TEST" | "HOMEWORK" | "ATTENDANCE_WARNING" | "ANNOUNCEMENT" | "SYSTEM";
   read: boolean;
   linkUrl?: string;
   createdAt: Date;

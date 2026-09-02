@@ -14,6 +14,8 @@ const NotificationSchema = new Schema<INotificationDocument>(
         "CLASS_REMINDER",
         "NEW_MATERIAL",
         "ASSIGNMENT",
+        "TEST",
+        "HOMEWORK",
         "ATTENDANCE_WARNING",
         "ANNOUNCEMENT",
         "SYSTEM",
