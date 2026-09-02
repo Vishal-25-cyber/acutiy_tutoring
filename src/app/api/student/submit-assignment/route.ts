@@ -27,10 +27,9 @@ export async function POST(req: NextRequest) {
       assignment = await Assignment.findById(assignmentId).lean();
     }
 
-    // Server-side Deadline Enforcement for non-tests or past due
-    if (assignment && assignment.dueDate && assignment.type !== "TEST") {
+    // Server-side Deadline Enforcement: check if deadline has passed
+    if (assignment && assignment.dueDate) {
       const d = new Date(assignment.dueDate);
-      d.setHours(23, 59, 59, 999);
       if (Date.now() > d.getTime()) {
         return NextResponse.json(
           { error: `Submission closed: The deadline (${new Date(assignment.dueDate).toLocaleDateString()}) has passed.` },

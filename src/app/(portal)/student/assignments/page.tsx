@@ -402,7 +402,8 @@ export default function StudentAssignmentsPage() {
               const isSubmitted = sub && !isEvaluated;
               const isTest = task.type === "TEST";
               const isPastDeadline = task.dueDate ? new Date() > new Date(task.dueDate) : false;
-              const canResubmit = isSubmitted && !isEvaluated && !isPastDeadline && !isTest;
+              // Allow student to resubmit/retake any assignment, test, or homework before deadline as long as it is not graded yet
+              const canResubmit = isSubmitted && !isEvaluated && !isPastDeadline;
 
               return (
                 <div
@@ -474,28 +475,39 @@ export default function StudentAssignmentsPage() {
                           </span>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedTask(task);
-                            setSelectedFile(
-                              sub.fileUrl
-                                ? {
-                                    url: sub.fileUrl,
-                                    name: sub.fileName || (sub.fileUrl.split("/").pop() || "Submitted Attachment"),
-                                    isImage: /\.(png|jpe?g|webp|gif)$/i.test(sub.fileUrl),
-                                  }
-                                : null
-                            );
-                            setSubmissionText(sub.submissionText || "");
-                            setErrorMessage("");
-                            setSuccessMessage("");
-                          }}
-                          className="w-full py-2.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-[#004b79] dark:text-[#dfb74a] flex items-center justify-center gap-2 cursor-pointer transition-all shadow-2xs"
-                        >
-                          <RefreshCw className="w-3.5 h-3.5" />
-                          <span>Resubmit / Update Work</span>
-                        </button>
+                        {isTest ? (
+                          <button
+                            type="button"
+                            onClick={() => handleStartTest(task)}
+                            className="w-full py-2.5 rounded-xl text-xs font-bold border border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/30 hover:bg-amber-100/60 dark:hover:bg-amber-900/40 text-amber-900 dark:text-amber-200 flex items-center justify-center gap-2 cursor-pointer transition-all shadow-2xs"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            <span>Retake / Resubmit Test</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedTask(task);
+                              setSelectedFile(
+                                sub.fileUrl
+                                  ? {
+                                      url: sub.fileUrl,
+                                      name: sub.fileName || (sub.fileUrl.split("/").pop() || "Submitted Attachment"),
+                                      isImage: /\.(png|jpe?g|webp|gif)$/i.test(sub.fileUrl),
+                                    }
+                                  : null
+                              );
+                              setSubmissionText(sub.submissionText || "");
+                              setErrorMessage("");
+                              setSuccessMessage("");
+                            }}
+                            className="w-full py-2.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-[#004b79] dark:text-[#dfb74a] flex items-center justify-center gap-2 cursor-pointer transition-all shadow-2xs"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            <span>Resubmit / Update Work</span>
+                          </button>
+                        )}
                       </div>
                     ) : isSubmitted ? (
                       <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs text-slate-500 flex items-center justify-between">
