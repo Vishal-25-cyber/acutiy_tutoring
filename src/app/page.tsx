@@ -2108,7 +2108,7 @@ export default function HomePage() {
 
           {/* Copyright */}
           <div className="mt-7 pt-5 border-t border-white/8 text-center text-xs text-slate-400 font-medium">
-            <p>© 2026 @mantif</p>
+            <p>© 2026 @mantif.All Rights Reserved.</p>
           </div>
 
         </div>
