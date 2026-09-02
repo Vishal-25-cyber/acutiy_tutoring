@@ -1287,25 +1287,25 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 4: TEAM (FOUNDER SPOTLIGHT - MATCHING TEAM CARD DESIGN)
+          PAGE 4: TEAM (FOUNDER SPOTLIGHT - 100% SINGLE-SCREEN VIEW)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="team" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-white py-10 lg:py-16">
-        <div className="w-full max-w-4xl mx-auto px-6 sm:px-10 lg:px-14 space-y-8 lg:space-y-10 text-center">
+      <section id="team" className="scroll-mt-16 min-h-[calc(100vh-4rem)] flex flex-col justify-center items-center border-b border-slate-200/80 bg-white py-4 sm:py-6 lg:py-8">
+        <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-5 text-center my-auto">
 
           {/* Section Header */}
-          <div className="text-center max-w-3xl mx-auto space-y-1.5">
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
+          <div className="text-center max-w-2xl mx-auto space-y-1">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight">
               Our Team
             </h2>
-            <p className="text-sm sm:text-base lg:text-lg font-bold text-[#b89047] tracking-normal max-w-2xl mx-auto">
+            <p className="text-xs sm:text-sm lg:text-base font-bold text-[#b89047] tracking-normal max-w-xl mx-auto">
               Passionate educators, engineering minds, and AI practitioners dedicated to student success.
             </p>
           </div>
 
-          {/* Centered Founder Card (Slightly Larger Prominent Size) */}
+          {/* Centered Founder Card (Guaranteed 100% visible above the fold on click) */}
           <div className="flex justify-center items-center">
-            <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-md hover:shadow-xl hover:border-[#b89047]/50 transition-all duration-300 flex flex-col items-center text-center space-y-4 w-full max-w-[285px] sm:max-w-[315px] lg:max-w-[335px]">
-              <div className="w-full aspect-4/5 rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
+            <div className="p-3.5 sm:p-4 rounded-3xl bg-white border border-slate-200 shadow-md hover:shadow-xl hover:border-[#b89047]/50 transition-all duration-300 flex flex-col items-center text-center space-y-2.5 w-full max-w-[220px] sm:max-w-[245px]">
+              <div className="w-full aspect-4/5 max-h-[220px] sm:max-h-[250px] rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
                 <img
                   src="/images/founder_karunya.png"
                   alt="Karunya S - Founder of MANTIF"
@@ -1313,8 +1313,8 @@ export default function HomePage() {
                 />
               </div>
               <div className="space-y-0.5 pt-0.5">
-                <h4 className="font-black text-xl sm:text-2xl text-[#002137] tracking-tight">Karunya S</h4>
-                <p className="text-sm sm:text-base font-black text-[#b89047] uppercase tracking-wider">Founder</p>
+                <h4 className="font-black text-lg sm:text-xl text-[#002137] tracking-tight">Karunya S</h4>
+                <p className="text-xs sm:text-sm font-black text-[#b89047] uppercase tracking-wider">Founder</p>
               </div>
             </div>
           </div>
