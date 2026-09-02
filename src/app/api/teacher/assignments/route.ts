@@ -162,15 +162,20 @@ export async function POST(req: NextRequest) {
     });
 
     if (eligibleStudents.length > 0) {
-      const typeLabel = taskType === "TEST" ? "Timed Proctored Test" : taskType === "HOMEWORK" ? "Daily Homework" : "Assignment";
-      const notifs = eligibleStudents.map((st) => ({
-        userId: st.userId,
-        title: `New ${typeLabel}: ${title}`,
-        message: `Due on ${finalDueDate.toLocaleDateString()}. Subject: ${subject}. Max marks: ${maxMarks || (taskType === "TEST" ? 50 : 20)}.`,
-        type: taskType,
-        linkUrl: "/student/assignments",
-      }));
-      await Notification.insertMany(notifs);
+      try {
+        const typeLabel = taskType === "TEST" ? "Timed Proctored Test" : taskType === "HOMEWORK" ? "Daily Homework" : "Assignment";
+        const notifs = eligibleStudents.map((st) => ({
+          userId: st.userId,
+          title: `New ${typeLabel}: ${title.trim()}`,
+          message: `Due on ${finalDueDate.toLocaleDateString()}. Subject: ${subject}. Max marks: ${maxMarks || (taskType === "TEST" ? 50 : 20)}.`,
+          type: taskType === "TEST" || taskType === "HOMEWORK" || taskType === "ASSIGNMENT" ? taskType : "ASSIGNMENT",
+          linkUrl: "/student/assignments",
+          read: false,
+        }));
+        await Notification.insertMany(notifs);
+      } catch (notifErr) {
+        console.warn("Notification creation warning:", notifErr);
+      }
     }
 
     return NextResponse.json({
