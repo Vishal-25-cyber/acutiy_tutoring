@@ -130,18 +130,12 @@ export default function HomePage() {
   const [selectedGalleryIdx, setSelectedGalleryIdx] = useState<number | null>(null);
 
   // Our Side / Schools Section State
-  const [expandedStoryIds, setExpandedStoryIds] = useState<string[]>(["kongu-school"]);
+  const [selectedSchoolModal, setSelectedSchoolModal] = useState<any | null>(null);
   const [customVideoUrls, setCustomVideoUrls] = useState<Record<string, string>>({});
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [activeSchoolForVideo, setActiveSchoolForVideo] = useState("");
   const [videoInputUrl, setVideoInputUrl] = useState("");
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
-
-  const toggleStoryExpand = (id: string) => {
-    setExpandedStoryIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
 
   const handleSaveVideoUrl = () => {
     if (activeSchoolForVideo && videoInputUrl.trim()) {
@@ -1228,12 +1222,12 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 3: OUR SIDE (SCHOOLS LIST - NAME ALONE + CONTENT LINK + VIDEO COLUMN)
+          PAGE 3: OUR SIDE (CLEAN SCHOOL LIST WITHOUT CARDS + POPUP LINK)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="our-side" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-10 lg:py-16">
-        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 space-y-10 lg:space-y-14">
+      <section id="our-side" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/30 to-white py-12 lg:py-20">
+        <div className="w-full max-w-5xl mx-auto px-6 sm:px-10 lg:px-14 space-y-10 lg:space-y-14">
           
-          {/* Centered Heading at Top (School outreach heading) */}
+          {/* Section Heading */}
           <div className="text-center space-y-2">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Our Side
@@ -1243,247 +1237,48 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* List of Schools (Stacked Vertically with Space for Adding Many Schools) */}
-          <div className="space-y-10 lg:space-y-14">
-            {outreachSchools.map((school) => {
-              const isStoryExpanded = expandedStoryIds.includes(school.id);
-              const effectiveVideo = customVideoUrls[school.id] || school.videoUrl;
-              const isVideoPlaying = playingVideoId === school.id;
-
-              return (
-                <div
-                  key={school.id}
-                  className="relative rounded-3xl bg-white border-2 border-slate-200/90 shadow-xl overflow-hidden p-6 sm:p-8 lg:p-10 transition-all hover:border-[#b89047]/40"
-                >
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-                    
-                    {/* Left Column (lg:col-span-7): School Name Alone + Link + Contents */}
-                    <div className="lg:col-span-7 space-y-5">
-                      
-                      {/* 1. School Name ALONE at top */}
-                      <div className="space-y-2 pb-2">
-                        <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#002137] tracking-tight leading-tight">
-                          {school.name}
-                        </h3>
-                        <p className="text-xs sm:text-sm font-bold text-[#b89047] uppercase tracking-wide flex items-center gap-1.5">
-                          <MapPin className="w-3.5 h-3.5 text-[#b89047] shrink-0" />
-                          <span>{school.district}</span>
-                          <span className="text-slate-300">•</span>
-                          <span>{school.tag}</span>
-                        </p>
-                      </div>
-
-                      {/* 2. Link UNDER the School Name */}
-                      <div className="flex flex-wrap items-center gap-3">
-                        <button
-                          onClick={() => toggleStoryExpand(school.id)}
-                          className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#002137] hover:bg-[#004b79] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
-                        >
-                          <BookOpen className="w-4 h-4 text-[#dfb74a]" />
-                          <span>{isStoryExpanded ? "Hide Session Contents" : "View Session Contents & Story"}</span>
-                          {isStoryExpanded ? (
-                            <ChevronUp className="w-4 h-4 text-amber-300" />
-                          ) : (
-                            <ChevronDown className="w-4 h-4 text-amber-300 group-hover:translate-y-0.5 transition-transform" />
-                          )}
-                        </button>
-
-                        <a
-                          href={school.schoolUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 hover:border-[#b89047] bg-white text-slate-700 hover:text-[#002137] text-xs sm:text-sm font-semibold transition-all shadow-sm hover:shadow"
-                        >
-                          <span>Visit School Reference</span>
-                          <ExternalLink className="w-3.5 h-3.5 text-[#b89047]" />
-                        </a>
-                      </div>
-
-                      {/* 3. Contents Area Inside / Under the Link */}
-                      <div className="space-y-4 pt-1">
-                        {/* Session Description */}
-                        <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/90 border border-slate-200/80 space-y-2.5">
-                          <p className="font-black text-sm sm:text-base text-[#002137]">
-                            Session: <span className="text-[#004b79]">“{school.sessionTitle}”</span>
-                          </p>
-                          <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-medium">
-                            {school.summary}
-                          </p>
-
-                          {/* Expanded Full Content Details */}
-                          {isStoryExpanded && (
-                            <div className="pt-2 border-t border-slate-200/70 text-slate-700 text-xs sm:text-sm leading-relaxed font-medium animate-in fade-in duration-300">
-                              <p>{school.description}</p>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Alma Mater Milestone Box */}
-                        <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/60 border-l-4 border-[#b89047] border-y border-r border-amber-200/70 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-black uppercase text-[#b89047] tracking-wider">
-                              {school.milestoneTitle}
-                            </span>
-                            <span className="text-[10px] uppercase font-bold text-amber-800 bg-amber-200/60 px-2 py-0.5 rounded-full">
-                              Founder Moment
-                            </span>
-                          </div>
-                          <p className="text-slate-800 text-xs sm:text-sm italic leading-relaxed font-medium">
-                            “{school.milestoneQuote}”
-                          </p>
-                        </div>
-
-                        {/* Motivational Tag */}
-                        <div className="pt-2 flex items-center justify-between flex-wrap gap-3 border-t border-slate-200/70">
-                          <span className="text-sm sm:text-base font-black text-[#b89047] tracking-tight flex items-center gap-2">
-                            <Rocket className="w-4 h-4 text-[#b89047]" />
-                            Still we have a Long Journey !
-                          </span>
-                          <span className="text-xs text-slate-400 font-semibold">
-                            MANTIF Community &amp; Institutional Outreach
-                          </span>
-                        </div>
-                      </div>
-
-                    </div>
-
-                    {/* Right Column (lg:col-span-5): DEDICATED VIDEO COLUMN */}
-                    <div className="lg:col-span-5 w-full space-y-4">
-                      
-                      {/* Video Header */}
-                      <div className="flex items-center justify-between flex-wrap gap-2 pb-1 border-b border-slate-100">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-[#002137] text-[#dfb74a] flex items-center justify-center shadow">
-                            <Video className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <h4 className="text-sm sm:text-base font-black text-[#002137]">
-                              Session Video
-                            </h4>
-                            <p className="text-[11px] font-semibold text-slate-500">
-                              Recording &amp; Live Stream
-                            </p>
-                          </div>
-                        </div>
-
-                        <button
-                          onClick={() => {
-                            setActiveSchoolForVideo(school.id);
-                            setVideoInputUrl(customVideoUrls[school.id] || "");
-                            setVideoModalOpen(true);
-                          }}
-                          className="inline-flex items-center gap-1 text-xs font-bold text-[#004b79] hover:text-[#b89047] bg-slate-100 hover:bg-amber-50 px-2.5 py-1.5 rounded-lg border border-slate-200 transition-colors cursor-pointer"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                          <span>Add / Edit Video</span>
-                        </button>
-                      </div>
-
-                      {/* Video Player Display Screen */}
-                      <div className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-slate-300 bg-slate-950 aspect-video flex items-center justify-center group">
-                        {effectiveVideo && isVideoPlaying ? (
-                          effectiveVideo.includes("youtube.com") || effectiveVideo.includes("youtu.be") ? (
-                            <iframe
-                              src={getEmbedVideoUrl(effectiveVideo)}
-                              title={school.name}
-                              className="w-full h-full border-0"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                            />
-                          ) : (
-                            <video
-                              src={effectiveVideo}
-                              controls
-                              autoPlay
-                              className="w-full h-full object-contain"
-                            />
-                          )
-                        ) : (
-                          /* Interactive Video Card Preview Frame */
-                          <div className="relative w-full h-full flex flex-col justify-between p-5 sm:p-6 bg-gradient-to-br from-slate-900 via-[#002137] to-slate-950 text-white select-none">
-                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(223,183,74,0.22),transparent_60%)] pointer-events-none" />
-                            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#dfb74a_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
-
-                            <div className="relative z-10 flex items-center justify-between">
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-600 text-white shadow-sm">
-                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                                Video Column
-                              </span>
-                              <span className="text-[10px] font-bold text-slate-300 bg-white/10 backdrop-blur-md px-2 py-0.5 rounded-md border border-white/10">
-                                1080p HD
-                              </span>
-                            </div>
-
-                            <div className="relative z-10 flex flex-col items-center justify-center my-auto text-center space-y-2.5">
-                              <button
-                                onClick={() => {
-                                  if (effectiveVideo) {
-                                    setPlayingVideoId(school.id);
-                                  } else {
-                                    setActiveSchoolForVideo(school.id);
-                                    setVideoInputUrl("");
-                                    setVideoModalOpen(true);
-                                  }
-                                }}
-                                className="relative group/play w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer"
-                                title="Play Video"
-                              >
-                                <div className="absolute -inset-2 rounded-full bg-[#dfb74a]/40 blur-md group-hover/play:blur-lg animate-pulse" />
-                                <Play className="w-7 h-7 sm:w-8 sm:h-8 fill-current ml-1 relative z-10" />
-                              </button>
-                              <div className="space-y-0.5">
-                                <p className="text-xs sm:text-sm font-extrabold text-white tracking-wide">
-                                  {effectiveVideo ? "Click to Play Session Video" : "Click to Add Video URL"}
-                                </p>
-                                <p className="text-[11px] text-slate-300 font-medium line-clamp-1 max-w-[240px] mx-auto">
-                                  {school.name}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="relative z-10 flex items-center justify-between text-[11px] text-slate-300 pt-2 border-t border-white/10">
-                              <span className="truncate max-w-[180px] font-semibold text-slate-200">
-                                {school.sessionTitle}
-                              </span>
-                              <button
-                                onClick={() => {
-                                  setActiveSchoolForVideo(school.id);
-                                  setVideoInputUrl(customVideoUrls[school.id] || "");
-                                  setVideoModalOpen(true);
-                                }}
-                                className="text-[#dfb74a] hover:underline font-bold cursor-pointer"
-                              >
-                                + Add Video Link
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Video Footer Helper */}
-                      <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
-                          <Film className="w-4 h-4 text-[#b89047]" />
-                          <span className="font-bold text-slate-700">Add YouTube or MP4 video URL</span>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setActiveSchoolForVideo(school.id);
-                            setVideoInputUrl(customVideoUrls[school.id] || "");
-                            setVideoModalOpen(true);
-                          }}
-                          className="font-extrabold text-[#004b79] hover:text-[#b89047] transition-colors cursor-pointer"
-                        >
-                          Configure Video ↗
-                        </button>
-                      </div>
-
-                    </div>
-
-                  </div>
+          {/* Clean List of Schools (No Outer Cards, Just Pure Typography & Action Links) */}
+          <div className="divide-y divide-slate-200">
+            {outreachSchools.map((school) => (
+              <div key={school.id} className="py-8 first:pt-0 last:pb-0 space-y-3.5">
+                
+                {/* School Name ALONE */}
+                <div className="space-y-1">
+                  <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#002137] tracking-tight leading-snug">
+                    {school.name}
+                  </h3>
+                  <p className="text-xs sm:text-sm font-bold text-[#b89047] uppercase tracking-wide flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-[#b89047] shrink-0" />
+                    <span>{school.district}</span>
+                    <span className="text-slate-300">•</span>
+                    <span>{school.tag}</span>
+                  </p>
                 </div>
-              );
-            })}
+
+                {/* Link directly under the school name */}
+                <div className="pt-1 flex flex-wrap items-center gap-3">
+                  <button
+                    onClick={() => setSelectedSchoolModal(school)}
+                    className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#002137] hover:bg-[#004b79] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
+                  >
+                    <BookOpen className="w-4 h-4 text-[#dfb74a]" />
+                    <span>View Session Story, Details &amp; Video</span>
+                    <ArrowRight className="w-4 h-4 text-amber-300 group-hover:translate-x-1 transition-transform" />
+                  </button>
+
+                  <a
+                    href={school.schoolUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 hover:border-[#b89047] bg-white text-slate-700 hover:text-[#002137] text-xs sm:text-sm font-semibold transition-all shadow-xs hover:shadow"
+                  >
+                    <span>Visit School Reference</span>
+                    <ExternalLink className="w-3.5 h-3.5 text-[#b89047]" />
+                  </a>
+                </div>
+
+              </div>
+            ))}
           </div>
 
         </div>
@@ -1965,6 +1760,186 @@ export default function HomePage() {
                     "Lifelong student bonds, peer encouragement, and mutual support.",
                   ][selectedGalleryIdx]}
                 </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── School Detail Modal (Full Session Story, Contents & Video Screen INSIDE Link) ─── */}
+        {selectedSchoolModal && (
+          <div
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+            onClick={() => setSelectedSchoolModal(null)}
+          >
+            <div
+              className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white border border-slate-200 shadow-2xl p-6 sm:p-8 lg:p-10 space-y-6 text-left"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Top Header */}
+              <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-100">
+                <div className="space-y-1.5">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-50 text-[#b89047] border border-amber-200">
+                    <School className="w-3.5 h-3.5" />
+                    <span>{selectedSchoolModal.tag}</span>
+                  </span>
+                  <h3 className="text-2xl sm:text-3xl font-black text-[#002137] leading-tight">
+                    {selectedSchoolModal.name}
+                  </h3>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-[#b89047]" /> {selectedSchoolModal.district}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setSelectedSchoolModal(null)}
+                  className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* 2-Column Grid inside the Modal: Left Contents & Right Video */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+                
+                {/* Left: Contents & Milestone */}
+                <div className="lg:col-span-6 space-y-4">
+                  {/* Session Focus */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                    <p className="text-xs font-black uppercase text-[#004b79] tracking-wider">
+                      Session Theme
+                    </p>
+                    <h4 className="text-base font-black text-[#002137]">
+                      {selectedSchoolModal.sessionTitle}
+                    </h4>
+                    <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-medium">
+                      {selectedSchoolModal.summary}
+                    </p>
+                    <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-medium pt-1">
+                      {selectedSchoolModal.description}
+                    </p>
+                  </div>
+
+                  {/* Alma Mater Milestone Box */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/60 border-l-4 border-[#b89047] border-y border-r border-amber-200/70 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black uppercase text-[#b89047] tracking-wider">
+                        {selectedSchoolModal.milestoneTitle}
+                      </span>
+                      <span className="text-[10px] uppercase font-bold text-amber-800 bg-amber-200/60 px-2 py-0.5 rounded-full">
+                        Founder Moment
+                      </span>
+                    </div>
+                    <p className="text-slate-800 text-xs sm:text-sm italic leading-relaxed font-medium">
+                      “{selectedSchoolModal.milestoneQuote}”
+                    </p>
+                  </div>
+
+                  <a
+                    href={selectedSchoolModal.schoolUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#004b79] hover:underline"
+                  >
+                    <span>Visit School Reference Online</span>
+                    <ExternalLink className="w-3.5 h-3.5 text-[#b89047]" />
+                  </a>
+                </div>
+
+                {/* Right: Dedicated Video Screen inside Modal */}
+                <div className="lg:col-span-6 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase text-[#002137] tracking-wider flex items-center gap-1.5">
+                      <Video className="w-4 h-4 text-[#004b79]" />
+                      Session Video Stream
+                    </span>
+
+                    <button
+                      onClick={() => {
+                        setActiveSchoolForVideo(selectedSchoolModal.id);
+                        setVideoInputUrl(customVideoUrls[selectedSchoolModal.id] || "");
+                        setVideoModalOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 text-xs font-bold text-[#004b79] hover:text-[#b89047] bg-slate-100 hover:bg-amber-50 px-2.5 py-1 rounded-lg border border-slate-200 transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Configure Video URL</span>
+                    </button>
+                  </div>
+
+                  {/* Video Player Display Container */}
+                  {(() => {
+                    const effectiveVid = customVideoUrls[selectedSchoolModal.id] || selectedSchoolModal.videoUrl;
+                    const isVidPlaying = playingVideoId === selectedSchoolModal.id;
+
+                    return (
+                      <div className="relative rounded-2xl overflow-hidden shadow-xl border-2 border-slate-300 bg-slate-950 aspect-video flex items-center justify-center">
+                        {effectiveVid && isVidPlaying ? (
+                          effectiveVid.includes("youtube.com") || effectiveVid.includes("youtu.be") ? (
+                            <iframe
+                              src={getEmbedVideoUrl(effectiveVid)}
+                              title={selectedSchoolModal.name}
+                              className="w-full h-full border-0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          ) : (
+                            <video
+                              src={effectiveVid}
+                              controls
+                              autoPlay
+                              className="w-full h-full object-contain"
+                            />
+                          )
+                        ) : (
+                          <div className="relative w-full h-full flex flex-col justify-between p-5 bg-gradient-to-br from-slate-900 via-[#002137] to-slate-950 text-white select-none">
+                            <div className="relative z-10 flex items-center justify-between">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-600 text-white">
+                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                                Video
+                              </span>
+                              <span className="text-[10px] text-slate-300">1080p HD</span>
+                            </div>
+
+                            <div className="relative z-10 flex flex-col items-center justify-center my-auto text-center space-y-2">
+                              <button
+                                onClick={() => {
+                                  if (effectiveVid) {
+                                    setPlayingVideoId(selectedSchoolModal.id);
+                                  } else {
+                                    setActiveSchoolForVideo(selectedSchoolModal.id);
+                                    setVideoInputUrl("");
+                                    setVideoModalOpen(true);
+                                  }
+                                }}
+                                className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all cursor-pointer"
+                              >
+                                <Play className="w-6 h-6 fill-current ml-0.5" />
+                              </button>
+                              <p className="text-xs font-bold text-white">
+                                {effectiveVid ? "Play Session Video" : "Click to Add Video URL"}
+                              </p>
+                            </div>
+
+                            <div className="relative z-10 flex items-center justify-between text-[11px] text-slate-300 pt-1 border-t border-white/10">
+                              <span className="truncate max-w-[160px]">{selectedSchoolModal.sessionTitle}</span>
+                              <button
+                                onClick={() => {
+                                  setActiveSchoolForVideo(selectedSchoolModal.id);
+                                  setVideoInputUrl(customVideoUrls[selectedSchoolModal.id] || "");
+                                  setVideoModalOpen(true);
+                                }}
+                                className="text-[#dfb74a] hover:underline font-bold cursor-pointer"
+                              >
+                                + Edit Link
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+
               </div>
             </div>
           </div>
