@@ -42,12 +42,19 @@ export async function resolveCanonicalRoomId(id: string): Promise<string> {
       if (doc.meetingId) roomAliases[doc.meetingId] = canonical;
       if (doc.livekitRoomId) roomAliases[doc.livekitRoomId] = canonical;
 
-      // Link any existing room instances
-      if (roomSignals[id] && !roomSignals[canonical]) {
-        roomSignals[canonical] = roomSignals[id];
-      } else if (roomSignals[canonical]) {
-        roomSignals[id] = roomSignals[canonical];
-      }
+      // Link all alias instances to the exact same shared room object
+      const sharedRoom =
+        roomSignals[canonical] ||
+        roomSignals[id] ||
+        (doc.meetingId && roomSignals[doc.meetingId]) ||
+        (doc.livekitRoomId && roomSignals[doc.livekitRoomId]) ||
+        { participants: {}, signals: [], admissions: {}, signalSeq: 0 };
+
+      roomSignals[canonical] = sharedRoom;
+      roomSignals[id] = sharedRoom;
+      if (doc.meetingId) roomSignals[doc.meetingId] = sharedRoom;
+      if (doc.livekitRoomId) roomSignals[doc.livekitRoomId] = sharedRoom;
+
       return canonical;
     }
   } catch {}
