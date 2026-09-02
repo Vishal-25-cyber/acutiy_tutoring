@@ -39,24 +39,19 @@ export default function StudentFeesPage() {
     };
   }, [refetch]);
 
-  const upiId = data?.settings?.upiId || "acuity.tutoring@upi";
-  const companyName = data?.settings?.companyName || "Acuity Tutoring";
-  const monthlyFee = Number(data?.settings?.monthlyFee || data?.currentFee?.amount || 1999);
-  const customQrImage = data?.settings?.qrCodeImageUrl;
+  const upiId = (data?.settings?.upiId || "acuity.tutoring@upi").trim();
+  const companyName = (data?.settings?.companyName || "Mantif Tutoring").trim();
+  const monthlyFee = Number(data?.currentFee?.amount ?? data?.settings?.monthlyFee ?? 299);
   const currentMonthStr = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date());
 
-  // Genuine UPI Deep Link URI with pre-filled exact amount
-  const upiUri = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(
-    companyName
-  )}&am=${monthlyFee.toFixed(2)}&cu=INR&tn=${encodeURIComponent("Tuition Fee")}`;
+  // Genuine NPCI standard UPI Deep Link URI with pre-filled exact amount
+  // Format: upi://pay?pa=VPA&pn=NAME&am=AMOUNT&cu=INR&tn=NOTE
+  const upiUri = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(companyName)}&am=${monthlyFee}&cu=INR&tn=${encodeURIComponent(`Tuition Fee ${currentMonthStr}`)}`;
 
-  // High-Resolution Scannable Real QR Code Image (uses custom uploaded QR if set, otherwise auto-generates dynamic UPI QR)
-  const displayQrCodeUrl =
-    customQrImage && customQrImage.trim()
-      ? customQrImage
-      : `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(
-          upiUri
-        )}&margin=8`;
+  // High-Resolution Scannable Dynamic QR Code that strictly encodes the exact pre-filled amount
+  const displayQrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(
+    upiUri
+  )}&margin=8&qzone=1`;
 
   const handleCopyUpi = () => {
     navigator.clipboard.writeText(upiId);
@@ -351,13 +346,19 @@ export default function StudentFeesPage() {
                   </div>
                 </div>
 
-                <div className="space-y-0.5">
+                <div className="space-y-1">
                   <span className="text-[11px] font-bold text-slate-900 dark:text-slate-100 block">
                     Scan with Any UPI App
                   </span>
                   <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 font-medium">
                     <span>GPay</span> • <span>PhonePe</span> • <span>Paytm</span> • <span>BHIM</span>
                   </div>
+                  <a
+                    href={upiUri}
+                    className="mt-1.5 inline-flex items-center gap-1 px-3 py-1 rounded-md text-[11px] font-bold bg-blue-50 dark:bg-blue-950/60 text-[#004b79] dark:text-[#dfb74a] border border-blue-200 dark:border-blue-900/60 hover:underline"
+                  >
+                    <span>Tap to Pay ₹{monthlyFee.toLocaleString("en-IN")} via UPI App</span>
+                  </a>
                 </div>
               </div>
 
