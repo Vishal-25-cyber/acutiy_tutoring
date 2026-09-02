@@ -91,9 +91,14 @@ export async function POST(req: NextRequest) {
       const normalizedGender = (gender || "OTHER").toString().toUpperCase();
       const safeGender = ["MALE", "FEMALE", "OTHER"].includes(normalizedGender) ? normalizedGender : "OTHER";
 
+      // Compute sequential STD_001 student ID
+      const studentCount = await StudentProfile.countDocuments();
+      const formattedStudentId = `STD_${String(studentCount + 1).padStart(3, "0")}`;
+
       // Save to `studentprofiles` collection
       await StudentProfile.create({
         userId: user._id,
+        studentId: formattedStudentId,
         schoolName: schoolName.trim(),
         district: district?.trim() || "",
         board,
@@ -112,7 +117,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         message: "Student registration submitted! Your account is pending admin approval. You will be able to log in once approved by the administrator.",
-        user: { name: user.name, email: user.email, role: "STUDENT", status: "PENDING_APPROVAL" },
+        user: { name: user.name, email: user.email, role: "STUDENT", status: "PENDING_APPROVAL", studentId: formattedStudentId },
       }, { status: 201 });
     }
 
@@ -156,9 +161,14 @@ export async function POST(req: NextRequest) {
       const safeClasses = Array.isArray(classesTaught) && classesTaught.length > 0 ? classesTaught : ["Class 10"];
       const safeSubjects = Array.isArray(subjects) && subjects.length > 0 ? subjects : [specialization.trim() || "Mathematics"];
 
+      // Compute sequential STF_001 staff ID
+      const teacherCount = await TeacherProfile.countDocuments();
+      const formattedStaffId = `STF_${String(teacherCount + 1).padStart(3, "0")}`;
+
       // Save to `teacherprofiles` collection
       await TeacherProfile.create({
         userId: user._id,
+        staffId: formattedStaffId,
         qualification: qualification.trim(),
         specialization: specialization.trim(),
         subjects: safeSubjects,
@@ -172,7 +182,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         message: "Teacher registration submitted! Your account is pending admin approval. You will be notified once approved.",
-        user: { name: user.name, email: user.email, role: "TEACHER", status: "PENDING_APPROVAL" },
+        user: { name: user.name, email: user.email, role: "TEACHER", status: "PENDING_APPROVAL", staffId: formattedStaffId },
       }, { status: 201 });
     }
 

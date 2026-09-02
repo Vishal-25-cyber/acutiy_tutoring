@@ -6,6 +6,7 @@ export interface ITeacherProfileDocument extends Document, Omit<ITeacherProfile,
 const TeacherProfileSchema = new Schema<ITeacherProfileDocument>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true, unique: true, index: true },
+    staffId: { type: String, trim: true, index: true },
     qualification: { type: String, required: true, trim: true },
     specialization: { type: String, required: true, trim: true },
     subjects: [{ type: String, trim: true }],

@@ -6,6 +6,7 @@ import User from "@/models/User";
 import StudentProfile from "@/models/StudentProfile";
 import Batch from "@/models/Batch";
 import { CLASS_LIST } from "@/lib/curriculum";
+import { formatStudentId } from "@/lib/id-generator";
 
 export async function GET(req: NextRequest) {
   try {
@@ -41,13 +42,13 @@ export async function GET(req: NextRequest) {
     // Filter by search query across name, email, phone, schoolName, district
     const students = profiles
       .filter((p: any) => p.userId != null)
-      .map((p: any) => {
+      .map((p: any, idx: number) => {
         const user = p.userId;
         const batch = p.batchId;
         return {
           studentProfileId: p._id.toString(),
           userId: user._id.toString(),
-          studentId: `STU-${user._id.toString().slice(-6).toUpperCase()}`,
+          studentId: formatStudentId(p.studentId || user._id, idx),
           name: user.name,
           email: user.email,
           phone: user.phone,

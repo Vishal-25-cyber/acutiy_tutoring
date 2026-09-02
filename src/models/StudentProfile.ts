@@ -6,6 +6,7 @@ export interface IStudentProfileDocument extends Document, Omit<IStudentProfile,
 const StudentProfileSchema = new Schema<IStudentProfileDocument>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true, unique: true, index: true },
+    studentId: { type: String, trim: true, index: true },
     schoolName: { type: String, required: true, trim: true },
     district: { type: String, trim: true, default: "" },
     board: {

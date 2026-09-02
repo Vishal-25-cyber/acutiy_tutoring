@@ -18,6 +18,7 @@ import {
   Hash,
 } from "lucide-react";
 import { useFastFetch } from "@/lib/api-cache";
+import { formatStudentId } from "@/lib/id-generator";
 import { PortalHeader } from "@/components/layout/PortalHeader";
 
 
@@ -35,7 +36,9 @@ export default function StudentDashboardPage() {
   const board = student?.board || authUser?.profile?.board || "State Board";
   const batch = student?.batch || authUser?.profile?.batchId;
   const batchName = batch?.name || (typeof batch === "string" ? batch : "Assigned Batch");
-  const studentId = student?.id || authUser?._id ? `#STU-${String(student?.id || authUser?._id).slice(-6).toUpperCase()}` : "#STU-000000";
+  const studentId = student?.studentId
+    ? (student.studentId.startsWith("#") ? student.studentId : `#${student.studentId}`)
+    : (student?.id || authUser?._id ? `#${formatStudentId(student?.id || authUser?._id)}` : "#STD_001");
   const studentEmail = student?.email || authUser?.email || "—";
   const studentPhone = student?.phone || authUser?.phone || "—";
   const schoolName = student?.schoolName || (authUser?.profile as any)?.schoolName || "—";

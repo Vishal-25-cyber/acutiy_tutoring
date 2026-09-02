@@ -26,6 +26,7 @@ import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { useFastFetch, invalidateCache } from "@/lib/api-cache";
 import { sanitize10DigitPhone, isValid10DigitPhone, isValidAcuityOrGmail } from "@/lib/validations/phone";
+import { formatStaffId } from "@/lib/id-generator";
 
 const ALL_CLASSES = [
   "Class 6",
@@ -288,7 +289,7 @@ export default function AdminTeachersPage() {
               <p className="text-xs text-slate-400">Try selecting another filter tab above.</p>
             </div>
           ) : (
-            teachers.map((t: any) => {
+            teachers.map((t: any, idx: number) => {
               const isPending = t.approvalStatus === "PENDING_APPROVAL" || t.userId?.status === "PENDING_APPROVAL";
               const isApproved = t.approvalStatus === "ACTIVE" || t.userId?.status === "ACTIVE";
 
@@ -299,9 +300,14 @@ export default function AdminTeachersPage() {
                 >
                   {/* Col 1: Name & Contact */}
                   <div className="col-span-3 space-y-0.5">
-                    <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100">
-                      {t.userId?.name || "Faculty Specialist"}
-                    </p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100">
+                        {t.userId?.name || "Faculty Specialist"}
+                      </p>
+                      <span className="font-mono text-[10px] font-bold px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                        {formatStaffId(t, idx)}
+                      </span>
+                    </div>
                     <p className="text-[11px] text-slate-400 font-mono truncate">
                       {t.userId?.email} • {t.userId?.phone || "—"}
                     </p>

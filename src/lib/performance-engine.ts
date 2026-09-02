@@ -17,6 +17,7 @@ import TestResult from "@/models/TestResult";
 import TeacherRemark from "@/models/TeacherRemark";
 import ParentCommunication from "@/models/ParentCommunication";
 import { getSubjectsForClassAndBoard, CURRICULUM_DATA } from "@/lib/curriculum";
+import { formatStudentId } from "@/lib/id-generator";
 
 export interface ReportFilterOptions {
   period?: "LAST_30_DAYS" | "LAST_90_DAYS" | "THIS_TERM" | "ALL_TIME" | string;
@@ -505,7 +506,7 @@ export async function generateStudentPerformanceReport(
       userId: user._id.toString(),
       studentProfileId: studentProfile._id.toString(),
       name: user.name,
-      studentId: `STU-${user._id.toString().slice(-6).toUpperCase()}`,
+      studentId: formatStudentId(studentProfile?.studentId || user._id),
       email: user.email,
       phone: user.phone,
       district: studentProfile.district || user.district || "Not Specified",

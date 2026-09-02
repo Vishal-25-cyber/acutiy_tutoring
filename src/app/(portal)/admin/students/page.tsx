@@ -20,6 +20,7 @@ import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { useFastFetch, invalidateCache } from "@/lib/api-cache";
 import { sanitize10DigitPhone, isValid10DigitPhone, isValidAcuityOrGmail } from "@/lib/validations/phone";
+import { formatStudentId } from "@/lib/id-generator";
 
 const CLASS_OPTIONS = [
   "Class 6",
@@ -399,7 +400,7 @@ export default function AdminStudentsPage() {
               <p className="text-xs text-slate-400">Try changing your search query or class selection.</p>
             </div>
           ) : (
-            filtered.map((st: any) => {
+            filtered.map((st: any, idx: number) => {
               const u = st.userId || {};
               return (
                 <div
@@ -412,6 +413,9 @@ export default function AdminStudentsPage() {
                       <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100">
                         {u.name || "Student"}
                       </p>
+                      <span className="font-mono text-[10px] font-bold px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                        {formatStudentId(st, idx)}
+                      </span>
                       {u.status === "PENDING_APPROVAL" ? (
                         <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
                           Pending Approval

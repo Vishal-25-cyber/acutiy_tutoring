@@ -128,8 +128,12 @@ export async function POST(req: NextRequest) {
       status: "ACTIVE",
     });
 
+    const studentCount = await StudentProfile.countDocuments();
+    const formattedStudentId = `STD_${String(studentCount + 1).padStart(3, "0")}`;
+
     const profile = await StudentProfile.create({
       userId: user._id,
+      studentId: formattedStudentId,
       schoolName: schoolName || "National Public School",
       board: board || "CBSE",
       currentClass,

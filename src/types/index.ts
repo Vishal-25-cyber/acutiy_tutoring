@@ -36,6 +36,7 @@ export interface IUser {
 export interface IStudentProfile {
   _id: string;
   userId: string | IUser;
+  studentId?: string; // Formatted STD_001
   schoolName: string;
   district?: string;
   board: EducationBoard;
@@ -58,6 +59,7 @@ export interface IStudentProfile {
 export interface ITeacherProfile {
   _id: string;
   userId: string | IUser;
+  staffId?: string; // Formatted STF_001
   qualification: string;
   specialization: string;
   subjects: string[];

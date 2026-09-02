@@ -487,7 +487,7 @@ export async function generateStudentPerformanceReportPdf(report: any): Promise<
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(203, 213, 225);
-    doc.text(`Student ID: ${student.studentId || "STU-1001"}`, 145, 12);
+    doc.text(`Student ID: ${student.studentId || "STD_001"}`, 145, 12);
     doc.text(
       `Date: ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`,
       145,

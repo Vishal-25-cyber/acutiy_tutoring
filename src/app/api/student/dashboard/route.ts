@@ -270,10 +270,21 @@ export async function GET() {
       };
     });
 
+    let assignedStudentId = profile?.studentId;
+    if (!assignedStudentId) {
+      const allStudents = await StudentProfile.find().sort({ createdAt: 1 }).select("_id userId").lean();
+      const idx = allStudents.findIndex((s: any) => s.userId?.toString() === session.userId || s._id?.toString() === profile?._id?.toString());
+      assignedStudentId = `STD_${String(idx >= 0 ? idx + 1 : 1).padStart(3, "0")}`;
+      if (profile?._id) {
+        await StudentProfile.findByIdAndUpdate(profile._id, { studentId: assignedStudentId });
+      }
+    }
+
     return NextResponse.json(
       {
         student: {
           id: session.userId,
+          studentId: assignedStudentId,
           name: user?.name || session.name || "Student",
           email: user?.email || session.email || "student@mantif.edu",
           phone: user?.phone || profile?.parentPhone || "",
