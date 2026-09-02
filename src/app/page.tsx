@@ -1282,7 +1282,7 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 4: TEAM (FOUNDER SPOTLIGHT - CENTERED IMAGE & NAME ALONE)
+          PAGE 4: TEAM (FOUNDER SPOTLIGHT - MATCHING TEAM CARD DESIGN)
       ═══════════════════════════════════════════════════════════════════════ */}
       <section id="team" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-white py-10 lg:py-16">
         <div className="w-full max-w-4xl mx-auto px-6 sm:px-10 lg:px-14 space-y-8 lg:space-y-10 text-center">
@@ -1297,28 +1297,20 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Centered Founder Portrait with Name & Founder Title Underneath */}
-          <div className="flex flex-col items-center justify-center space-y-4">
-            <div className="relative group">
-              <div className="absolute -inset-2 bg-gradient-to-r from-[#dfb74a]/30 to-[#004b79]/25 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition duration-500 pointer-events-none" />
-
-              <div className="relative shrink-0 w-[280px] h-[350px] sm:w-[320px] sm:h-[400px] lg:w-[340px] lg:h-[425px] rounded-3xl overflow-hidden shadow-2xl border-2 border-slate-200/90 bg-white">
+          {/* Centered Founder Card in Exact Same Styling & Ratio as Team Member Cards */}
+          <div className="flex justify-center items-center">
+            <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-[#b89047]/40 transition-all flex flex-col items-center text-center space-y-3 w-full max-w-[260px] sm:max-w-[280px]">
+              <div className="w-full aspect-4/5 rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
                 <img
                   src="/images/founder_karunya.png"
                   alt="Karunya S - Founder of MANTIF"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                 />
               </div>
-            </div>
-
-            {/* Name & Title Underneath */}
-            <div className="space-y-1 text-center pt-1">
-              <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight">
-                Karunya S
-              </h3>
-              <p className="text-base sm:text-lg lg:text-xl font-black text-[#b89047] uppercase tracking-wider">
-                Founder
-              </p>
+              <div className="space-y-0.5 pt-0.5">
+                <h4 className="font-black text-lg sm:text-xl text-[#002137]">Karunya S</h4>
+                <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">Founder</p>
+              </div>
             </div>
           </div>
 
