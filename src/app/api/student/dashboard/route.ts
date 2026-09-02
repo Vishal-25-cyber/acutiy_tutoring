@@ -29,18 +29,24 @@ export async function GET() {
       StudentProfile.findOne({ userId: session.userId }).populate("batchId").lean(),
     ]);
 
-    if (!profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    let studentProfile = profile;
+    if (!studentProfile) {
+      studentProfile = await StudentProfile.create({
+        userId: session.userId,
+        currentClass: "Class 10",
+        board: "State Board",
+        schoolName: "SSVS",
+      });
     }
 
-    const currentClass = profile.currentClass || "Class 10";
-    const board = profile.board || "CBSE";
+    const currentClass = studentProfile.currentClass || "Class 10";
+    const board = studentProfile.board || "CBSE";
     const now = new Date();
     const todayDateStr = now.toISOString().split("T")[0];
     const currentDayName = DAYS_OF_WEEK[now.getDay()];
 
-    const batchName = (profile.batchId as any)?.name || "6:00 PM – 7:00 PM";
-    const batchId = (profile.batchId as any)?._id || profile.batchId;
+    const batchName = (studentProfile.batchId as any)?.name || "6:00 PM – 7:00 PM";
+    const batchId = (studentProfile.batchId as any)?._id || studentProfile.batchId;
 
     const liveSessionFilter = batchId
       ? { $or: [{ batchId }, { classLevel: currentClass }] }
@@ -59,17 +65,20 @@ export async function GET() {
       paymentsList,
     ] = await Promise.all([
       LiveSession.find({
-        $and: [
+        $or: [
+          { status: "LIVE" },
           {
-            $or: [
-              { classLevel: currentClass },
-              { batchId: batchId || null },
-              { status: "LIVE" },
-            ],
-          },
-          {
-            $or: [
-              { status: "LIVE" },
+            $and: [
+              {
+                $or: [
+                  { classLevel: currentClass },
+                  { classLevel: null },
+                  { classLevel: { $exists: false } },
+                  { batchId: batchId || null },
+                  { batchId: null },
+                  { batchId: { $exists: false } },
+                ],
+              },
               { date: todayDateStr, status: { $in: ["PUBLISHED", "SCHEDULED", "LIVE"] } },
             ],
           },
@@ -82,12 +91,23 @@ export async function GET() {
 
       LiveSession.find({
         $or: [
-          { classLevel: currentClass },
-          { batchId: batchId || null },
           { status: "LIVE" },
+          {
+            $and: [
+              {
+                $or: [
+                  { classLevel: currentClass },
+                  { classLevel: null },
+                  { classLevel: { $exists: false } },
+                  { batchId: batchId || null },
+                  { batchId: null },
+                  { batchId: { $exists: false } },
+                ],
+              },
+              { status: { $in: ["PUBLISHED", "SCHEDULED", "LIVE"] }, date: { $gte: todayDateStr } },
+            ],
+          },
         ],
-        status: { $in: ["PUBLISHED", "SCHEDULED", "LIVE"] },
-        date: { $gte: todayDateStr },
       })
         .populate("teacherId", "name avatarUrl")
         .populate("batchId")

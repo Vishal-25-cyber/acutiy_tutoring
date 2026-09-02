@@ -35,9 +35,14 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const profile: any = await StudentProfile.findOne({ userId: session.userId }).populate("batchId").lean();
+    let profile: any = await StudentProfile.findOne({ userId: session.userId }).populate("batchId").lean();
     if (!profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+      profile = await StudentProfile.create({
+        userId: session.userId,
+        currentClass: "Class 10",
+        board: "State Board",
+        schoolName: "SSVS",
+      });
     }
 
     const now = new Date();
@@ -71,12 +76,22 @@ export async function GET(req: NextRequest) {
     const batchEnd = (profile.batchId as any)?.endTime || "20:00";
     const batchId = (profile.batchId as any)?._id || profile.batchId;
 
-    // Query published/scheduled/live/completed classes strictly for this student's batch or class level
+    // Query published/scheduled/live/completed classes for this student's grade/batch, or ANY class currently LIVE
     const sessionQuery: any = {
-      status: { $in: ["PUBLISHED", "SCHEDULED", "LIVE", "COMPLETED"] },
       $or: [
-        { classLevel: profile.currentClass },
-        { batchId: batchId || null },
+        { status: "LIVE" },
+        {
+          status: { $in: ["PUBLISHED", "SCHEDULED", "LIVE", "COMPLETED"] },
+          $or: [
+            { classLevel: profile.currentClass },
+            { classLevel: null },
+            { classLevel: { $exists: false } },
+            { batchId: batchId || null },
+            { batchId: null },
+            { batchId: { $exists: false } },
+            { date: todayDateStr },
+          ],
+        },
       ],
     };
 

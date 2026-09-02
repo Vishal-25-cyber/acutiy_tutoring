@@ -61,16 +61,37 @@ export async function GET(req: NextRequest) {
       }
       if (batchId) query.batchId = batchId;
     } else if (session.role === "STUDENT") {
-      const studentProfile = await StudentProfile.findOne({ userId: session.userId });
+      let studentProfile = await StudentProfile.findOne({ userId: session.userId });
       if (!studentProfile) {
-        return NextResponse.json({ error: "Student profile not found." }, { status: 404 });
+        studentProfile = await StudentProfile.create({
+          userId: session.userId,
+          currentClass: "Class 10",
+          board: "State Board",
+          schoolName: "SSVS",
+        });
       }
-      query.batchId = studentProfile.batchId;
-      query.classLevel = studentProfile.currentClass;
-      // Students should only see published, live or completed classes (never drafts)
+      const currentClass = studentProfile?.currentClass || "Class 10";
+      const studentBatchId = studentProfile?.batchId;
+
+      query.$or = [
+        { status: "LIVE" },
+        {
+          $or: [
+            { classLevel: currentClass },
+            { classLevel: null },
+            { classLevel: { $exists: false } },
+            { batchId: studentBatchId || null },
+            { batchId: null },
+            { batchId: { $exists: false } },
+            { date: todayDateStr },
+          ],
+        },
+      ];
+
+      // Students should see live, published, scheduled or completed classes
       if (status) {
         if (status.toUpperCase() === "UPCOMING") {
-          query.status = { $in: ["PUBLISHED", "SCHEDULED"] };
+          query.status = { $in: ["PUBLISHED", "SCHEDULED", "LIVE"] };
           query.date = { $gte: todayDateStr };
         } else {
           query.status = status.toUpperCase();

@@ -65,6 +65,8 @@ export function JitsiClassroom({
     role: currentUserRole,
     isTeacher: currentUserRole === "TEACHER" || currentUserRole === "ADMIN",
   });
+  const userInfoRef = useRef(userInfo);
+  useEffect(() => { userInfoRef.current = userInfo; }, [userInfo]);
 
   /* ── A/V Controls ── */
   const [isMicOn, setIsMicOn] = useState(false);
@@ -652,43 +654,81 @@ export function JitsiClassroom({
     setStage("PENDING_ADMISSION");
 
     const targetClassId = classData?.id || classData?.livekitRoomId || classId;
+    const token = typeof window !== "undefined" ? (localStorage.getItem("acuity_auth_token") || sessionStorage.getItem("acuity_auth_token")) : "";
+    const studentName = userInfoRef.current.name || userInfo.name || "Student";
+    const studentId = userInfoRef.current.id || userInfo.id || currentUserId;
 
     // Send knock
     try {
       await fetch(`/api/classes/${targetClassId}/admit`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: userInfo.name }),
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ name: studentName, userId: studentId }),
       });
     } catch (e) {
       console.warn("Knock failed:", e);
     }
 
-    // Start polling every 800ms for instant admission
+    // Start polling every 700ms for instant admission
     const poll = async () => {
       try {
+        const activeStudentId = userInfoRef.current.id || userInfo.id || currentUserId;
+        const authTok = typeof window !== "undefined" ? (localStorage.getItem("acuity_auth_token") || sessionStorage.getItem("acuity_auth_token")) : "";
         const res = await fetch(
-          `/api/classes/${targetClassId}/admit?userId=${userInfo.id}`,
-          { cache: "no-store" }
+          `/api/classes/${targetClassId}/admit?userId=${encodeURIComponent(activeStudentId)}`,
+          {
+            cache: "no-store",
+            headers: {
+              ...(authTok ? { Authorization: `Bearer ${authTok}` } : {}),
+            },
+          }
         );
-        const data = await res.json();
-        if (data.status === "ADMITTED") {
-          clearInterval(pollTimerRef.current!);
-          setIsCameraOn(true);
-          setIsMicOn(true);
-          setStage("LIVE_CLASS");
-          recordAttendanceJoin(classData?.id || classId);
-        } else if (data.status === "DENIED") {
-          clearInterval(pollTimerRef.current!);
-          setStage("DENIED");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === "ADMITTED") {
+            if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+            setIsCameraOn(true);
+            setIsMicOn(true);
+            setStage("LIVE_CLASS");
+            recordAttendanceJoin(classData?.id || classId);
+            return;
+          } else if (data.status === "DENIED") {
+            if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+            setStage("DENIED");
+            return;
+          }
+        }
+
+        // Secondary fallback check via join route
+        const joinCheck = await fetch(`/api/classes/${targetClassId}/join`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(authTok ? { Authorization: `Bearer ${authTok}` } : {}),
+          },
+        }).catch(() => null);
+        if (joinCheck && joinCheck.ok) {
+          const joinData = await joinCheck.json();
+          if (joinData.isAdmitted) {
+            if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+            setIsCameraOn(true);
+            setIsMicOn(true);
+            setStage("LIVE_CLASS");
+            recordAttendanceJoin(classData?.id || classId);
+            return;
+          }
         }
       } catch (e) { /* ignore poll errors */ }
     };
 
-    pollTimerRef.current = setInterval(poll, 800);
+    if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    pollTimerRef.current = setInterval(poll, 700);
     // Also poll immediately
     poll();
-  }, [classId, userInfo.id, userInfo.name, classData]);
+  }, [classId, userInfo.id, userInfo.name, classData, currentUserId]);
 
   // Cancel student knock when leaving lobby
   const cancelKnock = useCallback(async () => {
@@ -766,10 +806,14 @@ export function JitsiClassroom({
     async (userId: string, action: "ADMIT" | "DENY") => {
       setAdmittingId(userId);
       const targetClassId = classData?.id || classData?.livekitRoomId || classId;
+      const token = typeof window !== "undefined" ? (localStorage.getItem("acuity_auth_token") || sessionStorage.getItem("acuity_auth_token")) : "";
       try {
         await fetch(`/api/classes/${targetClassId}/admit`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
           body: JSON.stringify({ userId, action }),
         });
         // Optimistically remove from pending list
@@ -785,7 +829,7 @@ export function JitsiClassroom({
         setAdmittingId(null);
       }
     },
-    [classId, classData]
+    [classId, classData, pendingStudents]
   );
 
   /* ─────────────────────────────────────────────────
@@ -1553,10 +1597,15 @@ export function JitsiClassroom({
                     </div>
                   )}
 
-                  {/* In call — Real Connected Participants Only */}
+                  {/* In call — Connected Participants */}
                   <div className="space-y-1.5">
                     <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">
-                      In This Call ({1 + realtimeParticipants.filter((p) => p.id !== userInfo.id).length})
+                      In This Call ({
+                        1 +
+                        realtimeParticipants.filter((p) => p.id !== userInfo.id).length +
+                        (!userInfo.isTeacher && !realtimeParticipants.some((p) => p.role === "TEACHER" || p.role === "ADMIN" || p.id === (classData?.teacher?._id || classData?.teacher?.id)) ? 1 : 0) +
+                        (userInfo.isTeacher ? admittedList.filter((a) => !realtimeParticipants.some((p) => p.id === a.userId)).length : 0)
+                      })
                     </p>
 
                     {/* Self */}
@@ -1574,6 +1623,41 @@ export function JitsiClassroom({
                         ? <Mic className="w-3.5 h-3.5 text-emerald-400" />
                         : <MicOff className="w-3.5 h-3.5 text-rose-400" />}
                     </div>
+
+                    {/* If current user is student, ALWAYS display Teacher (Host) */}
+                    {!userInfo.isTeacher && !realtimeParticipants.some((p) => p.role === "TEACHER" || p.role === "ADMIN" || p.id === (classData?.teacher?._id || classData?.teacher?.id)) && (
+                      <div className="p-2.5 rounded-lg bg-white/5 flex items-center justify-between border border-emerald-500/20">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-indigo-700 flex items-center justify-center text-[10px] font-semibold text-white">
+                            {initials(classData?.teacher?.name || "Teacher")}
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-white">{classData?.teacher?.name || "Faculty Teacher"}</p>
+                            <p className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                              Host (Faculty)
+                            </p>
+                          </div>
+                        </div>
+                        <Mic className="w-3.5 h-3.5 text-emerald-400" />
+                      </div>
+                    )}
+
+                    {/* If current user is teacher, display admitted students connecting */}
+                    {userInfo.isTeacher && admittedList.filter((a) => !realtimeParticipants.some((p) => p.id === a.userId)).map((a) => (
+                      <div key={a.userId} className="p-2.5 rounded-lg bg-white/5 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-semibold text-slate-200">
+                            {initials(a.name || "Student")}
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-white">{a.name || "Student"}</p>
+                            <p className="text-[10px] text-emerald-400">Student (Admitted)</p>
+                          </div>
+                        </div>
+                        <Mic className="w-3.5 h-3.5 text-emerald-400" />
+                      </div>
+                    ))}
 
                     {/* Other connected real participants */}
                     {realtimeParticipants.filter((p) => p.id !== userInfo.id).map((p) => (

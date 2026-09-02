@@ -234,3 +234,10 @@ export async function POST(
     return NextResponse.json({ error: error.message || "Failed to join class." }, { status: 500 });
   }
 }
+
+export async function GET(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  return POST(req, ctx);
+}
