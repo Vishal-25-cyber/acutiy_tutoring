@@ -113,6 +113,10 @@ const config: Config = {
         "pulse-subtle": "pulse-subtle 3s ease-in-out infinite",
         float: "float 4s ease-in-out infinite",
       },
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', "system-ui", "-apple-system", "BlinkMacSystemFont", '"Segoe UI"', "Roboto", "sans-serif"],
+        heading: ['"Plus Jakarta Sans"', "sans-serif"],
+      },
     },
   },
   plugins: [],
