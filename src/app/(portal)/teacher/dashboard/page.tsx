@@ -8,9 +8,11 @@ import {
   GraduationCap,
   Mail,
   Hash,
+  Clock,
 } from "lucide-react";
 import { useFastFetch } from "@/lib/api-cache";
 import { PortalHeader } from "@/components/layout/PortalHeader";
+import { formatStaffId } from "@/lib/id-generator";
 
 export default function TeacherDashboardPage() {
   const { data: authData } = useFastFetch("/api/auth/me");
@@ -30,6 +32,10 @@ export default function TeacherDashboardPage() {
     (authUser?.role === "TEACHER" ? authUser?.name : null) ||
     "Faculty Member";
   const userName = typeof rawName === "string" && rawName.trim() ? rawName : "Faculty Member";
+
+  const staffId = teacher?.teacherId || teacher?.staffId
+    ? (teacher.teacherId || teacher.staffId)
+    : formatStaffId(authUser?._id);
 
   const stats = dashboardData?.stats || {
     totalStudents: 0,
@@ -87,11 +93,11 @@ export default function TeacherDashboardPage() {
             </div>
 
             <div className="space-y-1">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Pending Grading</span>
-              <p className="text-3xl font-black text-amber-600 dark:text-amber-400 tracking-tight leading-none">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Pending Reviews</span>
+              <p className="text-3xl font-black text-amber-500 tracking-tight leading-none">
                 {stats.pendingEvaluations}
               </p>
-              <p className="text-xs text-slate-400">tasks</p>
+              <p className="text-xs text-slate-400">submissions</p>
             </div>
 
             <div className="space-y-1">
@@ -104,30 +110,82 @@ export default function TeacherDashboardPage() {
           </div>
         </div>
 
-        {/* ── 3. FACULTY DETAILS (FLAT TABLE, PERFECT ALIGNMENT) ── */}
-        <div>
-          <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 mb-1">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Faculty Details &amp; Credentials</h2>
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-              Active
+        {/* ── 3. FACULTY DETAILS & CREDENTIALS (MODERN PROFILE CARD GRID WITH TEACHER ID) ── */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Faculty Profile &amp; Credentials
+              </h2>
+            </div>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+              Verified Active Faculty
             </span>
           </div>
 
-          <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {[
-              { icon: GraduationCap, label: "Teacher Name", value: userName },
-              { icon: ShieldCheck,   label: "Qualification", value: teacher?.qualification || "M.Sc., B.Ed" },
-              { icon: BookOpen,      label: "Specialization", value: teacher?.specialization || teacher?.subjects?.join(", ") || "Class 8-10 Mathematics & Science" },
-              { icon: Hash,          label: "Classes Taught", value: teacher?.classesTaught?.join(", ") || "Class 8, Class 9, Class 10" },
-              ...(teacher?.email || authUser?.email ? [{ icon: Mail, label: "Email Address", value: teacher?.email || authUser?.email }] : []),
-            ].map(({ icon: Icon, label, value }) => (
-              <div key={label} className="flex items-center justify-between py-3.5 gap-6">
-                <div className="flex items-center gap-2.5 min-w-[160px]">
-                  <Icon className="w-4 h-4 shrink-0 text-slate-400" />
-                  <span className="text-xs text-slate-500 dark:text-slate-400">{label}</span>
+              {
+                icon: Hash,
+                label: "Teacher ID",
+                value: staffId.startsWith("#") ? staffId : `#${staffId}`,
+                isBadge: true,
+              },
+              {
+                icon: GraduationCap,
+                label: "Teacher Name",
+                value: userName,
+              },
+              {
+                icon: ShieldCheck,
+                label: "Qualification",
+                value: teacher?.qualification || "BE CSE",
+              },
+              {
+                icon: BookOpen,
+                label: "Specialization",
+                value: teacher?.specialization || teacher?.subjects?.join(", ") || "Higher Secondary Sciences",
+              },
+              {
+                icon: Clock,
+                label: "Classes Taught",
+                value: teacher?.classesTaught?.join(", ") || "Class 8, Class 9, Class 10",
+              },
+              {
+                icon: Mail,
+                label: "Email Address",
+                value: teacher?.email || authUser?.email || "—",
+                isMono: true,
+              },
+            ].map(({ icon: Icon, label, value, isBadge, isMono }) => (
+              <div
+                key={label}
+                className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/80 shadow-2xs hover:border-indigo-200 dark:hover:border-indigo-900/60 transition-all flex items-start gap-3.5"
+              >
+                <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                  <Icon className="w-4 h-4" />
                 </div>
-                <span className="text-xs font-bold text-slate-900 dark:text-slate-100 text-right">{value || "—"}</span>
+                <div className="space-y-1 min-w-0 flex-1">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                    {label}
+                  </span>
+                  {isBadge ? (
+                    <span className="inline-block font-mono font-bold text-xs sm:text-sm text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800/60">
+                      {value}
+                    </span>
+                  ) : (
+                    <p
+                      className={`text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 truncate ${
+                        isMono ? "font-mono" : ""
+                      }`}
+                      title={String(value)}
+                    >
+                      {value || "—"}
+                    </p>
+                  )}
+                </div>
               </div>
             ))}
           </div>

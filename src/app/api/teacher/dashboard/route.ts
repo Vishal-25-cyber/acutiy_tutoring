@@ -159,9 +159,21 @@ export async function GET() {
       realAverageAttendance = Math.round((presentAttendedCount / teacherAttendanceRecords.length) * 100);
     }
 
+    let assignedStaffId = profile?.staffId;
+    if (!assignedStaffId) {
+      const allTeachers = await TeacherProfile.find().sort({ createdAt: 1 }).select("_id userId").lean();
+      const idx = allTeachers.findIndex((t: any) => t.userId?.toString() === session.userId || t._id?.toString() === profile?._id?.toString());
+      assignedStaffId = `STF_${String(idx >= 0 ? idx + 1 : 1).padStart(3, "0")}`;
+      if (profile?._id) {
+        await TeacherProfile.findByIdAndUpdate(profile._id, { staffId: assignedStaffId });
+      }
+    }
+
     return NextResponse.json({
       teacher: {
         id: session.userId,
+        teacherId: assignedStaffId,
+        staffId: assignedStaffId,
         name: userDoc?.name || session.name || "Faculty Member",
         email: userDoc?.email || session.email,
         qualification: profile?.qualification || "M.Sc. Mathematics, B.Ed",
