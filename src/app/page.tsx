@@ -1237,17 +1237,17 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Clean List of Schools (Single Line Name + View Button Only) */}
+          {/* Clean List of Schools (Centered Single Line Name + Centered View Button) */}
           <div className="divide-y divide-slate-200">
             {outreachSchools.map((school) => (
-              <div key={school.id} className="py-8 first:pt-0 last:pb-0 space-y-3.5">
+              <div key={school.id} className="py-8 first:pt-0 last:pb-0 space-y-4 text-center flex flex-col items-center">
                 
-                {/* School Name on Single Line */}
-                <div className="space-y-1.5">
+                {/* School Name on Single Line Centered */}
+                <div className="space-y-1.5 text-center">
                   <h3 className="text-xl sm:text-2xl md:text-[26px] lg:text-3xl font-black text-[#002137] tracking-tight leading-snug">
                     {school.name}
                   </h3>
-                  <p className="text-xs sm:text-sm font-bold text-[#b89047] uppercase tracking-wide flex items-center gap-1.5">
+                  <p className="text-xs sm:text-sm font-bold text-[#b89047] uppercase tracking-wide flex items-center justify-center gap-1.5 flex-wrap">
                     <MapPin className="w-3.5 h-3.5 text-[#b89047] shrink-0" />
                     <span>{school.district}</span>
                     <span className="text-slate-300">•</span>
@@ -1255,11 +1255,11 @@ export default function HomePage() {
                   </p>
                 </div>
 
-                {/* Only Action Button (School reference removed) */}
-                <div className="pt-1 flex items-center">
+                {/* Centered Action Button */}
+                <div className="pt-1 flex items-center justify-center">
                   <button
                     onClick={() => setSelectedSchoolModal(school)}
-                    className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-[#002137] hover:bg-[#004b79] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
+                    className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-2xl bg-[#002137] hover:bg-[#004b79] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
                   >
                     <BookOpen className="w-4 h-4 text-[#dfb74a]" />
                     <span>View Session Story, Details &amp; Video</span>
