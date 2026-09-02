@@ -91,7 +91,7 @@ const outreachSchools = [
       "The session focused on exploring different AI tools that can help teachers engage students, capture their attention, and bring more interest into the learning process.",
     milestoneTitle: "Alma Mater Milestone",
     milestoneQuote:
-      "The best part of this session was that Our Founder Ms. Karunya S is an alumna of the school. It was truly a proud moment for the entire MANTIF team and for the teachers who once taught her. We could witness the pride and happiness on her teachers’ faces as they welcomed her back, this time as a Founder.",
+      "The best part of this session was that Our Founder Ms. Karunya S is an alumini of the school. It was truly a proud moment for the entire MANTIF team and for the teachers who once taught her. We could witness the pride and happiness on her teachers’ faces as they welcomed her back, this time as a Founder.",
     schoolUrl: "https://www.google.com/search?q=Kongu+National+Matriculation+Hr+Sec+School+Nanjanapuram",
     videoTitle1: "Session Video 1: Faculty AI Workshop & Live Demo",
     videoUrl1: "",
@@ -1765,26 +1765,16 @@ export default function HomePage() {
         {/* ─── School Detail Modal (Professional Editorial Layout with 2 Video Players & NO Nested Cards) ─── */}
         {selectedSchoolModal && (
           <div
-            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-y-auto"
+            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             onClick={() => setSelectedSchoolModal(null)}
           >
             <div
-              className="relative w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-3xl bg-white border border-slate-200/90 shadow-2xl p-6 sm:p-8 lg:p-10 space-y-8 text-left"
+              className="relative w-full max-w-5xl max-h-[92vh] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-3xl bg-white border border-slate-200/90 shadow-2xl p-6 sm:p-8 lg:p-10 space-y-8 text-left"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Modal Top Header */}
-              <div className="flex items-start justify-between gap-6 pb-6 border-b border-slate-200/80">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-50 text-[#b89047] border border-amber-200/90">
-                      <School className="w-3.5 h-3.5" />
-                      <span>{selectedSchoolModal.tag}</span>
-                    </span>
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-[#b89047]" /> {selectedSchoolModal.district}
-                    </span>
-                  </div>
-
+              {/* Modal Top Header (Clean School Name ALONE with Close Button) */}
+              <div className="flex items-center justify-between gap-6 pb-6 border-b border-slate-200/80">
+                <div className="space-y-1">
                   <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#002137] tracking-tight leading-tight">
                     {selectedSchoolModal.name}
                   </h3>
@@ -1832,7 +1822,7 @@ export default function HomePage() {
                   </blockquote>
 
                   <p className="text-xs font-extrabold text-[#002137] tracking-wide pt-1">
-                    — Ms. Karunya S, Founder &amp; Alumna
+                    — Ms. Karunya S, Founder &amp; Alumini
                   </p>
                 </div>
 
