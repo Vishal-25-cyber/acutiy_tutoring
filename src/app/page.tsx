@@ -1302,9 +1302,9 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Centered Founder Card in Optimal Size Matching Team Cards */}
+          {/* Centered Founder Card (Slightly Larger Prominent Size) */}
           <div className="flex justify-center items-center">
-            <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-[#b89047]/40 transition-all flex flex-col items-center text-center space-y-3 w-full max-w-[245px] sm:max-w-[265px]">
+            <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-md hover:shadow-xl hover:border-[#b89047]/50 transition-all duration-300 flex flex-col items-center text-center space-y-4 w-full max-w-[285px] sm:max-w-[315px] lg:max-w-[335px]">
               <div className="w-full aspect-4/5 rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
                 <img
                   src="/images/founder_karunya.png"
@@ -1313,8 +1313,8 @@ export default function HomePage() {
                 />
               </div>
               <div className="space-y-0.5 pt-0.5">
-                <h4 className="font-black text-lg sm:text-xl text-[#002137]">Karunya S</h4>
-                <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">Founder</p>
+                <h4 className="font-black text-xl sm:text-2xl text-[#002137] tracking-tight">Karunya S</h4>
+                <p className="text-sm sm:text-base font-black text-[#b89047] uppercase tracking-wider">Founder</p>
               </div>
             </div>
           </div>
