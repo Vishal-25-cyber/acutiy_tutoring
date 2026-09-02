@@ -21,11 +21,11 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#001726]/95 backdrop-blur-md transition-all shadow-xs">
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 h-20 flex items-center justify-between">
         {/* Brand Logo & Name (Left Side - Clean Logo, Shifted Left, Stylized Λ matching logo) */}
-        <Link href="/" prefetch={true} className="flex items-center gap-3 group shrink-0">
+        <Link href="/" prefetch={true} className="flex items-center gap-3.5 group shrink-0">
           <img
             src="/images/mantif_logo.png"
             alt="Mantif Logo"
-            className="w-10 h-10 object-contain group-hover:scale-105 transition-transform shrink-0"
+            className="w-12 h-12 sm:w-[50px] sm:h-[50px] object-contain group-hover:scale-105 transition-transform shrink-0"
           />
           <div className="flex flex-col justify-center">
             <span

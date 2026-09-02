@@ -133,11 +133,11 @@ export function PortalSidebar({ role }: SidebarProps) {
     <aside className="w-64 border-r border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#001726] flex flex-col h-screen sticky top-0 shrink-0 select-none z-30 transition-colors">
       {/* Sidebar Header */}
       <div className="h-20 px-4 flex items-center border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#00121e]/50">
-        <Link href="/" prefetch={true} className="flex items-center gap-2.5 group shrink-0 min-w-0">
+        <Link href="/" className="flex items-center gap-3 group">
           <img
             src="/images/mantif_logo.png"
-            alt="MANTIF Logo"
-            className="w-10 h-10 object-contain group-hover:scale-105 transition-transform shrink-0"
+            alt="Mantif Logo"
+            className="w-11 h-11 object-contain group-hover:scale-105 transition-transform shrink-0"
           />
           <div className="flex flex-col justify-center min-w-0">
             <div className="flex items-center gap-1.5">

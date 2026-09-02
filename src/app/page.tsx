@@ -450,11 +450,11 @@ export default function HomePage() {
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 h-20 flex items-center justify-between">
 
           {/* Logo & Brand Identity (Left Side - Clean Logo, Shifted Left, Stylized Λ matching the logo) */}
-          <Link href="#about" className="flex items-center gap-3 group text-left cursor-pointer shrink-0">
+          <Link href="#about" className="flex items-center gap-3.5 group text-left cursor-pointer shrink-0">
             <img
               src="/images/mantif_logo.png"
               alt="MANTIF Logo"
-              className="w-10 h-10 object-contain group-hover:scale-105 transition-transform shrink-0"
+              className="w-12 h-12 sm:w-[50px] sm:h-[50px] object-contain group-hover:scale-105 transition-transform shrink-0"
             />
             <div className="flex flex-col justify-center">
               <span
