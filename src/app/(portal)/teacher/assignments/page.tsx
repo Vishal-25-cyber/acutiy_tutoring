@@ -858,9 +858,18 @@ export default function TeacherAssignmentsPage() {
         <Modal isOpen={!!selectedSub} onClose={() => setSelectedSub(null)} title="Grade Student Submission">
           <form onSubmit={handleGrade} className="space-y-4 pt-2">
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 space-y-1.5 text-xs">
-              <div className="flex items-center justify-between font-bold">
+              <div className="flex items-center justify-between font-bold flex-wrap gap-2">
                 <span className="text-slate-900 dark:text-slate-100">{selectedSub.studentId?.name}</span>
-                <span className="text-[#004b79] dark:text-[#dfb74a]">{selectedSub.assignmentId?.title}</span>
+                <div className="flex items-center gap-2">
+                  {/* Proctoring Violation Badge */}
+                  {typeof selectedSub.violationCount === "number" && (
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black flex items-center gap-1 border ${ selectedSub.violationCount === 0 ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800" : selectedSub.violationCount <= 2 ? "bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700" : "bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800" }`}>
+                      <ShieldAlert className="w-3 h-3" />
+                      {selectedSub.violationCount === 0 ? "No Violations" : `${selectedSub.violationCount} Violation${selectedSub.violationCount > 1 ? "s" : ""}`}
+                    </span>
+                  )}
+                  <span className="text-[#004b79] dark:text-[#dfb74a]">{selectedSub.assignmentId?.title}</span>
+                </div>
               </div>
               {selectedSub.proctoringSnapshotUrl && (
                 <div className="pt-2 border-t border-slate-200 dark:border-slate-800">

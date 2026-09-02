@@ -215,6 +215,7 @@ export interface IAssignmentSubmission {
   submissionText?: string;
   fileUrl?: string;
   proctoringSnapshotUrl?: string;
+  violationCount?: number;
   timeTakenMinutes?: number;
   submittedAt: Date;
   status: SubmissionStatus;

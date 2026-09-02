@@ -315,6 +315,8 @@ export default function StudentAssignmentsPage() {
     setAwaySeconds(0);
     setIsFaceDetected(true);
     setSplitViewMode("SPLIT");
+    setUploadExpired(false);
+    setUploadWindowSeconds(300);
     const duration = (test.durationMinutes || 45) * 60;
     setTimeLeftSeconds(duration);
     await startCamera();
@@ -544,6 +546,7 @@ export default function StudentAssignmentsPage() {
           submissionText: submissionText.trim(),
           fileUrl: selectedFile?.url || "",
           proctoringSnapshotUrl: snapshotUrl || "",
+          violationCount: isProctoredTest ? warningCount : 0,
           type: activeCategory,
         }),
       });
@@ -1088,60 +1091,66 @@ export default function StudentAssignmentsPage() {
               <div className={`${
                 splitViewMode === "SUBMIT_FULL" ? "lg:col-span-12" : "lg:col-span-5"
               } h-full flex flex-col gap-3 overflow-y-auto no-scrollbar pr-0.5`}>
-                {/* 1. Live Camera Feed & AI Security Monitor Card */}
-                <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3 shrink-0 shadow-xl">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold flex items-center gap-1.5 text-emerald-400">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                      <span>Live Webcam Proctoring</span>
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-mono">
-                      {isFaceDetected ? "● Candidate Focused" : `⚠️ Look Away: ${awaySeconds}s`}
-                    </span>
+                {/* 1. Live Camera Feed - Compact, clean with face visible */}
+                <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shrink-0 shadow-xl">
+                  {/* Camera Header */}
+                  <div className="px-3 py-2 flex items-center justify-between bg-slate-950/80 border-b border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${ isCameraStarted ? "bg-emerald-400 animate-pulse" : "bg-amber-400 animate-bounce" }`} />
+                      <span className="text-[11px] font-bold text-slate-300">Live Proctoring</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {/* Status */}
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ isFaceDetected ? "text-emerald-300 bg-emerald-950/60" : "text-rose-300 bg-rose-950/60 animate-pulse" }`}>
+                        {isFaceDetected ? "● In Frame" : `⚠ Away ${awaySeconds}s`}
+                      </span>
+                      {/* Warnings badge */}
+                      {warningCount > 0 && (
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-rose-600/30 border border-rose-600/50 text-rose-300 flex items-center gap-1">
+                          <ShieldAlert className="w-2.5 h-2.5" />
+                          {warningCount} {warningCount === 1 ? "Warning" : "Warnings"}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Video Stream with Face Frame Crosshairs */}
-                  <div className="relative w-full aspect-4/3 bg-slate-950 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center shadow-inner">
+                  {/* Video Feed — full width, no text overlays, face-forward */}
+                  <div className="relative w-full" style={{aspectRatio: "4/3"}}>
                     <video
                       ref={videoRef}
                       autoPlay
                       playsInline
                       muted
-                      className="w-full h-full object-cover scale-x-[-1]"
+                      className="w-full h-full object-cover"
+                      style={{transform: "scaleX(-1)", filter: "brightness(1.15) contrast(1.05)"}}
                     />
                     <canvas ref={canvasRef} className="hidden" />
 
-                    {/* Face Guide Target Overlay */}
+                    {/* Face guide frame — subtle corner guides only */}
                     {isCameraStarted && (
                       <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                        <div className={`w-36 h-48 sm:w-44 sm:h-56 rounded-3xl border-2 border-dashed transition-all duration-300 ${
-                          isFaceDetected
-                            ? "border-emerald-400/50 shadow-[0_0_20px_rgba(52,211,153,0.15)]"
-                            : "border-rose-500/80 shadow-[0_0_25px_rgba(244,63,94,0.3)] animate-pulse"
-                        }`} />
-                        <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-slate-950/80 text-[10px] font-mono text-slate-400">
-                          AI Focus Guard: {isFaceDetected ? "100% In View" : "Attention Diverted"}
+                        <div className={`w-40 h-52 sm:w-48 sm:h-60 relative transition-all duration-300`}>
+                          {/* Corner brackets */}
+                          {[
+                            "top-0 left-0 border-t-2 border-l-2 rounded-tl-xl",
+                            "top-0 right-0 border-t-2 border-r-2 rounded-tr-xl",
+                            "bottom-0 left-0 border-b-2 border-l-2 rounded-bl-xl",
+                            "bottom-0 right-0 border-b-2 border-r-2 rounded-br-xl",
+                          ].map((cls, i) => (
+                            <div key={i} className={`absolute w-6 h-6 ${ isFaceDetected ? "border-emerald-400/70" : "border-rose-500 animate-pulse" } ${cls}`} />
+                          ))}
                         </div>
                       </div>
                     )}
 
+                    {/* Camera initializing state */}
                     {!isCameraStarted && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center text-xs text-slate-400 bg-slate-950">
                         <Camera className="w-8 h-8 text-amber-400 animate-pulse" />
-                        <span>Camera stream initializing…</span>
+                        <span>Camera initializing…</span>
                         {cameraError && <p className="text-[11px] text-rose-400 font-bold">{cameraError}</p>}
                       </div>
                     )}
-                  </div>
-
-                  <div className="space-y-1 text-[11px] text-slate-400">
-                    <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                      <span>Continuous Security Guard Active</span>
-                    </div>
-                    <p className="text-slate-400 leading-tight">
-                      Write your answers on paper. Keep your face inside the target frame. Looking away for 5 seconds or switching tabs will trigger audio security alarms.
-                    </p>
                   </div>
                 </div>
 

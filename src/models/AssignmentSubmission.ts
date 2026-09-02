@@ -23,6 +23,7 @@ const AssignmentSubmissionSchema = new Schema<IAssignmentSubmissionDocument>(
     submissionText: { type: String, trim: true },
     fileUrl: { type: String, default: "" },
     proctoringSnapshotUrl: { type: String, default: "" },
+    violationCount: { type: Number, default: 0 },
     timeTakenMinutes: { type: Number },
     submittedAt: { type: Date, default: Date.now },
     status: {
