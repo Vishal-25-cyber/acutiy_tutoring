@@ -57,12 +57,6 @@ export function PortalSidebar({ role }: SidebarProps) {
       icon: CreditCard,
       api: "/api/student/payments",
     },
-    {
-      href: "/student/performance",
-      label: "Performance Report",
-      icon: Activity,
-      api: "/api/student/performance",
-    },
   ], []);
 
   const teacherLinks: SidebarLink[] = React.useMemo(() => [
