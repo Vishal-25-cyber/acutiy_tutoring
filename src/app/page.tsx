@@ -1314,7 +1314,7 @@ export default function HomePage() {
               </div>
               <div className="space-y-0.5 pt-0.5">
                 <h4 className="font-black text-lg sm:text-xl text-[#002137]">Karunya S</h4>
-                <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">Founder</p>
+                <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">Founder &amp; CEO</p>
               </div>
             </div>
           </div>
