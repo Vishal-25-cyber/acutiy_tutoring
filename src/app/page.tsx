@@ -1297,18 +1297,18 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Centered Founder Card in Exact Same Styling & Ratio as Team Member Cards */}
+          {/* Centered Founder Card in Exact Same Compact Size as Team Member Cards */}
           <div className="flex justify-center items-center">
-            <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-[#b89047]/40 transition-all flex flex-col items-center text-center space-y-3 w-full max-w-[260px] sm:max-w-[280px]">
+            <div className="p-4 sm:p-4.5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-[#b89047]/40 transition-all flex flex-col items-center text-center space-y-3 w-full max-w-[210px] sm:max-w-[230px]">
               <div className="w-full aspect-4/5 rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
                 <img
                   src="/images/founder_karunya.png"
                   alt="Karunya S - Founder of MANTIF"
-                  className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-full object-cover object-[center_16%] group-hover:scale-105 transition-transform duration-500"
                 />
               </div>
               <div className="space-y-0.5 pt-0.5">
-                <h4 className="font-black text-lg sm:text-xl text-[#002137]">Karunya S</h4>
+                <h4 className="font-black text-base sm:text-lg text-[#002137]">Karunya S</h4>
                 <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">Founder</p>
               </div>
             </div>
