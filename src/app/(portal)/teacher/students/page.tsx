@@ -274,96 +274,46 @@ export default function TeacherStudentsPage() {
                 {/* Class Student Rows (Cardless Hairline Table) */}
                 <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
                   {classStudents.map((s: any) => {
-                    const attPct = typeof s.attendancePercentage === "number" ? s.attendancePercentage : 100;
-                    const isCompliant = attPct >= 75;
-
                     return (
                       <div
                         key={s._id}
-                        className="py-4 flex flex-col xl:flex-row xl:items-center justify-between gap-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors px-1"
+                        className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors px-1"
                       >
-                        <div className="space-y-1.5 min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100">
-                              {s.userId?.name || "Student"}
-                            </h3>
+                        <div className="flex items-center gap-2.5 flex-wrap min-w-0 flex-1">
+                          <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100">
+                            {s.userId?.name || "Student"}
+                          </h3>
 
-                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#dfb74a] border border-blue-200 dark:border-[#004b79]/60">
-                              {s.currentClass} • {s.board}
-                            </span>
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#dfb74a] border border-blue-200 dark:border-[#004b79]/60">
+                            {s.currentClass} • {s.board}
+                          </span>
 
-                            <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                              Batch: {s.batchId?.name || "7:00 PM – 8:00 PM"}
-                            </span>
-                          </div>
-
-                          <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                            <School className="w-3.5 h-3.5 text-slate-400" />
-                            <span>{s.schoolName || "DAV Senior Secondary School"}</span>
-                          </p>
-
-                          <div className="flex items-center gap-4 text-[11px] text-slate-500 dark:text-slate-400 flex-wrap pt-0.5">
-                            <span className="flex items-center gap-1 font-mono">
-                              <Mail className="w-3.5 h-3.5 text-slate-400" />
-                              <span>{s.userId?.email}</span>
-                            </span>
-
-                            {s.userId?.phone && (
-                              <span className="flex items-center gap-1 font-mono">
-                                <Phone className="w-3.5 h-3.5 text-slate-400" />
-                                <span>{s.userId?.phone}</span>
-                              </span>
-                            )}
-
-                            {s.parentName && (
-                              <span className="text-slate-400">
-                                Parent: <strong className="text-slate-600 dark:text-slate-300 font-sans">{s.parentName}</strong>{" "}
-                                {s.parentPhone && `(${s.parentPhone})`}
-                              </span>
-                            )}
-                          </div>
+                          <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                            Batch: {s.batchId?.name || "7:00 PM – 8:00 PM"}
+                          </span>
                         </div>
 
-                        {/* Right Column: Attendance & Homework Stats + Actions */}
-                        <div className="flex items-center gap-4 shrink-0 flex-wrap justify-between sm:justify-end">
-                          <div className="text-left sm:text-right space-y-0.5">
-                            <div className="flex items-center gap-1.5 sm:justify-end">
-                              <span
-                                className={`text-sm font-black ${
-                                  isCompliant
-                                    ? "text-emerald-600 dark:text-emerald-400"
-                                    : "text-amber-600 dark:text-amber-400"
-                                }`}
-                              >
-                                {attPct}% Live Attendance
-                              </span>
-                            </div>
-                            <p className="text-[10px] text-slate-400">
-                              {s.attendedCount ?? 1}/{s.totalSessions ?? 1} Sessions • {s.homeworkSubmitted ?? 0} Homework Done
-                            </p>
-                          </div>
+                        {/* Action Buttons (View Dossier & Edit Profile) */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenView(s)}
+                            className="font-bold text-xs flex items-center gap-1.5 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer shadow-2xs"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                            <span>View</span>
+                          </Button>
 
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleOpenView(s)}
-                              className="font-bold text-xs flex items-center gap-1.5 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-                            >
-                              <Eye className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                              <span>View</span>
-                            </Button>
-
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleOpenEdit(s)}
-                              className="font-bold text-xs flex items-center gap-1.5 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-                            >
-                              <Edit className="w-3.5 h-3.5 text-[#004b79] dark:text-[#dfb74a]" />
-                              <span>Edit</span>
-                            </Button>
-                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenEdit(s)}
+                            className="font-bold text-xs flex items-center gap-1.5 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer shadow-2xs"
+                          >
+                            <Edit className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                            <span>Edit</span>
+                          </Button>
                         </div>
                       </div>
                     );
