@@ -129,14 +129,6 @@ export default function TeacherStudentReportsPage() {
     }
   }, [studentReport]);
 
-  // Parent Communication State
-  const [showAddCommModal, setShowAddCommModal] = useState(false);
-  const [commMethod, setCommMethod] = useState<"CALL" | "WHATSAPP" | "EMAIL" | "IN_PERSON">("CALL");
-  const [commSummary, setCommSummary] = useState("");
-  const [commFollowUpDate, setCommFollowUpDate] = useState("");
-  const [commStatus, setCommStatus] = useState<"PENDING" | "IN_PROGRESS" | "RESOLVED">("RESOLVED");
-  const [isSavingComm, setIsSavingComm] = useState(false);
-
   // PDF Handlers
   const handleDownloadSchoolPdf = async () => {
     if (!schoolReport) return;
@@ -186,37 +178,6 @@ export default function TeacherStudentReportsPage() {
       console.error(err);
     } finally {
       setIsSavingRemarks(false);
-    }
-  };
-
-  const handleAddParentComm = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedStudentId || !commSummary.trim()) return;
-    setIsSavingComm(true);
-
-    try {
-      const res = await fetch(`/api/teacher/reports/${selectedStudentId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "ADD_PARENT_COMM",
-          communicationMethod: commMethod,
-          discussionSummary: commSummary,
-          followUpDate: commFollowUpDate || undefined,
-          followUpStatus: commStatus,
-        }),
-      });
-      if (res.ok) {
-        setShowAddCommModal(false);
-        setCommSummary("");
-        setCommFollowUpDate("");
-        invalidateCache(`/api/teacher/reports/${selectedStudentId}`);
-        refetchStudentReport();
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSavingComm(false);
     }
   };
 
@@ -743,105 +704,12 @@ export default function TeacherStudentReportsPage() {
                 </form>
               </div>
 
-              {/* ── PARENT COMMUNICATION LOG ── */}
-              <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
-                <div className="flex items-center justify-between pb-3 mb-2">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Parent Communication History
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddCommModal(true)}
-                    className="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Log Call / Notice</span>
-                  </button>
-                </div>
-
-                <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                  {studentReport.parentCommunicationHistory?.map((c: any) => (
-                    <div key={c._id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-slate-900 dark:text-slate-100">
-                            {c.communicationMethod} with Parent
-                          </span>
-                          <span className="font-mono text-slate-400 text-[10px]">
-                            {new Date(c.contactDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                          </span>
-                        </div>
-                        <p className="text-slate-600 dark:text-slate-400">{c.discussionSummary}</p>
-                      </div>
-
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 self-start sm:self-auto shrink-0">
-                        {c.followUpStatus || "RESOLVED"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           ) : (
             <div className="py-8 text-center text-xs text-slate-400">
               Select a student to view performance report.
             </div>
           )}
-        </div>
-      )}
-
-      {/* ── ADD PARENT COMMUNICATION MODAL ── */}
-      {showAddCommModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800 shadow-xl animate-in zoom-in-95 duration-150">
-            <h3 className="font-extrabold text-base text-slate-900 dark:text-slate-100">
-              Log Parent Communication
-            </h3>
-            <form onSubmit={handleAddParentComm} className="space-y-3 text-xs">
-              <div className="space-y-1">
-                <label className="font-bold text-slate-700 dark:text-slate-300">Method</label>
-                <select
-                  value={commMethod}
-                  onChange={(e) => setCommMethod(e.target.value as any)}
-                  className="w-full p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
-                >
-                  <option value="CALL">Phone Call</option>
-                  <option value="WHATSAPP">WhatsApp Notice</option>
-                  <option value="EMAIL">Email</option>
-                  <option value="IN_PERSON">In-Person Meeting</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-bold text-slate-700 dark:text-slate-300">Discussion Summary</label>
-                <textarea
-                  rows={3}
-                  required
-                  value={commSummary}
-                  onChange={(e) => setCommSummary(e.target.value)}
-                  placeholder="Summary of discussion with parent..."
-                  className="w-full p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAddCommModal(false)}
-                  className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSavingComm}
-                  className="px-3.5 py-1.5 rounded-xl bg-[#002137] dark:bg-[#004b79] text-white font-bold"
-                >
-                  {isSavingComm ? "Saving…" : "Save Log"}
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
       )}
     </main>

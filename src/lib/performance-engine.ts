@@ -498,27 +498,15 @@ export async function generateStudentPerformanceReport(
     updatedAt: new Date(),
   };
 
-  const parentCommunicationHistory = parentComms.length > 0
-    ? parentComms.map((c) => ({
-        _id: c._id.toString(),
-        contactDate: new Date(c.contactDate).toISOString(),
-        communicationMethod: c.communicationMethod,
-        discussionSummary: c.discussionSummary,
-        followUpDate: c.followUpDate ? new Date(c.followUpDate).toISOString() : undefined,
-        followUpStatus: c.followUpStatus,
-        teacherName: c.teacherName || "Academic Counselor",
-      }))
-    : [
-        {
-          _id: "comm-1",
-          contactDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-          communicationMethod: "CALL" as const,
-          discussionSummary: "Informed parent regarding excellent test performance and discussed term syllabus progress.",
-          followUpDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-          followUpStatus: "RESOLVED" as const,
-          teacherName: "Academic Counselor",
-        },
-      ];
+  const parentCommunicationHistory = parentComms.map((c) => ({
+    _id: c._id.toString(),
+    contactDate: new Date(c.contactDate).toISOString(),
+    communicationMethod: c.communicationMethod,
+    discussionSummary: c.discussionSummary,
+    followUpDate: c.followUpDate ? new Date(c.followUpDate).toISOString() : undefined,
+    followUpStatus: c.followUpStatus,
+    teacherName: c.teacherName || "Academic Counselor",
+  }));
 
   return {
     studentInfo: {
