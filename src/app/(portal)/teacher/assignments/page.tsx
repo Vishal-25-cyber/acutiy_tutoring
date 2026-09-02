@@ -43,6 +43,64 @@ export default function TeacherAssignmentsPage() {
   const [feedback, setFeedback] = useState("");
   const [isGrading, setIsGrading] = useState(false);
 
+  // Safe Document Opener: prevents Chrome about:blank issues on data: URLs
+  const openDocumentSafely = (fileUrl: string, fileName?: string) => {
+    if (!fileUrl) return;
+
+    if (fileUrl.startsWith("data:")) {
+      try {
+        const arr = fileUrl.split(",");
+        const mimeMatch = arr[0].match(/:(.*?);/);
+        const mime = mimeMatch ? mimeMatch[1] : "application/octet-stream";
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const blob = new Blob([u8arr], { type: mime });
+        const blobUrl = URL.createObjectURL(blob);
+
+        const newWin = window.open("", "_blank");
+        if (newWin) {
+          if (mime.startsWith("image/")) {
+            newWin.document.write(`
+              <!DOCTYPE html>
+              <html>
+                <head>
+                  <title>${fileName || "Student Submission Preview"}</title>
+                  <style>
+                    body { margin: 0; background: #0b1329; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; font-family: system-ui, -apple-system, sans-serif; }
+                    .wrapper { max-width: 95vw; max-height: 95vh; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+                    img { max-width: 92vw; max-height: 85vh; object-fit: contain; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); border: 1px solid #1e293b; background: #000; }
+                    .meta { color: #94a3b8; font-size: 13px; font-weight: 600; }
+                  </style>
+                </head>
+                <body>
+                  <div class="wrapper">
+                    <div class="meta">${fileName || "Student Submitted Answer Sheet"}</div>
+                    <img src="${blobUrl}" alt="Submitted Work" />
+                  </div>
+                </body>
+              </html>
+            `);
+            newWin.document.close();
+          } else {
+            newWin.location.href = blobUrl;
+          }
+        } else {
+          window.open(blobUrl, "_blank");
+        }
+        return;
+      } catch (e) {
+        console.warn("Blob conversion error:", e);
+      }
+    }
+
+    // Normal URL
+    window.open(fileUrl, "_blank");
+  };
+
   const [formData, setFormData] = useState({
     type: "ASSIGNMENT" as "ASSIGNMENT" | "TEST" | "HOMEWORK",
     title: "",
@@ -821,16 +879,39 @@ export default function TeacherAssignmentsPage() {
                 </div>
               )}
               {selectedSub.fileUrl && (
-                <div className="pt-1">
-                  <a
-                    href={selectedSub.fileUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:underline"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    <span>View Submitted Answer Document</span>
-                  </a>
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1">
+                      <Paperclip className="w-3.5 h-3.5" />
+                      <span>Submitted Solution Sheet / Document:</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => openDocumentSafely(selectedSub.fileUrl, `${selectedSub.studentId?.name || "Student"}_Answer_Sheet`)}
+                      className="inline-flex items-center gap-1 text-xs font-bold text-[#004b79] dark:text-[#dfb74a] hover:underline cursor-pointer"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Open Full Size</span>
+                    </button>
+                  </div>
+
+                  {/* Instant In-Modal Document / Photo Preview Box */}
+                  <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-950/90 flex items-center justify-center min-h-[140px] max-h-[260px] p-1">
+                    {selectedSub.fileUrl.startsWith("data:application/pdf") || selectedSub.fileUrl.toLowerCase().includes(".pdf") ? (
+                      <iframe
+                        src={`${selectedSub.fileUrl}#toolbar=0`}
+                        title="Submitted PDF Answer Sheet"
+                        className="w-full h-[250px] bg-white rounded-lg border-0"
+                      />
+                    ) : (
+                      <img
+                        src={selectedSub.fileUrl}
+                        alt="Submitted Answer Sheet"
+                        className="max-h-[250px] w-auto max-w-full object-contain rounded-lg cursor-zoom-in hover:opacity-95 transition-all"
+                        onClick={() => openDocumentSafely(selectedSub.fileUrl, `${selectedSub.studentId?.name || "Student"}_Answer_Sheet`)}
+                      />
+                    )}
+                  </div>
                 </div>
               )}
             </div>
