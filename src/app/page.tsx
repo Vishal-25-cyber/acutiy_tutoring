@@ -1222,10 +1222,10 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 3: OUR SIDE (CLEAN SCHOOL LIST WITHOUT CARDS + POPUP LINK)
+          PAGE 3: OUR SIDE (BALANCED 2-COLUMN LAYOUT - NO SCHOOL REFERENCE BUTTON)
       ═══════════════════════════════════════════════════════════════════════ */}
       <section id="our-side" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/30 to-white py-12 lg:py-20">
-        <div className="w-full max-w-5xl mx-auto px-6 sm:px-10 lg:px-14 space-y-10 lg:space-y-14">
+        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 space-y-10 lg:space-y-14">
           
           {/* Section Heading */}
           <div className="text-center space-y-2">
@@ -1237,46 +1237,100 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Clean List of Schools (No Outer Cards, Just Pure Typography & Action Links) */}
+          {/* Clean List of Schools (Balanced 2-Column Split: School Info on Left, Video Launcher on Right) */}
           <div className="divide-y divide-slate-200">
             {outreachSchools.map((school) => (
-              <div key={school.id} className="py-8 first:pt-0 last:pb-0 space-y-3.5">
-                
-                {/* School Name ALONE */}
-                <div className="space-y-1">
-                  <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#002137] tracking-tight leading-snug">
-                    {school.name}
-                  </h3>
-                  <p className="text-xs sm:text-sm font-bold text-[#b89047] uppercase tracking-wide flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-[#b89047] shrink-0" />
-                    <span>{school.district}</span>
-                    <span className="text-slate-300">•</span>
-                    <span>{school.tag}</span>
-                  </p>
+              <div key={school.id} className="py-10 first:pt-0 last:pb-0">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 xl:gap-16 items-center">
+                  
+                  {/* Left Column (lg:col-span-7): School Name Alone + Theme + Action Link */}
+                  <div className="lg:col-span-7 space-y-4 text-left">
+                    <div className="space-y-2">
+                      <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight leading-tight">
+                        {school.name}
+                      </h3>
+                      <p className="text-xs sm:text-sm font-bold text-[#b89047] uppercase tracking-wide flex items-center gap-1.5 flex-wrap">
+                        <MapPin className="w-3.5 h-3.5 text-[#b89047] shrink-0" />
+                        <span>{school.district}</span>
+                        <span className="text-slate-300">•</span>
+                        <span>{school.tag}</span>
+                      </p>
+                    </div>
+
+                    <div className="space-y-2 text-slate-700 text-sm sm:text-base leading-relaxed font-medium">
+                      <p className="font-black text-[#002137]">
+                        Session: <span className="text-[#004b79]">“{school.sessionTitle}”</span>
+                      </p>
+                      <p className="text-slate-600">
+                        {school.summary}
+                      </p>
+                    </div>
+
+                    {/* Single Action Button (School Reference removed) */}
+                    <div className="pt-2">
+                      <button
+                        onClick={() => setSelectedSchoolModal(school)}
+                        className="group inline-flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-[#002137] hover:bg-[#004b79] text-white text-sm sm:text-base font-extrabold shadow-lg shadow-[#002137]/20 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+                      >
+                        <BookOpen className="w-5 h-5 text-[#dfb74a]" />
+                        <span>View Full Session Story, Contents &amp; Video</span>
+                        <ArrowRight className="w-4 h-4 text-amber-300 group-hover:translate-x-1.5 transition-transform" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Right Column (lg:col-span-5): Video Preview & Milestone Launcher */}
+                  <div className="lg:col-span-5 w-full">
+                    <div
+                      onClick={() => setSelectedSchoolModal(school)}
+                      className="group relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#002137] via-[#001726] to-slate-950 p-6 sm:p-7 text-white shadow-xl hover:shadow-2xl border border-slate-200/20 cursor-pointer transition-all duration-300 hover:scale-[1.02]"
+                    >
+                      {/* Ambient Glow */}
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(223,183,74,0.25),transparent_60%)] pointer-events-none" />
+                      <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#dfb74a_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+
+                      <div className="relative z-10 space-y-4">
+                        {/* Top Badges */}
+                        <div className="flex items-center justify-between">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-600/90 text-white shadow-sm">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                            Session Media
+                          </span>
+                          <span className="text-[11px] font-bold text-amber-300/90 bg-white/10 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-white/10">
+                            Founder Milestone
+                          </span>
+                        </div>
+
+                        {/* Center Play Icon & Prompt */}
+                        <div className="py-2 flex items-center gap-4">
+                          <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform shrink-0">
+                            <Play className="w-6 h-6 fill-current ml-0.5" />
+                          </div>
+                          <div className="space-y-0.5">
+                            <p className="text-sm sm:text-base font-black text-white group-hover:text-amber-300 transition-colors">
+                              Watch Session Video
+                            </p>
+                            <p className="text-xs text-slate-300 line-clamp-1 font-medium">
+                              Highlights &amp; Faculty Interaction
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Milestone Quote Preview */}
+                        <div className="p-3.5 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 text-xs italic text-slate-200 line-clamp-2 leading-relaxed">
+                          “{school.milestoneQuote}”
+                        </div>
+
+                        {/* Bottom Action Note */}
+                        <div className="flex items-center justify-between text-[11px] font-bold text-amber-300 pt-1 border-t border-white/10">
+                          <span>Click to Open Story &amp; Video Player</span>
+                          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
-
-                {/* Link directly under the school name */}
-                <div className="pt-1 flex flex-wrap items-center gap-3">
-                  <button
-                    onClick={() => setSelectedSchoolModal(school)}
-                    className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#002137] hover:bg-[#004b79] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
-                  >
-                    <BookOpen className="w-4 h-4 text-[#dfb74a]" />
-                    <span>View Session Story, Details &amp; Video</span>
-                    <ArrowRight className="w-4 h-4 text-amber-300 group-hover:translate-x-1 transition-transform" />
-                  </button>
-
-                  <a
-                    href={school.schoolUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 hover:border-[#b89047] bg-white text-slate-700 hover:text-[#002137] text-xs sm:text-sm font-semibold transition-all shadow-xs hover:shadow"
-                  >
-                    <span>Visit School Reference</span>
-                    <ExternalLink className="w-3.5 h-3.5 text-[#b89047]" />
-                  </a>
-                </div>
-
               </div>
             ))}
           </div>
