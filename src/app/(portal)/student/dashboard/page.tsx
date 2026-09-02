@@ -65,28 +65,28 @@ export default function StudentDashboardPage() {
     year: "numeric",
   }).format(new Date());
 
-  // Opted Subjects & Schedule
+  // Clean Opted Subjects & Schedule for Student's Grade & Batch
   const optedSubjects = [
     {
       name: "Mathematics",
       code: "MATH-10",
-      topic: "Quadratic Equations, Coordinate Geometry, Trigonometry",
-      schedule: "Mon, Wed, Fri • 7:00 PM – 8:00 PM",
-      faculty: "Dr. Sarah Jenkins",
+      topic: "Core Board Curriculum, Problem Solving & NCERT Solutions",
+      schedule: batchName,
+      faculty: "Assigned Faculty Specialist",
     },
     {
-      name: "Physics & Chemistry",
-      code: "SCI-10A",
-      topic: "Optics, Chemical Reactions & Equations, Electricity",
-      schedule: "Tue, Thu • 7:00 PM – 8:00 PM",
-      faculty: "Prof. Rajesh Kumar",
+      name: "Science (Physics, Chemistry & Biology)",
+      code: "SCI-10",
+      topic: "Conceptual Theory, Formula Derivations & Diagram Practice",
+      schedule: batchName,
+      faculty: "Assigned Faculty Specialist",
     },
     {
-      name: "Biology",
-      code: "SCI-10B",
-      topic: "Life Processes, Control & Coordination, Heredity",
-      schedule: "Saturday • 7:00 PM – 8:00 PM",
-      faculty: "Dr. Anita Rao",
+      name: "English & Social Studies",
+      code: "ENG-10",
+      topic: "Grammar, Reading Comprehension & Analytical Writing",
+      schedule: batchName,
+      faculty: "Assigned Faculty Specialist",
     },
   ];
 

@@ -112,74 +112,29 @@ export async function GET(req: NextRequest) {
     const hasLiveClassNow = dbClasses.some((c: any) => c.status === "LIVE");
     const activeLiveClass = dbClasses.find((c: any) => c.status === "LIVE");
 
-    const weeklySchedule = [
-      {
-        day: "Monday",
-        time: batchName,
-        startTime: batchStart,
-        endTime: batchEnd,
-        subject: "Mathematics",
-        topic: "Quadratic Equations — Discriminant & Real Roots Formula",
-        faculty: "Dr. Sarah Jenkins",
-        status: currentDayName === "Monday" && hasLiveClassNow ? "LIVE" : "SCHEDULED",
-        roomId: activeLiveClass?.livekitRoomId || "acuity-maths-live",
-      },
-      {
-        day: "Tuesday",
-        time: batchName,
-        startTime: batchStart,
-        endTime: batchEnd,
-        subject: "Science",
-        topic: "Light: Reflection & Refraction — Ray Diagrams Exemplar",
-        faculty: "Prof. Rajesh Kumar",
-        status: currentDayName === "Tuesday" && hasLiveClassNow ? "LIVE" : "SCHEDULED",
-        roomId: activeLiveClass?.livekitRoomId || "acuity-science-live",
-      },
-      {
-        day: "Wednesday",
-        time: batchName,
-        startTime: batchStart,
-        endTime: batchEnd,
-        subject: "Mathematics",
-        topic: "Arithmetic Progressions — nth Term & Sum of Terms",
-        faculty: "Dr. Sarah Jenkins",
-        status: currentDayName === "Wednesday" && hasLiveClassNow ? "LIVE" : "SCHEDULED",
-        roomId: activeLiveClass?.livekitRoomId || "acuity-maths-live",
-      },
-      {
-        day: "Thursday",
-        time: batchName,
-        startTime: batchStart,
-        endTime: batchEnd,
-        subject: "English",
-        topic: "Analytical Paragraph & Advanced Grammar Clauses",
-        faculty: "Ms. Anita Desai",
-        status: currentDayName === "Thursday" && hasLiveClassNow ? "LIVE" : "SCHEDULED",
-        roomId: activeLiveClass?.livekitRoomId || "acuity-english-live",
-      },
-      {
-        day: "Friday",
-        time: batchName,
-        startTime: batchStart,
-        endTime: batchEnd,
-        subject: "Social Science",
-        topic: "Nationalism in India / Life Processes Core Concepts",
-        faculty: "Prof. Rajesh Kumar",
-        status: currentDayName === "Friday" && hasLiveClassNow ? "LIVE" : "SCHEDULED",
-        roomId: activeLiveClass?.livekitRoomId || "acuity-social-live",
-      },
-      {
-        day: "Saturday",
-        time: batchName,
-        startTime: batchStart,
-        endTime: batchEnd,
-        subject: "Revision & Doubts",
-        topic: "Weekly Test Analysis, Doubt Resolution & Worksheet Solving",
-        faculty: "Senior Academic Faculty",
-        status: currentDayName === "Saturday" && hasLiveClassNow ? "LIVE" : "SCHEDULED",
-        roomId: activeLiveClass?.livekitRoomId || "acuity-revision-live",
-      },
-    ];
+    // Build real dynamic weekly schedule from actual database LiveSession records
+    const weeklySchedule = dbClasses.map((c: any) => {
+      let dayName = "Monday";
+      if (c.date) {
+        try {
+          dayName = new Intl.DateTimeFormat("en-US", { weekday: "long", timeZone: "Asia/Kolkata" }).format(new Date(c.date));
+        } catch {}
+      }
+      return {
+        _id: c._id?.toString(),
+        day: dayName,
+        date: c.date,
+        time: c.startTime && c.endTime ? `${c.startTime} – ${c.endTime}` : batchName,
+        startTime: c.startTime || batchStart,
+        endTime: c.endTime || batchEnd,
+        subject: c.subject || "Academic Live Session",
+        topic: c.topic || c.title || "Live Class",
+        faculty: (c.teacherId as any)?.name || "Assigned Faculty",
+        status: c.status || "SCHEDULED",
+        roomId: c.livekitRoomId || `mantif-session-${c._id}`,
+        description: c.description || "",
+      };
+    });
 
     return NextResponse.json({
       classes: dbClasses,

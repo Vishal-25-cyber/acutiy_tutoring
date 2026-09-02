@@ -76,16 +76,15 @@ export function ClassroomRoom({
   const [hasVoted, setHasVoted] = useState(false);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
+  const teacherName = initialSessionData?.teacherId?.name || "Assigned Faculty Specialist";
+
   // Teacher Controls State
   const [isRoomLocked, setIsRoomLocked] = useState(false);
   const [participants, setParticipants] = useState<
     { id: string; name: string; role: string; isMuted: boolean; isVideoOff: boolean; isHandRaised: boolean }[]
   >([
-    { id: "teacher-1", name: "Dr. Sarah Jenkins", role: "TEACHER", isMuted: false, isVideoOff: false, isHandRaised: false },
+    { id: "teacher-1", name: teacherName, role: "TEACHER", isMuted: false, isVideoOff: false, isHandRaised: false },
     { id: currentUserId, name: currentUserName, role: currentUserRole, isMuted: !isMicOn, isVideoOff: !isVideoOn, isHandRaised: false },
-    { id: "st-2", name: "Aravind Swaminathan", role: "STUDENT", isMuted: true, isVideoOff: false, isHandRaised: false },
-    { id: "st-3", name: "Priya Sharma", role: "STUDENT", isMuted: true, isVideoOff: false, isHandRaised: true },
-    { id: "st-4", name: "Rohit Verma", role: "STUDENT", isMuted: true, isVideoOff: true, isHandRaised: false },
   ]);
 
   // Fetch token & validate entry
@@ -329,11 +328,11 @@ export function ClassroomRoom({
               <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-900 to-indigo-950/40 flex items-center justify-center">
                 {/* Classroom Blackboard / Video Simulation */}
                 <div className="text-center p-8 max-w-xl">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center mx-auto mb-4 text-white text-3xl font-black shadow-xl shadow-indigo-500/30">
-                    SJ
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center mx-auto mb-4 text-white text-2xl font-black shadow-xl shadow-indigo-500/30">
+                    {(teacherName || "FC").split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
                   </div>
-                  <h3 className="text-xl font-bold text-slate-100">Dr. Sarah Jenkins</h3>
-                  <p className="text-sm text-indigo-400 font-medium mt-1">Lead Mathematics Faculty • Acuity Tutoring</p>
+                  <h3 className="text-xl font-bold text-slate-100">{teacherName}</h3>
+                  <p className="text-sm text-indigo-400 font-medium mt-1">Live Online Classroom • Mantif Tutoring</p>
 
                   <div className="mt-6 inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-slate-800/80 border border-slate-700 text-xs text-slate-300">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
@@ -346,7 +345,7 @@ export function ClassroomRoom({
               <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
                 <div className="px-3 py-1 rounded-xl bg-black/60 backdrop-blur-md border border-white/10 text-xs font-semibold flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                  Dr. Sarah Jenkins (Teacher)
+                  {teacherName} (Teacher)
                 </div>
                 <div className="px-2.5 py-1 rounded-xl bg-black/60 backdrop-blur-md border border-white/10 text-[11px] text-slate-300">
                   1080p 60fps

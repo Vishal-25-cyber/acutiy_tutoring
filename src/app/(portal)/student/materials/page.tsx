@@ -33,68 +33,7 @@ export default function StudentMaterialsPage() {
   const studentClass = data?.studentClass || "Class 10";
   const studentBoard = data?.board || "CBSE";
 
-  const defaultMaterials: DownloadableMaterial[] = [
-    {
-      _id: "mat-math-1",
-      title: "Quadratic Equations — Discriminant & Real Roots Formula Handbook",
-      subject: "Mathematics",
-      classLevel: studentClass,
-      category: "PDF HANDBOOK",
-      fileSize: "1.4 MB",
-      description: "Complete formula derivations, nature of roots discriminant breakdown, and NCERT exemplar solutions.",
-      uploadedBy: "Dr. Sarah Jenkins",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      _id: "mat-sci-1",
-      title: "Ray Optics & Mirror Formula — Step-by-Step Diagram Guide",
-      subject: "Science",
-      classLevel: studentClass,
-      category: "STUDY NOTES",
-      fileSize: "2.1 MB",
-      description: "Concave & convex mirror ray diagrams, sign conventions, and high-scoring refraction problems.",
-      uploadedBy: "Prof. Rajesh Kumar",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      _id: "mat-sci-2",
-      title: "Chemical Reactions & Equations — Balancing & Type Identification",
-      subject: "Science",
-      classLevel: studentClass,
-      category: "WORKSHEET",
-      fileSize: "1.8 MB",
-      description: "Endothermic, exothermic, redox reaction balance sheet with 30 solved board exemplar questions.",
-      uploadedBy: "Prof. Rajesh Kumar",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      _id: "mat-eng-1",
-      title: "Analytical Paragraph Writing & Advanced Grammar Clause Rules",
-      subject: "English",
-      classLevel: studentClass,
-      category: "STUDY NOTES",
-      fileSize: "980 KB",
-      description: "High-scoring paragraph templates, active-to-passive transformation, and reported speech cheat sheet.",
-      uploadedBy: "Ms. Anita Desai",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      _id: "mat-sst-1",
-      title: "Nationalism in India — Timeline & Map Pointing Revision Chart",
-      subject: "Social Science",
-      classLevel: studentClass,
-      category: "MIND MAP",
-      fileSize: "2.6 MB",
-      description: "Chronological events summary, Non-Cooperation Movement, Civil Disobedience, and key exam map items.",
-      uploadedBy: "Prof. Rajesh Kumar",
-      createdAt: new Date().toISOString(),
-    },
-  ];
-
-  const rawMaterials: DownloadableMaterial[] =
-    Array.isArray(data?.materials) && data.materials.length > 0
-      ? data.materials
-      : defaultMaterials;
+  const rawMaterials: DownloadableMaterial[] = Array.isArray(data?.materials) ? data.materials : [];
 
   // Filter strictly by student's class
   const classMaterials = rawMaterials.filter((m: any) => {

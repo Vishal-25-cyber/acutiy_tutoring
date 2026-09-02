@@ -97,9 +97,9 @@ async function purifyDatabase() {
   const batches = await Batch.find().lean();
   const seenBatches = new Set<string>();
   for (const b of batches) {
-    const key = `${b.name.toLowerCase().trim()}_${b.classLevel}`;
+    const key = `${b.name.toLowerCase().trim()}_${(b as any).classLevel || ""}`;
     if (seenBatches.has(key)) {
-      console.log(`   🗑 Removing duplicate batch: ${b.name} (${b.classLevel})`);
+      console.log(`   🗑 Removing duplicate batch: ${b.name}`);
       await Batch.findByIdAndDelete(b._id);
     } else {
       seenBatches.add(key);

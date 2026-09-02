@@ -46,70 +46,6 @@ export default function StudentClassesPage() {
 
   // Real-time live timer & meeting lock status
   const timing = useClassLiveTimer(batch);
-
-  const defaultWeeklySchedule = [
-    {
-      day: "Monday",
-      time: batchName,
-      subject: "Mathematics",
-      topic: "Quadratic Equations — Discriminant & Real Roots Formula",
-      faculty: "Dr. Sarah Jenkins",
-      status: "SCHEDULED",
-      roomId: timing.permanentRoomId,
-      description: "Step-by-step problem solving on quadratic equations and discriminant analysis.",
-    },
-    {
-      day: "Tuesday",
-      time: batchName,
-      subject: "Science",
-      topic: "Light: Reflection & Refraction — Ray Diagrams Exemplar",
-      faculty: "Prof. Rajesh Kumar",
-      status: "SCHEDULED",
-      roomId: timing.permanentRoomId,
-      description: "Concave and convex mirrors ray tracing with NCERT exemplar problems.",
-    },
-    {
-      day: "Wednesday",
-      time: batchName,
-      subject: "Mathematics",
-      topic: "Arithmetic Progressions — nth Term & Sum of Terms",
-      faculty: "Dr. Sarah Jenkins",
-      status: "SCHEDULED",
-      roomId: timing.permanentRoomId,
-      description: "Derivations of Sn formulas and finding nth terms in arithmetic series.",
-    },
-    {
-      day: "Thursday",
-      time: batchName,
-      subject: "English",
-      topic: "Analytical Paragraph & Advanced Grammar Clauses",
-      faculty: "Ms. Anita Desai",
-      status: "SCHEDULED",
-      roomId: timing.permanentRoomId,
-      description: "High-scoring writing techniques and active/passive voice application.",
-    },
-    {
-      day: "Friday",
-      time: batchName,
-      subject: "Social Science",
-      topic: "Nationalism in India / Life Processes Core Concepts",
-      faculty: "Prof. Rajesh Kumar",
-      status: "SCHEDULED",
-      roomId: timing.permanentRoomId,
-      description: "Timeline of the freedom movement and important map markers.",
-    },
-    {
-      day: "Saturday",
-      time: batchName,
-      subject: "Revision & Doubts",
-      topic: "Weekly Test Analysis, Doubt Resolution & Worksheet Solving",
-      faculty: "Senior Academic Faculty",
-      status: "SCHEDULED",
-      roomId: timing.permanentRoomId,
-      description: "Comprehensive review of the week's curriculum with live doubt solving.",
-    },
-  ];
-
   const todayDateStr = new Date().toISOString().split("T")[0];
   const now = new Date();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -154,11 +90,9 @@ export default function StudentClassesPage() {
   const liveOrTodayDbClass = activeDoc;
 
   const weeklySchedule = (
-    Array.isArray(data?.weeklySchedule) && data.weeklySchedule.length > 0
-      ? data.weeklySchedule.map((s: any) => ({ ...s, roomId: timing.permanentRoomId }))
-      : defaultWeeklySchedule
+    Array.isArray(data?.weeklySchedule) ? data.weeklySchedule : []
   ).map((item: any) => {
-    const isToday = currentDay.toLowerCase() === item.day.toLowerCase() || liveDay.toLowerCase() === item.day.toLowerCase();
+    const isToday = currentDay.toLowerCase() === item.day?.toLowerCase() || liveDay.toLowerCase() === item.day?.toLowerCase();
     if (isToday && activeDoc) {
       return {
         ...item,
@@ -176,20 +110,20 @@ export default function StudentClassesPage() {
   });
 
   const todayScheduleItem =
-    weeklySchedule.find((s: any) => s.day.toLowerCase() === currentDay.toLowerCase()) ||
-    weeklySchedule.find((s: any) => s.day.toLowerCase() === liveDay.toLowerCase()) ||
-    weeklySchedule[1];
+    weeklySchedule.find((s: any) => s.day?.toLowerCase() === currentDay.toLowerCase()) ||
+    weeklySchedule.find((s: any) => s.day?.toLowerCase() === liveDay.toLowerCase()) ||
+    weeklySchedule[0];
 
-  const activeSubject = activeDoc?.subject || todayScheduleItem?.subject || "Mathematics";
+  const activeSubject = activeDoc?.subject || todayScheduleItem?.subject || "Live Classroom";
   const activeTopic =
     activeDoc?.topic ||
     activeDoc?.title ||
     todayScheduleItem?.topic ||
-    "Quadratic Equations";
+    "Interactive Academic Session";
   const activeFaculty =
     (typeof activeDoc?.teacherId === "object" && activeDoc?.teacherId?.name) ||
     todayScheduleItem?.faculty ||
-    "Faculty Specialist";
+    "Assigned Faculty";
   const activeRoomId =
     activeDoc?.livekitRoomId || activeDoc?.meetingId || todayScheduleItem?.roomId || timing.permanentRoomId;
 
@@ -238,15 +172,22 @@ export default function StudentClassesPage() {
           Live Classes & Timetable
         </h1>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={handleDownloadTimetable}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-850 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+            disabled={isDownloading || weeklySchedule.length === 0}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
           >
             {isDownloaded ? (
               <>
-                <Check className="w-3.5 h-3.5 text-emerald-500" />
+                <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>Downloaded</span>
+              </>
+            ) : isDownloading ? (
+              <>
+                <span className="w-3.5 h-3.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                <span>Generating...</span>
               </>
             ) : (
               <>
@@ -402,94 +343,102 @@ export default function StudentClassesPage() {
               <span className="text-xs font-mono text-slate-400">Monday – Saturday</span>
             </div>
 
-            {/* Table Header */}
-            <div className="hidden md:grid grid-cols-12 gap-4 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-850">
-              <div className="col-span-2">Day & Timing</div>
-              <div className="col-span-5">Subject & Topic</div>
-              <div className="col-span-3">Faculty Instructor</div>
-              <div className="col-span-2 text-right">Class Status</div>
-            </div>
+            {weeklySchedule.length === 0 ? (
+              <div className="py-12 text-center space-y-2 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+                <CalendarDays className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No Live Classes Scheduled</p>
+                <p className="text-xs text-slate-400">When your faculty schedules online live classes for your batch, your timetable will appear here.</p>
+              </div>
+            ) : (
+              <>
+                {/* Table Header */}
+                <div className="hidden md:grid grid-cols-12 gap-4 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-850">
+                  <div className="col-span-2">Day & Timing</div>
+                  <div className="col-span-5">Subject & Topic</div>
+                  <div className="col-span-3">Faculty Instructor</div>
+                  <div className="col-span-2 text-right">Class Status</div>
+                </div>
 
-            {/* Schedule Rows (No Boxed Cards) */}
-            <div className="divide-y divide-slate-100 dark:divide-slate-850">
-              {weeklySchedule.map((item: any, idx: number) => {
-                const isToday = currentDay.toLowerCase() === item.day.toLowerCase();
-                const canJoinToday = isToday && timing.canJoin;
-                const accent = getSubjectAccent(item.subject);
+                {/* Schedule Rows (No Boxed Cards) */}
+                <div className="divide-y divide-slate-100 dark:divide-slate-850">
+                  {weeklySchedule.map((item: any, idx: number) => {
+                    const isToday = currentDay.toLowerCase() === item.day.toLowerCase();
+                    const canJoinToday = isToday && timing.canJoin;
+                    const accent = getSubjectAccent(item.subject);
 
-                return (
-                  <div
-                    key={idx}
-                    className={`py-3.5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center transition-colors ${isToday ? "bg-indigo-50/20 dark:bg-indigo-950/10" : ""
-                      }`}
-                  >
-                    {/* Col 1: Day & Time */}
-                    <div className="col-span-2 space-y-0.5">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-slate-900 dark:text-slate-100">
-                          {item.day}
-                        </span>
-                        {isToday && (
-                          <span className="px-1.5 py-0.2 rounded text-[10px] font-bold uppercase bg-indigo-600 text-white">
-                            Today
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs font-mono text-slate-500 dark:text-slate-400">
-                        {item.time || batchName}
-                      </p>
-                    </div>
-
-                    {/* Col 2: Subject & Topic */}
-                    <div className="col-span-5 space-y-0.5">
-                      <div className="flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full ${accent.dot} shrink-0`} />
-                        <span className={`text-xs font-bold ${accent.text}`}>
-                          {item.subject}
-                        </span>
-                      </div>
-                      <p className="font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200">
-                        {item.topic}
-                      </p>
-                      <p className="text-[11px] text-slate-400 truncate">
-                        {item.description}
-                      </p>
-                    </div>
-
-                    {/* Col 3: Faculty */}
-                    <div className="col-span-3">
-                      <p className="font-medium text-xs sm:text-sm text-slate-800 dark:text-slate-200">
-                        {item.faculty}
-                      </p>
-                      <p className="text-[10px] text-slate-400">Faculty Specialist</p>
-                    </div>
-
-                    {/* Col 4: Status / Join Action */}
-                    <div className="col-span-2 flex items-center justify-start md:justify-end">
-                      {canJoinToday ? (
-                        <Link href={`/classroom/${timing.permanentRoomId}`}>
-                          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors cursor-pointer">
-                            <Video className="w-3.5 h-3.5" />
-                            <span>Join Live</span>
-                          </button>
-                        </Link>
-                      ) : isToday ? (
-                        <div className="flex items-center gap-1.5 text-xs font-mono text-amber-600 dark:text-amber-400">
-                          <Lock className="w-3.5 h-3.5" />
-                          <span className="text-[11px] font-medium">{timing.countdownText}</span>
+                    return (
+                      <div
+                        key={idx}
+                        className={`py-3.5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center transition-colors ${isToday ? "bg-indigo-50/20 dark:bg-indigo-950/10" : ""
+                          }`}
+                      >
+                        {/* Col 1: Day & Time */}
+                        <div className="col-span-2 space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                              {item.day}
+                            </span>
+                            {isToday && (
+                              <span className="px-1.5 py-0.2 rounded text-[10px] font-bold uppercase bg-indigo-600 text-white">
+                                Today
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs font-mono text-slate-500 dark:text-slate-400">
+                            {item.time || batchName}
+                          </p>
                         </div>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-xs text-slate-400 font-medium">
-                          <Clock className="w-3.5 h-3.5" />
-                          <span>Scheduled</span>
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
 
+                        {/* Col 2: Subject & Topic */}
+                        <div className="col-span-5 space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full ${accent.dot} shrink-0`} />
+                            <span className={`text-xs font-bold ${accent.text}`}>
+                              {item.subject}
+                            </span>
+                          </div>
+                          <p className="font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200">
+                            {item.topic}
+                          </p>
+                          <p className="text-[11px] text-slate-400 truncate">
+                            {item.description}
+                          </p>
+                        </div>
+
+                        {/* Col 3: Faculty */}
+                        <div className="col-span-3">
+                          <p className="font-medium text-xs sm:text-sm text-slate-800 dark:text-slate-200">
+                            {item.faculty}
+                          </p>
+                          <p className="text-[10px] text-slate-400">Faculty Specialist</p>
+                        </div>
+
+                        {/* Col 4: Status / Join Action */}
+                        <div className="col-span-2 flex items-center justify-start md:justify-end">
+                          {canJoinToday ? (
+                            <Link href={`/classroom/${timing.permanentRoomId}`}>
+                              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors cursor-pointer">
+                                <Video className="w-3.5 h-3.5" />
+                                <span>Join Live</span>
+                              </button>
+                            </Link>
+                          ) : isToday ? (
+                            <div className="flex items-center gap-1.5 text-xs font-mono text-amber-600 dark:text-amber-400">
+                              <Lock className="w-3.5 h-3.5" />
+                              <span className="text-[11px] font-medium">{timing.countdownText}</span>
+                            </div>
+                          ) : (
+                            <span className="text-xs font-medium text-slate-400">
+                              {item.status || "Scheduled"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
         </>
       )}
