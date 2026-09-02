@@ -29,7 +29,7 @@ import {
   Download,
   Loader2,
 } from "lucide-react";
-import { useFastFetch } from "@/lib/api-cache";
+import { useFastFetch, invalidateCache } from "@/lib/api-cache";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +40,6 @@ export default function TeacherStudentsPage() {
   const { data, refetch, isLoading } = useFastFetch("/api/teacher/students");
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("ALL");
-  const [feeFilter, setFeeFilter] = useState("ALL");
 
   // Modals & PDF state
   const [viewingStudent, setViewingStudent] = useState<any>(null);
@@ -78,7 +77,7 @@ export default function TeacherStudentsPage() {
       currentClass: student.currentClass || "Class 10",
       board: student.board || "CBSE",
       schoolName: student.schoolName || "",
-      batchId: student.batchId?._id || student.batchId || (batches[0]?._id ?? ""),
+      batchId: student.batchId?._id || student.batchId || "",
       parentName: student.parentName || "",
       parentPhone: student.parentPhone || "",
     });
@@ -88,45 +87,57 @@ export default function TeacherStudentsPage() {
   const handleSaveStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingStudent) return;
-
     setIsSaving(true);
     setStatusMessage(null);
 
     try {
-      const res = await fetch("/api/teacher/students", {
-        method: "PATCH",
+      const res = await fetch(`/api/teacher/students`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           studentProfileId: editingStudent._id,
-          ...formData,
+          name: formData.name.trim(),
+          phone: formData.phone.trim(),
+          currentClass: formData.currentClass,
+          board: formData.board,
+          schoolName: formData.schoolName.trim(),
+          batchId: formData.batchId,
+          parentName: formData.parentName.trim(),
+          parentPhone: formData.parentPhone.trim(),
         }),
       });
 
-      const result = await res.json();
-      if (!res.ok) {
-        setStatusMessage({ type: "error", text: result.error || "Failed to update student profile." });
-        return;
+      if (res.ok) {
+        setStatusMessage({ type: "success", text: "Student profile updated successfully!" });
+        invalidateCache("/api/teacher/students");
+        refetch();
+        setTimeout(() => {
+          setEditingStudent(null);
+          setStatusMessage(null);
+        }, 800);
+      } else {
+        const d = await res.json();
+        setStatusMessage({ type: "error", text: d.error || "Failed to update profile." });
       }
-
-      setStatusMessage({ type: "success", text: "Student profile updated successfully!" });
-      setTimeout(() => {
-        setEditingStudent(null);
-        if (typeof refetch === "function") refetch();
-      }, 1000);
-    } catch (err: any) {
-      setStatusMessage({ type: "error", text: err.message || "Network error while saving." });
+    } catch (err) {
+      console.error(err);
+      setStatusMessage({ type: "error", text: "Network error. Please try again." });
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDownloadReportPdf = async (student: any) => {
-    const sId = student.userId?._id || student.userId || student._id;
-    if (!sId) return;
+    const studentUserId = student.userId?._id || student.userId;
+    if (!studentUserId) {
+      alert("Student ID not found.");
+      return;
+    }
 
-    setDownloadingStudentId(sId);
     try {
-      const res = await fetch(`/api/teacher/reports/${sId}?period=LAST_90_DAYS`);
+      setDownloadingStudentId(studentUserId);
+      const res = await fetch(`/api/teacher/students/${studentUserId}/report`);
+      if (!res.ok) throw new Error("Failed to load report data");
       const rData = await res.json();
       if (rData.report) {
         generateStudentPerformanceReportPdf(rData.report);
@@ -141,26 +152,19 @@ export default function TeacherStudentsPage() {
     }
   };
 
-  // Filter students based on search and fee status
-  const matchesSearchAndFee = (s: any) => {
-    const matchesFee =
-      feeFilter === "ALL" ||
-      (feeFilter === "PAID" && s.feeStatus?.isPaid && !s.feeStatus?.isUnderVerification) ||
-      (feeFilter === "VERIFICATION" && s.feeStatus?.isUnderVerification) ||
-      (feeFilter === "UNPAID" && !s.feeStatus?.isPaid && !s.feeStatus?.isUnderVerification);
-
+  // Filter students based on search
+  const matchesSearch = (s: any) => {
     const q = search.toLowerCase().trim();
-    const matchesSearch =
-      !q ||
+    if (!q) return true;
+    return (
       s.userId?.name?.toLowerCase().includes(q) ||
       s.userId?.email?.toLowerCase().includes(q) ||
       s.schoolName?.toLowerCase().includes(q) ||
       s.parentName?.toLowerCase().includes(q) ||
       s.userId?.phone?.includes(q) ||
       s.parentPhone?.includes(q) ||
-      s.currentClass?.toLowerCase().includes(q);
-
-    return matchesFee && matchesSearch;
+      s.currentClass?.toLowerCase().includes(q)
+    );
   };
 
   // Get distinct classes present in the students dataset in descending grade order
@@ -177,7 +181,7 @@ export default function TeacherStudentsPage() {
 
   const totalFilteredCount = students.filter((s: any) => {
     const matchesClass = classFilter === "ALL" || s.currentClass === classFilter;
-    return matchesClass && matchesSearchAndFee(s);
+    return matchesClass && matchesSearch(s);
   }).length;
 
   return (
@@ -218,32 +222,17 @@ export default function TeacherStudentsPage() {
             />
           </div>
 
-          {/* Fee Status Select */}
-          <div className="flex items-center gap-2.5">
-            <select
-              value={feeFilter}
-              onChange={(e) => setFeeFilter(e.target.value)}
-              className="h-10 px-3.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-[#004b79] cursor-pointer shadow-xs"
+          {(classFilter !== "ALL" || search.trim()) && (
+            <button
+              onClick={() => {
+                setClassFilter("ALL");
+                setSearch("");
+              }}
+              className="h-10 px-3 rounded-xl text-xs font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 dark:hover:border-rose-800 transition-colors cursor-pointer"
             >
-              <option value="ALL">All Fee Statuses</option>
-              <option value="PAID">Fee Paid</option>
-              <option value="VERIFICATION">Under Verification</option>
-              <option value="UNPAID">Unpaid / Dues</option>
-            </select>
-
-            {(classFilter !== "ALL" || feeFilter !== "ALL" || search.trim()) && (
-              <button
-                onClick={() => {
-                  setClassFilter("ALL");
-                  setFeeFilter("ALL");
-                  setSearch("");
-                }}
-                className="h-10 px-3 rounded-xl text-xs font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 dark:hover:border-rose-800 transition-colors cursor-pointer"
-              >
-                Reset
-              </button>
-            )}
-          </div>
+              Reset Filters
+            </button>
+          )}
         </div>
 
         {/* Class-wise Filter Tabs / Pills */}
@@ -295,7 +284,7 @@ export default function TeacherStudentsPage() {
         ) : (
           displayClasses.map((cls) => {
             const classStudents = students.filter(
-              (s: any) => (s.currentClass || "Class 10") === cls && matchesSearchAndFee(s)
+              (s: any) => (s.currentClass || "Class 10") === cls && matchesSearch(s)
             );
 
             if (classStudents.length === 0) return null;
@@ -325,9 +314,6 @@ export default function TeacherStudentsPage() {
                   {classStudents.map((s: any) => {
                     const attPct = typeof s.attendancePercentage === "number" ? s.attendancePercentage : 100;
                     const isCompliant = attPct >= 75;
-                    const fee = s.feeStatus;
-                    const isFeePaid = fee?.isPaid;
-                    const isUnderVerification = fee?.isUnderVerification;
 
                     return (
                       <div
@@ -347,24 +333,6 @@ export default function TeacherStudentsPage() {
                             <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                               Batch: {s.batchId?.name || "7:00 PM – 8:00 PM"}
                             </span>
-
-                            {/* Fee Status Badge */}
-                            {isUnderVerification ? (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 animate-pulse">
-                                <Clock className="w-3 h-3 text-amber-600 animate-spin" />
-                                <span>Under Verification ({fee?.billingMonth || "Aug 2026"})</span>
-                              </span>
-                            ) : isFeePaid ? (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                                <span>₹{fee?.amount || 2500} Paid ({fee?.billingMonth || "Aug 2026"})</span>
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
-                                <AlertCircle className="w-3 h-3 text-rose-500" />
-                                <span>₹{fee?.amount || 2500} Due ({fee?.billingMonth || "Aug 2026"})</span>
-                              </span>
-                            )}
                           </div>
 
                           <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
@@ -428,14 +396,6 @@ export default function TeacherStudentsPage() {
                               )}
                               <span>Download PDF</span>
                             </button>
-
-                            <a
-                              href={`/teacher/reports`}
-                              className="font-bold text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800/80 bg-blue-50 dark:bg-blue-950/40 text-[#004b79] dark:text-[#dfb74a] hover:bg-blue-100 dark:hover:bg-blue-900/60 cursor-pointer transition-all"
-                            >
-                              <Activity className="w-3.5 h-3.5" />
-                              <span>Analytics</span>
-                            </a>
 
                             <Button
                               variant="outline"
@@ -518,27 +478,13 @@ export default function TeacherStudentsPage() {
 
               <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 space-y-1">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                  <CreditCard className="w-3.5 h-3.5 text-indigo-500" />
-                  Fee Status
+                  <Clock className="w-3.5 h-3.5 text-indigo-500" />
+                  Allocated Batch
                 </span>
-                <p
-                  className={`text-xl font-black ${
-                    viewingStudent.feeStatus?.isUnderVerification
-                      ? "text-amber-600 dark:text-amber-400"
-                      : viewingStudent.feeStatus?.isPaid
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-rose-600 dark:text-rose-400"
-                  }`}
-                >
-                  {viewingStudent.feeStatus?.isUnderVerification
-                    ? "VERIFICATION"
-                    : viewingStudent.feeStatus?.isPaid
-                    ? "PAID"
-                    : "UNPAID"}
+                <p className="text-sm font-black text-slate-900 dark:text-slate-100 truncate">
+                  {viewingStudent.batchId?.name || "6:00 PM – 7:00 PM"}
                 </p>
-                <p className="text-[10px] text-slate-400">
-                  ₹{viewingStudent.feeStatus?.amount || 2500} for {viewingStudent.feeStatus?.billingMonth || "Aug 2026"}
-                </p>
+                <p className="text-[10px] text-slate-400">Assigned Schedule</p>
               </div>
 
               <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 space-y-1">
