@@ -541,9 +541,14 @@ export function JitsiClassroom({
 
     async function initLivekit() {
       try {
+        const authTok = typeof window !== "undefined" ? (localStorage.getItem("acuity_auth_token") || sessionStorage.getItem("acuity_auth_token")) : "";
         const res = await fetch("/api/livekit/token", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            ...(authTok ? { Authorization: `Bearer ${authTok}` } : {}),
+          },
           body: JSON.stringify({ sessionId: classId }),
         });
         if (!res.ok) {

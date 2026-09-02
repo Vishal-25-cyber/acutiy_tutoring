@@ -57,42 +57,40 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Student profile not found." }, { status: 404 });
       }
 
-      // Check class level eligibility
-      if (studentProfile.currentClass !== liveSession.classLevel) {
-        return NextResponse.json(
-          { error: `This live class is for ${liveSession.classLevel}. You are enrolled in ${studentProfile.currentClass}.` },
-          { status: 403 }
-        );
+      // If class is not already LIVE, check class level and batch assignment
+      if (liveSession.status !== "LIVE") {
+        if (studentProfile.currentClass && liveSession.classLevel && studentProfile.currentClass !== liveSession.classLevel) {
+          return NextResponse.json(
+            { error: `This live class is for ${liveSession.classLevel}. You are enrolled in ${studentProfile.currentClass}.` },
+            { status: 403 }
+          );
+        }
+
+        const studentBatchId = studentProfile.batchId?.toString();
+        const sessionBatchId =
+          typeof liveSession.batchId === "object"
+            ? (liveSession.batchId as any)._id?.toString()
+            : liveSession.batchId?.toString();
+
+        if (studentBatchId && sessionBatchId && studentBatchId !== sessionBatchId) {
+          return NextResponse.json(
+            { error: "You are not assigned to this class batch." },
+            { status: 403 }
+          );
+        }
       }
 
-      // Check batch eligibility
-      const studentBatchId = studentProfile.batchId?.toString();
-      const sessionBatchId =
-        typeof liveSession.batchId === "object"
-          ? (liveSession.batchId as any)._id?.toString()
-          : liveSession.batchId?.toString();
-
-      if (studentBatchId !== sessionBatchId) {
-        return NextResponse.json(
-          { error: "You are not assigned to this class batch." },
-          { status: 403 }
-        );
-      }
-
-      // Check Late Entry Grace Period
-      const graceMinutes = liveSession.gracePeriodMinutes ?? 5;
+      // Check Late Entry Grace Period only if session is not active/LIVE
+      const graceMinutes = liveSession.gracePeriodMinutes ?? 15;
       const now = new Date();
 
       // Parse class start datetime
-      const [startHour, startMin] = liveSession.startTime.split(":").map(Number);
-      const sessionStartDateTime = new Date(`${liveSession.date}T${liveSession.startTime.padStart(5, "0")}:00`);
+      const sessionStartDateTime = new Date(`${liveSession.date}T${(liveSession.startTime || "00:00").padStart(5, "0")}:00`);
 
-      // If session start is a valid date
-      if (!isNaN(sessionStartDateTime.getTime())) {
+      if (liveSession.status !== "LIVE" && !isNaN(sessionStartDateTime.getTime())) {
         const diffMs = now.getTime() - sessionStartDateTime.getTime();
         const diffMinutes = Math.floor(diffMs / (1000 * 60));
 
-        // If student arrives more than graceMinutes late and manual override is NOT enabled:
         if (diffMinutes > graceMinutes && !liveSession.allowLateJoinManually && liveSession.status !== "COMPLETED") {
           return NextResponse.json(
             {
