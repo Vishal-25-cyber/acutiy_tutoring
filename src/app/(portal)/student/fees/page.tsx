@@ -27,7 +27,7 @@ export default function StudentFeesPage() {
   const [isPaying, setIsPaying] = useState(false);
   const [showPayModal, setShowPayModal] = useState(false);
   const [isQrUnlocked, setIsQrUnlocked] = useState(false);
-  const [autoLockSeconds, setAutoLockSeconds] = useState(30);
+  const [autoLockSeconds, setAutoLockSeconds] = useState(10);
   const [hasScanned, setHasScanned] = useState(false);
   const [transactionIdInput, setTransactionIdInput] = useState("");
   const [copiedUpi, setCopiedUpi] = useState(false);
@@ -44,7 +44,7 @@ export default function StudentFeesPage() {
     };
   }, [refetch]);
 
-  // Automatic security lock timer: locks QR automatically after 30 seconds
+  // Automatic security lock timer: locks QR automatically after 10 seconds
   useEffect(() => {
     let timer: any;
     if (isQrUnlocked && showPayModal) {
@@ -53,7 +53,7 @@ export default function StudentFeesPage() {
           if (prev <= 1) {
             setIsQrUnlocked(false);
             setHasScanned(true);
-            return 30;
+            return 10;
           }
           return prev - 1;
         });
@@ -89,13 +89,13 @@ export default function StudentFeesPage() {
     setTransactionIdInput(`UPI-${Date.now().toString().slice(-8)}`);
     setIsQrUnlocked(false);
     setHasScanned(false);
-    setAutoLockSeconds(30);
+    setAutoLockSeconds(10);
     setShowPayModal(true);
   };
 
   const handleOpenQr = () => {
     setIsQrUnlocked(true);
-    setAutoLockSeconds(30);
+    setAutoLockSeconds(10);
   };
 
   const handleManualLock = () => {
@@ -382,19 +382,11 @@ export default function StudentFeesPage() {
                         className="w-48 h-48 sm:w-52 sm:h-52 object-contain rounded-lg"
                       />
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center">
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
                         <Clock className="w-3 h-3 text-amber-600 animate-spin" />
                         <span>Auto-locks in {autoLockSeconds}s</span>
                       </span>
-                      <button
-                        type="button"
-                        onClick={handleManualLock}
-                        className="text-[11px] font-bold text-[#004b79] dark:text-[#dfb74a] hover:underline flex items-center gap-1 cursor-pointer"
-                      >
-                        <Lock className="w-3 h-3" />
-                        <span>Lock Now</span>
-                      </button>
                     </div>
                   </div>
                 )}
