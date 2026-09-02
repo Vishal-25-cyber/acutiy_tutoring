@@ -24,7 +24,7 @@ import { PortalHeader } from "@/components/layout/PortalHeader";
 
 export default function StudentDashboardPage() {
   const { data: authData } = useFastFetch("/api/auth/me");
-  const { data } = useFastFetch("/api/student/dashboard");
+  const { data } = useFastFetch<any>("/api/student/dashboard", undefined, { pollIntervalMs: 3000 });
   const { data: paymentData } = useFastFetch("/api/student/payments");
 
   const authUser = authData?.user;

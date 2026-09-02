@@ -78,18 +78,18 @@ export function getRoom(roomId: string) {
     roomSignals[roomId] = roomSignals[targetId];
   }
 
-  // Clean up old signals (>60s) and inactive participants (>25s)
+  // Clean up old signals (>60s) and inactive participants (>6s)
   const now = Date.now();
   roomSignals[targetId].signals = roomSignals[targetId].signals.filter((s) => now - s.timestamp < 60000);
   for (const [pid, p] of Object.entries(roomSignals[targetId].participants)) {
-    if (now - p.lastSeen > 25000) {
+    if (now - p.lastSeen > 6000) {
       delete roomSignals[targetId].participants[pid];
     }
   }
   return roomSignals[targetId];
 }
 
-// POST: Send WebRTC offer, answer, ICE candidate, heartbeat, or CLASS_ENDED
+// POST: Send WebRTC offer, answer, ICE candidate, heartbeat, CLIENT_LEFT, or CLASS_ENDED
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -117,6 +117,19 @@ export async function POST(
         timestamp: Date.now(),
       });
       return NextResponse.json({ success: true, isEnded: true, lastSeq: room.signalSeq });
+    }
+
+    if (type === "CLIENT_LEFT") {
+      delete room.participants[userId];
+      if (room.admissions) delete room.admissions[userId];
+      room.signalSeq = (room.signalSeq || 0) + 1;
+      room.signals.push({
+        id: room.signalSeq,
+        from: userId,
+        type: "CLIENT_LEFT",
+        timestamp: Date.now(),
+      });
+      return NextResponse.json({ success: true, left: true, lastSeq: room.signalSeq });
     }
 
     // Update participant presence

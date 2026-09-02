@@ -238,6 +238,20 @@ export function JitsiClassroom({
   // Global unmount & window pageleave cleanup (ensures webcam hardware light turns off immediately)
   useEffect(() => {
     const handleLeaveWindow = () => {
+      const curUserId = userInfoRef.current.id || currentUserId;
+      if (curUserId) {
+        try {
+          fetch(`/api/classes/${classId}/signal`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            keepalive: true,
+            body: JSON.stringify({
+              senderId: curUserId,
+              type: "CLIENT_LEFT",
+            }),
+          }).catch(() => {});
+        } catch {}
+      }
       stopAllMediaTracks();
     };
     window.addEventListener("beforeunload", handleLeaveWindow);
@@ -249,7 +263,7 @@ export function JitsiClassroom({
       stopAllMediaTracks();
       if (pollTimerRef.current) clearInterval(pollTimerRef.current);
     };
-  }, [stopAllMediaTracks]);
+  }, [stopAllMediaTracks, classId, currentUserId]);
 
   const jitsiApiRef = useRef<any>(null);
 
@@ -271,22 +285,17 @@ export function JitsiClassroom({
         return;
       }
       stream.getTracks().forEach((track) => {
-        const senders = pc.getSenders();
-        const existingSender = senders.find(
-          (s) => s.track?.kind === track.kind || (s as any).kind === track.kind
+        const transceivers = pc.getTransceivers();
+        const matchingTransceiver = transceivers.find(
+          (t) => t.sender.track?.kind === track.kind || t.receiver?.track?.kind === track.kind
         );
-        if (existingSender) {
-          existingSender.replaceTrack(track).catch(() => {});
+        if (matchingTransceiver) {
+          matchingTransceiver.sender.replaceTrack(track).catch(() => {});
         } else {
           try {
             pc.addTrack(track, stream);
           } catch (e) {
-            const transceiver = pc.getTransceivers().find(
-              (t) => t.receiver?.track?.kind === track.kind || t.sender?.track?.kind === track.kind
-            );
-            if (transceiver?.sender) {
-              transceiver.sender.replaceTrack(track).catch(() => {});
-            }
+            console.warn("addTrack error:", e);
           }
         }
       });
@@ -400,6 +409,21 @@ export function JitsiClassroom({
     stopAllMediaTracks();
     if (pollTimerRef.current) clearInterval(pollTimerRef.current);
     stopAllMedia();
+    const curUserId = userInfoRef.current.id || currentUserId;
+
+    // Send immediate CLIENT_LEFT signal to notify remote peer
+    try {
+      fetch(`/api/classes/${classId}/signal`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        body: JSON.stringify({
+          senderId: curUserId,
+          type: "CLIENT_LEFT",
+        }),
+      }).catch(() => {});
+    } catch {}
+
     const targetClassId = classDataRef.current?.id || classDataRef.current?.livekitRoomId || classId;
 
     if (userInfoRef.current.isTeacher) {
@@ -646,13 +670,23 @@ export function JitsiClassroom({
           const other = data.participants.find((p: any) => p.id !== curUserId);
           if (other) {
             setRemoteParticipant(other);
-          } else if (admittedListRef.current.length === 0) {
+          } else {
             setRemoteParticipant(null);
+            setHasRemoteVideo(false);
+            hasRemoteVideoRef.current = false;
+            if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+            remoteStreamRef.current = null;
           }
         }
 
         for (const sig of data.signals || []) {
-          if (sig.type === "CLIENT_JOINED" && userInfoRef.current.isTeacher && activePC) {
+          if (sig.type === "CLIENT_LEFT" && sig.from !== curUserId) {
+            setRemoteParticipant(null);
+            setHasRemoteVideo(false);
+            hasRemoteVideoRef.current = false;
+            if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+            remoteStreamRef.current = null;
+          } else if (sig.type === "CLIENT_JOINED" && userInfoRef.current.isTeacher && activePC) {
             addTracksToPeerConnection(activePC);
             if (activePC.signalingState === "stable" && !isCreatingOffer) {
               isCreatingOffer = true;
@@ -738,9 +772,9 @@ export function JitsiClassroom({
         // Periodic offer retry if other participant is present but remote video not yet connected
         if (userInfoRef.current.isTeacher && activePC && activePC.signalingState === "stable" && !isCreatingOffer) {
           const other = data.participants?.find((p: any) => p.id !== curUserId);
-          if (other && !hasRemoteVideoRef.current && activePC.connectionState !== "connected") {
+          if (other && !hasRemoteVideoRef.current) {
             const timeSinceLastOffer = Date.now() - lastOfferTimeRef.current;
-            if (timeSinceLastOffer > 3500) {
+            if (timeSinceLastOffer > 3000) {
               isCreatingOffer = true;
               lastOfferTimeRef.current = Date.now();
               addTracksToPeerConnection(activePC);
@@ -1432,7 +1466,16 @@ export function JitsiClassroom({
             {userInfo.isTeacher ? (
               (isCameraOn || isScreenSharing) ? (
                 <video
-                  ref={teacherVideoRef}
+                  ref={(el) => {
+                    teacherVideoRef.current = el;
+                    if (el) {
+                      const stream = screenStreamRef.current || localStreamRef.current;
+                      if (stream && el.srcObject !== stream) {
+                        el.srcObject = stream;
+                      }
+                      el.play().catch(() => {});
+                    }
+                  }}
                   autoPlay
                   playsInline
                   muted
@@ -1455,7 +1498,9 @@ export function JitsiClassroom({
                   ref={(el) => {
                     remoteVideoRef.current = el;
                     if (el && remoteStreamRef.current) {
-                      el.srcObject = remoteStreamRef.current;
+                      if (el.srcObject !== remoteStreamRef.current) {
+                        el.srcObject = remoteStreamRef.current;
+                      }
                       el.play().catch(() => {
                         el.muted = true;
                         el.play().catch(() => {});
@@ -1493,7 +1538,15 @@ export function JitsiClassroom({
             {!userInfo.isTeacher ? (
               isCameraOn ? (
                 <video
-                  ref={localVideoRef}
+                  ref={(el) => {
+                    localVideoRef.current = el;
+                    if (el) {
+                      if (localStreamRef.current && el.srcObject !== localStreamRef.current) {
+                        el.srcObject = localStreamRef.current;
+                      }
+                      el.play().catch(() => {});
+                    }
+                  }}
                   autoPlay
                   playsInline
                   muted
@@ -1516,7 +1569,9 @@ export function JitsiClassroom({
                   ref={(el) => {
                     remoteVideoRef.current = el;
                     if (el && remoteStreamRef.current) {
-                      el.srcObject = remoteStreamRef.current;
+                      if (el.srcObject !== remoteStreamRef.current) {
+                        el.srcObject = remoteStreamRef.current;
+                      }
                       el.play().catch(() => {
                         el.muted = true;
                         el.play().catch(() => {});

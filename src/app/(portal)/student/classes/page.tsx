@@ -22,7 +22,7 @@ import { useClassLiveTimer } from "@/lib/use-class-timer";
 const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export default function StudentClassesPage() {
-  const { data } = useFastFetch("/api/student/classes");
+  const { data } = useFastFetch<any>("/api/student/classes", undefined, { pollIntervalMs: 3000 });
   const [isDownloading, setIsDownloading] = React.useState(false);
   const [isDownloaded, setIsDownloaded] = React.useState(false);
 
@@ -133,6 +133,11 @@ export default function StudentClassesPage() {
     return false;
   };
 
+  // Find any active live class first, or scheduled class for today
+  const liveClassDoc =
+    data?.classes?.find((c: any) => c.status === "LIVE") ||
+    data?.classes?.find((c: any) => (!c.date || c.date === todayDateStr) && isWithinClassWindow(c));
+
   const todayDbClass = data?.classes?.find(
     (c: any) =>
       c.status !== "CANCELLED" &&
@@ -140,12 +145,8 @@ export default function StudentClassesPage() {
       (!c.date || c.date === todayDateStr)
   );
 
-  const liveClassDoc =
-    data?.classes?.find((c: any) => c.status === "LIVE") ||
-    data?.classes?.find((c: any) => (!c.date || c.date === todayDateStr) && isWithinClassWindow(c));
-
-  const isClassCurrentlyLive = Boolean(liveClassDoc) || Boolean(todayDbClass);
   const activeDoc = liveClassDoc || todayDbClass;
+  const isClassCurrentlyLive = Boolean(liveClassDoc);
   const liveOrTodayDbClass = activeDoc;
 
   const weeklySchedule = (
