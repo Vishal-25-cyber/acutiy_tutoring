@@ -860,7 +860,7 @@ export default function StudentAssignmentsPage() {
           {/* Top Secure Examination Control Bar - Light Theme */}
           <div className="h-14 px-4 sm:px-6 bg-white border-b border-gray-200 shadow-sm flex items-center justify-between gap-3 shrink-0 z-20">
             {/* Left: Test ID */}
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="w-8 h-8 rounded-xl bg-[#004b79]/10 border border-[#004b79]/20 flex items-center justify-center text-[#004b79] shrink-0">
                 <Camera className="w-4 h-4" />
               </div>
@@ -1152,13 +1152,7 @@ export default function StudentAssignmentsPage() {
                       className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer transition-colors">
                       <RotateCcw className="w-3.5 h-3.5" />
                     </button>
-                    {activeProctoredTest.attachmentUrl && (
-                      <a href={activeProctoredTest.attachmentUrl} target="_blank" rel="noreferrer"
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white text-[11px] font-bold cursor-pointer ml-1">
-                        <ExternalLink className="w-3 h-3" />
-                        <span className="hidden sm:inline">Popout</span>
-                      </a>
-                    )}
+
                   </div>
                 </div>
                 {/* PDF Frame */}
