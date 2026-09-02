@@ -1103,11 +1103,14 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           PAGE 2: TUTORING HUB (WHERE IT ALL BEGAN - SEAMLESS CANVAS LAYOUT)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="tutoring-hub" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-16 sm:py-24 lg:py-28">
-        <div className="w-full max-w-6xl mx-auto px-6 sm:px-10 lg:px-14 text-center space-y-10 sm:space-y-12">
+      <section id="tutoring-hub" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(184,144,71,0.08),rgba(255,255,255,0))] bg-white py-16 sm:py-24 lg:py-28">
+        <div className="w-full max-w-5xl mx-auto px-6 sm:px-10 lg:px-14 text-center space-y-10 sm:space-y-12">
 
           {/* Section Headings */}
-          <div className="space-y-2 text-center">
+          <div className="space-y-3 text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-100/90 text-slate-700 border border-slate-200/80 text-xs font-bold tracking-wider uppercase backdrop-blur-xs">
+              <span>🏛️ Our Heritage · 4 Years of Classroom Dedication</span>
+            </div>
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Tutoring Hub
             </h2>
@@ -1116,35 +1119,43 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Narrative Story (Wide Expansive Balanced Paragraph Covering Spaces) */}
-          <div className="max-w-5xl mx-auto text-slate-700 text-base sm:text-lg lg:text-2xl leading-relaxed sm:leading-[1.8] font-normal text-center">
+          {/* Narrative Story (High-End Cardless Editorial Typography) */}
+          <div className="max-w-4xl mx-auto text-slate-800 text-lg sm:text-xl lg:text-2xl leading-relaxed sm:leading-[1.75] font-normal text-center">
             <p>
-              For the past four years, <strong className="text-slate-900 font-bold">Tutoring Hub</strong> has been a dedicated physical learning space where we worked closely with students, refining our methodology, and gaining valuable classroom experience. Today, we have evolved that foundational experience into <strong className="text-[#002137] font-extrabold">MANTIF</strong>—building modern, AI-enhanced learning solutions for students, educators, and institutions.
+              For the past four years, <strong className="text-[#002137] font-extrabold">Tutoring Hub</strong> has been a dedicated physical learning space where we worked closely with students, refining our methodology, and gaining valuable classroom experience. Today, we have evolved that foundational experience into <strong className="text-[#002137] font-extrabold">MANTIF</strong>—building modern, AI-enhanced learning solutions for students, educators, and institutions.
             </p>
           </div>
 
-          {/* 3-Column Milestone Metric Strip Covering Horizontal Width */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto pt-2">
-            <div className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-1.5 text-center transition-all hover:border-slate-300">
-              <span className="text-2xl sm:text-3xl font-black text-[#002137] tracking-tight">4+ Years</span>
-              <p className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">Physical Hub Experience</p>
+          {/* Cardless Milestone Flow (Seamless Inline Stats without Boxed Cards) */}
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-12 lg:gap-16 pt-2 pb-2 text-slate-700">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">4+</span>
+              <span className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider text-left leading-tight">
+                Years Physical<br />Hub Legacy
+              </span>
             </div>
-            <div className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-1.5 text-center transition-all hover:border-slate-300">
-              <span className="text-2xl sm:text-3xl font-black text-[#b89047] tracking-tight">Student-First</span>
-              <p className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">Refined Methodology</p>
+            <span className="hidden sm:inline-block w-1.5 h-1.5 rounded-full bg-[#b89047]/40" />
+            <div className="flex items-center gap-3">
+              <span className="text-3xl sm:text-4xl font-black text-[#b89047] tracking-tight">100%</span>
+              <span className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider text-left leading-tight">
+                Student-First<br />Pedagogy
+              </span>
             </div>
-            <div className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-1.5 text-center transition-all hover:border-slate-300">
-              <span className="text-2xl sm:text-3xl font-black text-[#002137] tracking-tight">MANTIF AI</span>
-              <p className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">Next-Gen Evolution</p>
+            <span className="hidden sm:inline-block w-1.5 h-1.5 rounded-full bg-[#b89047]/40" />
+            <div className="flex items-center gap-3">
+              <span className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">Next-Gen</span>
+              <span className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider text-left leading-tight">
+                AI-Enhanced<br />MANTIF Platform
+              </span>
             </div>
           </div>
 
           {/* Seamless Gold Foundation Quote */}
           <div className="py-2 max-w-3xl mx-auto text-center space-y-1.5">
-            <p className="text-xl sm:text-2xl lg:text-3xl font-black text-[#002137] leading-snug">
+            <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#002137] tracking-tight">
               “Tutoring Hub gave us the foundation.
             </p>
-            <p className="text-xl sm:text-2xl lg:text-3xl font-black text-[#b89047] leading-snug">
+            <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#b89047] tracking-tight">
               MANTIF is taking it forward.”
             </p>
           </div>
