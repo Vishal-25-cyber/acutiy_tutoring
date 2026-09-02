@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Bell, Check, Sparkles, AlertCircle, BookOpen, Clock, CheckCheck } from "lucide-react";
+import { Bell, Check, Clock, CheckCheck, ChevronRight, X, Inbox } from "lucide-react";
 import Link from "next/link";
 
 interface NotificationItem {
@@ -16,6 +16,8 @@ interface NotificationItem {
 
 export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
+  const [showAllModal, setShowAllModal] = useState(false);
+  const [modalFilter, setModalFilter] = useState<"ALL" | "UNREAD">("ALL");
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
   const loadNotifications = async () => {
@@ -39,6 +41,8 @@ export function NotificationBell() {
   }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
+  // Show only 2 recent notifications in the quick dropdown
+  const quickNotifications = notifications.slice(0, 2);
 
   const markAsRead = async (notificationId: string, e?: React.MouseEvent) => {
     if (e) {
@@ -93,6 +97,10 @@ export function NotificationBell() {
     }
   };
 
+  const filteredModalNotifications = modalFilter === "UNREAD"
+    ? notifications.filter((n) => !n.read)
+    : notifications;
+
   return (
     <div className="relative">
       <button
@@ -108,6 +116,7 @@ export function NotificationBell() {
         )}
       </button>
 
+      {/* ── 1. QUICK NOTIFICATIONS DROPDOWN (1 - 2 ITEMS ONLY) ── */}
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
@@ -135,11 +144,11 @@ export function NotificationBell() {
               )}
             </div>
 
-            <div className="py-2 space-y-2 max-h-84 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
-              {notifications.length === 0 ? (
-                <p className="text-center py-8 text-xs text-slate-400">No notifications yet</p>
+            <div className="py-2 space-y-2 divide-y divide-slate-100 dark:divide-slate-800/60">
+              {quickNotifications.length === 0 ? (
+                <p className="text-center py-6 text-xs text-slate-400">No notifications yet</p>
               ) : (
-                notifications.map((n) => (
+                quickNotifications.map((n) => (
                   <div
                     key={n._id}
                     onClick={() => markAsRead(n._id)}
@@ -171,7 +180,7 @@ export function NotificationBell() {
                         </span>
                       </div>
 
-                      <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-[11px]">
+                      <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-[11px] line-clamp-2">
                         {n.message}
                       </p>
 
@@ -192,9 +201,175 @@ export function NotificationBell() {
                 ))
               )}
             </div>
+
+            {/* View All Notifications Footer Button */}
+            {notifications.length > 0 && (
+              <div className="pt-2 mt-1 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    setShowAllModal(true);
+                  }}
+                  className="w-full py-2 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all flex items-center justify-between cursor-pointer group"
+                >
+                  <span>View All Notifications ({notifications.length})</span>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              </div>
+            )}
           </div>
         </>
+      )}
+
+      {/* ── 2. VIEW ALL NOTIFICATIONS MODAL ── */}
+      {showAllModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[85vh]">
+            
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                  <Bell className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                    All Notifications
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    {notifications.length} total updates · {unreadCount} unread
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={markAllAsRead}
+                    className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 cursor-pointer flex items-center gap-1"
+                  >
+                    <CheckCheck className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Mark all read</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowAllModal(false)}
+                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="px-5 pt-3 pb-2 flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 shrink-0">
+              <button
+                type="button"
+                onClick={() => setModalFilter("ALL")}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  modalFilter === "ALL"
+                    ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs border border-slate-200 dark:border-slate-700"
+                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                }`}
+              >
+                All ({notifications.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setModalFilter("UNREAD")}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  modalFilter === "UNREAD"
+                    ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs border border-slate-200 dark:border-slate-700"
+                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                }`}
+              >
+                Unread ({unreadCount})
+              </button>
+            </div>
+
+            {/* Notification List Scroll Area */}
+            <div className="p-5 overflow-y-auto space-y-2.5 flex-1 divide-y divide-slate-100 dark:divide-slate-800/60">
+              {filteredModalNotifications.length === 0 ? (
+                <div className="py-12 text-center space-y-2">
+                  <Inbox className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    No {modalFilter === "UNREAD" ? "unread" : ""} notifications
+                  </p>
+                  <p className="text-xs text-slate-400">You are completely up to date!</p>
+                </div>
+              ) : (
+                filteredModalNotifications.map((n) => (
+                  <div
+                    key={n._id}
+                    onClick={() => markAsRead(n._id)}
+                    className="block pt-2.5 first:pt-0 cursor-pointer"
+                  >
+                    <Link
+                      href={n.linkUrl || "#"}
+                      onClick={() => {
+                        markAsRead(n._id);
+                        setShowAllModal(false);
+                      }}
+                      className={`block p-3.5 rounded-2xl text-xs transition-all border ${
+                        n.read
+                          ? "bg-slate-50/50 dark:bg-slate-800/30 border-slate-100 dark:border-slate-800/50 text-slate-500 opacity-85 hover:opacity-100 hover:border-slate-300"
+                          : "bg-indigo-50/70 dark:bg-indigo-950/40 border-indigo-200/70 dark:border-indigo-800/60 text-slate-900 dark:text-slate-100 font-medium shadow-2xs ring-1 ring-indigo-500/10"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <div className="flex items-center gap-2 min-w-0">
+                          {!n.read && (
+                            <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 shrink-0" />
+                          )}
+                          <span className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">
+                            {n.title}
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-slate-400 shrink-0 font-mono">
+                          {formatTimeAgo(n.createdAt)}
+                        </span>
+                      </div>
+
+                      <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
+                        {n.message}
+                      </p>
+
+                      {!n.read && (
+                        <div className="mt-2.5 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={(e) => markAsRead(n._id, e)}
+                            className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 flex items-center gap-1 hover:underline cursor-pointer"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Mark as read</span>
+                          </button>
+                        </div>
+                      )}
+                    </Link>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-end shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowAllModal(false)}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+
+          </div>
+        </div>
       )}
     </div>
   );
 }
+
