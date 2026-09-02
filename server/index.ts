@@ -226,19 +226,19 @@ app.use(
   })
 );
 
-app.get("*", (req: any, res: any, next: any) => {
-  if (req.path.startsWith("/api")) {
-    return next();
-  }
-  const indexPath = fs.existsSync(path.join(distPath, "index.html"))
-    ? path.join(distPath, "index.html")
-    : path.resolve(process.cwd(), "dist/index.html");
+// SPA Fallback for all client-side routes (Express 5 compatible)
+app.use((req: any, res: any, next: any) => {
+  if (req.method === "GET" && !req.path.startsWith("/api")) {
+    const indexPath = fs.existsSync(path.join(distPath, "index.html"))
+      ? path.join(distPath, "index.html")
+      : path.resolve(process.cwd(), "dist/index.html");
 
-  if (fs.existsSync(indexPath)) {
-    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    res.setHeader("Pragma", "no-cache");
-    res.setHeader("Expires", "0");
-    return res.sendFile(indexPath);
+    if (fs.existsSync(indexPath)) {
+      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+      return res.sendFile(indexPath);
+    }
   }
   next();
 });
