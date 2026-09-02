@@ -203,10 +203,18 @@ import path from "path";
 import fs from "fs";
 
 // Static SPA Serving for Production (Render / Cloud)
-const distPath = path.join(process.cwd(), "dist");
+const distPath = fs.existsSync(path.resolve(process.cwd(), "dist"))
+  ? path.resolve(process.cwd(), "dist")
+  : fs.existsSync(path.resolve(__dirname, "../dist"))
+  ? path.resolve(__dirname, "../dist")
+  : path.join(process.cwd(), "dist");
+
+console.log(`[Server] Serving static frontend from: ${distPath} (exists: ${fs.existsSync(distPath)})`);
+
 if (fs.existsSync(distPath)) {
   app.use(
     express.static(distPath, {
+      index: false,
       setHeaders: (res: any, filePath: string) => {
         if (filePath.endsWith("index.html")) {
           res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
