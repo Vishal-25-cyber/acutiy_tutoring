@@ -1103,32 +1103,48 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           PAGE 2: TUTORING HUB (WHERE IT ALL BEGAN - SEAMLESS CANVAS LAYOUT)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="tutoring-hub" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-14 sm:py-20 lg:py-24">
-        <div className="w-full max-w-4xl mx-auto px-6 sm:px-10 lg:px-14 text-center space-y-8 sm:space-y-10">
+      <section id="tutoring-hub" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-16 sm:py-24 lg:py-28">
+        <div className="w-full max-w-6xl mx-auto px-6 sm:px-10 lg:px-14 text-center space-y-10 sm:space-y-12">
 
           {/* Section Headings */}
-          <div className="space-y-1.5 text-center">
+          <div className="space-y-2 text-center">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Tutoring Hub
             </h2>
-            <p className="text-xl sm:text-2xl font-extrabold text-[#b89047] tracking-tight">
+            <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#b89047] tracking-tight">
               Where It All Began
             </p>
           </div>
 
-          {/* Narrative Story (Clean Proportional Balanced Paragraph) */}
-          <div className="max-w-2xl mx-auto text-slate-700 text-sm sm:text-base lg:text-[17px] leading-relaxed sm:leading-[1.85] font-normal text-center">
+          {/* Narrative Story (Wide Expansive Balanced Paragraph Covering Spaces) */}
+          <div className="max-w-5xl mx-auto text-slate-700 text-base sm:text-lg lg:text-2xl leading-relaxed sm:leading-[1.8] font-normal text-center">
             <p>
-              For the past four years, <strong>Tutoring Hub</strong> has been a dedicated physical learning space where we worked closely with students, refining our methodology, and gaining valuable classroom experience. Today, we have evolved that foundational experience into <strong className="text-[#002137] font-extrabold">MANTIF</strong>—building modern, AI-enhanced learning solutions for students, educators, and institutions.
+              For the past four years, <strong className="text-slate-900 font-bold">Tutoring Hub</strong> has been a dedicated physical learning space where we worked closely with students, refining our methodology, and gaining valuable classroom experience. Today, we have evolved that foundational experience into <strong className="text-[#002137] font-extrabold">MANTIF</strong>—building modern, AI-enhanced learning solutions for students, educators, and institutions.
             </p>
           </div>
 
-          {/* Seamless Gold Foundation Quote (Balanced Symmetrical Alignment) */}
-          <div className="py-2 max-w-lg mx-auto text-center space-y-1">
-            <p className="text-lg sm:text-xl font-black text-[#002137] leading-snug">
+          {/* 3-Column Milestone Metric Strip Covering Horizontal Width */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto pt-2">
+            <div className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-1.5 text-center transition-all hover:border-slate-300">
+              <span className="text-2xl sm:text-3xl font-black text-[#002137] tracking-tight">4+ Years</span>
+              <p className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">Physical Hub Experience</p>
+            </div>
+            <div className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-1.5 text-center transition-all hover:border-slate-300">
+              <span className="text-2xl sm:text-3xl font-black text-[#b89047] tracking-tight">Student-First</span>
+              <p className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">Refined Methodology</p>
+            </div>
+            <div className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-1.5 text-center transition-all hover:border-slate-300">
+              <span className="text-2xl sm:text-3xl font-black text-[#002137] tracking-tight">MANTIF AI</span>
+              <p className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">Next-Gen Evolution</p>
+            </div>
+          </div>
+
+          {/* Seamless Gold Foundation Quote */}
+          <div className="py-2 max-w-3xl mx-auto text-center space-y-1.5">
+            <p className="text-xl sm:text-2xl lg:text-3xl font-black text-[#002137] leading-snug">
               “Tutoring Hub gave us the foundation.
             </p>
-            <p className="text-lg sm:text-xl font-black text-[#b89047] leading-snug">
+            <p className="text-xl sm:text-2xl lg:text-3xl font-black text-[#b89047] leading-snug">
               MANTIF is taking it forward.”
             </p>
           </div>
@@ -1142,14 +1158,14 @@ export default function HomePage() {
                 setStep(1);
                 document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="px-8 py-3.5 rounded-xl bg-[#002137] hover:bg-[#003659] text-white text-sm font-extrabold transition-all shadow-md shadow-[#002137]/15 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer flex items-center gap-2"
+              className="px-9 py-4 rounded-xl bg-[#002137] hover:bg-[#003659] text-white text-sm sm:text-base font-extrabold transition-all shadow-md shadow-[#002137]/15 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer flex items-center gap-2"
             >
               <span>Sign Up on MANTIF</span>
               <ArrowRight className="w-4 h-4" />
             </button>
             <a
               href="#contact"
-              className="px-8 py-3.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-sm font-extrabold transition-all shadow-2xs hover:-translate-y-0.5 cursor-pointer"
+              className="px-9 py-4 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-sm sm:text-base font-extrabold transition-all shadow-2xs hover:-translate-y-0.5 cursor-pointer"
             >
               Contact Us
             </a>
