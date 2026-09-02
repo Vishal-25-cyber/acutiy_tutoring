@@ -73,6 +73,20 @@ export default function StudentAssignmentsPage() {
     (a: any) => (a.type || "ASSIGNMENT") === activeCategory
   );
 
+  const formatDueDateTime = (dStr: string | Date) => {
+    if (!dStr) return "No deadline";
+    const d = new Date(dStr);
+    if (isNaN(d.getTime())) return "No deadline";
+    const datePart = d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+    const hours = d.getHours();
+    const mins = d.getMinutes();
+    if (hours === 0 && mins === 0) {
+      return `Due: ${datePart}`;
+    }
+    const timePart = d.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", hour12: true });
+    return `Due: ${datePart} at ${timePart}`;
+  };
+
   // ── WEBCAM PROCTORING STREAM LIFECYCLE ──
   const startCamera = async () => {
     setCameraError("");
@@ -407,7 +421,7 @@ export default function StudentAssignmentsPage() {
                         </span>
                       ) : (
                         <span className="text-[11px] font-semibold text-slate-400">
-                          Due: {new Date(task.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                          {formatDueDateTime(task.dueDate)}
                         </span>
                       )}
                     </div>
