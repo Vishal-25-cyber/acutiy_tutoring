@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
 
       const passwordHash = await hashPassword(password);
 
-      // Save to `users` collection
+      // Save to `users` collection (PENDING_APPROVAL status until Admin approves)
       const user = await User.create({
         name: name.trim(),
         email: email.trim().toLowerCase(),
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
         district: district?.trim() || "",
         passwordHash,
         role: "STUDENT",
-        status: "ACTIVE",
+        status: "PENDING_APPROVAL",
       });
 
       const normalizedGender = (gender || "OTHER").toString().toUpperCase();
@@ -111,8 +111,8 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: "Student account created successfully! You can now sign in.",
-        user: { name: user.name, email: user.email, role: "STUDENT" },
+        message: "Student registration submitted! Your account is pending admin approval. You will be able to log in once approved by the administrator.",
+        user: { name: user.name, email: user.email, role: "STUDENT", status: "PENDING_APPROVAL" },
       }, { status: 201 });
     }
 

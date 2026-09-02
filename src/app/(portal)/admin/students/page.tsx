@@ -37,6 +37,7 @@ export default function AdminStudentsPage() {
   const [selectedBoard, setSelectedBoard] = useState("ALL");
   const [selectedBatch, setSelectedBatch] = useState("ALL");
   const [selectedRisk, setSelectedRisk] = useState("ALL");
+  const [selectedStatus, setSelectedStatus] = useState("ALL");
 
   // Construct query url for useFastFetch
   const query = new URLSearchParams();
@@ -44,6 +45,7 @@ export default function AdminStudentsPage() {
   if (selectedBoard !== "ALL") query.append("board", selectedBoard);
   if (selectedBatch !== "ALL") query.append("batchId", selectedBatch);
   if (selectedRisk !== "ALL") query.append("riskLevel", selectedRisk);
+  if (selectedStatus !== "ALL") query.append("status", selectedStatus);
   const studentsApiUrl = `/api/admin/students${query.toString() ? `?${query.toString()}` : ""}`;
 
   const { data: sData, refetch: refetchStudents } = useFastFetch(studentsApiUrl);
@@ -247,17 +249,43 @@ export default function AdminStudentsPage() {
     }
   };
 
+  const handleQuickApprove = async (st: any) => {
+    try {
+      const res = await fetch("/api/admin/students", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId: st.userId?._id || st.userId,
+          status: "ACTIVE",
+        }),
+      });
+      if (res.ok) {
+        invalidateCache(studentsApiUrl);
+        invalidateCache("/api/admin/dashboard");
+        refetchStudents();
+      } else {
+        alert("Failed to approve student.");
+      }
+    } catch {
+      alert("Network error while approving student.");
+    }
+  };
+
+  const pendingCount = students.filter((st: any) => st.userId?.status === "PENDING_APPROVAL").length;
+
   const filtered = students.filter((st: any) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    const u = st.userId || {};
-    return (
-      u.name?.toLowerCase().includes(q) ||
-      u.email?.toLowerCase().includes(q) ||
-      u.phone?.includes(q) ||
-      st.schoolName?.toLowerCase().includes(q) ||
-      st.parentName?.toLowerCase().includes(q)
+    const matchesSearch = !search || (
+      st.userId?.name?.toLowerCase().includes(search.toLowerCase()) ||
+      st.userId?.email?.toLowerCase().includes(search.toLowerCase()) ||
+      st.userId?.phone?.includes(search) ||
+      st.schoolName?.toLowerCase().includes(search.toLowerCase()) ||
+      st.parentName?.toLowerCase().includes(search.toLowerCase())
     );
+    const matchesClass = selectedClass === "ALL" || st.currentClass === selectedClass;
+    const matchesBoard = selectedBoard === "ALL" || st.board === selectedBoard;
+    const matchesRisk = selectedRisk === "ALL" || st.attendanceRiskLevel === selectedRisk;
+    const matchesStatus = selectedStatus === "ALL" || st.userId?.status === selectedStatus;
+    return matchesSearch && matchesClass && matchesBoard && matchesRisk && matchesStatus;
   });
 
   return (
@@ -274,7 +302,7 @@ export default function AdminStudentsPage() {
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Filter, edit student profiles, update live batch schedules, and manage database records.
+            Review pending registrations, approve student accounts, edit profiles, and manage schedules.
           </p>
         </div>
 
@@ -287,8 +315,27 @@ export default function AdminStudentsPage() {
         </button>
       </div>
 
+      {/* ── Pending Approvals Banner ── */}
+      {pendingCount > 0 && selectedStatus !== "PENDING_APPROVAL" && (
+        <div className="py-3 px-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+            <span className="font-bold text-amber-900 dark:text-amber-200">
+              {pendingCount} Student{pendingCount === 1 ? "" : "s"} awaiting your approval to access the portal.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSelectedStatus("PENDING_APPROVAL")}
+            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white transition-all shadow-xs self-start sm:self-auto cursor-pointer"
+          >
+            Review Pending Approvals ({pendingCount})
+          </button>
+        </div>
+      )}
+
       {/* ── 2. CARDLESS SEARCH & FILTERS BAR ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-6 gap-3">
         <div className="sm:col-span-2 relative">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
           <input
@@ -298,6 +345,19 @@ export default function AdminStudentsPage() {
             onChange={(e) => setSearch(e.target.value)}
             className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-10 pr-4 text-xs font-medium focus:outline-none focus:border-[#004b79] shadow-xs"
           />
+        </div>
+
+        <div>
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79] shadow-xs cursor-pointer"
+          >
+            <option value="ALL">All Statuses</option>
+            <option value="PENDING_APPROVAL">Pending Approval ({pendingCount})</option>
+            <option value="ACTIVE">Active (Approved)</option>
+            <option value="SUSPENDED">Suspended</option>
+          </select>
         </div>
 
         <div>
@@ -367,9 +427,24 @@ export default function AdminStudentsPage() {
                 >
                   {/* Col 1: Student Name & School */}
                   <div className="col-span-3 space-y-0.5">
-                    <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100">
-                      {u.name || "Student"}
-                    </p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100">
+                        {u.name || "Student"}
+                      </p>
+                      {u.status === "PENDING_APPROVAL" ? (
+                        <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                          Pending Approval
+                        </span>
+                      ) : u.status === "SUSPENDED" ? (
+                        <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                          Suspended
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                          Active
+                        </span>
+                      )}
+                    </div>
                     <p className="text-[11px] text-slate-400 truncate">
                       {st.schoolName || "Enrolled Student"}
                     </p>
@@ -402,6 +477,17 @@ export default function AdminStudentsPage() {
 
                   {/* Col 5: Actions */}
                   <div className="col-span-2 flex items-center justify-start md:justify-end gap-1.5">
+                    {u.status === "PENDING_APPROVAL" && (
+                      <button
+                        type="button"
+                        onClick={() => handleQuickApprove(st)}
+                        className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
+                        title="Approve student and enable portal login"
+                      >
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>Approve</span>
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => openEditModal(st)}
@@ -460,28 +546,45 @@ export default function AdminStudentsPage() {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Phone Number (10 Digits) *</label>
-                <Input
-                  required
-                  type="tel"
-                  maxLength={10}
-                  value={editForm.phone}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, phone: sanitize10DigitPhone(e.target.value) })
-                  }
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Phone (10 Digits) *</label>
+                  <Input
+                    required
+                    type="tel"
+                    maxLength={10}
+                    value={editForm.phone}
+                    onChange={(e) =>
+                      setEditForm({
+                        ...editForm,
+                        phone: sanitize10DigitPhone(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Attendance Risk Level</label>
+                  <select
+                    value={editForm.attendanceRiskLevel}
+                    onChange={(e) => setEditForm({ ...editForm, attendanceRiskLevel: e.target.value })}
+                    className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79]"
+                  >
+                    <option value="LOW">Low Risk (Regular Attendance)</option>
+                    <option value="MEDIUM">Medium Risk (Warning)</option>
+                    <option value="HIGH">High Risk (Chronic Absence &lt;75%)</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            {/* Section 2: Academic & Batch */}
+            {/* Section 2: Academic Details */}
             <div className="space-y-3 pb-3 border-b border-slate-100 dark:border-slate-800">
               <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#004b79] dark:text-[#dfb74a]">
-                2. Academic Grade &amp; Batch Slot
+                2. Academic &amp; Batch Assignment
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 <div>
-                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Class Level *</label>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Class / Grade *</label>
                   <select
                     value={editForm.currentClass}
                     onChange={(e) => setEditForm({ ...editForm, currentClass: e.target.value })}
@@ -493,7 +596,7 @@ export default function AdminStudentsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Education Board *</label>
+                  <label className="block font-bold mb-1 text-slate-700 dark:text-slate-300">Curriculum Board *</label>
                   <select
                     value={editForm.board}
                     onChange={(e) => setEditForm({ ...editForm, board: e.target.value })}
@@ -576,7 +679,8 @@ export default function AdminStudentsPage() {
                     onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
                     className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79]"
                   >
-                    <option value="ACTIVE">ACTIVE (Enrolled &amp; Enabled)</option>
+                    <option value="ACTIVE">ACTIVE (Approved &amp; Enrolled)</option>
+                    <option value="PENDING_APPROVAL">PENDING APPROVAL (Awaiting Admin Approval)</option>
                     <option value="SUSPENDED">SUSPENDED (Access Disabled)</option>
                   </select>
                 </div>

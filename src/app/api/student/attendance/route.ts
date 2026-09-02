@@ -49,7 +49,7 @@ export async function GET() {
 
     const attendancePercentage = totalSessions > 0
       ? Math.round((presentCount / totalSessions) * 100)
-      : 100;
+      : 0;
 
     let riskLevel: "LOW" | "MEDIUM" | "HIGH" = "LOW";
     if (totalSessions > 0) {

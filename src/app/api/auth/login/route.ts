@@ -51,9 +51,19 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Invalid credentials. Student not found." }, { status: 401 });
       }
 
+      if (user.status === "PENDING_APPROVAL") {
+        return NextResponse.json(
+          {
+            error: "Your student account is awaiting administrator approval. You will be able to sign in once activated by the admin.",
+            status: "PENDING_APPROVAL",
+          },
+          { status: 403 }
+        );
+      }
+
       if (user.status === "SUSPENDED" || user.status === "REJECTED") {
         return NextResponse.json(
-          { error: "Your account is currently suspended. Please contact administration." },
+          { error: "Your account is currently suspended or inactive. Please contact administration." },
           { status: 403 }
         );
       }

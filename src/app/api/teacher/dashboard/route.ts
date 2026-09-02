@@ -149,7 +149,7 @@ export async function GET() {
       }
     });
 
-    let realAverageAttendance = 100;
+    let realAverageAttendance = 0;
     if (conductedEnrolledSum > 0) {
       realAverageAttendance = Math.min(100, Math.round((conductedPresentSum / conductedEnrolledSum) * 100));
     } else if (teacherAttendanceRecords.length > 0) {

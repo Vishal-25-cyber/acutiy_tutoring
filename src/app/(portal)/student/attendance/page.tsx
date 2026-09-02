@@ -106,16 +106,23 @@ export default function StudentAttendancePage() {
             <span>Download Statement (CSV)</span>
           </button>
 
-          <span
-            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
-              isCompliant
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300"
-                : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300"
-            }`}
-          >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>{isCompliant ? "Compliant (≥ 75% Rule)" : "Turnout Below 75%"}</span>
-          </span>
+          {stats.totalSessions > 0 ? (
+            <span
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
+                isCompliant
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300"
+                  : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300"
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>{isCompliant ? "Compliant (≥ 75% Rule)" : "Turnout Below 75%"}</span>
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>No Attendance Marked (0%)</span>
+            </span>
+          )}
         </div>
       </div>
 
@@ -124,10 +131,14 @@ export default function StudentAttendancePage() {
         <div className="py-2 sm:px-6 first:pl-0 space-y-1">
           <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Attendance Turnout</span>
           <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 font-mono">
-            {stats.attendancePercentage}%
+            {stats.totalSessions > 0 ? `${stats.attendancePercentage}%` : "0%"}
           </p>
-          <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-            Meets minimum 75% requirement
+          <p className={`text-xs font-medium ${stats.totalSessions === 0 ? "text-slate-400" : stats.attendancePercentage >= 75 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
+            {stats.totalSessions === 0
+              ? "No attendance marked yet"
+              : stats.attendancePercentage >= 75
+              ? "Meets minimum 75% requirement"
+              : "Below minimum 75% requirement"}
           </p>
         </div>
 

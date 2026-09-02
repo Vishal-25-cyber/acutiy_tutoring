@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
     const board = searchParams.get("board");
     const batchId = searchParams.get("batchId");
     const riskLevel = searchParams.get("riskLevel");
+    const status = searchParams.get("status");
 
     await connectToDatabase();
 
@@ -39,10 +40,11 @@ export async function GET(req: NextRequest) {
       .populate("batchId")
       .sort({ createdAt: -1 });
 
-    // Filter by search query on User name / email / phone
+    // Filter by search query and user status
     const filtered = profiles.filter((p) => {
       if (!p.userId) return false;
       const user = p.userId as any;
+      if (status && status !== "ALL" && user.status !== status) return false;
       if (!search) return true;
       const q = search.toLowerCase();
       return (

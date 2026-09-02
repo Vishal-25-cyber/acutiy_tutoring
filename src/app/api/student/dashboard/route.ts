@@ -223,7 +223,7 @@ export async function GET() {
     const totalSessions = Math.max(totalConductedSessions, totalAttended);
     const attendancePercentage = totalSessions > 0
       ? Math.round((totalAttended / totalSessions) * 100)
-      : 100;
+      : 0;
 
     // Real strictly calculated Assessment Statistics from database
     const totalAssignments = activeAssignments.length;
