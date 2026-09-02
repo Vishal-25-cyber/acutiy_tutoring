@@ -1238,7 +1238,7 @@ export default function HomePage() {
       ═══════════════════════════════════════════════════════════════════════ */}
       <section id="our-side" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/30 to-white py-12 lg:py-20">
         <div className="w-full max-w-6xl mx-auto px-6 sm:px-10 lg:px-14 space-y-10 lg:space-y-14">
-          
+
           {/* Section Heading */}
           <div className="text-center space-y-2">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
@@ -1253,7 +1253,7 @@ export default function HomePage() {
           <div className="divide-y divide-slate-200">
             {outreachSchools.map((school) => (
               <div key={school.id} className="py-8 first:pt-0 last:pb-0 space-y-4 text-center flex flex-col items-center">
-                
+
                 {/* School Name on Single Line Centered */}
                 <div className="space-y-1.5 text-center">
                   <h3 className="text-xl sm:text-2xl md:text-[26px] lg:text-3xl font-black text-[#002137] tracking-tight leading-snug">
@@ -1287,25 +1287,25 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 4: TEAM (FOUNDER SPOTLIGHT - 100% SINGLE-SCREEN VIEW)
+          PAGE 4: TEAM (FOUNDER SPOTLIGHT - MATCHING TEAM CARD DESIGN)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="team" className="scroll-mt-16 min-h-[calc(100vh-4rem)] flex flex-col justify-center items-center border-b border-slate-200/80 bg-white py-4 sm:py-6 lg:py-8">
-        <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-5 text-center my-auto">
+      <section id="team" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-white py-10 lg:py-16">
+        <div className="w-full max-w-4xl mx-auto px-6 sm:px-10 lg:px-14 space-y-8 lg:space-y-10 text-center">
 
           {/* Section Header */}
-          <div className="text-center max-w-2xl mx-auto space-y-1">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight">
+          <div className="text-center max-w-3xl mx-auto space-y-1.5">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Our Team
             </h2>
-            <p className="text-xs sm:text-sm lg:text-base font-bold text-[#b89047] tracking-normal max-w-xl mx-auto">
+            <p className="text-sm sm:text-base lg:text-lg font-bold text-[#b89047] tracking-normal max-w-2xl mx-auto">
               Passionate educators, engineering minds, and AI practitioners dedicated to student success.
             </p>
           </div>
 
-          {/* Centered Founder Card (Guaranteed 100% visible above the fold on click) */}
+          {/* Centered Founder Card in Optimal Size Matching Team Cards */}
           <div className="flex justify-center items-center">
-            <div className="p-3.5 sm:p-4 rounded-3xl bg-white border border-slate-200 shadow-md hover:shadow-xl hover:border-[#b89047]/50 transition-all duration-300 flex flex-col items-center text-center space-y-2.5 w-full max-w-[220px] sm:max-w-[245px]">
-              <div className="w-full aspect-4/5 max-h-[220px] sm:max-h-[250px] rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
+            <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-[#b89047]/40 transition-all flex flex-col items-center text-center space-y-3 w-full max-w-[245px] sm:max-w-[265px]">
+              <div className="w-full aspect-4/5 rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
                 <img
                   src="/images/founder_karunya.png"
                   alt="Karunya S - Founder of MANTIF"
@@ -1313,8 +1313,8 @@ export default function HomePage() {
                 />
               </div>
               <div className="space-y-0.5 pt-0.5">
-                <h4 className="font-black text-lg sm:text-xl text-[#002137] tracking-tight">Karunya S</h4>
-                <p className="text-xs sm:text-sm font-black text-[#b89047] uppercase tracking-wider">Founder</p>
+                <h4 className="font-black text-lg sm:text-xl text-[#002137]">Karunya S</h4>
+                <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">Founder</p>
               </div>
             </div>
           </div>
@@ -1753,7 +1753,7 @@ export default function HomePage() {
 
               {/* Seamless Editorial Content Section (No nested box cards!) */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                
+
                 {/* Left: Session Academic Focus & Details */}
                 <div className="lg:col-span-7 space-y-3.5">
                   <p className="text-xs font-black uppercase tracking-widest text-[#004b79]">
@@ -1814,7 +1814,7 @@ export default function HomePage() {
 
                 {/* 2-Column Responsive Video Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-                  
+
                   {/* VIDEO SLOT 1 */}
                   {(() => {
                     const slotKey = `${selectedSchoolModal.id}_1`;
