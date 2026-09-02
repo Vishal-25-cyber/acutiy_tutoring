@@ -1670,20 +1670,20 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* ─── School Detail Modal (Professional Editorial Layout with 2 Video Players & NO Nested Cards) ─── */}
+        {/* ─── School Detail Modal (Professional Editorial Layout with 2 Video Players & Compact Proportions) ─── */}
         {selectedSchoolModal && (
           <div
-            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             onClick={() => setSelectedSchoolModal(null)}
           >
             <div
-              className="relative w-full max-w-5xl max-h-[92vh] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-3xl bg-white border border-slate-200/90 shadow-2xl p-6 sm:p-8 lg:p-10 space-y-8 text-left"
+              className="relative w-full max-w-3xl lg:max-w-4xl max-h-[88vh] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-2xl bg-white border border-slate-200/90 shadow-2xl p-5 sm:p-7 space-y-5 text-left"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Top Header (Clean Single-Line School Name + Unique Signature Close Button) */}
-              <div className="flex items-center justify-between gap-4 pb-6 border-b border-slate-200/80">
-                <div className="space-y-1">
-                  <h3 className="text-xl sm:text-2xl md:text-[26px] lg:text-3xl font-black text-[#002137] tracking-tight leading-snug">
+              <div className="flex items-center justify-between gap-3 pb-4 border-b border-slate-200/80">
+                <div className="space-y-0.5">
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-black text-[#002137] tracking-tight leading-snug">
                     {selectedSchoolModal.name}
                   </h3>
                 </div>
@@ -1691,52 +1691,52 @@ export default function HomePage() {
                 {/* Unique Signature Designed Close Button */}
                 <button
                   onClick={() => setSelectedSchoolModal(null)}
-                  className="group relative inline-flex items-center gap-2 pl-3.5 pr-2 py-1.5 rounded-full bg-[#002137] hover:bg-[#004b79] text-white border-2 border-[#dfb74a]/60 shadow-lg shadow-[#002137]/25 hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer shrink-0"
+                  className="group relative inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1 rounded-full bg-[#002137] hover:bg-[#004b79] text-white border-2 border-[#dfb74a]/60 shadow-md hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer shrink-0"
                   title="Close Dialog"
                 >
-                  <span className="text-[11px] font-black uppercase tracking-wider text-[#dfb74a] hidden sm:inline-block">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-[#dfb74a] hidden sm:inline-block">
                     Close
                   </span>
-                  <div className="w-7 h-7 rounded-full bg-[#dfb74a] text-[#002137] group-hover:bg-white flex items-center justify-center shadow-inner transition-colors">
-                    <X className="w-4 h-4 stroke-[3] transition-transform duration-300 group-hover:rotate-90" />
+                  <div className="w-6 h-6 rounded-full bg-[#dfb74a] text-[#002137] group-hover:bg-white flex items-center justify-center shadow-inner transition-colors">
+                    <X className="w-3.5 h-3.5 stroke-[3] transition-transform duration-300 group-hover:rotate-90" />
                   </div>
                 </button>
               </div>
 
-              {/* Unified Full-Width Narrative Paragraph (Combined, not separate columns) */}
-              <div className="space-y-4 max-w-5xl">
-                <div className="space-y-1">
-                  <p className="text-xs font-black uppercase tracking-widest text-[#004b79]">
+              {/* Unified Full-Width Narrative Paragraph */}
+              <div className="space-y-2.5">
+                <div className="space-y-0.5">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-[#004b79]">
                     Academic Focus &amp; Practical Training
                   </p>
-                  <h4 className="text-xl sm:text-2xl lg:text-3xl font-black text-[#002137] leading-snug">
+                  <h4 className="text-base sm:text-lg lg:text-xl font-black text-[#002137] leading-snug">
                     “{selectedSchoolModal.sessionTitle}”
                   </h4>
                 </div>
 
-                <p className="text-slate-700 text-sm sm:text-base lg:text-[17px] leading-relaxed font-normal">
+                <p className="text-slate-700 text-xs sm:text-sm lg:text-[15px] leading-relaxed font-normal">
                   {selectedSchoolModal.summary}{" "}
                   {selectedSchoolModal.description}{" "}
                   {selectedSchoolModal.milestoneQuote}
                 </p>
 
-                <div className="flex items-center gap-2 pt-1">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#b89047]" />
-                  <p className="text-xs sm:text-sm font-extrabold text-[#002137] tracking-wide">
+                <div className="flex items-center gap-1.5 pt-0.5">
+                  <span className="w-2 h-2 rounded-full bg-[#b89047]" />
+                  <p className="text-xs font-extrabold text-[#002137] tracking-wide">
                     — Ms. Karunya S, Founder (Alumna)
                   </p>
                 </div>
               </div>
 
               {/* ─── DUAL VIDEO SHOWCASE (2 DEDICATED VIDEOS) ─── */}
-              <div className="space-y-5 pt-6 border-t border-slate-200/80">
+              <div className="space-y-3.5 pt-4 border-t border-slate-200/80">
                 <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-[#002137] text-[#dfb74a] flex items-center justify-center shadow-xs">
-                      <Video className="w-4 h-4" />
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-[#002137] text-[#dfb74a] flex items-center justify-center shadow-xs">
+                      <Video className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <h4 className="text-base sm:text-lg font-black text-[#002137]">
+                      <h4 className="text-sm sm:text-base font-black text-[#002137]">
                         Session Video Recordings
                       </h4>
                       <p className="text-xs text-slate-500 font-medium">

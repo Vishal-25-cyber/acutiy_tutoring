@@ -396,11 +396,8 @@ export default function StudentFeesPage() {
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Tuition Amount:</span>
-                    <span className="font-mono font-black text-sm sm:text-base text-[#004b79] dark:text-[#dfb74a]">
-                      ₹{monthlyFee.toLocaleString("en-IN")}
-                    </span>
+                  <div className="p-2.5 rounded-lg bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/70 dark:border-blue-800/50 text-[11px] text-[#004b79] dark:text-blue-300 font-medium leading-relaxed">
+                    ℹ️ The transaction account is temporarily kept as Founder&apos;s bank account.
                   </div>
 
                   <div className="flex items-center justify-between pt-2 border-t border-slate-200/80 dark:border-slate-800">
