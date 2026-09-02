@@ -464,7 +464,11 @@ export function JitsiClassroom({
       } catch (e) {
         console.warn("Failed to mark class as ended:", e);
       }
-      router.push("/teacher/dashboard");
+      if (typeof window !== "undefined") {
+        window.location.href = "/teacher/dashboard";
+      } else {
+        router.push("/teacher/dashboard");
+      }
     } else {
       try {
         await fetch(`/api/classes/${targetClassId}/admit`, {
@@ -484,7 +488,11 @@ export function JitsiClassroom({
         });
       } catch (e) { console.warn(e); }
 
-      router.push("/student/classes");
+      if (typeof window !== "undefined") {
+        window.location.href = "/student/classes";
+      } else {
+        router.push("/student/classes");
+      }
     }
   }, [stopAllMediaTracks, stopAllMedia, classId, router, durationSeconds]);
 
