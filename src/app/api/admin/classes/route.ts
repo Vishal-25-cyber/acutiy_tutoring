@@ -100,8 +100,18 @@ export async function GET() {
       return pA.time - pB.time;
     });
 
+    // Deduplicate: remove sessions with identical title + date + startTime + teacher
+    // (prevents UI from showing the same class twice if duplicates exist in DB)
+    const seen = new Set<string>();
+    const uniqueSessions = sessions.filter((s) => {
+      const key = `${s.title}|${s.date}|${s.startTime}|${s.teacher}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
     return NextResponse.json({
-      sessions,
+      sessions: uniqueSessions,
       currentTime: now.toISOString(),
     }, {
       headers: {
