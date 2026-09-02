@@ -502,10 +502,10 @@ export default function StudentAssignmentsPage() {
 
       {/* ── 4. LIVE PROCTORED TEST ROOM MODAL ── */}
       {activeProctoredTest && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-          <div className="w-full max-w-4xl bg-white dark:bg-[#001726] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto no-scrollbar [&::-webkit-scrollbar]:hidden">
+          <div className="w-full max-w-4xl bg-white dark:bg-[#001726] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
             {/* Proctored Room Header */}
-            <div className="p-4 sm:p-5 bg-gradient-to-r from-slate-900 to-[#002137] text-white flex items-center justify-between border-b border-slate-800">
+            <div className="p-4 sm:p-5 bg-gradient-to-r from-slate-900 to-[#002137] text-white flex items-center justify-between border-b border-slate-800 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300">
                   <Camera className="w-5 h-5" />
@@ -544,7 +544,7 @@ export default function StudentAssignmentsPage() {
             </div>
 
             {/* Proctored Room Body Grid */}
-            <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-y-auto flex-1">
+            <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-y-auto no-scrollbar [&::-webkit-scrollbar]:hidden flex-1">
               {/* Left Column: Test Instructions & Question Paper */}
               <div className="lg:col-span-7 space-y-4">
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 space-y-3">

@@ -55,10 +55,10 @@ export function Modal({
         onClick={onClose}
       />
 
-      {/* ── Sleek Rectangle Card Modal Container ── */}
+      {/* ── Sleek Rectangle Card Modal Container (No Scrollbar, Clean Fit) ── */}
       <div
         className={cn(
-          "relative w-full rounded-lg bg-white dark:bg-[#0c1427] border border-slate-200 dark:border-slate-800 shadow-2xl z-10 max-h-[92vh] overflow-y-auto p-6 sm:p-7 transition-all animate-in fade-in zoom-in-98 duration-150",
+          "relative w-full rounded-2xl bg-white dark:bg-[#0c1427] border border-slate-200 dark:border-slate-800 shadow-2xl z-10 max-h-[94vh] overflow-y-auto no-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] p-5 sm:p-6 transition-all animate-in fade-in zoom-in-98 duration-150",
           maxWidthClasses[maxWidth]
         )}
       >
