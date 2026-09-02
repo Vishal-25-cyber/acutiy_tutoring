@@ -93,10 +93,10 @@ const outreachSchools = [
     milestoneQuote:
       "The best part of this session was that Our Founder Ms. Karunya S is an alumini of the school. It was truly a proud moment for the entire MANTIF team and for the teachers who once taught her. We could witness the pride and happiness on her teachers’ faces as they welcomed her back, this time as a Founder.",
     schoolUrl: "https://www.google.com/search?q=Kongu+National+Matriculation+Hr+Sec+School+Nanjanapuram",
-    videoTitle1: "Session Video 1: Faculty AI Workshop & Live Demo",
-    videoUrl1: "/videos/session_video_1.mp4",
-    videoTitle2: "Session Video 2: Founder Address & Teacher Interaction",
-    videoUrl2: "/videos/session_video_2.mp4",
+    videoTitle1: "Session Video 1: Faculty AI Workshop & Teacher Participation",
+    videoUrl1: "/videos/session_video_2.mp4",
+    videoTitle2: "Session Video 2: Founder Address & Live Demonstration",
+    videoUrl2: "/videos/session_video_1.mp4",
   },
   // To add another school, simply copy and paste the block below:
   /*
