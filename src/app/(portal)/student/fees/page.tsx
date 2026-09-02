@@ -27,6 +27,8 @@ export default function StudentFeesPage() {
   const [isPaying, setIsPaying] = useState(false);
   const [showPayModal, setShowPayModal] = useState(false);
   const [isQrUnlocked, setIsQrUnlocked] = useState(false);
+  const [autoLockSeconds, setAutoLockSeconds] = useState(30);
+  const [hasScanned, setHasScanned] = useState(false);
   const [transactionIdInput, setTransactionIdInput] = useState("");
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [downloadingReceiptId, setDownloadingReceiptId] = useState<string | null>(null);
@@ -41,6 +43,26 @@ export default function StudentFeesPage() {
       window.removeEventListener("acuity:payment-updated", handleLiveUpdate);
     };
   }, [refetch]);
+
+  // Automatic security lock timer: locks QR automatically after 30 seconds
+  useEffect(() => {
+    let timer: any;
+    if (isQrUnlocked && showPayModal) {
+      timer = setInterval(() => {
+        setAutoLockSeconds((prev) => {
+          if (prev <= 1) {
+            setIsQrUnlocked(false);
+            setHasScanned(true);
+            return 30;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isQrUnlocked, showPayModal]);
 
   const upiId = (data?.settings?.upiId || "acuity.tutoring@upi").trim();
   const companyName = (data?.settings?.companyName || "Mantif Tutoring").trim();
@@ -66,7 +88,28 @@ export default function StudentFeesPage() {
   const handleOpenScanner = () => {
     setTransactionIdInput(`UPI-${Date.now().toString().slice(-8)}`);
     setIsQrUnlocked(false);
+    setHasScanned(false);
+    setAutoLockSeconds(30);
     setShowPayModal(true);
+  };
+
+  const handleOpenQr = () => {
+    setIsQrUnlocked(true);
+    setAutoLockSeconds(30);
+  };
+
+  const handleManualLock = () => {
+    setIsQrUnlocked(false);
+    setHasScanned(true);
+  };
+
+  const handleUtrChange = (val: string) => {
+    setTransactionIdInput(val);
+    if (isQrUnlocked && val.trim().length >= 4) {
+      // Auto-lock QR as soon as user types their UTR after scanning
+      setIsQrUnlocked(false);
+      setHasScanned(true);
+    }
   };
 
   const handleSubmitPayment = async (e: React.FormEvent) => {
@@ -96,6 +139,7 @@ export default function StudentFeesPage() {
       if (res.ok) {
         setShowPayModal(false);
         setIsQrUnlocked(false);
+        setHasScanned(true);
         refetch();
       }
     } catch (err) {
@@ -308,44 +352,50 @@ export default function StudentFeesPage() {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
               <div className="md:col-span-5 flex flex-col items-center text-center space-y-2.5">
                 {!isQrUnlocked ? (
-                  <div className="w-48 h-48 sm:w-52 sm:h-52 p-4 bg-slate-50 dark:bg-slate-900/90 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center text-center space-y-3 shadow-inner">
+                  <div className="w-48 h-48 sm:w-52 sm:h-52 p-4 bg-slate-50 dark:bg-slate-900/90 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center text-center space-y-2.5 shadow-inner">
                     <div className="w-12 h-12 rounded-full bg-slate-200/80 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300">
                       <Lock className="w-6 h-6 text-[#004b79] dark:text-[#dfb74a]" />
                     </div>
                     <div className="space-y-0.5">
                       <p className="font-bold text-xs text-slate-800 dark:text-slate-200">
-                        Payment QR Locked
+                        {hasScanned ? "QR Code Locked" : "Payment QR Locked"}
                       </p>
                       <p className="text-[10px] text-slate-400">
-                        Click below to view Founder's QR
+                        {hasScanned ? "Scan finished. Enter UTR to verify." : "Click below to view Founder's QR"}
                       </p>
                     </div>
                     <button
                       type="button"
-                      onClick={() => setIsQrUnlocked(true)}
-                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#004b79] hover:bg-[#003b60] text-white transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+                      onClick={handleOpenQr}
+                      className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#004b79] hover:bg-[#003b60] text-white transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
                     >
                       <Lock className="w-3.5 h-3.5" />
-                      <span>Click to Open QR</span>
+                      <span>{hasScanned ? "Re-open QR" : "Click to Open QR"}</span>
                     </button>
                   </div>
                 ) : (
                   <div className="space-y-2 flex flex-col items-center">
-                    <div className="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-150">
+                    <div className="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-150 relative">
                       <img
                         src={displayQrCodeUrl}
                         alt="Founder's Official UPI QR Code"
                         className="w-48 h-48 sm:w-52 sm:h-52 object-contain rounded-lg"
                       />
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsQrUnlocked(false)}
-                      className="text-[11px] font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 flex items-center gap-1 cursor-pointer"
-                    >
-                      <Lock className="w-3 h-3" />
-                      <span>Lock QR Code</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                        <Clock className="w-3 h-3 text-amber-600 animate-spin" />
+                        <span>Auto-locks in {autoLockSeconds}s</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleManualLock}
+                        className="text-[11px] font-bold text-[#004b79] dark:text-[#dfb74a] hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <Lock className="w-3 h-3" />
+                        <span>Lock Now</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -399,7 +449,13 @@ export default function StudentFeesPage() {
                     type="text"
                     placeholder="e.g. 423589102456"
                     value={transactionIdInput}
-                    onChange={(e) => setTransactionIdInput(e.target.value)}
+                    onChange={(e) => handleUtrChange(e.target.value)}
+                    onFocus={() => {
+                      if (isQrUnlocked) {
+                        setIsQrUnlocked(false);
+                        setHasScanned(true);
+                      }
+                    }}
                     className="w-full h-10 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 text-xs font-mono focus:outline-none focus:border-[#004b79] focus:ring-1 focus:ring-[#004b79]"
                   />
                   <p className="text-[10px] text-slate-400">
