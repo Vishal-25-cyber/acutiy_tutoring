@@ -251,6 +251,8 @@ export function JitsiClassroom({
     };
   }, [stopAllMediaTracks]);
 
+  const jitsiApiRef = useRef<any>(null);
+
   /* ─────────────────────────────────────────────────
      2a.  Add Tracks / Pre-allocate Transceivers
   ───────────────────────────────────────────────── */
@@ -394,337 +396,177 @@ export function JitsiClassroom({
   const admittedListRef = useRef(admittedList);
   useEffect(() => { admittedListRef.current = admittedList; }, [admittedList]);
 
-  /* ─────────────────────────────────────────────────
-     2c.  WebRTC Peer-to-Peer Streaming (Teacher <-> Student)
-  ───────────────────────────────────────────────── */
+  // Release camera/mic when entering live class so Jitsi Meet gets direct hardware access
   useEffect(() => {
-    if (stage !== "LIVE_CLASS") return;
-
-    let pc = peerConnectionRef.current;
-    if (!pc || pc.signalingState === "closed") {
-      pc = new RTCPeerConnection({
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:19302" },
-          { urls: "stun:stun2.l.google.com:19302" },
-          { urls: "stun:stun3.l.google.com:19302" },
-          { urls: "stun:stun4.l.google.com:19302" },
-          { urls: "stun:stun.services.mozilla.com" },
-          { urls: "stun:global.stun.twilio.com:3478" },
-          { urls: "stun:stun.relay.metered.ca:80" },
-          {
-            urls: [
-              "turn:openrelay.metered.ca:80",
-              "turn:openrelay.metered.ca:443",
-              "turn:openrelay.metered.ca:443?transport=tcp",
-              "turns:openrelay.metered.ca:443?transport=tcp",
-            ],
-            username: "openrelayproject",
-            credential: "openrelayproject",
-          },
-        ],
-        bundlePolicy: "max-bundle",
-        rtcpMuxPolicy: "require",
-      });
-      peerConnectionRef.current = pc;
-
-      // Add local media tracks or pre-allocate transceivers immediately
-      addTracksToPeerConnection(pc);
-
-      // Handle incoming remote audio/video tracks
-      pc.ontrack = (event) => {
-        let stream = event.streams[0];
-        if (!stream) {
-          if (!remoteStreamRef.current) {
-            remoteStreamRef.current = new MediaStream();
-          }
-          if (!remoteStreamRef.current.getTracks().some((t) => t.id === event.track.id)) {
-            remoteStreamRef.current.addTrack(event.track);
-          }
-          stream = remoteStreamRef.current;
-        } else {
-          remoteStreamRef.current = stream;
-        }
-        setHasRemoteVideo(true);
-        hasRemoteVideoRef.current = true;
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = stream;
-          remoteVideoRef.current.play().catch(() => {
-            if (remoteVideoRef.current) {
-              remoteVideoRef.current.muted = true;
-              remoteVideoRef.current.play().catch(() => {});
-            }
-          });
-        }
-      };
-
-      pc.onconnectionstatechange = () => {
-        if (pc?.connectionState === "connected") {
-          setHasRemoteVideo(true);
-          hasRemoteVideoRef.current = true;
-        }
-      };
-
-      // Send local ICE candidates to server signaling
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
-          const targetClassId = classDataRef.current?.id || classId;
-          const activeUserId = userInfoRef.current.id || currentUserId;
-          fetch(`/api/classes/${targetClassId}/signal`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              senderId: activeUserId,
-              name: userInfoRef.current.name,
-              role: userInfoRef.current.role,
-              type: "candidate",
-              data: event.candidate,
-            }),
-          }).catch(() => {});
-        }
-      };
+    if (stage === "LIVE_CLASS") {
+      stopAllMediaTracks();
     }
+  }, [stage, stopAllMediaTracks]);
 
-    const targetClassId = classDataRef.current?.id || classId;
-    let isCreatingOffer = false;
-
-    // Send immediate "I am in the classroom" broadcast so remote peer knows we entered
-    const activeUserId = userInfoRef.current.id || currentUserId;
-    fetch(`/api/classes/${targetClassId}/signal`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        senderId: activeUserId,
-        name: userInfoRef.current.name,
-        role: userInfoRef.current.role,
-        type: "CLIENT_JOINED",
-        isCameraOn: isCameraOnRef.current,
-        isMicOn: isMicOnRef.current,
-        isScreenSharing: isScreenSharingRef.current,
-      }),
-    }).catch(() => {});
-
-    // Polling loop for WebRTC signals (Offers, Answers, ICE Candidates, Heartbeat, Reactions)
-    const signalInterval = setInterval(async () => {
+  const handleLeaveClass = useCallback(async () => {
+    stopAllMediaTracks();
+    if (jitsiApiRef.current) {
       try {
-        const activePC = peerConnectionRef.current;
-        if (activePC) addTracksToPeerConnection(activePC);
+        jitsiApiRef.current.dispose();
+      } catch (e) {}
+      jitsiApiRef.current = null;
+    }
+    if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    stopAllMedia();
+    const targetClassId = classDataRef.current?.id || classDataRef.current?.livekitRoomId || classId;
 
-        const curUserId = userInfoRef.current.id || currentUserId;
-        const curTargetId = classDataRef.current?.id || classId;
+    if (userInfoRef.current.isTeacher) {
+      try {
+        await fetch(`/api/classes/${targetClassId}/end`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (e) {
+        console.warn("Failed to mark class as ended:", e);
+      }
+      router.push("/teacher/dashboard");
+    } else {
+      try {
+        await fetch(`/api/classes/${targetClassId}/admit`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (e) {}
 
-        // Send heartbeat & presence
-        await fetch(`/api/classes/${curTargetId}/signal`, {
+      try {
+        await fetch("/api/attendance/leave", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            senderId: curUserId,
-            name: userInfoRef.current.name,
-            role: userInfoRef.current.role,
-            isCameraOn: isCameraOnRef.current,
-            isMicOn: isMicOnRef.current,
-            isScreenSharing: isScreenSharingRef.current,
+            classId: targetClassId,
+            durationMinutes: Math.max(1, Math.round(durationSeconds / 60)),
           }),
         });
+      } catch (e) { console.warn(e); }
 
-        // Fetch pending signals using monotonic sequence ID
-        const res = await fetch(
-          `/api/classes/${curTargetId}/signal?userId=${encodeURIComponent(curUserId)}&sinceSeq=${lastSignalSeqRef.current}`
-        );
-        if (!res.ok) return;
-        const data = await res.json();
-        if (typeof data.lastSeq === "number") {
-          lastSignalSeqRef.current = Math.max(lastSignalSeqRef.current, data.lastSeq);
-        }
+      router.push("/student/classes");
+    }
+  }, [stopAllMediaTracks, stopAllMedia, classId, router, durationSeconds]);
 
-        // Check if teacher concluded the class
-        if (data.isEnded || (data.signals && data.signals.some((s: any) => s.type === "CLASS_ENDED"))) {
-          if (!userInfoRef.current.isTeacher) {
-            stopAllMedia();
-            if (peerConnectionRef.current) {
-              peerConnectionRef.current.close();
-              peerConnectionRef.current = null;
-            }
-            setStage("ENDED");
-            return;
-          }
-        }
+  /* ─────────────────────────────────────────────────
+     2c.  Jitsi Meet Video Conferencing Integration
+  ───────────────────────────────────────────────── */
+  const [jitsiError, setJitsiError] = useState(false);
 
-        // Update participants list
-        if (data.participants) {
-          setRealtimeParticipants(data.participants);
-          const other = data.participants.find((p: any) => p.id !== curUserId);
-          if (other) {
-            setRemoteParticipant(other);
-          } else if (admittedListRef.current.length === 0) {
-            setRemoteParticipant(null);
-          }
-        }
+  useEffect(() => {
+    if (stage !== "LIVE_CLASS") return;
 
-        // Process WebRTC signals
-        for (const sig of data.signals || []) {
-          if (sig.type === "CLIENT_JOINED" && userInfoRef.current.isTeacher && activePC) {
-            addTracksToPeerConnection(activePC);
-            if (activePC.signalingState === "stable" && !isCreatingOffer) {
-              isCreatingOffer = true;
-              lastOfferTimeRef.current = Date.now();
-              try {
-                const offer = await activePC.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
-                await activePC.setLocalDescription(offer);
-                await fetch(`/api/classes/${curTargetId}/signal`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    senderId: curUserId,
-                    name: userInfoRef.current.name,
-                    role: userInfoRef.current.role,
-                    to: sig.from,
-                    type: "offer",
-                    data: offer,
-                  }),
-                });
-              } catch (e) {
-                console.warn("[WebRTC] Offer error on CLIENT_JOINED:", e);
-              } finally {
-                isCreatingOffer = false;
-              }
-            }
-          } else if (sig.type === "offer" && !userInfoRef.current.isTeacher && activePC) {
-            addTracksToPeerConnection(activePC);
-            // Handle glare: polite student peer rolls back if in local-offer
-            if (activePC.signalingState !== "stable") {
-              await activePC.setLocalDescription({ type: "rollback" } as any).catch(() => {});
-            }
-            await activePC.setRemoteDescription(new RTCSessionDescription(sig.data));
+    stopAllMediaTracks();
 
-            // Flush queued candidates
-            while (queuedIceCandidatesRef.current.length > 0) {
-              const c = queuedIceCandidatesRef.current.shift();
-              if (c) try { await activePC.addIceCandidate(new RTCIceCandidate(c)); } catch (e) {}
-            }
+    let disposed = false;
 
-            const answer = await activePC.createAnswer();
-            await activePC.setLocalDescription(answer);
-            await fetch(`/api/classes/${curTargetId}/signal`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                senderId: curUserId,
-                name: userInfoRef.current.name,
-                role: userInfoRef.current.role,
-                to: sig.from,
-                type: "answer",
-                data: answer,
-              }),
-            });
-          } else if (sig.type === "answer" && userInfoRef.current.isTeacher && activePC) {
-            if (activePC.signalingState === "have-local-offer") {
-              await activePC.setRemoteDescription(new RTCSessionDescription(sig.data));
-              // Flush queued candidates
-              while (queuedIceCandidatesRef.current.length > 0) {
-                const c = queuedIceCandidatesRef.current.shift();
-                if (c) try { await activePC.addIceCandidate(new RTCIceCandidate(c)); } catch (e) {}
-              }
-            }
-          } else if (sig.type === "candidate" && activePC) {
-            if (activePC.remoteDescription && activePC.remoteDescription.type) {
-              try {
-                await activePC.addIceCandidate(new RTCIceCandidate(sig.data));
-              } catch (e) {}
-            } else {
-              queuedIceCandidatesRef.current.push(sig.data);
-            }
-          } else if (sig.type === "REACTION" && sig.data?.emoji) {
-            const rxId = sig.data.id || `${Date.now()}-${Math.random()}`;
-            const newReaction: FloatingReaction = {
-              id: rxId,
-              emoji: sig.data.emoji,
-              senderName: sig.name || "Peer",
-              x: 25 + Math.random() * 50,
-            };
-            setReactions((prev) => [...prev.slice(-15), newReaction]);
-            setTimeout(() => {
-              setReactions((prev) => prev.filter((r) => r.id !== rxId));
-            }, 2800);
-          }
-        }
+    const initJitsi = () => {
+      if (disposed) return;
+      const container = document.getElementById("jitsi-meet-container");
+      if (!container) return;
 
-        // Teacher initiates offer when student is detected and connection is stable
-        if (userInfoRef.current.isTeacher && activePC && activePC.signalingState === "stable" && !isCreatingOffer) {
-          const other = data.participants?.find((p: any) => p.id !== curUserId);
-          if (other && !hasRemoteVideoRef.current && activePC.connectionState !== "connected") {
-            const timeSinceLastOffer = Date.now() - lastOfferTimeRef.current;
-            if (timeSinceLastOffer > 4000) {
-              isCreatingOffer = true;
-              lastOfferTimeRef.current = Date.now();
-              addTracksToPeerConnection(activePC);
-              try {
-                const offer = await activePC.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
-                await activePC.setLocalDescription(offer);
-                await fetch(`/api/classes/${curTargetId}/signal`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    senderId: curUserId,
-                    name: userInfoRef.current.name,
-                    role: userInfoRef.current.role,
-                    to: other.id,
-                    type: "offer",
-                    data: offer,
-                  }),
-                });
-              } catch (e) {
-                console.warn("[WebRTC] Periodic offer error:", e);
-              } finally {
-                isCreatingOffer = false;
-              }
-            }
-          }
-        }
-      } catch (err) {
-        // quiet error handling
+      if (jitsiApiRef.current) {
+        try { jitsiApiRef.current.dispose(); } catch (e) {}
+        jitsiApiRef.current = null;
       }
-    }, 600);
+
+      const safeRoomName = `AcuityTutoring_${classId.replace(/[^a-zA-Z0-9]/g, "")}`;
+
+      if ((window as any).JitsiMeetExternalAPI) {
+        try {
+          const api = new (window as any).JitsiMeetExternalAPI("meet.jit.si", {
+            roomName: safeRoomName,
+            parentNode: container,
+            width: "100%",
+            height: "100%",
+            userInfo: {
+              displayName: (userInfoRef.current.name || userInfo.name || "Participant") + (userInfoRef.current.isTeacher ? " (Teacher)" : " (Student)"),
+              email: userInfoRef.current.email || userInfo.email,
+            },
+            configOverwrite: {
+              startWithAudioMuted: false,
+              startWithVideoMuted: false,
+              prejoinPageEnabled: false,
+              prejoinConfig: { enabled: false },
+              disableDeepLinking: true,
+              enableWelcomePage: false,
+              enableClosePage: false,
+              hideConferenceSubject: false,
+              subject: classData?.title || classData?.subject || "Live Classroom",
+            },
+            interfaceConfigOverwrite: {
+              SHOW_JITSI_WATERMARK: false,
+              SHOW_WATERMARK_FOR_GUESTS: false,
+              SHOW_BRAND_WATERMARK: false,
+              SHOW_POWERED_BY: false,
+              DEFAULT_REMOTE_DISPLAY_NAME: "Student",
+              TOOLBAR_BUTTONS: [
+                "microphone",
+                "camera",
+                "desktop",
+                "chat",
+                "raisehand",
+                "reactions",
+                "tileview",
+                "videoquality",
+                "fullscreen",
+                "hangup",
+              ],
+            },
+          });
+
+          jitsiApiRef.current = api;
+
+          api.addEventListener("videoConferenceLeft", () => {
+            handleLeaveClass();
+          });
+
+          api.addEventListener("readyToClose", () => {
+            handleLeaveClass();
+          });
+          return;
+        } catch (err) {
+          console.warn("Jitsi Meet API init error, activating fallback:", err);
+          setJitsiError(true);
+        }
+      } else {
+        setJitsiError(true);
+      }
+    };
+
+    if (!(window as any).JitsiMeetExternalAPI) {
+      const existingScript = document.getElementById("jitsi-external-api");
+      if (!existingScript) {
+        const script = document.createElement("script");
+        script.id = "jitsi-external-api";
+        script.src = "https://meet.jit.si/external_api.js";
+        script.async = true;
+        script.onload = () => {
+          if (!disposed) initJitsi();
+        };
+        script.onerror = () => {
+          if (!disposed) setJitsiError(true);
+        };
+        document.body.appendChild(script);
+      } else {
+        existingScript.addEventListener("load", () => {
+          if (!disposed) initJitsi();
+        });
+      }
+    } else {
+      initJitsi();
+    }
 
     return () => {
-      clearInterval(signalInterval);
-      if (peerConnectionRef.current) {
+      disposed = true;
+      if (jitsiApiRef.current) {
         try {
-          peerConnectionRef.current.close();
+          jitsiApiRef.current.dispose();
         } catch (e) {}
-        peerConnectionRef.current = null;
+        jitsiApiRef.current = null;
       }
     };
-  }, [stage, classId, addTracksToPeerConnection, stopAllMedia, currentUserId]);
-
-  /* ── Send Reaction Handler ── */
-  const sendReaction = useCallback((emoji: string) => {
-    const rxId = `${Date.now()}-${Math.random()}`;
-    const newReaction: FloatingReaction = {
-      id: rxId,
-      emoji,
-      senderName: userInfoRef.current.name || userInfo.name || "You",
-      x: 25 + Math.random() * 50,
-    };
-    setReactions((prev) => [...prev.slice(-15), newReaction]);
-    setTimeout(() => {
-      setReactions((prev) => prev.filter((r) => r.id !== rxId));
-    }, 2800);
-
-    const curTargetId = classDataRef.current?.id || classId;
-    const curUserId = userInfoRef.current.id || currentUserId;
-    fetch(`/api/classes/${curTargetId}/signal`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        senderId: curUserId,
-        name: userInfoRef.current.name || userInfo.name,
-        role: userInfoRef.current.role || userInfo.role,
-        type: "REACTION",
-        data: { emoji, id: rxId },
-      }),
-    }).catch(() => {});
-  }, [classId, currentUserId, userInfo.name, userInfo.role]);
+  }, [stage, classId, stopAllMediaTracks, handleLeaveClass, classData?.title, classData?.subject, userInfo.name, userInfo.email]);
 
   /* ─────────────────────────────────────────────────
      3a.  STUDENT → knock & poll for admission
@@ -1030,50 +872,6 @@ export function JitsiClassroom({
   };
 
   /* ─────────────────────────────────────────────────
-     8.  Leave class
-  ───────────────────────────────────────────────── */
-  const handleLeaveClass = async () => {
-    stopAllMediaTracks();
-    if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-    stopAllMedia();
-    const targetClassId = classData?.id || classData?.livekitRoomId || classId;
-
-    if (userInfo.isTeacher) {
-      try {
-        await fetch(`/api/classes/${targetClassId}/end`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-        });
-      } catch (e) {
-        console.warn("Failed to mark class as ended:", e);
-      }
-      router.push("/teacher/dashboard");
-    } else {
-      try {
-        // 1. Remove from admitted & pending lists so next visit requires new admission
-        await fetch(`/api/classes/${targetClassId}/admit`, {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-        });
-      } catch (e) {}
-
-      try {
-        // 2. Record attendance duration
-        await fetch("/api/attendance/leave", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            classId: targetClassId,
-            durationMinutes: Math.max(1, Math.round(durationSeconds / 60)),
-          }),
-        });
-      } catch (e) { console.warn(e); }
-
-      router.push("/student/classes");
-    }
-  };
-
-  /* ─────────────────────────────────────────────────
      Helpers
   ───────────────────────────────────────────────── */
   const recordAttendanceJoin = async (id: string) => {
@@ -1371,7 +1169,7 @@ export function JitsiClassroom({
   }
 
   /* ══════════════════════════════════════════════
-     RENDER — LIVE CLASSROOM
+     RENDER — LIVE CLASSROOM (Jitsi Meet)
   ══════════════════════════════════════════════ */
   return (
     <div className="h-screen w-screen bg-[#111] text-white flex flex-col overflow-hidden font-sans select-none">
@@ -1389,7 +1187,7 @@ export function JitsiClassroom({
           </span>
         </div>
 
-        <div className="flex items-center gap-4 shrink-0 text-xs text-slate-400">
+        <div className="flex items-center gap-3 shrink-0 text-xs text-slate-400">
           <div className="flex items-center gap-1.5 font-mono">
             <Clock className="w-3.5 h-3.5" />
             <span>{fmt(durationSeconds)}</span>
@@ -1399,6 +1197,13 @@ export function JitsiClassroom({
               {pendingCount > 0 ? `${pendingCount} waiting` : "All admitted"}
             </div>
           )}
+          <button
+            onClick={handleLeaveClass}
+            className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
+          >
+            <PhoneOff className="w-3.5 h-3.5" />
+            <span>Leave</span>
+          </button>
         </div>
       </header>
 
@@ -1426,525 +1231,22 @@ export function JitsiClassroom({
             >
               Deny
             </button>
-            {pendingStudents.length > 1 && (
-              <button
-                onClick={() => setActiveSidebar("PEOPLE")}
-                className="text-xs font-bold underline ml-1 cursor-pointer"
-              >
-                View All ({pendingStudents.length})
-              </button>
-            )}
           </div>
         </div>
       )}
 
-      {/* ── Main: Video Grid + Sidebar ── */}
-      <div className="flex-1 flex overflow-hidden">
-
-        {/* Video Grid: 2-tile split (Vertical on mobile, Horizontal on desktop) */}
-        <div className="flex-1 p-2 sm:p-3 flex flex-col sm:flex-row gap-2 sm:gap-3 overflow-hidden relative">
-
-          {/* Floating live reactions overlay */}
-          <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden">
-            {reactions.map((r) => (
-              <div
-                key={r.id}
-                className="absolute bottom-12 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-sm border border-white/20 shadow-lg text-white animate-float-reaction pointer-events-none"
-                style={{ left: `${r.x}%` }}
-              >
-                <span className="text-2xl">{r.emoji}</span>
-                <span className="text-xs font-semibold text-slate-200">{r.senderName}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Teacher tile */}
-          <div className="flex-1 w-full sm:w-1/2 h-1/2 sm:h-full relative rounded-xl overflow-hidden bg-[#181818] border border-white/10 flex items-center justify-center min-h-0 min-w-0">
-            {userInfo.isTeacher ? (
-              (isCameraOn || isScreenSharing) ? (
-                <video
-                  ref={teacherVideoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className={`w-full h-full ${isScreenSharing ? "object-contain bg-black" : "object-cover -scale-x-100"}`}
-                />
-              ) : (
-                <div className="flex flex-col items-center gap-3 text-center px-4">
-                  <div className="w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-slate-700 flex items-center justify-center text-xl sm:text-2xl font-semibold text-slate-200">
-                    {initials(userInfo.name)}
-                  </div>
-                  <div>
-                    <p className="text-xs sm:text-sm font-medium text-white">{userInfo.name} (You)</p>
-                    <span className="text-[11px] sm:text-xs text-slate-400">Camera is off</span>
-                  </div>
-                </div>
-              )
-            ) : (
-              <div className="relative w-full h-full flex items-center justify-center">
-                <video
-                  ref={(el) => {
-                    remoteVideoRef.current = el;
-                    if (el && remoteStreamRef.current) {
-                      el.srcObject = remoteStreamRef.current;
-                      el.play().catch(() => {
-                        el.muted = true;
-                        el.play().catch(() => {});
-                      });
-                    }
-                  }}
-                  autoPlay
-                  playsInline
-                  className="w-full h-full object-cover bg-black"
-                />
-                {!hasRemoteVideo && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center px-4 bg-[#181818]">
-                    <div className="w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-slate-700 flex items-center justify-center text-xl sm:text-2xl font-semibold text-slate-200">
-                      {initials(classData?.teacher?.name || "TC")}
-                    </div>
-                    <div>
-                      <p className="text-xs sm:text-sm font-medium text-white">{classData?.teacher?.name || "Faculty Teacher"}</p>
-                      <span className="text-[11px] sm:text-xs text-slate-400 flex items-center justify-center gap-1.5 mt-1">
-                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                        Connecting teacher live video...
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            <div className="absolute bottom-2 left-2 px-2 py-1 rounded-md bg-black/70 text-[10px] sm:text-[11px] font-medium text-white flex items-center gap-1.5 z-10">
-              <Mic className="w-3 h-3 text-emerald-400" />
-              <span>{userInfo.isTeacher ? `${userInfo.name} (You)` : (classData?.teacher?.name || "Teacher")} · {isScreenSharing && userInfo.isTeacher ? "Screen Sharing" : "Host"}</span>
-            </div>
-          </div>
-
-          {/* Student tile — Always rendered so both participants can always see both video feeds */}
-          <div className="flex-1 w-full sm:w-1/2 h-1/2 sm:h-full relative rounded-xl overflow-hidden bg-[#181818] border border-white/10 flex items-center justify-center min-h-0 min-w-0">
-            {!userInfo.isTeacher ? (
-              isCameraOn ? (
-                <video
-                  ref={localVideoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover -scale-x-100"
-                />
-              ) : (
-                <div className="flex flex-col items-center gap-3 text-center px-4">
-                  <div className="w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-slate-700 flex items-center justify-center text-xl sm:text-2xl font-semibold text-slate-200">
-                    {initials(userInfo.name)}
-                  </div>
-                  <div>
-                    <p className="text-xs sm:text-sm font-medium text-white">{userInfo.name} (You)</p>
-                    <span className="text-[11px] sm:text-xs text-slate-400">Camera is off</span>
-                  </div>
-                </div>
-              )
-            ) : (
-              <div className="relative w-full h-full flex items-center justify-center">
-                <video
-                  ref={(el) => {
-                    remoteVideoRef.current = el;
-                    if (el && remoteStreamRef.current) {
-                      el.srcObject = remoteStreamRef.current;
-                      el.play().catch(() => {
-                        el.muted = true;
-                        el.play().catch(() => {});
-                      });
-                    }
-                  }}
-                  autoPlay
-                  playsInline
-                  className="w-full h-full object-cover bg-black"
-                />
-                {!hasRemoteVideo && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#181818] text-center px-4">
-                    <div className="w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-slate-700 flex items-center justify-center text-xl sm:text-2xl font-semibold text-slate-200">
-                      {initials(remoteParticipant?.name || admittedList[0]?.name || "Student")}
-                    </div>
-                    <div>
-                      <p className="text-xs sm:text-sm font-medium text-white">{remoteParticipant?.name || admittedList[0]?.name || "Student"}</p>
-                      <span className="text-[11px] sm:text-xs text-slate-400 flex items-center justify-center gap-1.5 mt-1">
-                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                        Connecting student live video...
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            <div className="absolute bottom-2 left-2 px-2 py-1 rounded-md bg-black/70 text-[10px] sm:text-[11px] font-medium text-white flex items-center gap-1.5 z-10">
-              {(!userInfo.isTeacher ? isMicOn : remoteParticipant?.isMicOn !== false)
-                ? <Mic className="w-3 h-3 text-emerald-400" />
-                : <MicOff className="w-3 h-3 text-rose-400" />}
-              <span>{!userInfo.isTeacher ? `${userInfo.name} (You)` : (remoteParticipant?.name || admittedList[0]?.name || "Student")}</span>
-            </div>
-            {isHandRaised && !userInfo.isTeacher && (
-              <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-amber-500 text-[10px] font-bold text-black flex items-center gap-1 z-10">
-                <Hand className="w-3 h-3" />
-                Hand Raised
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── Sidebar ── */}
-        {activeSidebar !== "NONE" && (
-          <aside className="w-80 h-full bg-[#1a1a1a] border-l border-white/10 flex flex-col shrink-0">
-            <div className="h-12 px-4 flex items-center justify-between border-b border-white/10 shrink-0">
-              <h3 className="text-sm font-semibold text-white">
-                {activeSidebar === "CHAT"   && "In-call Messages"}
-                {activeSidebar === "PEOPLE" && "Participants"}
-                {activeSidebar === "INFO"   && "Class Details"}
-              </h3>
-              <button
-                onClick={() => setActiveSidebar("NONE")}
-                className="w-7 h-7 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4">
-              {/* ── Chat ── */}
-              {activeSidebar === "CHAT" && (
-                <div className="h-full flex flex-col justify-between">
-                  <div className="space-y-3 overflow-y-auto pr-1">
-                    {messages.length === 0 ? (
-                      <p className="text-xs text-slate-500 text-center py-8">No messages yet. Send a message to the class!</p>
-                    ) : (
-                      messages.map((m) => (
-                        <div
-                          key={m.id}
-                          className={`flex flex-col ${m.isSelf ? "items-end" : "items-start"}`}
-                        >
-                          <div className="flex items-baseline gap-1.5 mb-1">
-                            <span className="text-[10px] font-medium text-slate-400">{m.sender}</span>
-                            <span className="text-[9px] text-slate-600">{m.time}</span>
-                          </div>
-                          <div
-                            className={`max-w-[85%] px-3 py-2 rounded-xl text-xs ${
-                              m.isSelf
-                                ? "bg-blue-600 text-white rounded-br-xs"
-                                : "bg-white/10 text-slate-100 rounded-bl-xs"
-                            }`}
-                          >
-                            {m.text}
-                          </div>
-                        </div>
-                      ))
-                    )}
-                    <div ref={chatBottomRef} />
-                  </div>
-
-                  <form onSubmit={handleSendMessage} className="mt-3 flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Message everyone…"
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 placeholder-slate-500"
-                    />
-                    <button
-                      type="submit"
-                      className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shrink-0 cursor-pointer"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                    </button>
-                  </form>
-                </div>
-              )}
-
-              {/* ── People ── */}
-              {activeSidebar === "PEOPLE" && (
-                <div className="space-y-4">
-                  {/* Teacher admit panel — visible to teacher only */}
-                  {userInfo.isTeacher && pendingStudents.length > 0 && (
-                    <div className="space-y-2">
-                      <p className="text-[10px] text-amber-400 uppercase font-bold tracking-wider flex items-center gap-1.5">
-                        <Bell className="w-3 h-3" />
-                        Waiting to Join ({pendingStudents.length})
-                      </p>
-                      <div className="space-y-2">
-                        {pendingStudents.map((s) => (
-                          <div
-                            key={s.userId}
-                            className="flex items-center justify-between p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20"
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-semibold text-slate-200 shrink-0">
-                                {initials(s.name)}
-                              </div>
-                              <p className="text-xs font-medium text-white truncate">{s.name}</p>
-                            </div>
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              <button
-                                onClick={() => handleAdmitDeny(s.userId, "ADMIT")}
-                                disabled={admittingId === s.userId}
-                                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-[11px] font-semibold text-white transition-colors cursor-pointer disabled:opacity-50"
-                              >
-                                {admittingId === s.userId
-                                  ? <Loader2 className="w-3 h-3 animate-spin" />
-                                  : <CheckCircle2 className="w-3 h-3" />}
-                                Admit
-                              </button>
-                              <button
-                                onClick={() => handleAdmitDeny(s.userId, "DENY")}
-                                disabled={admittingId === s.userId}
-                                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-600 hover:bg-red-500 text-[11px] font-semibold text-white transition-colors cursor-pointer disabled:opacity-50"
-                              >
-                                <XCircle className="w-3 h-3" />
-                                Deny
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* In call — Connected Participants */}
-                  <div className="space-y-1.5">
-                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">
-                      In This Call ({
-                        1 +
-                        realtimeParticipants.filter((p) => p.id !== userInfo.id).length +
-                        (!userInfo.isTeacher && !realtimeParticipants.some((p) => p.role === "TEACHER" || p.role === "ADMIN" || p.id === (classData?.teacher?._id || classData?.teacher?.id)) ? 1 : 0) +
-                        (userInfo.isTeacher ? admittedList.filter((a) => !realtimeParticipants.some((p) => p.id === a.userId)).length : 0)
-                      })
-                    </p>
-
-                    {/* Self */}
-                    <div className="p-2.5 rounded-lg bg-white/5 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-blue-700 flex items-center justify-center text-[10px] font-semibold text-white">
-                          {initials(userInfo.name)}
-                        </div>
-                        <div>
-                          <p className="text-xs font-medium text-white">{userInfo.name} (You)</p>
-                          <p className="text-[10px] text-slate-500">{userInfo.isTeacher ? "Host" : "Student"}</p>
-                        </div>
-                      </div>
-                      {isMicOn
-                        ? <Mic className="w-3.5 h-3.5 text-emerald-400" />
-                        : <MicOff className="w-3.5 h-3.5 text-rose-400" />}
-                    </div>
-
-                    {/* If current user is student, ALWAYS display Teacher (Host) */}
-                    {!userInfo.isTeacher && !realtimeParticipants.some((p) => p.role === "TEACHER" || p.role === "ADMIN" || p.id === (classData?.teacher?._id || classData?.teacher?.id)) && (
-                      <div className="p-2.5 rounded-lg bg-white/5 flex items-center justify-between border border-emerald-500/20">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-indigo-700 flex items-center justify-center text-[10px] font-semibold text-white">
-                            {initials(classData?.teacher?.name || "Teacher")}
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium text-white">{classData?.teacher?.name || "Faculty Teacher"}</p>
-                            <p className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                              Host (Faculty)
-                            </p>
-                          </div>
-                        </div>
-                        <Mic className="w-3.5 h-3.5 text-emerald-400" />
-                      </div>
-                    )}
-
-                    {/* If current user is teacher, display admitted students connecting */}
-                    {userInfo.isTeacher && admittedList.filter((a) => !realtimeParticipants.some((p) => p.id === a.userId)).map((a) => (
-                      <div key={a.userId} className="p-2.5 rounded-lg bg-white/5 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-semibold text-slate-200">
-                            {initials(a.name || "Student")}
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium text-white">{a.name || "Student"}</p>
-                            <p className="text-[10px] text-emerald-400">Student (Admitted)</p>
-                          </div>
-                        </div>
-                        <Mic className="w-3.5 h-3.5 text-emerald-400" />
-                      </div>
-                    ))}
-
-                    {/* Other connected real participants */}
-                    {realtimeParticipants.filter((p) => p.id !== userInfo.id).map((p) => (
-                      <div key={p.id} className="p-2.5 rounded-lg bg-white/5 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-semibold text-slate-200">
-                            {initials(p.name)}
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium text-white">{p.name}</p>
-                            <p className="text-[10px] text-slate-400">{p.role === "TEACHER" || p.role === "ADMIN" ? "Host" : "Student"}</p>
-                          </div>
-                        </div>
-                        {p.isMicOn !== false
-                          ? <Mic className="w-3.5 h-3.5 text-emerald-400" />
-                          : <MicOff className="w-3.5 h-3.5 text-rose-400" />}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* ── Info ── */}
-              {activeSidebar === "INFO" && (
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Topic</p>
-                    <p className="text-sm font-semibold text-white">{classData?.title}</p>
-                    <p className="text-xs text-slate-400 mt-0.5">{classData?.description || "Interactive problem solving session."}</p>
-                  </div>
-                  <div className="h-px bg-white/10" />
-                  <div className="space-y-2.5">
-                    {[
-                      ["Schedule",  `${classData?.startTime} – ${classData?.endTime}`],
-                      ["Grade",     classData?.classLevel || "—"],
-                      ["Faculty",   classData?.teacher?.name || "—"],
-                      ["Attendance","≥ 75% required"],
-                    ].map(([label, val]) => (
-                      <div key={label} className="flex justify-between text-xs">
-                        <span className="text-slate-500">{label}</span>
-                        <span className="text-white font-medium">{val}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </aside>
+      {/* ── Main: Jitsi Meet Live Video Classroom ── */}
+      <div className="flex-1 w-full h-full relative overflow-hidden bg-[#0d0d0d]">
+        <div id="jitsi-meet-container" className="w-full h-full" />
+        {/* Seamless fallback iframe if external_api.js script is blocked or delayed */}
+        {jitsiError && (
+          <iframe
+            src={`https://meet.jit.si/AcuityTutoring_${classId.replace(/[^a-zA-Z0-9]/g, "")}#config.prejoinPageEnabled=false&config.disableDeepLinking=true&userInfo.displayName=${encodeURIComponent((userInfoRef.current.name || userInfo.name || "Participant") + (userInfoRef.current.isTeacher ? " (Teacher)" : " (Student)"))}`}
+            allow="camera; microphone; fullscreen; display-capture; autoplay"
+            className="w-full h-full border-0"
+          />
         )}
       </div>
-
-      {/* ── Bottom Controls ── */}
-      <footer className="h-16 bg-[#111] border-t border-white/10 flex items-center justify-between px-5 shrink-0 z-20">
-
-        {/* Left: duration */}
-        <div className="hidden md:flex items-center gap-2 text-xs text-slate-500 font-mono min-w-[80px]">
-          <span>{fmt(durationSeconds)}</span>
-          <span>·</span>
-          <span className="truncate max-w-[100px]">{classData?.subject}</span>
-        </div>
-
-        {/* Center: media controls */}
-        <div className="flex items-center gap-2.5 mx-auto">
-          <button
-            onClick={() => setIsMicOn(!isMicOn)}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-              isMicOn ? "bg-slate-700 hover:bg-slate-600 text-white" : "bg-red-600 hover:bg-red-500 text-white"
-            }`}
-            title={isMicOn ? "Mute mic" : "Unmute mic"}
-          >
-            {isMicOn ? <Mic className="w-[18px] h-[18px]" /> : <MicOff className="w-[18px] h-[18px]" />}
-          </button>
-
-          <button
-            onClick={() => setIsCameraOn(!isCameraOn)}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-              isCameraOn ? "bg-slate-700 hover:bg-slate-600 text-white" : "bg-red-600 hover:bg-red-500 text-white"
-            }`}
-            title={isCameraOn ? "Turn off camera" : "Turn on camera"}
-          >
-            {isCameraOn ? <Video className="w-[18px] h-[18px]" /> : <VideoOff className="w-[18px] h-[18px]" />}
-          </button>
-
-          <button
-            onClick={() => setIsHandRaised(!isHandRaised)}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-              isHandRaised ? "bg-amber-500 text-black" : "bg-slate-700 hover:bg-slate-600 text-white"
-            }`}
-            title={isHandRaised ? "Lower hand" : "Raise hand"}
-          >
-            <Hand className="w-[18px] h-[18px]" />
-          </button>
-
-          {/* Live Reactions Picker Button */}
-          <div className="relative">
-            <button
-              onClick={() => setShowReactionsPicker(!showReactionsPicker)}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-                showReactionsPicker ? "bg-amber-500 text-black" : "bg-slate-700 hover:bg-slate-600 text-white"
-              }`}
-              title="React with emoji"
-            >
-              <Smile className="w-[18px] h-[18px]" />
-            </button>
-
-            {showReactionsPicker && (
-              <div className="absolute bottom-12 left-1/2 -translate-x-1/2 bg-slate-900/95 border border-white/20 backdrop-blur-md rounded-full px-3 py-1.5 flex items-center gap-2 shadow-2xl z-50 animate-in fade-in zoom-in-90 duration-150">
-                {["👏", "❤️", "👍", "😂", "🎉", "🔥"].map((emoji) => (
-                  <button
-                    key={emoji}
-                    onClick={() => {
-                      sendReaction(emoji);
-                      setShowReactionsPicker(false);
-                    }}
-                    className="text-xl hover:scale-125 active:scale-95 transition-transform p-1 cursor-pointer"
-                    title={`React ${emoji}`}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {userInfo.isTeacher && (
-            <button
-              onClick={toggleScreenShare}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-                isScreenSharing ? "bg-blue-600 text-white" : "bg-slate-700 hover:bg-slate-600 text-white"
-              }`}
-              title="Share screen"
-            >
-              <MonitorUp className="w-[18px] h-[18px]" />
-            </button>
-          )}
-
-          <button
-            onClick={handleLeaveClass}
-            className="h-10 px-5 rounded-full bg-red-600 hover:bg-red-500 text-white text-xs font-semibold flex items-center gap-2 ml-2 cursor-pointer transition-all"
-          >
-            <PhoneOff className="w-4 h-4" />
-            <span className="hidden sm:inline">Leave</span>
-          </button>
-        </div>
-
-        {/* Right: sidebar toggles */}
-        <div className="flex items-center gap-1 min-w-[80px] justify-end">
-          <button
-            onClick={() => setActiveSidebar(activeSidebar === "INFO" ? "NONE" : "INFO")}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-              activeSidebar === "INFO" ? "bg-slate-700 text-white" : "hover:bg-slate-700 text-slate-400"
-            }`}
-          >
-            <Info className="w-[18px] h-[18px]" />
-          </button>
-
-          <button
-            onClick={() => setActiveSidebar(activeSidebar === "PEOPLE" ? "NONE" : "PEOPLE")}
-            className={`relative w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-              activeSidebar === "PEOPLE" ? "bg-slate-700 text-white" : "hover:bg-slate-700 text-slate-400"
-            }`}
-          >
-            <Users className="w-[18px] h-[18px]" />
-            {pendingCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-amber-500 text-black text-[9px] font-black flex items-center justify-center">
-                {pendingCount}
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() => setActiveSidebar(activeSidebar === "CHAT" ? "NONE" : "CHAT")}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-              activeSidebar === "CHAT" ? "bg-slate-700 text-white" : "hover:bg-slate-700 text-slate-400"
-            }`}
-          >
-            <MessageSquare className="w-[18px] h-[18px]" />
-          </button>
-        </div>
-      </footer>
     </div>
   );
 }
