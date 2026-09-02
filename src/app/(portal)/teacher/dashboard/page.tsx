@@ -52,17 +52,12 @@ export default function TeacherDashboardPage() {
 
       <main className="w-full max-w-7xl mx-auto p-6 sm:p-8 space-y-8 animate-in fade-in duration-150 select-none">
 
-        {/* ── 1. WELCOME HEADER (PERFECT ALIGNMENT, NO VERIFIED FACULTY BADGE, EXACT NAME) ── */}
+        {/* ── 1. WELCOME HEADER (PERFECT ALIGNMENT, EXACT NAME) ── */}
         <div className="flex flex-row items-center justify-between gap-4 pb-5 border-b border-slate-200 dark:border-slate-800">
           <div className="space-y-1">
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
               Welcome, {userName}
             </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Subjects: <strong className="text-slate-700 dark:text-slate-300">{teacher?.subjects?.join(", ") || "Mathematics, Science"}</strong>
-              &nbsp;·&nbsp;
-              Grades: <strong className="text-slate-700 dark:text-slate-300">{teacher?.classesTaught?.join(", ") || "Class 8, Class 9, Class 10"}</strong>
-            </p>
           </div>
 
           <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium shrink-0">
