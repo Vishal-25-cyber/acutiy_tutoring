@@ -42,16 +42,21 @@ export default function StudentFeesPage() {
   const upiId = (data?.settings?.upiId || "acuity.tutoring@upi").trim();
   const companyName = (data?.settings?.companyName || "Mantif Tutoring").trim();
   const monthlyFee = Number(data?.currentFee?.amount ?? data?.settings?.monthlyFee ?? 299);
+  const customQrImage = data?.settings?.qrCodeImageUrl;
   const currentMonthStr = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date());
 
   // Genuine NPCI standard UPI Deep Link URI with pre-filled exact amount
   // Format: upi://pay?pa=VPA&pn=NAME&am=AMOUNT&cu=INR&tn=NOTE
   const upiUri = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(companyName)}&am=${monthlyFee}&cu=INR&tn=${encodeURIComponent(`Tuition Fee ${currentMonthStr}`)}`;
 
-  // High-Resolution Scannable Dynamic QR Code that strictly encodes the exact pre-filled amount
-  const displayQrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(
-    upiUri
-  )}&margin=8&qzone=1`;
+  // High-Resolution Scannable Real QR Code Image:
+  // Uses original custom uploaded QR if set, otherwise auto-generates dynamic UPI QR
+  const displayQrCodeUrl =
+    customQrImage && customQrImage.trim()
+      ? customQrImage
+      : `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(
+          upiUri
+        )}&margin=8`;
 
   const handleCopyUpi = () => {
     navigator.clipboard.writeText(upiId);
@@ -333,17 +338,12 @@ export default function StudentFeesPage() {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
               {/* Left Column: Real Scannable UPI QR Scanner */}
               <div className="md:col-span-5 flex flex-col items-center text-center space-y-2.5">
-                <div className="relative p-2.5 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center">
+                <div className="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center">
                   <img
                     src={displayQrCodeUrl}
                     alt="Official UPI QR Code"
                     className="w-48 h-48 sm:w-52 sm:h-52 object-contain rounded-lg"
                   />
-                  <div className="absolute inset-x-0 bottom-3 text-center">
-                    <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-[#004b79] text-white shadow-xs">
-                      ₹{monthlyFee.toLocaleString("en-IN")} Pre-Filled
-                    </span>
-                  </div>
                 </div>
 
                 <div className="space-y-1">
@@ -352,6 +352,11 @@ export default function StudentFeesPage() {
                   </span>
                   <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 font-medium">
                     <span>GPay</span> • <span>PhonePe</span> • <span>Paytm</span> • <span>BHIM</span>
+                  </div>
+                  <div className="pt-1">
+                    <span className="inline-block px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                      ₹{monthlyFee.toLocaleString("en-IN")} Pre-Filled
+                    </span>
                   </div>
                   <a
                     href={upiUri}
