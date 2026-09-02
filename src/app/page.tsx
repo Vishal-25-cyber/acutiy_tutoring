@@ -239,8 +239,8 @@ export default function HomePage() {
       setOk("Login verified. Redirecting…");
       setTimeout(() => {
         const resolvedRole = data.user?.role || loginRole;
-        if (resolvedRole === "TEACHER") router.push("/teacher/dashboard");
-        else if (resolvedRole === "STUDENT") router.push("/student/dashboard");
+        if (loginRole === "STUDENT" || resolvedRole === "STUDENT") router.push("/student/dashboard");
+        else if (loginRole === "TEACHER" || resolvedRole === "TEACHER") router.push("/teacher/dashboard");
         else router.push("/admin/dashboard");
       }, 300);
     } catch (e: any) {
