@@ -104,32 +104,48 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Record / Update Attendance on Join
-      const existingAttendance = await Attendance.findOne({
-        studentId: userSession.userId,
-        sessionId: liveSession._id,
-      });
-
-      if (!existingAttendance) {
-        const isLate =
-          !isNaN(sessionStartDateTime.getTime()) &&
-          now.getTime() - sessionStartDateTime.getTime() > 2 * 60 * 1000;
-
-        await Attendance.create({
+      // Record / Update Attendance on Join safely
+      try {
+        const existingAttendance = await Attendance.findOne({
           studentId: userSession.userId,
           sessionId: liveSession._id,
-          batchId: liveSession.batchId,
-          classLevel: liveSession.classLevel,
-          joinTime: now,
-          status: isLate ? "LATE" : "PRESENT",
-          durationMinutes: 0,
         });
 
-        // Update student attendance stats
-        await StudentProfile.findOneAndUpdate(
-          { userId: userSession.userId },
-          { $inc: { totalClassesAttended: 1 } }
-        );
+        if (!existingAttendance) {
+          const isLate =
+            !isNaN(sessionStartDateTime.getTime()) &&
+            now.getTime() - sessionStartDateTime.getTime() > 2 * 60 * 1000;
+
+          const effectiveBatchId =
+            (typeof liveSession.batchId === "object" ? (liveSession.batchId as any)?._id : liveSession.batchId) ||
+            studentProfile.batchId;
+
+          let finalBatchId = effectiveBatchId;
+          if (!finalBatchId) {
+            const Batch = (await import("@/models/Batch")).default;
+            const fb = await Batch.findOne();
+            finalBatchId = fb?._id;
+          }
+
+          if (finalBatchId) {
+            await Attendance.create({
+              studentId: userSession.userId,
+              sessionId: liveSession._id,
+              batchId: finalBatchId,
+              classLevel: liveSession.classLevel || studentProfile.currentClass || "Class 10",
+              joinTime: now,
+              status: isLate ? "LATE" : "PRESENT",
+              durationMinutes: 0,
+            });
+
+            await StudentProfile.findOneAndUpdate(
+              { userId: userSession.userId },
+              { $inc: { totalClassesAttended: 1 } }
+            );
+          }
+        }
+      } catch (attErr) {
+        console.warn("Attendance recording warning (non-fatal):", attErr);
       }
     }
 

@@ -16,7 +16,7 @@ const AttendanceSchema = new Schema<IAttendanceDocument>(
   {
     studentId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     sessionId: { type: Schema.Types.ObjectId, ref: "LiveSession", required: true, index: true },
-    batchId: { type: Schema.Types.ObjectId, ref: "Batch", required: true, index: true },
+    batchId: { type: Schema.Types.ObjectId, ref: "Batch", required: false, index: true },
     classLevel: {
       type: String,
       enum: [
