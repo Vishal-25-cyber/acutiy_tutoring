@@ -1772,20 +1772,26 @@ export default function HomePage() {
               className="relative w-full max-w-5xl max-h-[92vh] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-3xl bg-white border border-slate-200/90 shadow-2xl p-6 sm:p-8 lg:p-10 space-y-8 text-left"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Modal Top Header (Clean School Name ALONE with Close Button) */}
-              <div className="flex items-center justify-between gap-6 pb-6 border-b border-slate-200/80">
+              {/* Modal Top Header (Clean Single-Line School Name + Unique Signature Close Button) */}
+              <div className="flex items-center justify-between gap-4 pb-6 border-b border-slate-200/80">
                 <div className="space-y-1">
-                  <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#002137] tracking-tight leading-tight">
+                  <h3 className="text-xl sm:text-2xl md:text-[26px] lg:text-3xl font-black text-[#002137] tracking-tight leading-snug">
                     {selectedSchoolModal.name}
                   </h3>
                 </div>
 
+                {/* Unique Signature Designed Close Button */}
                 <button
                   onClick={() => setSelectedSchoolModal(null)}
-                  className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-all cursor-pointer shrink-0 shadow-xs hover:rotate-90 duration-200"
+                  className="group relative inline-flex items-center gap-2 pl-3.5 pr-2 py-1.5 rounded-full bg-[#002137] hover:bg-[#004b79] text-white border-2 border-[#dfb74a]/60 shadow-lg shadow-[#002137]/25 hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer shrink-0"
                   title="Close Dialog"
                 >
-                  <X className="w-5 h-5" />
+                  <span className="text-[11px] font-black uppercase tracking-wider text-[#dfb74a] hidden sm:inline-block">
+                    Close
+                  </span>
+                  <div className="w-7 h-7 rounded-full bg-[#dfb74a] text-[#002137] group-hover:bg-white flex items-center justify-center shadow-inner transition-colors">
+                    <X className="w-4 h-4 stroke-[3] transition-transform duration-300 group-hover:rotate-90" />
+                  </div>
                 </button>
               </div>
 
