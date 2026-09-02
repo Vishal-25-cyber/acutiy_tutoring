@@ -363,7 +363,6 @@ export default function HomePage() {
     if (!tSpec.trim()) { setErr("Please enter your specialization."); return false; }
     if (!tDistrict.trim()) { setErr("Please enter your district."); return false; }
     if (tClasses.length === 0) { setErr("Please select at least one class you are willing to teach."); return false; }
-    if (tSubjects.length === 0) { setErr("Please select at least one subject you want to teach."); return false; }
     return true;
   };
 
@@ -939,31 +938,6 @@ export default function HomePage() {
                                   }`}
                               >
                                 {c.replace("Class ", "C")}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Subjects willing to teach */}
-                      <div className="space-y-1">
-                        <label className="block text-xs font-bold text-slate-700">
-                          Which Subjects do you want to teach? *
-                        </label>
-                        <div className="grid grid-cols-3 gap-1.5">
-                          {["Mathematics", "Science", "English", "Social Science", "Hindi"].map((s) => {
-                            const isSelected = tSubjects.includes(s);
-                            return (
-                              <button
-                                key={s}
-                                type="button"
-                                onClick={() => toggleTSubject(s)}
-                                className={`py-2 px-1.5 text-xs font-bold rounded-xl border transition-all cursor-pointer text-center truncate ${isSelected
-                                  ? "bg-[#002137] text-white border-[#002137] shadow-xs"
-                                  : "bg-white text-slate-700 border-slate-200 hover:border-slate-300"
-                                  }`}
-                              >
-                                {s}
                               </button>
                             );
                           })}
