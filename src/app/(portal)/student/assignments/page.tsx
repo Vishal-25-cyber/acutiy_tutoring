@@ -266,15 +266,28 @@ export default function StudentAssignmentsPage() {
   const startCamera = async () => {
     setCameraError("");
     try {
+      if (
+        streamRef.current &&
+        streamRef.current.active &&
+        streamRef.current.getVideoTracks().some((t) => t.readyState === "live")
+      ) {
+        if (videoRef.current) {
+          videoRef.current.srcObject = streamRef.current;
+          videoRef.current.play().catch(() => {});
+        }
+        setIsCameraStarted(true);
+        return;
+      }
+
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
           audio: false,
         });
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          videoRef.current.play();
+          videoRef.current.play().catch(() => {});
         }
         setIsCameraStarted(true);
       } else {
@@ -285,6 +298,16 @@ export default function StudentAssignmentsPage() {
       setCameraError("Camera permission required for proctored tests. Please enable camera access.");
     }
   };
+
+  // Re-bind video element whenever it mounts or view mode switches
+  useEffect(() => {
+    if (isCameraStarted && streamRef.current && videoRef.current) {
+      if (videoRef.current.srcObject !== streamRef.current) {
+        videoRef.current.srcObject = streamRef.current;
+      }
+      videoRef.current.play().catch(() => {});
+    }
+  }, [isCameraStarted, activeProctoredTest, splitViewMode]);
 
   const stopCamera = () => {
     if (streamRef.current) {
@@ -1155,138 +1178,139 @@ export default function StudentAssignmentsPage() {
             /* DURING TEST VIEW: PDF VIEWER (LEFT) + CAMERA PROCTORING (RIGHT) */
             <div className="flex-1 p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-12 gap-3 overflow-hidden">
               {/* LEFT PANE: QUESTION PAPER / PDF VIEWER - light theme */}
-              {(splitViewMode === "SPLIT" || splitViewMode === "PDF_FULL") && (
-                <div className={`${
-                  splitViewMode === "PDF_FULL" ? "lg:col-span-12" : "lg:col-span-7"
-                } h-full flex flex-col rounded-2xl bg-white border border-gray-200 overflow-hidden shadow-lg`}>
-                  {/* PDF Viewer Header */}
-                  <div className="px-3 py-2.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between gap-2 shrink-0">
-                    <div className="flex items-center gap-2 truncate">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-rose-500 text-white shrink-0">PDF</span>
-                      <span className="text-xs font-semibold text-gray-700 truncate">
-                        {activeProctoredTest.attachmentName || `${activeProctoredTest.title} — Question Paper`}
-                      </span>
+              <div className={`${
+                splitViewMode === "SUBMIT_FULL"
+                  ? "hidden"
+                  : splitViewMode === "PDF_FULL"
+                  ? "lg:col-span-12"
+                  : "lg:col-span-7"
+              } h-full flex flex-col rounded-2xl bg-white border border-gray-200 overflow-hidden shadow-lg`}>
+                {/* PDF Viewer Header */}
+                <div className="px-3 py-2.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between gap-2 shrink-0">
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-rose-500 text-white shrink-0">PDF</span>
+                    <span className="text-xs font-semibold text-gray-700 truncate">
+                      {activeProctoredTest.attachmentName || `${activeProctoredTest.title} — Question Paper`}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button type="button" onClick={() => setPdfZoom((prev) => Math.max(50, prev - 15))} title="Zoom Out"
+                      className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer transition-colors">
+                      <ZoomOut className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="text-[11px] font-mono text-gray-500 w-10 text-center font-bold">{pdfZoom}%</span>
+                    <button type="button" onClick={() => setPdfZoom((prev) => Math.min(200, prev + 15))} title="Zoom In"
+                      className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer transition-colors">
+                      <ZoomIn className="w-3.5 h-3.5" />
+                    </button>
+                    <button type="button" onClick={() => setPdfZoom(100)} title="Reset"
+                      className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer transition-colors">
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+                {/* PDF Frame */}
+                <div className="flex-1 overflow-hidden relative flex flex-col bg-gray-100">
+                  {activeProctoredTest.attachmentUrl ? (
+                    <div className="w-full h-full overflow-auto flex items-start justify-center p-2">
+                      <iframe
+                        src={`${activeProctoredTest.attachmentUrl}#toolbar=0&navpanes=0`}
+                        title="Question Paper PDF"
+                        className="w-full h-full rounded-xl bg-white border-0 shadow-md"
+                        style={{ transform: pdfZoom !== 100 ? `scale(${pdfZoom / 100})` : undefined, transformOrigin: "top center" }}
+                      />
                     </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button type="button" onClick={() => setPdfZoom((prev) => Math.max(50, prev - 15))} title="Zoom Out"
-                        className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer transition-colors">
-                        <ZoomOut className="w-3.5 h-3.5" />
-                      </button>
-                      <span className="text-[11px] font-mono text-gray-500 w-10 text-center font-bold">{pdfZoom}%</span>
-                      <button type="button" onClick={() => setPdfZoom((prev) => Math.min(200, prev + 15))} title="Zoom In"
-                        className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer transition-colors">
-                        <ZoomIn className="w-3.5 h-3.5" />
-                      </button>
-                      <button type="button" onClick={() => setPdfZoom(100)} title="Reset"
-                        className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer transition-colors">
-                        <RotateCcw className="w-3.5 h-3.5" />
-                      </button>
+                  ) : (
+                    <div className="p-6 overflow-y-auto space-y-4 text-xs font-mono leading-relaxed text-gray-700">
+                      <div className="p-4 rounded-xl bg-white border border-gray-200 shadow-sm">
+                        <h4 className="font-bold text-sm text-[#004b79] mb-2">Instructions &amp; Questions:</h4>
+                        <p className="whitespace-pre-wrap">{activeProctoredTest.description || "Answer all questions clearly on your blank paper. Show complete working steps."}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* RIGHT PANE: CAMERA PROCTORING - light theme */}
+              <div className={`${
+                splitViewMode === "PDF_FULL"
+                  ? "hidden"
+                  : splitViewMode === "SUBMIT_FULL"
+                  ? "lg:col-span-12"
+                  : "lg:col-span-5"
+              } h-full flex flex-col overflow-hidden`}>
+                {/* Camera card - full height, no wordings underneath */}
+                <div className="rounded-2xl bg-white border border-gray-200 overflow-hidden shadow-md flex-1 flex flex-col">
+                  {/* Camera Header */}
+                  <div className="px-3.5 py-2.5 flex items-center justify-between bg-gray-50 border-b border-gray-200 shrink-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${ isCameraStarted ? "bg-emerald-500 animate-pulse" : "bg-amber-400 animate-bounce" }`} />
+                      <span className="text-[11px] font-bold text-gray-700">Live Proctoring</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {/* In Frame / Away status */}
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ isFaceDetected ? "text-emerald-700 bg-emerald-100" : "text-rose-600 bg-rose-100 animate-pulse" }`}>
+                        {isFaceDetected ? "● In Frame" : `⚠ Away ${awaySeconds}s`}
+                      </span>
+                      {warningCount > 0 && (
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-rose-100 border border-rose-200 text-rose-600 flex items-center gap-1">
+                          <ShieldAlert className="w-2.5 h-2.5" />
+                          {warningCount} {warningCount === 1 ? "Warning" : "Warnings"}
+                        </span>
+                      )}
                     </div>
                   </div>
-                  {/* PDF Frame */}
-                  <div className="flex-1 overflow-hidden relative flex flex-col bg-gray-100">
-                    {activeProctoredTest.attachmentUrl ? (
-                      <div className="w-full h-full overflow-auto flex items-start justify-center p-2">
-                        <iframe
-                          src={`${activeProctoredTest.attachmentUrl}#toolbar=0&navpanes=0`}
-                          title="Question Paper PDF"
-                          className="w-full h-full rounded-xl bg-white border-0 shadow-md"
-                          style={{ transform: pdfZoom !== 100 ? `scale(${pdfZoom / 100})` : undefined, transformOrigin: "top center" }}
-                        />
-                      </div>
-                    ) : (
-                      <div className="p-6 overflow-y-auto space-y-4 text-xs font-mono leading-relaxed text-gray-700">
-                        <div className="p-4 rounded-xl bg-white border border-gray-200 shadow-sm">
-                          <h4 className="font-bold text-sm text-[#004b79] mb-2">Instructions &amp; Questions:</h4>
-                          <p className="whitespace-pre-wrap">{activeProctoredTest.description || "Answer all questions clearly on your blank paper. Show complete working steps."}</p>
+
+                  {/* Video Feed */}
+                  <div className="relative w-full flex-1 bg-black overflow-hidden flex items-center justify-center min-h-[320px]">
+                    <video
+                      ref={(node) => {
+                        videoRef.current = node;
+                        if (node && streamRef.current) {
+                          if (node.srcObject !== streamRef.current) {
+                            node.srcObject = streamRef.current;
+                          }
+                          node.play().catch(() => {});
+                        }
+                      }}
+                      autoPlay
+                      playsInline
+                      muted
+                      onCanPlay={(e) => {
+                        e.currentTarget.play().catch(() => {});
+                      }}
+                      className="w-full h-full object-cover"
+                      style={{ transform: "scaleX(-1)" }}
+                    />
+                    <canvas ref={canvasRef} className="hidden" />
+
+                    {/* Face guide frame */}
+                    {isCameraStarted && (
+                      <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                        <div className="w-44 h-56 sm:w-56 sm:h-72 relative transition-all duration-300">
+                          {[
+                            "top-0 left-0 border-t-2 border-l-2 rounded-tl-xl",
+                            "top-0 right-0 border-t-2 border-r-2 rounded-tr-xl",
+                            "bottom-0 left-0 border-b-2 border-l-2 rounded-bl-xl",
+                            "bottom-0 right-0 border-b-2 border-r-2 rounded-br-xl",
+                          ].map((cls, i) => (
+                            <div key={i} className={`absolute w-7 h-7 ${ isFaceDetected ? "border-emerald-400/80" : "border-rose-500 animate-pulse" } ${cls}`} />
+                          ))}
                         </div>
+                      </div>
+                    )}
+
+                    {/* Camera initializing state */}
+                    {!isCameraStarted && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center text-xs text-gray-400 bg-gray-900">
+                        <Camera className="w-8 h-8 text-[#dfb74a] animate-pulse" />
+                        <span className="text-gray-300 font-medium">Camera initializing…</span>
+                        {cameraError && <p className="text-[11px] text-rose-400 font-bold">{cameraError}</p>}
                       </div>
                     )}
                   </div>
                 </div>
-              )}
-
-              {/* RIGHT PANE: CAMERA PROCTORING - light theme */}
-              {(splitViewMode === "SPLIT" || splitViewMode === "SUBMIT_FULL") && (
-                <div className={`${
-                  splitViewMode === "SUBMIT_FULL" ? "lg:col-span-12" : "lg:col-span-5"
-                } h-full flex flex-col gap-3 overflow-y-auto pr-0.5`}>
-                  {/* Camera card - light */}
-                  <div className="rounded-2xl bg-white border border-gray-200 overflow-hidden shrink-0 shadow-md">
-                    {/* Camera Header - light */}
-                    <div className="px-3 py-2 flex items-center justify-between bg-gray-50 border-b border-gray-200">
-                      <div className="flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full shrink-0 ${ isCameraStarted ? "bg-emerald-500 animate-pulse" : "bg-amber-400 animate-bounce" }`} />
-                        <span className="text-[11px] font-bold text-gray-700">Live Proctoring</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {/* In Frame / Away status */}
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ isFaceDetected ? "text-emerald-700 bg-emerald-100" : "text-rose-600 bg-rose-100 animate-pulse" }`}>
-                          {isFaceDetected ? "● In Frame" : `⚠ Away ${awaySeconds}s`}
-                        </span>
-                        {warningCount > 0 && (
-                          <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-rose-100 border border-rose-200 text-rose-600 flex items-center gap-1">
-                            <ShieldAlert className="w-2.5 h-2.5" />
-                            {warningCount} {warningCount === 1 ? "Warning" : "Warnings"}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Video Feed */}
-                    <div className="relative w-full bg-black" style={{aspectRatio: "4/3"}}>
-                      <video
-                        ref={videoRef}
-                        autoPlay
-                        playsInline
-                        muted
-                        className="w-full h-full object-cover"
-                        style={{transform: "scaleX(-1)", filter: "brightness(1.15) contrast(1.05)"}}
-                      />
-                      <canvas ref={canvasRef} className="hidden" />
-
-                      {/* Face guide frame */}
-                      {isCameraStarted && (
-                        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                          <div className="w-40 h-52 sm:w-48 sm:h-60 relative transition-all duration-300">
-                            {[
-                              "top-0 left-0 border-t-2 border-l-2 rounded-tl-xl",
-                              "top-0 right-0 border-t-2 border-r-2 rounded-tr-xl",
-                              "bottom-0 left-0 border-b-2 border-l-2 rounded-bl-xl",
-                              "bottom-0 right-0 border-b-2 border-r-2 rounded-br-xl",
-                            ].map((cls, i) => (
-                              <div key={i} className={`absolute w-6 h-6 ${ isFaceDetected ? "border-emerald-400/70" : "border-rose-500 animate-pulse" } ${cls}`} />
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Camera initializing state */}
-                      {!isCameraStarted && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center text-xs text-gray-400 bg-gray-100">
-                          <Camera className="w-8 h-8 text-[#004b79] animate-pulse" />
-                          <span className="text-gray-500 font-medium">Camera initializing…</span>
-                          {cameraError && <p className="text-[11px] text-rose-500 font-bold">{cameraError}</p>}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Instructions & Proctoring Notice Card */}
-                  <div className="rounded-2xl bg-white border border-gray-200 p-4 shadow-sm flex flex-col gap-2.5">
-                    <h4 className="text-xs font-black uppercase tracking-wider text-gray-700 flex items-center gap-1.5">
-                      <ShieldCheck className="w-4 h-4 text-[#004b79]" />
-                      <span>Live Proctoring Active</span>
-                    </h4>
-                    <ul className="text-xs text-gray-500 space-y-1.5 list-disc pl-4 leading-relaxed">
-                      <li>Keep your face centered and visible to the webcam throughout the exam.</li>
-                      <li>Navigating to another tab or turning away for 5+ seconds logs recorded warnings.</li>
-                      <li>Write all solutions neatly on physical paper.</li>
-                      <li>Once you finish, click <strong>"Finish Test"</strong> at top right to unlock your 5-minute answer sheet upload window.</li>
-                    </ul>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           )}
         </div>,
