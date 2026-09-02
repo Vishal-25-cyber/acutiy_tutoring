@@ -303,6 +303,13 @@ export function sortClassesByPriority<T extends { status?: string; date?: string
     const dateA = a.date || "";
     const dateB = b.date || "";
 
+    // Both LIVE -> Most recently started / created first
+    if (stateA === "LIVE") {
+      const timeA = (a as any).actualStartTime ? new Date((a as any).actualStartTime).getTime() : ((a as any).createdAt ? new Date((a as any).createdAt).getTime() : 0);
+      const timeB = (b as any).actualStartTime ? new Date((b as any).actualStartTime).getTime() : ((b as any).createdAt ? new Date((b as any).createdAt).getTime() : 0);
+      if (timeA !== timeB) return timeB - timeA;
+    }
+
     // Both UPCOMING -> Earliest start date and time first (Today, Tomorrow, etc.)
     if (stateA === "UPCOMING") {
       if (dateA !== dateB) return dateA.localeCompare(dateB);

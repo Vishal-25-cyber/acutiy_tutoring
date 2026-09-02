@@ -178,6 +178,22 @@ export async function POST(req: NextRequest) {
     const randomHex = Math.random().toString(16).substring(2, 8);
     const livekitRoomId = `acuity-${cleanSubject}-${Date.now().toString().slice(-4)}-${randomHex}`;
 
+    if (isLiveNow || status === "LIVE") {
+      try {
+        await LiveSession.updateMany(
+          {
+            teacherId: teacherUserId,
+            status: "LIVE",
+          },
+          {
+            $set: { status: "COMPLETED", actualEndTime: new Date() },
+          }
+        );
+      } catch (cleanErr) {
+        console.warn("Error concluding prior live classes:", cleanErr);
+      }
+    }
+
     const newClass = await LiveSession.create({
       title: resolvedTitle,
       subject,

@@ -133,9 +133,13 @@ export default function StudentClassesPage() {
     return false;
   };
 
-  // Find any active live class first, or scheduled class for today
+  // Find the latest active live class first, or scheduled class for today
   const liveClassDoc =
-    data?.classes?.find((c: any) => c.status === "LIVE") ||
+    data?.classes?.filter((c: any) => c.status === "LIVE").sort((a: any, b: any) => {
+      const tA = a.actualStartTime ? new Date(a.actualStartTime).getTime() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+      const tB = b.actualStartTime ? new Date(b.actualStartTime).getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+      return tB - tA;
+    })[0] ||
     data?.classes?.find((c: any) => (!c.date || c.date === todayDateStr) && isWithinClassWindow(c));
 
   const todayDbClass = data?.classes?.find(
