@@ -20,12 +20,22 @@ import {
   Timer,
   Play,
   ShieldCheck,
+  ShieldAlert,
   Eye,
   AlertTriangle,
   Loader2,
   ExternalLink,
   Paperclip,
   Download,
+  Maximize2,
+  Minimize2,
+  SplitSquareHorizontal,
+  Volume2,
+  VolumeX,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -44,7 +54,7 @@ export default function StudentAssignmentsPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // ── LIVE PROCTORED TEST ROOM STATE ──
+  // ── LIVE PROCTORED FULL-SCREEN EXAMINATION STATE ──
   const [activeProctoredTest, setActiveProctoredTest] = useState<any>(null);
   const [isCameraStarted, setIsCameraStarted] = useState(false);
   const [cameraError, setCameraError] = useState("");
@@ -52,9 +62,24 @@ export default function StudentAssignmentsPage() {
   const [isTestLocked, setIsTestLocked] = useState(false);
   const [capturedProctoringSnapshot, setCapturedProctoringSnapshot] = useState<string | null>(null);
 
+  // Security & Attention Monitor State
+  const [isExamFullscreen, setIsExamFullscreen] = useState<boolean>(false);
+  const [splitViewMode, setSplitViewMode] = useState<"SPLIT" | "PDF_FULL" | "SUBMIT_FULL">("SPLIT");
+  const [pdfZoom, setPdfZoom] = useState<number>(100);
+  const [warningCount, setWarningCount] = useState<number>(0);
+  const [activeWarning, setActiveWarning] = useState<{
+    type: "TAB_SWITCH" | "LOOK_AWAY" | "CAMERA_LOST";
+    message: string;
+    timestamp: number;
+  } | null>(null);
+  const [awaySeconds, setAwaySeconds] = useState<number>(0);
+  const [isFaceDetected, setIsFaceDetected] = useState<boolean>(true);
+  const [isSoundMuted, setIsSoundMuted] = useState<boolean>(false);
+
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const lastSoundRef = useRef<number>(0);
 
   // File Upload State
   const [selectedFile, setSelectedFile] = useState<{
@@ -87,6 +112,75 @@ export default function StudentAssignmentsPage() {
     }
     const timePart = d.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", hour12: true });
     return `Due: ${datePart} at ${timePart}`;
+  };
+
+  // ── SOUND ALARM SYNTHESIZER (WEB AUDIO API) ──
+  const playWarningSound = (type: "ALARM" | "BEEP" = "ALARM") => {
+    if (isSoundMuted) return;
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      if (ctx.state === "suspended") {
+        ctx.resume();
+      }
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      if (type === "ALARM") {
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.setValueAtTime(440, ctx.currentTime + 0.12);
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.24);
+        gain.gain.setValueAtTime(0.35, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.5);
+      } else {
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(660, ctx.currentTime);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.25);
+      }
+    } catch (err) {
+      console.warn("Proctoring sound warning playback error:", err);
+    }
+  };
+
+  // ── PROCTORING VIOLATION TRIGGER ──
+  const triggerProctoringViolation = (
+    type: "TAB_SWITCH" | "LOOK_AWAY" | "CAMERA_LOST",
+    message: string
+  ) => {
+    setWarningCount((prev) => prev + 1);
+    setActiveWarning({
+      type,
+      message,
+      timestamp: Date.now(),
+    });
+
+    const now = Date.now();
+    if (now - lastSoundRef.current > 2500) {
+      lastSoundRef.current = now;
+      playWarningSound("ALARM");
+    }
+  };
+
+  // ── FULLSCREEN TOGGLE HELPER ──
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+      setIsExamFullscreen(true);
+    } else {
+      document.exitFullscreen().catch(() => {});
+      setIsExamFullscreen(false);
+    }
   };
 
   // ── WEBCAM PROCTORING STREAM LIFECYCLE ──
@@ -154,9 +248,24 @@ export default function StudentAssignmentsPage() {
     setCapturedProctoringSnapshot(null);
     setSelectedFile(null);
     setSubmissionText("");
+    setWarningCount(0);
+    setActiveWarning(null);
+    setAwaySeconds(0);
+    setIsFaceDetected(true);
+    setSplitViewMode("SPLIT");
     const duration = (test.durationMinutes || 45) * 60;
     setTimeLeftSeconds(duration);
     await startCamera();
+
+    // Auto-request browser fullscreen for maximum exam integrity
+    try {
+      if (document.documentElement && !document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+        setIsExamFullscreen(true);
+      }
+    } catch (e) {
+      console.warn("Fullscreen request:", e);
+    }
   };
 
   // Close Proctored Test Room
@@ -164,7 +273,110 @@ export default function StudentAssignmentsPage() {
     stopCamera();
     setActiveProctoredTest(null);
     setIsTestLocked(false);
+    setActiveWarning(null);
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+      setIsExamFullscreen(false);
+    }
   };
+
+  // ── TAB SWITCH & WINDOW FOCUS LOST PROCTORING LISTENER ──
+  useEffect(() => {
+    if (!activeProctoredTest) return;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        triggerProctoringViolation(
+          "TAB_SWITCH",
+          "⚠️ Tab Switch Violation: Navigating away from the test tab is strictly prohibited & recorded!"
+        );
+      }
+    };
+
+    const handleBlur = () => {
+      triggerProctoringViolation(
+        "TAB_SWITCH",
+        "⚠️ Window Focus Lost: Please return and keep the examination window active on your screen!"
+      );
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", handleBlur);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [activeProctoredTest]);
+
+  // ── WEBCAM ATTENTION & 5-SECOND LOOK-AWAY TRACKER ──
+  useEffect(() => {
+    if (!activeProctoredTest || !isCameraStarted) return;
+
+    const interval = setInterval(() => {
+      if (videoRef.current && videoRef.current.readyState >= 2) {
+        try {
+          const canvas = canvasRef.current || document.createElement("canvas");
+          canvas.width = 64;
+          canvas.height = 48;
+          const ctx = canvas.getContext("2d", { willReadFrequently: true });
+          if (ctx) {
+            ctx.drawImage(videoRef.current, 0, 0, 64, 48);
+            const imgData = ctx.getImageData(0, 0, 64, 48);
+            const data = imgData.data;
+
+            // Sample brightness and variance in central face zone
+            let totalLuma = 0;
+            let centerVariance = 0;
+            let sampledPixels = 0;
+
+            for (let y = 12; y < 36; y++) {
+              for (let x = 16; x < 48; x++) {
+                const i = (y * 64 + x) * 4;
+                const luma = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                totalLuma += luma;
+                sampledPixels++;
+              }
+            }
+            const avgLuma = totalLuma / (sampledPixels || 1);
+
+            for (let y = 12; y < 36; y++) {
+              for (let x = 16; x < 48; x++) {
+                const i = (y * 64 + x) * 4;
+                const luma = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                centerVariance += Math.abs(luma - avgLuma);
+              }
+            }
+            const avgVariance = centerVariance / (sampledPixels || 1);
+
+            // If camera covered or face absent
+            const facePresent = avgLuma > 15 && avgLuma < 245 && avgVariance > 10;
+
+            if (facePresent) {
+              setIsFaceDetected(true);
+              setAwaySeconds(0);
+            } else {
+              setIsFaceDetected(false);
+              setAwaySeconds((prev) => {
+                const next = prev + 1;
+                if (next >= 5) {
+                  triggerProctoringViolation(
+                    "LOOK_AWAY",
+                    "⚠️ Attention Warning: Candidate looking away or absent from camera frame for 5+ seconds! Keep eyes on screen."
+                  );
+                }
+                return next;
+              });
+            }
+          }
+        } catch (e) {
+          console.warn("Proctoring frame analysis warning:", e);
+        }
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [activeProctoredTest, isCameraStarted]);
 
   // Live Countdown Timer for Proctored Test
   useEffect(() => {
@@ -176,6 +388,7 @@ export default function StudentAssignmentsPage() {
             clearInterval(interval);
             setIsTestLocked(true);
             captureSnapshot();
+            playWarningSound("ALARM");
             return 0;
           }
           return prev - 1;
@@ -547,182 +760,392 @@ export default function StudentAssignmentsPage() {
         )}
       </div>
 
-      {/* ── 4. LIVE PROCTORED TEST ROOM MODAL ── */}
+      {/* ── 4. FULL-SCREEN SECURE PROCTORED EXAMINATION SUITE ── */}
       {activeProctoredTest && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto no-scrollbar [&::-webkit-scrollbar]:hidden">
-          <div className="w-full max-w-4xl bg-white dark:bg-[#001726] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-            {/* Proctored Room Header */}
-            <div className="p-4 sm:p-5 bg-gradient-to-r from-slate-900 to-[#002137] text-white flex items-center justify-between border-b border-slate-800 shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300">
-                  <Camera className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-base sm:text-lg font-black tracking-tight">
-                      {activeProctoredTest.title}
-                    </h2>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500 text-white flex items-center gap-1 animate-pulse">
-                      <span className="w-1.5 h-1.5 rounded-full bg-white" /> Proctored Session
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-300">
-                    Subject: {activeProctoredTest.subject} • Max Marks: {activeProctoredTest.maxMarks}
-                  </p>
-                </div>
+        <div className="fixed inset-0 z-50 bg-[#060d17] text-white flex flex-col h-screen w-screen overflow-hidden select-none">
+          {/* Top Secure Examination Control Bar */}
+          <div className="h-16 px-4 sm:px-6 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 flex items-center justify-between gap-3 shrink-0 z-20">
+            {/* Left: Test Identification & Live Security Status */}
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+                <Camera className="w-4 h-4" />
               </div>
-
-              {/* Countdown Timer Display */}
-              <div className="flex items-center gap-3">
-                <div className="px-3.5 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/50 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-amber-400" />
-                  <span className="font-mono font-black text-sm sm:text-base text-amber-300">
-                    {formatTime(timeLeftSeconds)}
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm sm:text-base font-black tracking-tight truncate">
+                    {activeProctoredTest.title}
+                  </h2>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500 text-white flex items-center gap-1 animate-pulse shrink-0">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white" /> Proctored
                   </span>
                 </div>
+                <div className="flex items-center gap-2 text-[11px] text-slate-400 truncate">
+                  <span>{activeProctoredTest.subject}</span>
+                  <span>•</span>
+                  <span>Max: {activeProctoredTest.maxMarks} Marks</span>
+                  <span>•</span>
+                  {isFaceDetected ? (
+                    <span className="text-emerald-400 font-bold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" /> In Frame
+                    </span>
+                  ) : (
+                    <span className="text-rose-400 font-bold flex items-center gap-1 animate-pulse">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block" /> Away ({awaySeconds}s)
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Center: Live Timer & Violation Badges */}
+            <div className="flex items-center gap-2.5">
+              {/* Timer Pill */}
+              <div className={`px-3.5 py-1.5 rounded-xl border flex items-center gap-2 transition-all ${
+                timeLeftSeconds <= 300
+                  ? "bg-rose-950/70 border-rose-600 text-rose-300 animate-pulse"
+                  : "bg-amber-950/40 border-amber-500/50 text-amber-300"
+              }`}>
+                <Clock className="w-4 h-4" />
+                <span className="font-mono font-black text-sm sm:text-base">
+                  {formatTime(timeLeftSeconds)}
+                </span>
+              </div>
+
+              {/* Warnings Pill */}
+              <div className={`px-2.5 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all ${
+                warningCount > 0
+                  ? "bg-rose-900/60 border-rose-600 text-rose-200 animate-pulse"
+                  : "bg-slate-800/80 border-slate-700 text-slate-400"
+              }`}>
+                <ShieldAlert className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Warnings:</span>
+                <span className="font-mono font-bold">{warningCount}</span>
+              </div>
+
+              {/* Split View Switcher */}
+              <div className="hidden md:flex items-center p-1 rounded-xl bg-slate-800/90 border border-slate-700 text-xs font-bold">
                 <button
                   type="button"
-                  onClick={handleCloseTestRoom}
-                  className="p-1.5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white cursor-pointer"
+                  onClick={() => setSplitViewMode("PDF_FULL")}
+                  className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                    splitViewMode === "PDF_FULL"
+                      ? "bg-[#004b79] text-white shadow-xs"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
                 >
-                  <X className="w-5 h-5" />
+                  Paper Only
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSplitViewMode("SPLIT")}
+                  className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                    splitViewMode === "SPLIT"
+                      ? "bg-[#004b79] text-white shadow-xs"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  Split View
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSplitViewMode("SUBMIT_FULL")}
+                  className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                    splitViewMode === "SUBMIT_FULL"
+                      ? "bg-[#004b79] text-white shadow-xs"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  Proctor &amp; Upload
                 </button>
               </div>
             </div>
 
-            {/* Proctored Room Body Grid */}
-            <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-y-auto no-scrollbar [&::-webkit-scrollbar]:hidden flex-1">
-              {/* Left Column: Test Instructions & Question Paper */}
-              <div className="lg:col-span-7 space-y-4">
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                      Test Questions &amp; Paper
+            {/* Right: Audio, Fullscreen, and Exit Controls */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsSoundMuted(!isSoundMuted)}
+                title={isSoundMuted ? "Unmute Proctoring Alarm" : "Mute Proctoring Alarm"}
+                className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                  isSoundMuted
+                    ? "bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300"
+                    : "bg-emerald-950/40 border-emerald-600/50 text-emerald-400 hover:bg-emerald-900/50"
+                }`}
+              >
+                {isSoundMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={toggleFullscreen}
+                title="Toggle Fullscreen Lockdown"
+                className="p-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 cursor-pointer transition-all"
+              >
+                {isExamFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleCloseTestRoom}
+                className="px-3 py-1.5 rounded-xl bg-rose-600/20 hover:bg-rose-600 border border-rose-500/40 text-rose-300 hover:text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Finish / Exit</span>
+              </button>
+            </div>
+          </div>
+
+          {/* High-Visibility Floating Warning Banner */}
+          {activeWarning && (
+            <div className="px-4 py-2.5 bg-rose-600 text-white flex items-center justify-between gap-3 shadow-lg animate-bounce z-30 shrink-0">
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-bold">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>{activeWarning.message}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveWarning(null)}
+                className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white text-xs font-bold cursor-pointer shrink-0"
+              >
+                Acknowledge
+              </button>
+            </div>
+          )}
+
+          {/* Main Examination Workspace: Split Screen Layout */}
+          <div className="flex-1 p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden">
+            {/* ═══════════════════════════════════════════════════════════ */}
+            {/* ── LEFT PANE: QUESTION PAPER / INTERACTIVE PDF VIEWER ── */}
+            {/* ═══════════════════════════════════════════════════════════ */}
+            {(splitViewMode === "SPLIT" || splitViewMode === "PDF_FULL") && (
+              <div className={`${
+                splitViewMode === "PDF_FULL" ? "lg:col-span-12" : "lg:col-span-7"
+              } h-full flex flex-col rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-2xl`}>
+                {/* PDF Viewer Header Toolbar */}
+                <div className="p-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between gap-2 shrink-0">
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-rose-600 text-white shrink-0">
+                      PDF
                     </span>
+                    <span className="text-xs font-bold text-slate-200 truncate">
+                      {activeProctoredTest.attachmentName || `${activeProctoredTest.title} Question Paper`}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setPdfZoom((prev) => Math.max(50, prev - 15))}
+                      title="Zoom Out"
+                      className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer"
+                    >
+                      <ZoomOut className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="text-[11px] font-mono text-slate-400 w-10 text-center font-bold">
+                      {pdfZoom}%
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setPdfZoom((prev) => Math.min(200, prev + 15))}
+                      title="Zoom In"
+                      className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer"
+                    >
+                      <ZoomIn className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPdfZoom(100)}
+                      title="Reset Zoom"
+                      className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
+
                     {activeProctoredTest.attachmentUrl && (
                       <a
                         href={activeProctoredTest.attachmentUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#004b79] hover:bg-[#003b60] text-white text-xs font-bold transition-colors shadow-xs"
+                        title="Open in Full Browser Tab"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white text-[11px] font-bold cursor-pointer ml-1"
                       >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span>Open Question Paper PDF</span>
+                        <ExternalLink className="w-3 h-3" />
+                        <span className="hidden sm:inline">Popout</span>
                       </a>
                     )}
                   </div>
+                </div>
 
-                  {activeProctoredTest.description && (
-                    <div className="p-3.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed font-mono">
-                      {activeProctoredTest.description}
+                {/* PDF Interactive Frame / Question Content */}
+                <div className="flex-1 bg-slate-950 overflow-hidden relative flex flex-col">
+                  {activeProctoredTest.attachmentUrl ? (
+                    <div className="w-full h-full flex-1 overflow-auto bg-slate-800 flex items-center justify-center p-2">
+                      <iframe
+                        src={`${activeProctoredTest.attachmentUrl}#toolbar=0&navpanes=0`}
+                        title="Question Paper PDF"
+                        className="w-full h-full rounded-xl bg-white border-0 shadow-lg"
+                        style={{
+                          transform: pdfZoom !== 100 ? `scale(${pdfZoom / 100})` : undefined,
+                          transformOrigin: "top center",
+                        }}
+                      />
                     </div>
-                  )}
-
-                  {activeProctoredTest.attachmentUrl && (
-                    <div className="p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 flex items-center justify-between gap-3 text-xs">
-                      <div className="flex items-center gap-2 truncate">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-black bg-rose-500 text-white shrink-0 uppercase tracking-wider">
-                          PDF
-                        </span>
-                        <span className="font-bold text-slate-900 dark:text-slate-100 truncate">
-                          {activeProctoredTest.attachmentName || "Official Question Paper.pdf"}
-                        </span>
-                        {activeProctoredTest.attachmentSize && (
-                          <span className="text-[10px] text-slate-400 font-mono shrink-0">
-                            ({activeProctoredTest.attachmentSize})
-                          </span>
-                        )}
+                  ) : (
+                    <div className="p-6 overflow-y-auto space-y-4 text-xs font-mono leading-relaxed text-slate-200">
+                      <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
+                        <h4 className="font-bold text-sm text-amber-400 mb-2">Instructions &amp; Questions:</h4>
+                        <p className="whitespace-pre-wrap">{activeProctoredTest.description || "Answer all questions clearly on your blank paper. Show complete working steps."}</p>
                       </div>
-                      <a
-                        href={activeProctoredTest.attachmentUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs font-bold text-[#004b79] dark:text-[#dfb74a] hover:underline shrink-0"
-                      >
-                        View Questions
-                      </a>
                     </div>
                   )}
                 </div>
+              </div>
+            )}
 
-                {/* Answer Upload Section (Active or unlocked when timer completes) */}
-                <div className="p-4 rounded-2xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/60 space-y-3">
+            {/* ═══════════════════════════════════════════════════════════ */}
+            {/* ── RIGHT PANE: LIVE AI PROCTORING & ANSWER SUBMISSION ── */}
+            {/* ═══════════════════════════════════════════════════════════ */}
+            {(splitViewMode === "SPLIT" || splitViewMode === "SUBMIT_FULL") && (
+              <div className={`${
+                splitViewMode === "SUBMIT_FULL" ? "lg:col-span-12" : "lg:col-span-5"
+              } h-full flex flex-col gap-3 overflow-y-auto no-scrollbar pr-0.5`}>
+                {/* 1. Live Camera Feed & AI Security Monitor Card */}
+                <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3 shrink-0 shadow-xl">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#004b79] dark:text-[#dfb74a] flex items-center gap-1.5">
-                      <Upload className="w-4 h-4" />
-                      <span>Upload Handwritten Answer Sheet Photos / PDF</span>
+                    <span className="text-xs font-bold flex items-center gap-1.5 text-emerald-400">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                      <span>Live Webcam Proctoring</span>
                     </span>
-                    {isTestLocked && (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
-                        Time Ended — Upload Answers
-                      </span>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {isFaceDetected ? "● Candidate Focused" : `⚠️ Look Away: ${awaySeconds}s`}
+                    </span>
+                  </div>
+
+                  {/* Video Stream with Face Frame Crosshairs */}
+                  <div className="relative w-full aspect-4/3 bg-slate-950 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center shadow-inner">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-full object-cover scale-x-[-1]"
+                    />
+                    <canvas ref={canvasRef} className="hidden" />
+
+                    {/* Face Guide Target Overlay */}
+                    {isCameraStarted && (
+                      <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                        <div className={`w-36 h-48 sm:w-44 sm:h-56 rounded-3xl border-2 border-dashed transition-all duration-300 ${
+                          isFaceDetected
+                            ? "border-emerald-400/50 shadow-[0_0_20px_rgba(52,211,153,0.15)]"
+                            : "border-rose-500/80 shadow-[0_0_25px_rgba(244,63,94,0.3)] animate-pulse"
+                        }`} />
+                        <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-slate-950/80 text-[10px] font-mono text-slate-400">
+                          AI Focus Guard: {isFaceDetected ? "100% In View" : "Attention Diverted"}
+                        </div>
+                      </div>
+                    )}
+
+                    {!isCameraStarted && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center text-xs text-slate-400 bg-slate-950">
+                        <Camera className="w-8 h-8 text-amber-400 animate-pulse" />
+                        <span>Camera stream initializing…</span>
+                        {cameraError && <p className="text-[11px] text-rose-400 font-bold">{cameraError}</p>}
+                      </div>
                     )}
                   </div>
 
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept="image/*,application/pdf"
-                    className="hidden"
-                  />
+                  <div className="space-y-1 text-[11px] text-slate-400">
+                    <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>Continuous Security Guard Active</span>
+                    </div>
+                    <p className="text-slate-400 leading-tight">
+                      Write your answers on paper. Keep your face inside the target frame. Looking away for 5 seconds or switching tabs will trigger audio security alarms.
+                    </p>
+                  </div>
+                </div>
 
-                  {selectedFile ? (
-                    <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2 truncate">
-                        <FileCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span className="font-bold truncate text-slate-800 dark:text-slate-200">
-                          {selectedFile.name}
+                {/* 2. Answer Sheet Photo & File Upload Card */}
+                <div className="p-4 rounded-2xl bg-blue-950/30 border border-blue-900/60 space-y-3 flex-1 flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-[#dfb74a] flex items-center gap-1.5">
+                        <Upload className="w-4 h-4" />
+                        <span>Upload Handwritten Solutions</span>
+                      </span>
+                      {isTestLocked && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-500/40">
+                          Time Completed — Upload Now
                         </span>
-                        <span className="text-[10px] text-slate-400 font-mono">({selectedFile.size})</span>
+                      )}
+                    </div>
+
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept="image/*,application/pdf"
+                      className="hidden"
+                    />
+
+                    {selectedFile ? (
+                      <div className="p-3 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2 truncate">
+                          <FileCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span className="font-bold truncate text-slate-200">
+                            {selectedFile.name}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-mono">({selectedFile.size})</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedFile(null)}
+                          className="p-1 text-slate-400 hover:text-rose-400 cursor-pointer"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
+                    ) : (
                       <button
                         type="button"
-                        onClick={() => setSelectedFile(null)}
-                        className="p-1 text-slate-400 hover:text-rose-500"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full py-4 border-2 border-dashed border-blue-500/40 rounded-xl flex flex-col items-center justify-center gap-1.5 text-xs text-[#dfb74a] font-bold hover:bg-slate-900 cursor-pointer transition-all"
                       >
-                        <X className="w-4 h-4" />
+                        <Camera className="w-5 h-5 text-blue-400" />
+                        <span>Take Photo / Upload Solution Sheet</span>
+                        <span className="text-[10px] text-slate-400 font-normal">PNG, JPG or PDF up to 25MB</span>
                       </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="w-full py-4 border-2 border-dashed border-blue-300 dark:border-blue-800 rounded-xl flex flex-col items-center justify-center gap-1.5 text-xs text-[#004b79] dark:text-[#dfb74a] font-bold hover:bg-white dark:hover:bg-slate-900 cursor-pointer transition-all"
-                    >
-                      <Camera className="w-5 h-5 text-blue-500" />
-                      <span>Take Photo / Upload Answer Sheet</span>
-                      <span className="text-[10px] text-slate-400 font-normal">PNG, JPG or PDF up to 25MB</span>
-                    </button>
-                  )}
+                    )}
 
-                  <textarea
-                    rows={2}
-                    value={submissionText}
-                    onChange={(e) => setSubmissionText(e.target.value)}
-                    placeholder="Optional answer notes or key final values..."
-                    className="w-full p-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
-                  />
+                    <textarea
+                      rows={2}
+                      value={submissionText}
+                      onChange={(e) => setSubmissionText(e.target.value)}
+                      placeholder="Optional final answers or working notes..."
+                      className="w-full p-2.5 text-xs rounded-xl border border-slate-700 bg-slate-900 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-[#004b79]"
+                    />
 
-                  {successMessage && (
-                    <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-xs text-emerald-800 dark:text-emerald-200 font-bold flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                      <span>{successMessage}</span>
-                    </div>
-                  )}
+                    {successMessage && (
+                      <div className="p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-800 text-xs text-emerald-200 font-bold flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        <span>{successMessage}</span>
+                      </div>
+                    )}
 
-                  {errorMessage && (
-                    <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950 text-xs text-rose-800 dark:text-rose-200 font-bold flex items-center gap-1.5">
-                      <AlertCircle className="w-4 h-4 text-rose-600" />
-                      <span>{errorMessage}</span>
-                    </div>
-                  )}
+                    {errorMessage && (
+                      <div className="p-2.5 rounded-xl bg-rose-950/80 border border-rose-800 text-xs text-rose-200 font-bold flex items-center gap-1.5">
+                        <AlertCircle className="w-4 h-4 text-rose-400" />
+                        <span>{errorMessage}</span>
+                      </div>
+                    )}
+                  </div>
 
                   <button
                     type="button"
                     disabled={isSubmitting || (!selectedFile && !submissionText.trim())}
                     onClick={(e) => handleSubmitWork(e, true)}
-                    className="w-full py-3 rounded-xl text-xs font-bold bg-[#004b79] hover:bg-[#003b60] text-white flex items-center justify-center gap-2 cursor-pointer transition-all shadow-xs disabled:opacity-60"
+                    className="w-full py-3 rounded-xl text-xs font-bold bg-[#004b79] hover:bg-[#003b60] text-white flex items-center justify-center gap-2 cursor-pointer transition-all shadow-lg disabled:opacity-50 mt-2"
                   >
                     {isSubmitting ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -733,54 +1156,7 @@ export default function StudentAssignmentsPage() {
                   </button>
                 </div>
               </div>
-
-              {/* Right Column: Live Camera Video Stream & Proctoring Monitor */}
-              <div className="lg:col-span-5 space-y-4 flex flex-col justify-between">
-                <div className="p-4 rounded-2xl bg-slate-900 text-white border border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold flex items-center gap-1.5 text-emerald-400">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                      <span>Live Camera Feed</span>
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-mono">Proctoring AI Active</span>
-                  </div>
-
-                  {/* Video Stream Element */}
-                  <div className="relative w-full aspect-4/3 bg-slate-950 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center">
-                    <video
-                      ref={videoRef}
-                      autoPlay
-                      playsInline
-                      muted
-                      className="w-full h-full object-cover scale-x-[-1]"
-                    />
-                    <canvas ref={canvasRef} className="hidden" />
-
-                    {!isCameraStarted && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center text-xs text-slate-400 bg-slate-950">
-                        <Camera className="w-8 h-8 text-amber-400" />
-                        <span>Camera stream activating…</span>
-                        {cameraError && <p className="text-[11px] text-rose-400 font-bold">{cameraError}</p>}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-1.5 text-[11px] text-slate-400">
-                    <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                      <span>Focus Guard Active</span>
-                    </div>
-                    <p>
-                      Keep your face within camera view while writing solutions on paper. Snapshot verified upon answer submission.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-200 font-medium">
-                  <strong>Note:</strong> When the countdown timer completes, the test paper locks and you have 10 minutes to take and upload photos of your answer sheets.
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       )}

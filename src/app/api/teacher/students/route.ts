@@ -9,6 +9,7 @@ import AssignmentSubmission from "@/models/AssignmentSubmission";
 import Batch from "@/models/Batch";
 import Payment from "@/models/Payment";
 import SystemSettings from "@/models/SystemSettings";
+import { formatStudentId } from "@/lib/id-generator";
 
 export async function GET() {
   try {
@@ -24,7 +25,7 @@ export async function GET() {
     const rawStudents = await StudentProfile.find(
       classesTaught.length > 0 ? { currentClass: { $in: classesTaught } } : {}
     )
-      .populate("userId", "name email phone status avatarUrl")
+      .populate("userId", "name email phone status avatarUrl district")
       .populate("batchId")
       .sort({ currentClass: 1 })
       .lean();
@@ -39,7 +40,7 @@ export async function GET() {
 
     // Compute live real-time attendance, homework, and tuition fee metrics for each student
     const students = await Promise.all(
-      rawStudents.map(async (st: any) => {
+      rawStudents.map(async (st: any, idx: number) => {
         const studentUserId = st.userId?._id;
 
         const [attendanceRecords, submissions, payments] = await Promise.all([
@@ -107,6 +108,7 @@ export async function GET() {
 
         return {
           ...st,
+          studentId: st.studentId || formatStudentId(st, idx),
           attendancePercentage,
           attendedCount: presentCount,
           totalSessions,

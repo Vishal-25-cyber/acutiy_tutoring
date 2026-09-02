@@ -23,6 +23,7 @@ import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CLASS_LIST } from "@/lib/curriculum";
+import { formatStudentId } from "@/lib/id-generator";
 
 export default function TeacherStudentsPage() {
   const { data, refetch, isLoading } = useFastFetch("/api/teacher/students");
@@ -275,29 +276,73 @@ export default function TeacherStudentsPage() {
                   </span>
                 </div>
 
-                {/* Class Student Rows (Cardless Hairline Table) */}
-                <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                {/* Class Student Rows / Modern Roster Cards */}
+                <div className="space-y-3">
                   {classStudents.map((s: any, idx: number) => {
+                    const studentId = s.studentId || formatStudentId(s, idx);
+                    const formattedId = studentId.startsWith("#") ? studentId : `#${studentId}`;
+                    const initials = (s.userId?.name || "Student")
+                      .split(" ")
+                      .map((n: string) => n[0])
+                      .slice(0, 2)
+                      .join("")
+                      .toUpperCase();
+
                     return (
                       <div
                         key={s._id}
-                        className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors px-1"
+                        className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 shadow-2xs transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                       >
-                        <div className="min-w-0 flex-1">
-                          <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100">
-                            {idx + 1}. {s.userId?.name || "Student"}
-                          </h3>
+                        {/* Col 1: Avatar, Number, Name, ID & Status */}
+                        <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#004b79] to-[#002137] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                            {initials}
+                          </div>
+                          <div className="space-y-1 min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs font-mono font-bold text-slate-400">
+                                #{idx + 1}
+                              </span>
+                              <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100 truncate">
+                                {s.userId?.name || "Student"}
+                              </h3>
+                              <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60">
+                                {formattedId}
+                              </span>
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                                Active
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 flex-wrap">
+                              <span className="flex items-center gap-1">
+                                <School className="w-3.5 h-3.5 text-slate-400" />
+                                <strong className="text-slate-700 dark:text-slate-300">{s.schoolName || "School Not Specified"}</strong>
+                              </span>
+                              <span>·</span>
+                              <span>{s.board || "State Board"} ({s.district || s.userId?.district || "District"})</span>
+                              {s.userId?.email && (
+                                <>
+                                  <span>·</span>
+                                  <span className="font-mono text-[11px] text-slate-400 truncate max-w-[200px]">
+                                    {s.userId.email}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
 
-                        {/* Action Buttons (View Dossier & Edit Profile) */}
-                        <div className="flex items-center gap-2 shrink-0">
+                        {/* Col 2: Action Buttons */}
+                        <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleOpenView(s)}
-                            className="font-bold text-xs flex items-center gap-1.5 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer shadow-2xs"
+                            className="font-bold text-xs flex items-center gap-1.5 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-[#004b79] dark:text-[#dfb74a] cursor-pointer shadow-2xs px-3.5 py-1.5"
                           >
-                            <Eye className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                            <Eye className="w-3.5 h-3.5" />
                             <span>View</span>
                           </Button>
 
@@ -305,7 +350,7 @@ export default function TeacherStudentsPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleOpenEdit(s)}
-                            className="font-bold text-xs flex items-center gap-1.5 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer shadow-2xs"
+                            className="font-bold text-xs flex items-center gap-1.5 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer shadow-2xs px-3 py-1.5"
                           >
                             <Edit className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                             <span>Edit</span>
