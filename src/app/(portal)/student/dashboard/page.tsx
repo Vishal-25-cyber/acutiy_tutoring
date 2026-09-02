@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   BookOpen,
   CalendarCheck2,
-  CreditCard,
   User,
   Mail,
   Phone,
@@ -115,7 +114,7 @@ export default function StudentDashboardPage() {
         <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
           Academic Vital Metrics
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
           
           <div className="space-y-1">
             <span className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
@@ -130,41 +129,6 @@ export default function StudentDashboardPage() {
                 ? `${totalAttended} of ${totalSessions} Sessions Attended`
                 : `${totalAttended} of ${totalSessions} Sessions Held`}
             </p>
-          </div>
-
-          <div className="space-y-1">
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-              <CreditCard className="w-3.5 h-3.5 text-emerald-500" />
-              Tuition Status
-            </span>
-            {currentFee ? (
-              <Link href="/student/fees" className="block group">
-                <p className="text-2xl sm:text-3xl font-bold text-amber-600 dark:text-amber-400 tracking-tight group-hover:underline">
-                  ₹{currentFee.amount}
-                </p>
-                <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold">
-                  Due ({currentFee.billingMonth}) →
-                </p>
-              </Link>
-            ) : pendingVerification ? (
-              <Link href="/student/fees" className="block group">
-                <p className="text-2xl sm:text-3xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight group-hover:underline">
-                  Pending
-                </p>
-                <p className="text-xs text-indigo-500 font-semibold">
-                  Verification Active →
-                </p>
-              </Link>
-            ) : (
-              <div>
-                <p className="text-2xl sm:text-3xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">
-                  Cleared
-                </p>
-                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                  All Dues Paid for Cycle
-                </p>
-              </div>
-            )}
           </div>
 
           <div className="space-y-1">
