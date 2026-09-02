@@ -30,16 +30,16 @@ export default function StudentDashboardPage() {
   const authUser = authData?.user;
   const student = data?.student;
 
-  const rawName = student?.name || authUser?.name || "Student";
+  const rawName = student?.name || (authUser?.role === "STUDENT" ? authUser?.name : null) || "Student";
   const safeName = typeof rawName === "string" && rawName.trim() ? rawName : "Student";
   const classLevel = student?.classLevel || authUser?.profile?.currentClass || "Class 10";
-  const board = student?.board || authUser?.profile?.board || "CBSE";
+  const board = student?.board || authUser?.profile?.board || "State Board";
   const batch = student?.batch || authUser?.profile?.batchId;
-  const batchName = batch?.name || "7:00 PM – 8:00 PM";
-  const studentId = student?.id ? `#STU-${String(student.id).slice(-6).toUpperCase()}` : "#STU-109482";
-  const studentEmail = student?.email || authUser?.email || "aravind.class10@acuity.edu";
-  const studentPhone = student?.phone || authUser?.phone || "+91 98765 43210";
-  const schoolName = student?.schoolName || "National Public School";
+  const batchName = batch?.name || (typeof batch === "string" ? batch : "Assigned Batch");
+  const studentId = student?.id || authUser?._id ? `#STU-${String(student?.id || authUser?._id).slice(-6).toUpperCase()}` : "#STU-000000";
+  const studentEmail = student?.email || authUser?.email || "—";
+  const studentPhone = student?.phone || authUser?.phone || "—";
+  const schoolName = student?.schoolName || (authUser?.profile as any)?.schoolName || "—";
 
   // Real strictly computed attendance values
   const totalSessions = student?.totalSessions ?? 0;

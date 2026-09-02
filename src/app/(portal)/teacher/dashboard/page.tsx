@@ -19,15 +19,17 @@ export default function TeacherDashboardPage() {
   const authUser = authData?.user;
   const teacher = dashboardData?.teacher;
 
+  // If a student somehow reaches this page, let layout redirect immediately
+  if (authUser && authUser.role === "STUDENT") {
+    return null;
+  }
+
   // Correctly resolve the logged in teacher's name
   const rawName =
-    (teacher?.name && teacher.name !== "Faculty Member" ? teacher.name : null) ||
-    (authUser?.name && authUser.name !== "Faculty Member" && authUser.name !== "Student" ? authUser.name : null) ||
-    (typeof window !== "undefined" ? localStorage.getItem("acuity_user_name") : null) ||
-    authUser?.name ||
     teacher?.name ||
-    "Sudeep";
-  const userName = typeof rawName === "string" && rawName.trim() ? rawName : "Sudeep";
+    (authUser?.role === "TEACHER" ? authUser?.name : null) ||
+    "Faculty Member";
+  const userName = typeof rawName === "string" && rawName.trim() ? rawName : "Faculty Member";
 
   const stats = dashboardData?.stats || {
     totalStudents: 0,

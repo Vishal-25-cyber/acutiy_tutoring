@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { clearAuthAndCaches } from "@/lib/api-cache";
 import {
   AlertCircle, CheckCircle2, ArrowRight, ArrowLeft,
   Loader2, ChevronRight, ChevronLeft, BookOpen, GraduationCap,
@@ -312,19 +313,26 @@ export default function HomePage() {
         setErr(data.error || "Invalid login credentials.");
         return;
       }
+      clearAuthAndCaches();
       if (data.token && typeof window !== "undefined") {
         try {
           localStorage.setItem("acuity_auth_token", data.token);
+          if (data.user?.name) localStorage.setItem("acuity_user_name", data.user.name);
+          if (data.user?.role) localStorage.setItem("acuity_user_role", data.user.role);
           sessionStorage.setItem("acuity_auth_token", data.token);
         } catch { }
       }
       setOk("Login verified. Redirecting…");
       setTimeout(() => {
         const resolvedRole = data.user?.role || loginRole;
-        if (resolvedRole === "TEACHER") router.push("/teacher/dashboard");
-        else if (resolvedRole === "STUDENT") router.push("/student/dashboard");
-        else router.push("/admin/dashboard");
-      }, 300);
+        const targetUrl =
+          resolvedRole === "TEACHER"
+            ? "/teacher/dashboard"
+            : resolvedRole === "ADMIN"
+            ? "/admin/dashboard"
+            : "/student/dashboard";
+        window.location.href = targetUrl;
+      }, 250);
     } catch (e: any) {
       setErr(e.message || "Network connection error.");
     } finally {

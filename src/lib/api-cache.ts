@@ -237,10 +237,34 @@ export function setCachedData(url: string, data: any) {
  * Invalidate cache key prefix and notify all active listeners to refresh immediately
  */
 export function invalidateCache(urlPrefix: string = "") {
-  for (const key of memoryCache.keys()) {
-    if (!urlPrefix || key.startsWith(urlPrefix)) {
-      memoryCache.delete(key);
+  if (!urlPrefix || urlPrefix === "/api" || urlPrefix === "all") {
+    memoryCache.clear();
+    inflightRequests.clear();
+  } else {
+    for (const key of memoryCache.keys()) {
+      if (key.startsWith(urlPrefix)) {
+        memoryCache.delete(key);
+      }
     }
   }
   cacheListeners.forEach((listener) => listener(urlPrefix));
+}
+
+/**
+ * Hard reset all client auth tokens, session state, and memory caches
+ */
+export function clearAuthAndCaches() {
+  memoryCache.clear();
+  inflightRequests.clear();
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.removeItem("acuity_auth_token");
+      localStorage.removeItem("acuity_user_name");
+      localStorage.removeItem("acuity_user_role");
+      sessionStorage.removeItem("acuity_auth_token");
+    } catch {
+      // ignore
+    }
+  }
+  cacheListeners.forEach((listener) => listener("all"));
 }

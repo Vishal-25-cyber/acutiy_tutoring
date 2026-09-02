@@ -6,20 +6,37 @@ import TeacherProfile from "@/models/TeacherProfile";
 import { getSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(req: NextRequest) {
   try {
     const session = await getSession(req);
     if (!session) {
-      return NextResponse.json({ user: null }, {
-        headers: { "Cache-Control": "private, max-age=5, stale-while-revalidate=30" }
-      });
+      return NextResponse.json(
+        { user: null },
+        {
+          headers: {
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            Pragma: "no-cache",
+            Expires: "0",
+          },
+        }
+      );
     }
 
     await connectToDatabase();
     const user: any = await User.findById(session.userId).select("-passwordHash");
     if (!user) {
-      return NextResponse.json({ user: null });
+      return NextResponse.json(
+        { user: null },
+        {
+          headers: {
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            Pragma: "no-cache",
+            Expires: "0",
+          },
+        }
+      );
     }
 
     // Ensure Sudeep or any teacher with a TeacherProfile always retains TEACHER role
@@ -36,28 +53,42 @@ export async function GET(req: NextRequest) {
     if (user.role === "STUDENT") {
       profileData = await StudentProfile.findOne({ userId: user._id }).populate("batchId").lean();
     } else if (user.role === "TEACHER") {
-      profileData = teacherProfile || await TeacherProfile.findOne({ userId: user._id }).lean();
+      profileData = teacherProfile || (await TeacherProfile.findOne({ userId: user._id }).lean());
     }
 
-    return NextResponse.json({
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        altPhone: user.altPhone,
-        role: user.role,
-        status: user.status,
-        avatarUrl: user.avatarUrl,
-        profile: profileData,
+    return NextResponse.json(
+      {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          altPhone: user.altPhone,
+          role: user.role,
+          status: user.status,
+          avatarUrl: user.avatarUrl,
+          profile: profileData,
+        },
       },
-    }, {
-      headers: {
-        "Cache-Control": "private, max-age=5, stale-while-revalidate=15",
-      },
-    });
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      }
+    );
   } catch (error: any) {
     console.error("Auth ME error:", error);
-    return NextResponse.json({ user: null });
+    return NextResponse.json(
+      { user: null },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      }
+    );
   }
 }

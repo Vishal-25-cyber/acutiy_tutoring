@@ -26,7 +26,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { cn } from "@/components/ui/button";
-import { warmupPortalCache, prefetchApi, invalidateCache, useFastFetch } from "@/lib/api-cache";
+import { warmupPortalCache, prefetchApi, invalidateCache, clearAuthAndCaches, useFastFetch } from "@/lib/api-cache";
 
 interface SidebarLink {
   href: string;
@@ -122,11 +122,12 @@ export function PortalSidebar({ role }: SidebarProps) {
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-      invalidateCache("/api");
     } catch (e) {
       console.error(e);
+    } finally {
+      clearAuthAndCaches();
+      window.location.href = "/";
     }
-    router.push("/");
   };
 
   return (
