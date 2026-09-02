@@ -276,7 +276,6 @@ app.listen(PORT, () => {
                 subjects: ["Mathematics", "Science"],
                 classesTaught: ["Class 9", "Class 10"],
                 experienceYears: 5,
-                approvalStatus: "ACTIVE",
               },
               $set: {
                 approvalStatus: "ACTIVE",
