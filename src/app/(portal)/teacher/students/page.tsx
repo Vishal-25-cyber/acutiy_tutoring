@@ -234,10 +234,18 @@ export default function TeacherStudentsPage() {
         {isLoading ? (
           <div className="p-12 text-center text-xs text-slate-400 animate-pulse">Loading live student roster...</div>
         ) : totalFilteredCount === 0 ? (
-          <div className="p-12 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl space-y-2">
-            <Users className="w-8 h-8 text-slate-400 mx-auto" />
-            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">No students found</p>
-            <p className="text-xs text-slate-400">No enrolled student profiles match your search criteria.</p>
+          <div className="py-16 px-6 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-900/50 space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#dfb74a] mx-auto flex items-center justify-center shadow-xs">
+              <Users className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                No Students Found in {classFilter !== "ALL" ? classFilter : "this filter"}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                There are currently no active students enrolled in {classFilter !== "ALL" ? classFilter : "the selected criteria"}.
+              </p>
+            </div>
           </div>
         ) : (
           displayClasses.map((cls) => {
