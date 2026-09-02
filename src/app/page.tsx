@@ -11,7 +11,7 @@ import {
   Building, ExternalLink, Quote, Heart, Cpu, Brain,
   Compass, School, UserCheck, Star, Image as ImageIcon,
   Menu, X, Laptop, Rocket, Maximize2, Play, Video, Film,
-  ChevronDown, ChevronUp, Calendar, Eye, Layers, ArrowUpRight, Plus
+  ChevronDown, ChevronUp, Plus
 } from "lucide-react";
 
 type AuthMode = "SIGNIN" | "SIGNUP";
@@ -77,76 +77,40 @@ function getEmbedVideoUrl(url: string) {
   return url;
 }
 
-const outreachInitiatives = [
+// ─── Our Side / Schools Outreach List (Easily Add More Schools Here) ───
+const outreachSchools = [
   {
     id: "kongu-school",
     name: "Kongu National Matriculation Hr Sec School, Nanjanapuram",
-    shortName: "Kongu National MHSS",
     district: "Erode District",
     tag: "Academic Faculty Empowerment Seminar",
-    date: "Faculty AI Seminar",
     sessionTitle: "AI in Education: Empowering Students Today",
     summary:
       "MANTIF conducted a specialized session on “AI in Education: Empowering Students Today” for the teachers of Kongu National Higher Secondary School, Nanjanapuram.",
-    highlights: [
-      "Explored practical AI tools that help teachers engage students, capture attention, and bring lively curiosity into daily lessons.",
-      "Live demonstrations on AI-assisted lesson preparation, automated rubric crafting, and visual math explanations.",
-      "Interactive Q&A and pedagogy discussion with 40+ senior faculty members."
-    ],
+    description:
+      "The session focused on exploring different AI tools that can help teachers engage students, capture their attention, and bring more interest into the learning process.",
     milestoneTitle: "Alma Mater Milestone",
     milestoneQuote:
       "The best part of this session was that Our Founder Ms. Karunya S is an alumna of the school. It was truly a proud moment for the entire MANTIF team and for the teachers who once taught her. We could witness the pride and happiness on her teachers’ faces as they welcomed her back, this time as a Founder.",
     schoolUrl: "https://www.google.com/search?q=Kongu+National+Matriculation+Hr+Sec+School+Nanjanapuram",
-    defaultVideoUrl: "",
-    videoTitle: "Seminar Highlights & Faculty Interaction",
-    badge: "Featured Milestone"
+    videoUrl: "", // Paste YouTube / MP4 URL or configure via UI
   },
+  // To add another school, simply copy and paste the block below with details:
+  /*
   {
-    id: "faculty-workshop",
-    name: "State-Level Teachers AI Pedagogy Workshop",
-    shortName: "State AI Workshop",
-    district: "Tamil Nadu Region",
-    tag: "Institutional Faculty Empowerment Drive",
-    date: "Faculty Development Program",
-    sessionTitle: "Next-Gen Teaching: AI in the Modern Classroom",
-    summary:
-      "A comprehensive faculty development drive equipping school educators with real-world AI methods to personalize student learning and streamline assessments.",
-    highlights: [
-      "Hands-on session on configuring AI question banks, automated rubric generation, and instant feedback loops.",
-      "Techniques to identify individual student learning gaps early and provide tailored support.",
-      "Strategies to blend empathetic human mentorship with rapid AI tutoring assistance."
-    ],
-    milestoneTitle: "Institutional Mission",
-    milestoneQuote:
-      "Our mission is to empower every teacher with intuitive AI tools, freeing up their creative energy to inspire, guide, and nurture every single student.",
-    schoolUrl: "https://www.google.com/search?q=MANTIF+Education+Workshops",
-    defaultVideoUrl: "",
-    videoTitle: "Workshop Demonstration & Live Q&A",
-    badge: "Completed Initiative"
+    id: "next-school-id",
+    name: "Next School / Institution Name Here",
+    district: "District / City",
+    tag: "Faculty AI Workshop / Seminar",
+    sessionTitle: "Session Title Here",
+    summary: "Brief overview of what MANTIF conducted for this school.",
+    description: "Detailed session contents, AI tools introduced, and outcomes.",
+    milestoneTitle: "Milestone Story",
+    milestoneQuote: "Memorable milestone quote or key reflection from this session.",
+    schoolUrl: "https://school-website-or-link.com",
+    videoUrl: "",
   },
-  {
-    id: "student-bootcamp",
-    name: "Youth STEM & AI Immersion Seminar",
-    shortName: "Youth AI Bootcamp",
-    district: "Academic Outreach",
-    tag: "Student Mentorship & Hands-on Lab",
-    date: "Interactive Student Drive",
-    sessionTitle: "Curiosity First: Understanding Math & AI Intuition",
-    summary:
-      "An inspiring interactive seminar designed to spark mathematical intuition, conceptual clarity, and hands-on AI literacy among secondary students.",
-    highlights: [
-      "Interactive problem-solving sprints showing students how foundational math powers modern artificial intelligence models.",
-      "Guided introduction to foundational AI thinking, logic circuits, and algorithmic problem-solving.",
-      "Direct mentorship and motivational Q&A with MANTIF educators."
-    ],
-    milestoneTitle: "Student First Philosophy",
-    milestoneQuote:
-      "When high school students understand the 'why' behind formulas, learning transforms from a burden into an exciting superpower.",
-    schoolUrl: "https://www.google.com/search?q=MANTIF+Student+Bootcamps",
-    defaultVideoUrl: "",
-    videoTitle: "Student Engagement & Problem Solving",
-    badge: "Completed Initiative"
-  }
+  */
 ];
 
 export default function HomePage() {
@@ -165,11 +129,11 @@ export default function HomePage() {
   // Gallery Lightbox Modal State
   const [selectedGalleryIdx, setSelectedGalleryIdx] = useState<number | null>(null);
 
-  // Our Side / Outreach Initiatives States
-  const [activeOutreachId, setActiveOutreachId] = useState("kongu-school");
+  // Our Side / Schools Section State
   const [expandedStoryIds, setExpandedStoryIds] = useState<string[]>(["kongu-school"]);
   const [customVideoUrls, setCustomVideoUrls] = useState<Record<string, string>>({});
   const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [activeSchoolForVideo, setActiveSchoolForVideo] = useState("");
   const [videoInputUrl, setVideoInputUrl] = useState("");
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
@@ -179,10 +143,10 @@ export default function HomePage() {
     );
   };
 
-  const handleSaveVideoUrl = (id: string) => {
-    if (videoInputUrl.trim()) {
-      setCustomVideoUrls((prev) => ({ ...prev, [id]: videoInputUrl.trim() }));
-      setPlayingVideoId(id);
+  const handleSaveVideoUrl = () => {
+    if (activeSchoolForVideo && videoInputUrl.trim()) {
+      setCustomVideoUrls((prev) => ({ ...prev, [activeSchoolForVideo]: videoInputUrl.trim() }));
+      setPlayingVideoId(activeSchoolForVideo);
       setVideoModalOpen(false);
       setVideoInputUrl("");
     }
@@ -272,7 +236,7 @@ export default function HomePage() {
           setSBatch(d.batches[0]._id);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     fetch("/api/admin/settings")
       .then((r) => r.json())
@@ -281,7 +245,7 @@ export default function HomePage() {
           setContactSettings(d.settings);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const phone1 = (contactSettings?.supportPhone1 || "9876543210").replace(/\D/g, "").slice(-10);
@@ -346,13 +310,13 @@ export default function HomePage() {
         try {
           localStorage.setItem("acuity_auth_token", data.token);
           sessionStorage.setItem("acuity_auth_token", data.token);
-        } catch {}
+        } catch { }
       }
       setOk("Login verified. Redirecting…");
       setTimeout(() => {
         const resolvedRole = data.user?.role || loginRole;
-        if (loginRole === "STUDENT" || resolvedRole === "STUDENT") router.push("/student/dashboard");
-        else if (loginRole === "TEACHER" || resolvedRole === "TEACHER") router.push("/teacher/dashboard");
+        if (resolvedRole === "TEACHER") router.push("/teacher/dashboard");
+        else if (resolvedRole === "STUDENT") router.push("/student/dashboard");
         else router.push("/admin/dashboard");
       }, 300);
     } catch (e: any) {
@@ -478,7 +442,7 @@ export default function HomePage() {
       ═══════════════════════════════════════════════════════════════════════ */}
       <header className="sticky top-0 z-50 w-full border-b border-slate-200/90 bg-white/95 backdrop-blur-md transition-all shadow-xs">
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 h-20 flex items-center justify-between">
-          
+
           {/* Logo & Brand Identity (Left Side - Clean Logo, Shifted Left, Stylized Λ matching the logo) */}
           <Link href="#about" className="flex items-center gap-3 group text-left cursor-pointer shrink-0">
             <img
@@ -609,28 +573,26 @@ export default function HomePage() {
           {/* RIGHT HALF (50%): ULTRA-SLEEK MODERN AUTH PANEL */}
           <div id="auth-card-section" className="w-full flex justify-center lg:pl-6 xl:pl-10">
             <div className="w-full max-w-[450px] bg-white rounded-3xl border border-slate-200/90 shadow-[0_16px_40px_-8px_rgba(0,33,55,0.09)] p-7 sm:p-8 space-y-5">
-              
+
               {/* Sleek Tab Switcher: Sign In vs Sign Up Alone */}
               <div className="flex border-b border-slate-200">
                 <button
                   type="button"
                   onClick={() => { setAuthMode("SIGNIN"); clear(); }}
-                  className={`flex-1 pb-3 text-center text-sm sm:text-base font-extrabold tracking-tight transition-all border-b-2 cursor-pointer ${
-                    authMode === "SIGNIN"
+                  className={`flex-1 pb-3 text-center text-sm sm:text-base font-extrabold tracking-tight transition-all border-b-2 cursor-pointer ${authMode === "SIGNIN"
                       ? "border-[#002137] text-[#002137]"
                       : "border-transparent text-slate-400 hover:text-slate-700"
-                  }`}
+                    }`}
                 >
                   Sign In
                 </button>
                 <button
                   type="button"
                   onClick={() => { setAuthMode("SIGNUP"); setStep(1); clear(); }}
-                  className={`flex-1 pb-3 text-center text-sm sm:text-base font-extrabold tracking-tight transition-all border-b-2 cursor-pointer ${
-                    authMode === "SIGNUP"
+                  className={`flex-1 pb-3 text-center text-sm sm:text-base font-extrabold tracking-tight transition-all border-b-2 cursor-pointer ${authMode === "SIGNUP"
                       ? "border-[#002137] text-[#002137]"
                       : "border-transparent text-slate-400 hover:text-slate-700"
-                  }`}
+                    }`}
                 >
                   Sign Up
                 </button>
@@ -667,11 +629,10 @@ export default function HomePage() {
                           setLoginRole(item.key as LoginRole);
                           clear();
                         }}
-                        className={`py-2 rounded-lg font-bold transition-all cursor-pointer text-center ${
-                          loginRole === item.key
+                        className={`py-2 rounded-lg font-bold transition-all cursor-pointer text-center ${loginRole === item.key
                             ? "bg-white text-[#002137] shadow-xs font-black"
                             : "text-slate-500 hover:text-slate-800"
-                        }`}
+                          }`}
                       >
                         {item.label}
                       </button>
@@ -684,8 +645,8 @@ export default function HomePage() {
                         {loginRole === "STUDENT"
                           ? "Student Email or Registered Mobile"
                           : loginRole === "TEACHER"
-                          ? "Faculty Email (@mantif.edu / @gmail.com)"
-                          : "Administrator Email"}
+                            ? "Faculty Email (@mantif.edu / @gmail.com)"
+                            : "Administrator Email"}
                       </label>
                       <input
                         type="text"
@@ -697,8 +658,8 @@ export default function HomePage() {
                           loginRole === "STUDENT"
                             ? "e.g. 9876543210 or student@mantif.edu"
                             : loginRole === "TEACHER"
-                            ? "e.g. sarah.maths@mantif.edu"
-                            : "admin@mantif.edu"
+                              ? "e.g. sarah.maths@mantif.edu"
+                              : "admin@mantif.edu"
                         }
                         className="w-full px-4 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-white focus:bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#004b79]/20 focus:border-[#004b79] transition-all font-medium"
                       />
@@ -766,11 +727,10 @@ export default function HomePage() {
                           setStep(1);
                           clear();
                         }}
-                        className={`py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer border ${
-                          signupRole === item.key
+                        className={`py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer border ${signupRole === item.key
                             ? "bg-blue-50 border-[#004b79] text-[#004b79] font-black shadow-2xs"
                             : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
-                        }`}
+                          }`}
                       >
                         <item.icon className="w-4 h-4" />
                         <span>{item.label}</span>
@@ -959,11 +919,10 @@ export default function HomePage() {
                                 key={c}
                                 type="button"
                                 onClick={() => toggleTClass(c)}
-                                className={`py-2 px-1 text-xs font-bold rounded-xl border transition-all cursor-pointer text-center ${
-                                  isSelected
+                                className={`py-2 px-1 text-xs font-bold rounded-xl border transition-all cursor-pointer text-center ${isSelected
                                     ? "bg-[#002137] text-white border-[#002137] shadow-xs"
                                     : "bg-white text-slate-700 border-slate-200 hover:border-slate-300"
-                                }`}
+                                  }`}
                               >
                                 {c.replace("Class ", "C")}
                               </button>
@@ -985,11 +944,10 @@ export default function HomePage() {
                                 key={s}
                                 type="button"
                                 onClick={() => toggleTSubject(s)}
-                                className={`py-2 px-1.5 text-xs font-bold rounded-xl border transition-all cursor-pointer text-center truncate ${
-                                  isSelected
+                                className={`py-2 px-1.5 text-xs font-bold rounded-xl border transition-all cursor-pointer text-center truncate ${isSelected
                                     ? "bg-[#002137] text-white border-[#002137] shadow-xs"
                                     : "bg-white text-slate-700 border-slate-200 hover:border-slate-300"
-                                }`}
+                                  }`}
                               >
                                 {s}
                               </button>
@@ -1159,7 +1117,7 @@ export default function HomePage() {
       ═══════════════════════════════════════════════════════════════════════ */}
       <section id="tutoring-hub" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-10 lg:py-14">
         <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 space-y-8 lg:space-y-10">
-          
+
           {/* Centered Heading at Top */}
           <div className="text-center space-y-1.5">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
@@ -1270,17 +1228,13 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 3: OUR SIDE (INSTITUTIONAL OUTREACH - INITIATIVES LIST & VIDEO COLUMN)
+          PAGE 3: OUR SIDE (SCHOOLS LIST - NAME ALONE + CONTENT LINK + VIDEO COLUMN)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="our-side" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/50 to-white py-8 lg:py-12">
-        <div className="w-full max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 xl:px-16 space-y-7 sm:space-y-9">
+      <section id="our-side" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-10 lg:py-16">
+        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 space-y-10 lg:space-y-14">
           
-          {/* Section Header */}
+          {/* Centered Heading at Top (School outreach heading) */}
           <div className="text-center space-y-2">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-[#b89047] text-xs font-black uppercase tracking-wider shadow-sm">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Institutional &amp; Academic Outreach</span>
-            </div>
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Our Side
             </h2>
@@ -1289,339 +1243,248 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* List of All Things We Done (Pills / Selector Tabs) */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between flex-wrap gap-2 px-1">
-              <span className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-[#004b79]" />
-                All Completed Initiatives &amp; Milestones ({outreachInitiatives.length})
-              </span>
-              <span className="text-xs font-semibold text-slate-400">
-                Select any session below to view story &amp; video
-              </span>
-            </div>
+          {/* List of Schools (Stacked Vertically with Space for Adding Many Schools) */}
+          <div className="space-y-10 lg:space-y-14">
+            {outreachSchools.map((school) => {
+              const isStoryExpanded = expandedStoryIds.includes(school.id);
+              const effectiveVideo = customVideoUrls[school.id] || school.videoUrl;
+              const isVideoPlaying = playingVideoId === school.id;
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {outreachInitiatives.map((item) => {
-                const isSelected = activeOutreachId === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setActiveOutreachId(item.id);
-                      if (!expandedStoryIds.includes(item.id)) {
-                        setExpandedStoryIds((prev) => [...prev, item.id]);
-                      }
-                    }}
-                    className={`relative text-left p-3.5 sm:p-4 rounded-2xl transition-all duration-300 border flex flex-col justify-between gap-2.5 cursor-pointer ${
-                      isSelected
-                        ? "bg-[#002137] text-white border-[#002137] shadow-lg shadow-[#002137]/15 ring-2 ring-[#dfb74a]/40"
-                        : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm hover:border-[#b89047]/50"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span
-                        className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
-                          isSelected
-                            ? "bg-[#dfb74a] text-[#002137]"
-                            : "bg-amber-100/70 text-[#b89047] border border-amber-200/60"
-                        }`}
-                      >
-                        {item.badge}
-                      </span>
-                      <span className={`text-[11px] font-medium flex items-center gap-1 ${isSelected ? "text-slate-300" : "text-slate-400"}`}>
-                        <MapPin className="w-3 h-3 text-[#b89047]" />
-                        {item.district}
-                      </span>
-                    </div>
-
-                    <div>
-                      <p className={`text-sm sm:text-base font-extrabold line-clamp-1 ${isSelected ? "text-white" : "text-[#002137]"}`}>
-                        {item.name}
-                      </p>
-                      <p className={`text-xs line-clamp-1 font-medium ${isSelected ? "text-amber-200/90" : "text-slate-500"}`}>
-                        {item.sessionTitle}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[11px] font-bold pt-1 border-t border-slate-200/20">
-                      <span className={isSelected ? "text-[#dfb74a]" : "text-[#004b79]"}>
-                        {isSelected ? "Active View ●" : "View Story →"}
-                      </span>
-                      <span className={isSelected ? "text-slate-300" : "text-slate-400"}>
-                        {item.date}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Active Initiative Card: Name Alone + Content Link + Video Column */}
-          {(() => {
-            const currentItem = outreachInitiatives.find((it) => it.id === activeOutreachId) || outreachInitiatives[0];
-            const isStoryExpanded = expandedStoryIds.includes(currentItem.id);
-            const effectiveVideo = customVideoUrls[currentItem.id] || currentItem.defaultVideoUrl;
-            const isVideoPlaying = playingVideoId === currentItem.id;
-
-            return (
-              <div className="relative rounded-3xl bg-white border-2 border-slate-200/90 shadow-xl overflow-hidden p-6 sm:p-8 lg:p-10">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-12 items-start">
-                  
-                  {/* Left Column (lg:col-span-7): School Name Alone + Link + Contents */}
-                  <div className="lg:col-span-7 space-y-5">
+              return (
+                <div
+                  key={school.id}
+                  className="relative rounded-3xl bg-white border-2 border-slate-200/90 shadow-xl overflow-hidden p-6 sm:p-8 lg:p-10 transition-all hover:border-[#b89047]/40"
+                >
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
                     
-                    {/* 1. School / Institution Name ALONE at top */}
-                    <div className="space-y-2 pb-3 border-b border-slate-100">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-50 text-[#b89047] border border-amber-200/80">
-                          <Sparkles className="w-3.5 h-3.5" />
-                          {currentItem.badge}
-                        </span>
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5 text-[#b89047]" /> {currentItem.district}
-                        </span>
-                        <span className="text-xs font-semibold text-slate-400">• {currentItem.date}</span>
+                    {/* Left Column (lg:col-span-7): School Name Alone + Link + Contents */}
+                    <div className="lg:col-span-7 space-y-5">
+                      
+                      {/* 1. School Name ALONE at top */}
+                      <div className="space-y-2 pb-2">
+                        <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#002137] tracking-tight leading-tight">
+                          {school.name}
+                        </h3>
+                        <p className="text-xs sm:text-sm font-bold text-[#b89047] uppercase tracking-wide flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-[#b89047] shrink-0" />
+                          <span>{school.district}</span>
+                          <span className="text-slate-300">•</span>
+                          <span>{school.tag}</span>
+                        </p>
                       </div>
 
-                      {/* Prominent Name ALONE */}
-                      <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#002137] tracking-tight leading-tight">
-                        {currentItem.name}
-                      </h3>
+                      {/* 2. Link UNDER the School Name */}
+                      <div className="flex flex-wrap items-center gap-3">
+                        <button
+                          onClick={() => toggleStoryExpand(school.id)}
+                          className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#002137] hover:bg-[#004b79] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
+                        >
+                          <BookOpen className="w-4 h-4 text-[#dfb74a]" />
+                          <span>{isStoryExpanded ? "Hide Session Contents" : "View Session Contents & Story"}</span>
+                          {isStoryExpanded ? (
+                            <ChevronUp className="w-4 h-4 text-amber-300" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 text-amber-300 group-hover:translate-y-0.5 transition-transform" />
+                          )}
+                        </button>
 
-                      <p className="text-xs sm:text-sm font-bold text-[#b89047] uppercase tracking-wide flex items-center gap-1.5">
-                        <School className="w-4 h-4 shrink-0 text-[#b89047]" />
-                        {currentItem.tag}
-                      </p>
-                    </div>
+                        <a
+                          href={school.schoolUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 hover:border-[#b89047] bg-white text-slate-700 hover:text-[#002137] text-xs sm:text-sm font-semibold transition-all shadow-sm hover:shadow"
+                        >
+                          <span>Visit School Reference</span>
+                          <ExternalLink className="w-3.5 h-3.5 text-[#b89047]" />
+                        </a>
+                      </div>
 
-                    {/* 2. Interactive Link UNDER the name */}
-                    <div className="flex flex-wrap items-center gap-3">
-                      <button
-                        onClick={() => toggleStoryExpand(currentItem.id)}
-                        className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#002137] hover:bg-[#004b79] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
-                      >
-                        <BookOpen className="w-4 h-4 text-[#dfb74a]" />
-                        <span>{isStoryExpanded ? "Hide Session Contents" : "View Full Session Story & Contents"}</span>
-                        {isStoryExpanded ? (
-                          <ChevronUp className="w-4 h-4 text-amber-300" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4 text-amber-300 group-hover:translate-y-0.5 transition-transform" />
-                        )}
-                      </button>
+                      {/* 3. Contents Area Inside / Under the Link */}
+                      <div className="space-y-4 pt-1">
+                        {/* Session Description */}
+                        <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/90 border border-slate-200/80 space-y-2.5">
+                          <p className="font-black text-sm sm:text-base text-[#002137]">
+                            Session: <span className="text-[#004b79]">“{school.sessionTitle}”</span>
+                          </p>
+                          <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-medium">
+                            {school.summary}
+                          </p>
 
-                      <a
-                        href={currentItem.schoolUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 hover:border-[#b89047] bg-white text-slate-700 hover:text-[#002137] text-xs sm:text-sm font-semibold transition-all shadow-sm hover:shadow"
-                      >
-                        <span>Visit School Reference</span>
-                        <ExternalLink className="w-3.5 h-3.5 text-[#b89047]" />
-                      </a>
-                    </div>
-
-                    {/* 3. Contents Area Inside / Under the Link */}
-                    <div className="space-y-4 pt-1">
-                      {/* Session Info Block */}
-                      <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/90 border border-slate-200/80 space-y-3">
-                        <div className="flex items-center gap-2 text-xs font-black uppercase text-[#004b79] tracking-wider">
-                          <Brain className="w-4 h-4 text-[#b89047]" />
-                          <span>Session Focus</span>
+                          {/* Expanded Full Content Details */}
+                          {isStoryExpanded && (
+                            <div className="pt-2 border-t border-slate-200/70 text-slate-700 text-xs sm:text-sm leading-relaxed font-medium animate-in fade-in duration-300">
+                              <p>{school.description}</p>
+                            </div>
+                          )}
                         </div>
-                        <h4 className="text-base sm:text-lg font-black text-[#002137]">
-                          Session: <span className="text-[#004b79]">“{currentItem.sessionTitle}”</span>
-                        </h4>
-                        <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-medium">
-                          {currentItem.summary}
-                        </p>
 
-                        {/* Detailed Highlights (Expanded) */}
-                        {isStoryExpanded && (
-                          <div className="space-y-2 pt-3 border-t border-slate-200/70 animate-in fade-in duration-300">
-                            <span className="text-xs font-bold text-slate-700 uppercase tracking-wide block">
-                              Key Modules &amp; Classroom Takeaways:
+                        {/* Alma Mater Milestone Box */}
+                        <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/60 border-l-4 border-[#b89047] border-y border-r border-amber-200/70 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-black uppercase text-[#b89047] tracking-wider">
+                              {school.milestoneTitle}
                             </span>
-                            <ul className="space-y-2">
-                              {currentItem.highlights.map((h, idx) => (
-                                <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-700">
-                                  <CheckCircle2 className="w-4 h-4 text-[#b89047] shrink-0 mt-0.5" />
-                                  <span>{h}</span>
-                                </li>
-                              ))}
-                            </ul>
+                            <span className="text-[10px] uppercase font-bold text-amber-800 bg-amber-200/60 px-2 py-0.5 rounded-full">
+                              Founder Moment
+                            </span>
                           </div>
-                        )}
-                      </div>
-
-                      {/* Alma Mater / Milestone Quote */}
-                      <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/60 border-l-4 border-[#b89047] border-y border-r border-amber-200/70 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-black uppercase text-[#b89047] tracking-wider flex items-center gap-1.5">
-                            <Award className="w-4 h-4 text-[#b89047]" />
-                            {currentItem.milestoneTitle}
-                          </span>
-                          <span className="text-[10px] uppercase font-extrabold text-amber-800 bg-amber-200/60 px-2 py-0.5 rounded-full">
-                            Founder Moment
-                          </span>
-                        </div>
-                        <p className="text-slate-800 text-xs sm:text-sm italic leading-relaxed font-medium">
-                          “{currentItem.milestoneQuote}”
-                        </p>
-                      </div>
-
-                      {/* Motivational Banner */}
-                      <div className="pt-2 flex items-center justify-between flex-wrap gap-3 border-t border-slate-200/70">
-                        <span className="text-sm sm:text-base font-black text-[#b89047] tracking-tight flex items-center gap-2">
-                          <Rocket className="w-4 h-4 text-[#b89047]" />
-                          Still we have a Long Journey !
-                        </span>
-                        <span className="text-xs text-slate-400 font-semibold">
-                          MANTIF Community &amp; Institutional Outreach
-                        </span>
-                      </div>
-                    </div>
-
-                  </div>
-
-                  {/* Right Column (lg:col-span-5): DEDICATED VIDEO COLUMN */}
-                  <div className="lg:col-span-5 w-full space-y-4">
-                    
-                    {/* Video Column Header */}
-                    <div className="flex items-center justify-between flex-wrap gap-2 pb-1 border-b border-slate-100">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-[#002137] text-[#dfb74a] flex items-center justify-center shadow">
-                          <Video className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <h4 className="text-sm sm:text-base font-black text-[#002137]">
-                            Session Video &amp; Highlights
-                          </h4>
-                          <p className="text-[11px] font-semibold text-slate-500">
-                            Dedicated Video Stream
+                          <p className="text-slate-800 text-xs sm:text-sm italic leading-relaxed font-medium">
+                            “{school.milestoneQuote}”
                           </p>
                         </div>
+
+                        {/* Motivational Tag */}
+                        <div className="pt-2 flex items-center justify-between flex-wrap gap-3 border-t border-slate-200/70">
+                          <span className="text-sm sm:text-base font-black text-[#b89047] tracking-tight flex items-center gap-2">
+                            <Rocket className="w-4 h-4 text-[#b89047]" />
+                            Still we have a Long Journey !
+                          </span>
+                          <span className="text-xs text-slate-400 font-semibold">
+                            MANTIF Community &amp; Institutional Outreach
+                          </span>
+                        </div>
                       </div>
 
-                      <button
-                        onClick={() => {
-                          setVideoInputUrl(customVideoUrls[currentItem.id] || "");
-                          setVideoModalOpen(true);
-                        }}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-[#004b79] hover:text-[#b89047] bg-slate-100 hover:bg-amber-50 px-2.5 py-1.5 rounded-lg border border-slate-200 transition-colors cursor-pointer"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>Add / Edit Video</span>
-                      </button>
                     </div>
 
-                    {/* Dedicated Video Screen Container */}
-                    <div className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-slate-300 bg-slate-950 aspect-video flex items-center justify-center group">
-                      {effectiveVideo && isVideoPlaying ? (
-                        effectiveVideo.includes("youtube.com") || effectiveVideo.includes("youtu.be") ? (
-                          <iframe
-                            src={getEmbedVideoUrl(effectiveVideo)}
-                            title={currentItem.videoTitle}
-                            className="w-full h-full border-0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                          />
-                        ) : (
-                          <video
-                            src={effectiveVideo}
-                            controls
-                            autoPlay
-                            className="w-full h-full object-contain"
-                          />
-                        )
-                      ) : (
-                        /* Modern Video Player Preview Frame */
-                        <div className="relative w-full h-full flex flex-col justify-between p-5 sm:p-6 bg-gradient-to-br from-slate-900 via-[#002137] to-slate-950 text-white select-none">
-                          {/* Ambient Glow */}
-                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(223,183,74,0.22),transparent_60%)] pointer-events-none" />
-                          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#dfb74a_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
-
-                          {/* Top Badges */}
-                          <div className="relative z-10 flex items-center justify-between">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-600 text-white shadow-sm">
-                              <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                              Video Column
-                            </span>
-                            <span className="text-[10px] font-bold text-slate-300 bg-white/10 backdrop-blur-md px-2 py-0.5 rounded-md border border-white/10">
-                              1080p HD
-                            </span>
+                    {/* Right Column (lg:col-span-5): DEDICATED VIDEO COLUMN */}
+                    <div className="lg:col-span-5 w-full space-y-4">
+                      
+                      {/* Video Header */}
+                      <div className="flex items-center justify-between flex-wrap gap-2 pb-1 border-b border-slate-100">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-[#002137] text-[#dfb74a] flex items-center justify-center shadow">
+                            <Video className="w-4 h-4" />
                           </div>
-
-                          {/* Center Play Interaction */}
-                          <div className="relative z-10 flex flex-col items-center justify-center my-auto text-center space-y-2.5">
-                            <button
-                              onClick={() => {
-                                if (effectiveVideo) {
-                                  setPlayingVideoId(currentItem.id);
-                                } else {
-                                  setVideoInputUrl("");
-                                  setVideoModalOpen(true);
-                                }
-                              }}
-                              className="relative group/play w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer"
-                              title="Play Video"
-                            >
-                              <div className="absolute -inset-2 rounded-full bg-[#dfb74a]/40 blur-md group-hover/play:blur-lg animate-pulse" />
-                              <Play className="w-7 h-7 sm:w-8 sm:h-8 fill-current ml-1 relative z-10" />
-                            </button>
-                            <div className="space-y-0.5">
-                              <p className="text-xs sm:text-sm font-extrabold text-white tracking-wide">
-                                {effectiveVideo ? "Click to Watch Session Video" : "Click to Add Video URL"}
-                              </p>
-                              <p className="text-[11px] text-slate-300 font-medium">
-                                {currentItem.name}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Bottom Controls */}
-                          <div className="relative z-10 flex items-center justify-between text-[11px] text-slate-300 pt-2 border-t border-white/10">
-                            <span className="truncate max-w-[200px] font-semibold text-slate-200">
-                              {currentItem.videoTitle}
-                            </span>
-                            <button
-                              onClick={() => {
-                                setVideoInputUrl(customVideoUrls[currentItem.id] || "");
-                                setVideoModalOpen(true);
-                              }}
-                              className="text-[#dfb74a] hover:underline font-bold cursor-pointer"
-                            >
-                              + Add Video Link
-                            </button>
+                          <div>
+                            <h4 className="text-sm sm:text-base font-black text-[#002137]">
+                              Session Video
+                            </h4>
+                            <p className="text-[11px] font-semibold text-slate-500">
+                              Recording &amp; Live Stream
+                            </p>
                           </div>
                         </div>
-                      )}
-                    </div>
 
-                    {/* Column Helper Banner */}
-                    <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <Film className="w-4 h-4 text-[#b89047]" />
-                        <span className="font-bold text-slate-700">Add any YouTube or MP4 video URL</span>
+                        <button
+                          onClick={() => {
+                            setActiveSchoolForVideo(school.id);
+                            setVideoInputUrl(customVideoUrls[school.id] || "");
+                            setVideoModalOpen(true);
+                          }}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-[#004b79] hover:text-[#b89047] bg-slate-100 hover:bg-amber-50 px-2.5 py-1.5 rounded-lg border border-slate-200 transition-colors cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add / Edit Video</span>
+                        </button>
                       </div>
-                      <button
-                        onClick={() => {
-                          setVideoInputUrl(customVideoUrls[currentItem.id] || "");
-                          setVideoModalOpen(true);
-                        }}
-                        className="font-extrabold text-[#004b79] hover:text-[#b89047] transition-colors cursor-pointer"
-                      >
-                        Configure Video ↗
-                      </button>
+
+                      {/* Video Player Display Screen */}
+                      <div className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-slate-300 bg-slate-950 aspect-video flex items-center justify-center group">
+                        {effectiveVideo && isVideoPlaying ? (
+                          effectiveVideo.includes("youtube.com") || effectiveVideo.includes("youtu.be") ? (
+                            <iframe
+                              src={getEmbedVideoUrl(effectiveVideo)}
+                              title={school.name}
+                              className="w-full h-full border-0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          ) : (
+                            <video
+                              src={effectiveVideo}
+                              controls
+                              autoPlay
+                              className="w-full h-full object-contain"
+                            />
+                          )
+                        ) : (
+                          /* Interactive Video Card Preview Frame */
+                          <div className="relative w-full h-full flex flex-col justify-between p-5 sm:p-6 bg-gradient-to-br from-slate-900 via-[#002137] to-slate-950 text-white select-none">
+                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(223,183,74,0.22),transparent_60%)] pointer-events-none" />
+                            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#dfb74a_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+
+                            <div className="relative z-10 flex items-center justify-between">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-600 text-white shadow-sm">
+                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                                Video Column
+                              </span>
+                              <span className="text-[10px] font-bold text-slate-300 bg-white/10 backdrop-blur-md px-2 py-0.5 rounded-md border border-white/10">
+                                1080p HD
+                              </span>
+                            </div>
+
+                            <div className="relative z-10 flex flex-col items-center justify-center my-auto text-center space-y-2.5">
+                              <button
+                                onClick={() => {
+                                  if (effectiveVideo) {
+                                    setPlayingVideoId(school.id);
+                                  } else {
+                                    setActiveSchoolForVideo(school.id);
+                                    setVideoInputUrl("");
+                                    setVideoModalOpen(true);
+                                  }
+                                }}
+                                className="relative group/play w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer"
+                                title="Play Video"
+                              >
+                                <div className="absolute -inset-2 rounded-full bg-[#dfb74a]/40 blur-md group-hover/play:blur-lg animate-pulse" />
+                                <Play className="w-7 h-7 sm:w-8 sm:h-8 fill-current ml-1 relative z-10" />
+                              </button>
+                              <div className="space-y-0.5">
+                                <p className="text-xs sm:text-sm font-extrabold text-white tracking-wide">
+                                  {effectiveVideo ? "Click to Play Session Video" : "Click to Add Video URL"}
+                                </p>
+                                <p className="text-[11px] text-slate-300 font-medium line-clamp-1 max-w-[240px] mx-auto">
+                                  {school.name}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="relative z-10 flex items-center justify-between text-[11px] text-slate-300 pt-2 border-t border-white/10">
+                              <span className="truncate max-w-[180px] font-semibold text-slate-200">
+                                {school.sessionTitle}
+                              </span>
+                              <button
+                                onClick={() => {
+                                  setActiveSchoolForVideo(school.id);
+                                  setVideoInputUrl(customVideoUrls[school.id] || "");
+                                  setVideoModalOpen(true);
+                                }}
+                                className="text-[#dfb74a] hover:underline font-bold cursor-pointer"
+                              >
+                                + Add Video Link
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Video Footer Helper */}
+                      <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <Film className="w-4 h-4 text-[#b89047]" />
+                          <span className="font-bold text-slate-700">Add YouTube or MP4 video URL</span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setActiveSchoolForVideo(school.id);
+                            setVideoInputUrl(customVideoUrls[school.id] || "");
+                            setVideoModalOpen(true);
+                          }}
+                          className="font-extrabold text-[#004b79] hover:text-[#b89047] transition-colors cursor-pointer"
+                        >
+                          Configure Video ↗
+                        </button>
+                      </div>
+
                     </div>
 
                   </div>
-
                 </div>
-              </div>
-            );
-          })()}
+              );
+            })}
+          </div>
 
         </div>
       </section>
@@ -1631,7 +1494,7 @@ export default function HomePage() {
       ═══════════════════════════════════════════════════════════════════════ */}
       <section id="team" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-white py-6 lg:py-8">
         <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 space-y-6 lg:space-y-8">
-          
+
           {/* Section Header */}
           <div className="text-center max-w-3xl mx-auto space-y-1.5">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
@@ -1714,7 +1577,7 @@ export default function HomePage() {
       ═══════════════════════════════════════════════════════════════════════ */}
       <section id="mentors" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-slate-50/60 py-6 lg:py-8">
         <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 space-y-6 lg:space-y-8">
-          
+
           {/* Section Header */}
           <div className="text-center max-w-3xl mx-auto space-y-1">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
@@ -1727,7 +1590,7 @@ export default function HomePage() {
 
           {/* Categories with Centered Headings & Symmetrical Full-Width Layout */}
           <div className="space-y-8 max-w-7xl mx-auto w-full">
-            
+
             {/* 1. Education Mentors */}
             <div className="space-y-4">
               <div className="text-center">
@@ -1781,7 +1644,7 @@ export default function HomePage() {
 
               {/* 4 Cards Grid Full Width */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 xl:gap-6 w-full">
-                
+
                 {/* 1. Vishal K */}
                 <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-[#004b79]/40 transition-all flex flex-col items-center text-center space-y-3">
                   <div className="w-full aspect-4/5 rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
@@ -1855,7 +1718,7 @@ export default function HomePage() {
       ═══════════════════════════════════════════════════════════════════════ */}
       <section id="testimonials" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center py-8 lg:py-10 bg-slate-50 border-b border-slate-200/80 overflow-hidden">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 lg:space-y-8">
-          
+
           <div className="text-center max-w-3xl mx-auto space-y-1.5">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Testimonials
@@ -1951,7 +1814,7 @@ export default function HomePage() {
       ═══════════════════════════════════════════════════════════════════════ */}
       <section id="gallery" className="scroll-mt-20 py-20 bg-gradient-to-b from-white via-slate-50/50 to-white border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          
+
           {/* Header */}
           <div className="text-center max-w-3xl mx-auto">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
@@ -1972,38 +1835,38 @@ export default function HomePage() {
               { id: 8, src: "/images/gallery_8.jpg", title: "Senior Board Exam Cohort", sub: "Dedicated revision, mock testing, and core subject preparation." },
               { id: 9, src: "/images/gallery_9.jpg", title: "MANTIF Friendship Circle", sub: "Lifelong student bonds, peer encouragement, and mutual support." },
             ].map((item, idx) => (
-                <div
-                  key={item.id}
-                  onClick={() => setSelectedGalleryIdx(idx)}
-                  className="group relative h-[300px] sm:h-[340px] rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md hover:shadow-2xl hover:border-[#b89047]/80 transition-all duration-500 cursor-pointer flex flex-col justify-end transform hover:-translate-y-1.5"
-                >
-                  <img
-                    src={item.src}
-                    alt={item.title}
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
-                  />
-                  
-                  {/* Subtle Gradient Backplate */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/95 via-[#001726]/40 to-transparent transition-opacity duration-300 group-hover:from-[#001726]/98" />
+              <div
+                key={item.id}
+                onClick={() => setSelectedGalleryIdx(idx)}
+                className="group relative h-[300px] sm:h-[340px] rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md hover:shadow-2xl hover:border-[#b89047]/80 transition-all duration-500 cursor-pointer flex flex-col justify-end transform hover:-translate-y-1.5"
+              >
+                <img
+                  src={item.src}
+                  alt={item.title}
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
+                />
 
-                  {/* Top Floating Expand Button */}
-                  <div className="absolute top-4 right-4 z-10">
-                    <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0 shadow-sm">
-                      <Maximize2 className="w-4 h-4" />
-                    </div>
-                  </div>
+                {/* Subtle Gradient Backplate */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#001726]/95 via-[#001726]/40 to-transparent transition-opacity duration-300 group-hover:from-[#001726]/98" />
 
-                  {/* Bottom Text Content */}
-                  <div className="relative z-10 p-5 sm:p-6 space-y-1">
-                    <h3 className="text-base sm:text-lg font-black text-white leading-snug group-hover:text-[#dfb74a] transition-colors">
-                      {item.title}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-slate-200 line-clamp-2 leading-relaxed font-normal">
-                      {item.sub}
-                    </p>
+                {/* Top Floating Expand Button */}
+                <div className="absolute top-4 right-4 z-10">
+                  <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0 shadow-sm">
+                    <Maximize2 className="w-4 h-4" />
                   </div>
                 </div>
-              ))}
+
+                {/* Bottom Text Content */}
+                <div className="relative z-10 p-5 sm:p-6 space-y-1">
+                  <h3 className="text-base sm:text-lg font-black text-white leading-snug group-hover:text-[#dfb74a] transition-colors">
+                    {item.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-200 line-clamp-2 leading-relaxed font-normal">
+                    {item.sub}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
 
         </div>
@@ -2106,8 +1969,8 @@ export default function HomePage() {
             </div>
           </div>
         )}
-        
-        {/* ─── Video Embed & Configuration Modal ─── */}
+
+        {/* ─── School Video URL Modal ─── */}
         {videoModalOpen && (
           <div
             className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
@@ -2121,13 +1984,13 @@ export default function HomePage() {
                 <div className="space-y-1">
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-amber-50 text-[#b89047] border border-amber-200">
                     <Video className="w-3.5 h-3.5" />
-                    <span>Session Video Player</span>
+                    <span>School Session Video</span>
                   </div>
                   <h3 className="text-xl sm:text-2xl font-black text-[#002137]">
                     Add / Configure Video URL
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                    Enter a YouTube link or MP4 video URL for this seminar initiative.
+                    Enter a YouTube link or MP4 video URL for this school session.
                   </p>
                 </div>
                 <button
@@ -2151,18 +2014,9 @@ export default function HomePage() {
                     className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#004b79] focus:ring-2 focus:ring-[#004b79]/20 outline-none text-xs sm:text-sm text-slate-800 font-medium transition-all"
                   />
                 </div>
-                
-                {/* Quick suggestions / Demo */}
-                <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
-                  <span>Supported: YouTube links, Shorts, MP4 files</span>
-                  <button
-                    type="button"
-                    onClick={() => setVideoInputUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ")}
-                    className="text-[#004b79] hover:underline font-bold"
-                  >
-                    Use Sample URL
-                  </button>
-                </div>
+                <p className="text-xs text-slate-400">
+                  Supported formats: YouTube URLs, YouTube Shorts, MP4 video links
+                </p>
               </div>
 
               <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
@@ -2178,7 +2032,7 @@ export default function HomePage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleSaveVideoUrl(activeOutreachId)}
+                  onClick={handleSaveVideoUrl}
                   className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#002137] hover:bg-[#004b79] text-white shadow-md hover:shadow-lg transition-all cursor-pointer"
                 >
                   Save &amp; Play Video
