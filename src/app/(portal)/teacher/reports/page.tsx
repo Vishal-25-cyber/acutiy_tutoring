@@ -50,22 +50,16 @@ export default function TeacherStudentReportsPage() {
     refetch: refetchSchools,
   } = useFastFetch("/api/teacher/reports/school");
 
-  const defaultSchools = [
-    { schoolName: "Delhi Public School", studentCount: 14, district: "Metro District", board: "CBSE", classes: ["Class 8", "Class 9", "Class 10"] },
-    { schoolName: "National Public School", studentCount: 11, district: "Central District", board: "CBSE", classes: ["Class 8", "Class 9", "Class 10"] },
-    { schoolName: "DAV Public School", studentCount: 9, district: "South District", board: "CBSE", classes: ["Class 7", "Class 8", "Class 9", "Class 10"] },
-    { schoolName: "Kendriya Vidyalaya", studentCount: 16, district: "Main District", board: "CBSE", classes: ["Class 6", "Class 7", "Class 8", "Class 9", "Class 10"] },
-    { schoolName: "SSVS", studentCount: 5, district: "Main District", board: "CBSE", classes: ["Class 10"] },
-  ];
+  const schools: Array<{ schoolName: string; studentCount: number; district?: string; board?: string; classes?: string[] }> =
+    Array.isArray(schoolsData?.schools) ? schoolsData.schools : [];
 
-  const schools = Array.isArray(schoolsData?.schools) && schoolsData.schools.length > 0
-    ? schoolsData.schools
-    : defaultSchools;
-
-  // Auto-select first school if none selected
+  // Auto-select first real school from database
   useEffect(() => {
-    if (!selectedSchool && schools.length > 0) {
-      setSelectedSchool(schools[0].schoolName);
+    if (schools.length > 0) {
+      const exists = schools.some((s) => s.schoolName === selectedSchool);
+      if (!selectedSchool || !exists) {
+        setSelectedSchool(schools[0].schoolName);
+      }
     }
   }, [schools, selectedSchool]);
 
@@ -361,10 +355,10 @@ export default function TeacherStudentReportsPage() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  {selectedSchool} Overview
+                  {schoolReport.schoolOverview?.schoolName || selectedSchool} Overview
                 </h2>
                 <span className="text-xs font-semibold text-slate-500">
-                  {schoolReport.schoolInfo?.curriculum || "CBSE Board"} · {schoolReport.schoolInfo?.totalEnrolledStudents || 5} Enrolled Students
+                  {schoolReport.schoolOverview?.curriculum || schoolReport.schoolOverview?.board || "CBSE Board"} · {schoolReport.schoolOverview?.totalStudents ?? schoolReport.studentMarksheet?.length ?? 0} Enrolled Students
                 </span>
               </div>
 
@@ -372,23 +366,27 @@ export default function TeacherStudentReportsPage() {
                 <div className="space-y-1">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">School Overall Avg</span>
                   <p className="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight leading-none">
-                    {schoolReport.overallMetrics?.schoolAverageScore || 80}%
+                    {schoolReport.schoolMetrics?.overallSchoolAverage ?? 0}%
                   </p>
-                  <p className="text-xs text-emerald-600 font-semibold">+8% vs Benchmark</p>
+                  <p className="text-xs text-emerald-600 font-semibold">
+                    {(schoolReport.schoolMetrics?.overallSchoolAverage ?? 0) >= 75 ? "+8% vs Benchmark" : "Cohort Performance"}
+                  </p>
                 </div>
 
                 <div className="space-y-1">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Avg Attendance</span>
                   <p className="text-3xl font-black text-[#004b79] dark:text-[#dfb74a] tracking-tight leading-none">
-                    {schoolReport.overallMetrics?.averageAttendance || 81}%
+                    {schoolReport.schoolMetrics?.averageAttendance ?? 0}%
                   </p>
-                  <p className="text-xs text-slate-400">punctual cohort</p>
+                  <p className="text-xs text-slate-400">
+                    {(schoolReport.schoolMetrics?.averageAttendance ?? 0) >= 80 ? "punctual cohort" : "attendance tracking"}
+                  </p>
                 </div>
 
                 <div className="space-y-1">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Test Average</span>
                   <p className="text-3xl font-black text-amber-600 dark:text-amber-400 tracking-tight leading-none">
-                    {schoolReport.overallMetrics?.averageTestScore || 81}%
+                    {schoolReport.schoolMetrics?.averageTestScore ?? 0}%
                   </p>
                   <p className="text-xs text-slate-400">assessment average</p>
                 </div>
@@ -396,9 +394,9 @@ export default function TeacherStudentReportsPage() {
                 <div className="space-y-1">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Top Performer</span>
                   <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight leading-none truncate">
-                    {schoolReport.overallMetrics?.topPerformerName || "Top Student"}
+                    {schoolReport.schoolMetrics?.topPerformer || schoolReport.schoolOverview?.topPerformer || "N/A"}
                   </p>
-                  <p className="text-xs text-slate-400">highest score: {schoolReport.overallMetrics?.highestScore || 88}%</p>
+                  <p className="text-xs text-slate-400">highest score: {schoolReport.schoolMetrics?.highestScore ?? schoolReport.schoolOverview?.highestScore ?? 0}%</p>
                 </div>
               </div>
             </div>
@@ -411,7 +409,7 @@ export default function TeacherStudentReportsPage() {
                 Consolidated Student Marksheet &amp; Performance Roster
               </h2>
               <span className="text-xs text-slate-400">
-                {schoolReport?.studentRoster?.length || 0} Students Listed
+                {(schoolReport?.studentMarksheet?.length ?? schoolReport?.studentRoster?.length ?? 0)} Students Listed
               </span>
             </div>
 
@@ -420,7 +418,7 @@ export default function TeacherStudentReportsPage() {
                 <Loader2 className="w-6 h-6 animate-spin text-[#004b79]" />
                 <span className="text-xs">Loading school cohort data…</span>
               </div>
-            ) : schoolReport?.studentRoster && schoolReport.studentRoster.length > 0 ? (
+            ) : (schoolReport?.studentMarksheet || schoolReport?.studentRoster || []).length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
@@ -439,14 +437,14 @@ export default function TeacherStudentReportsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
-                    {schoolReport.studentRoster.map((st: any) => (
+                    {(schoolReport?.studentMarksheet || schoolReport?.studentRoster || []).map((st: any) => (
                       <tr
                         key={st.userId}
                         className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
                       >
                         <td className="py-3.5 px-2 font-bold">
                           <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono">
-                            #{st.schoolRank}
+                            #{st.schoolRank || 1}
                           </span>
                         </td>
                         <td className="py-3.5 px-2 font-bold text-slate-900 dark:text-slate-100">
@@ -456,15 +454,15 @@ export default function TeacherStudentReportsPage() {
                         <td className="py-3.5 px-2 font-semibold text-[#004b79] dark:text-[#dfb74a]">
                           {st.classLevel}
                         </td>
-                        <td className="py-3.5 px-2 font-mono font-semibold">{st.subjectScores?.Mathematics || 85}%</td>
-                        <td className="py-3.5 px-2 font-mono font-semibold">{st.subjectScores?.Science || 82}%</td>
-                        <td className="py-3.5 px-2 font-mono font-semibold">{st.subjectScores?.English || 88}%</td>
-                        <td className="py-3.5 px-2 font-mono font-semibold">{st.subjectScores?.["Social Science"] || 80}%</td>
+                        <td className="py-3.5 px-2 font-mono font-semibold">{st.subjectScores?.Mathematics ?? 0}%</td>
+                        <td className="py-3.5 px-2 font-mono font-semibold">{st.subjectScores?.Science ?? 0}%</td>
+                        <td className="py-3.5 px-2 font-mono font-semibold">{st.subjectScores?.English ?? 0}%</td>
+                        <td className="py-3.5 px-2 font-mono font-semibold">{st.subjectScores?.["Social Science"] ?? 0}%</td>
                         <td className="py-3.5 px-2 font-bold text-emerald-600 dark:text-emerald-400">
-                          {st.attendancePercentage}%
+                          {st.attendancePercentage ?? 0}%
                         </td>
                         <td className="py-3.5 px-2 font-black text-slate-900 dark:text-slate-100">
-                          {st.overallScore}%
+                          {st.overallScore ?? 0}%
                         </td>
                         <td className="py-3.5 px-2 text-right">
                           <button

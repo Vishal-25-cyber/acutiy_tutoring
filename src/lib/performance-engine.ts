@@ -623,7 +623,8 @@ export async function getDistinctSchoolsList() {
 
   profiles.forEach((p: any) => {
     if (!p.userId) return;
-    const rawSchool = (p.schoolName || "").trim() || "Kendriya Vidyalaya";
+    const rawSchool = (p.schoolName || "").trim();
+    if (!rawSchool) return;
     const existing = schoolMap.get(rawSchool);
     if (existing) {
       existing.studentCount += 1;
@@ -632,25 +633,12 @@ export async function getDistinctSchoolsList() {
       schoolMap.set(rawSchool, {
         schoolName: rawSchool,
         studentCount: 1,
-        district: p.district || p.userId?.district || "Main District",
+        district: p.district || p.userId?.district || "District",
         board: p.board || "CBSE",
-        classes: new Set(p.currentClass ? [p.currentClass] : ["Class 10"]),
+        classes: new Set(p.currentClass ? [p.currentClass] : []),
       });
     }
   });
-
-  // Ensure baseline schools exist if fresh DB
-  if (schoolMap.size === 0) {
-    ["Delhi Public School", "Kendriya Vidyalaya", "St. Xavier's High School", "DAV Public School"].forEach((sName, idx) => {
-      schoolMap.set(sName, {
-        schoolName: sName,
-        studentCount: 3 + idx,
-        district: "Metro District",
-        board: idx % 2 === 0 ? "CBSE" : "State Board",
-        classes: new Set(["Class 8", "Class 9", "Class 10"]),
-      });
-    });
-  }
 
   return Array.from(schoolMap.values()).map((s) => ({
     schoolName: s.schoolName,
@@ -670,7 +658,7 @@ export async function generateSchoolPerformanceReport(
 ) {
   const targetSchool = (schoolName || "").trim();
 
-  // Find all student profiles from this school
+  // Find all real student profiles from this school
   const query: any = {};
   if (targetSchool && targetSchool !== "ALL") {
     query.schoolName = { $regex: new RegExp(`^${targetSchool.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}$`, "i") };
@@ -679,23 +667,15 @@ export async function generateSchoolPerformanceReport(
     query.currentClass = filters.classLevel;
   }
 
-  let studentProfiles = await StudentProfile.find(query)
+  const studentProfiles = await StudentProfile.find(query)
     .populate("userId", "name email phone district")
     .populate("batchId", "name")
     .lean();
 
-  // If no profiles matched exact regex (e.g. mock / general query), fallback to all active profiles
-  if (studentProfiles.length === 0) {
-    studentProfiles = await StudentProfile.find(filters.classLevel && filters.classLevel !== "ALL" ? { currentClass: filters.classLevel } : {})
-      .populate("userId", "name email phone district")
-      .populate("batchId", "name")
-      .lean();
-  }
-
   // Filter out any without valid user doc
   const validProfiles = studentProfiles.filter((p: any) => p.userId != null);
 
-  // Generate individual performance metrics for each student in the school
+  // Generate individual performance metrics for each real student in the school
   const studentReports = await Promise.all(
     validProfiles.map(async (p: any) => {
       try {
@@ -731,52 +711,28 @@ export async function generateSchoolPerformanceReport(
 
   const cleanStudents = studentReports.filter((s) => s != null) as any[];
 
-  // If DB has fewer than 2 students for this school, seed authentic peer entries for comprehensive display
-  if (cleanStudents.length < 3) {
-    const mockNames = ["Aarav Sharma", "Diya Patel", "Rohan Verma", "Ananya Iyer", "Kavya Nair"];
-    const baseClass = filters.classLevel && filters.classLevel !== "ALL" ? filters.classLevel : "Class 10";
-    mockNames.slice(cleanStudents.length).forEach((mName, idx) => {
-      const score = Math.max(68, Math.min(96, 88 - idx * 4));
-      cleanStudents.push({
-        userId: `mock-user-${idx + 1}`,
-        studentId: `STU-SC${idx + 101}`,
-        name: mName,
-        email: `${mName.toLowerCase().replace(" ", ".")}@example.com`,
-        phone: "+91 98401 23456",
-        district: "Main District",
-        classLevel: baseClass,
-        board: "CBSE",
-        batchName: "Evening Regular Batch",
-        overallScore: score,
-        attendancePercentage: Math.min(98, 86 + idx * 3),
-        testAverage: score - 2,
-        assignmentCompletion: Math.min(100, 88 + idx * 2),
-        liveEngagement: 92,
-        subjectScores: {
-          Mathematics: Math.min(100, score + 2),
-          Science: score,
-          English: Math.min(100, score + 4),
-          "Social Science": Math.max(65, score - 5),
-        },
-        statusColor: score >= 80 ? "GREEN" : score >= 70 ? "BLUE" : "YELLOW",
-      });
-    });
-  }
-
   // Sort students by overall score descending to assign intra-school ranks
   cleanStudents.sort((a, b) => b.overallScore - a.overallScore);
   cleanStudents.forEach((st, idx) => {
     st.schoolRank = idx + 1;
   });
 
-  // Calculate School-Wide Aggregate Metrics
+  // Calculate School-Wide Aggregate Metrics strictly from real enrolled students
   const totalStudents = cleanStudents.length;
-  const overallSchoolAverage = Math.round(cleanStudents.reduce((sum, s) => sum + s.overallScore, 0) / totalStudents);
-  const averageAttendance = Math.round(cleanStudents.reduce((sum, s) => sum + s.attendancePercentage, 0) / totalStudents);
-  const averageTestScore = Math.round(cleanStudents.reduce((sum, s) => sum + s.testAverage, 0) / totalStudents);
-  const averageAssignmentCompletion = Math.round(cleanStudents.reduce((sum, s) => sum + s.assignmentCompletion, 0) / totalStudents);
-  const topPerformer = cleanStudents[0]?.name || "Top Student";
-  const highestScore = cleanStudents[0]?.overallScore || 95;
+  const overallSchoolAverage = totalStudents > 0
+    ? Math.round(cleanStudents.reduce((sum, s) => sum + (s.overallScore || 0), 0) / totalStudents)
+    : 0;
+  const averageAttendance = totalStudents > 0
+    ? Math.round(cleanStudents.reduce((sum, s) => sum + (s.attendancePercentage || 0), 0) / totalStudents)
+    : 0;
+  const averageTestScore = totalStudents > 0
+    ? Math.round(cleanStudents.reduce((sum, s) => sum + (s.testAverage || 0), 0) / totalStudents)
+    : 0;
+  const averageAssignmentCompletion = totalStudents > 0
+    ? Math.round(cleanStudents.reduce((sum, s) => sum + (s.assignmentCompletion || 0), 0) / totalStudents)
+    : 0;
+  const topPerformer = cleanStudents[0]?.name || "N/A";
+  const highestScore = cleanStudents[0]?.overallScore || 0;
 
   // Calculate Subject Benchmarks across this School's students
   const subjectList = ["Mathematics", "Science", "English", "Social Science"];
@@ -841,7 +797,7 @@ export async function generateSchoolPerformanceReport(
       `Class average in ${weakSubj.map((s) => `${s.subject} (${s.schoolAverage}%)`).join(", ")} requires additional targeted practice.`
     );
   }
-  if (averageAttendance < 80) {
+  if (averageAttendance < 80 && averageAttendance > 0) {
     cohortFocusAreas.push(`School cohort attendance is currently ${averageAttendance}%. Punctual attendance recommended.`);
   }
   if (cohortFocusAreas.length === 0) {
@@ -856,28 +812,58 @@ export async function generateSchoolPerformanceReport(
     "Schedule monthly faculty-parent progress alignment meeting.",
   ];
 
+  const firstProfile = validProfiles[0] as any;
+  const schoolNameFinal = targetSchool || firstProfile?.schoolName || "Selected School";
+  const districtFinal = firstProfile?.district || firstProfile?.userId?.district || "District";
+  const boardFinal = firstProfile?.board || "CBSE";
+
   return {
     schoolOverview: {
-      schoolName: targetSchool || "Kendriya Vidyalaya",
-      district: cleanStudents[0]?.district || "Main District",
-      board: cleanStudents[0]?.board || "CBSE",
+      schoolName: schoolNameFinal,
+      district: districtFinal,
+      board: boardFinal,
+      curriculum: `${boardFinal} Board`,
       totalStudents,
+      totalEnrolledStudents: totalStudents,
       classesRepresented: Array.from(new Set(cleanStudents.map((s) => s.classLevel))).sort(),
       topPerformer,
+      topPerformerName: topPerformer,
       highestScore,
       reportGeneratedDate: new Date().toISOString(),
       reportPeriod: filters.period || "Current Academic Term",
     },
+    schoolInfo: {
+      schoolName: schoolNameFinal,
+      district: districtFinal,
+      board: boardFinal,
+      curriculum: `${boardFinal} Board`,
+      totalStudents,
+      totalEnrolledStudents: totalStudents,
+    },
     schoolMetrics: {
       overallSchoolAverage,
+      schoolAverageScore: overallSchoolAverage,
       averageAttendance,
       averageTestScore,
       averageAssignmentCompletion,
       topPerformer,
+      topPerformerName: topPerformer,
+      highestScore,
+      totalStudents,
+    },
+    overallMetrics: {
+      overallSchoolAverage,
+      schoolAverageScore: overallSchoolAverage,
+      averageAttendance,
+      averageTestScore,
+      averageAssignmentCompletion,
+      topPerformer,
+      topPerformerName: topPerformer,
       highestScore,
       totalStudents,
     },
     studentMarksheet: cleanStudents,
+    studentRoster: cleanStudents,
     subjectBenchmarks,
     classDistribution,
     cohortStrengths,
