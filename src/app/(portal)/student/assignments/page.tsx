@@ -337,11 +337,23 @@ export default function StudentAssignmentsPage() {
     stopCamera();
     setActiveProctoredTest(null);
     setIsTestLocked(false);
+    setUploadExpired(false);
+    setUploadWindowSeconds(300);
     setActiveWarning(null);
     if (document.fullscreenElement) {
       document.exitFullscreen().catch(() => {});
       setIsExamFullscreen(false);
     }
+  };
+
+  // Finish test: lock exam, start 5-min upload window (don't close yet)
+  const handleFinishTest = () => {
+    if (!isTestLocked) {
+      setIsTestLocked(true);
+      captureSnapshot();
+      playWarningSound("ALARM");
+    }
+    setSplitViewMode("SUBMIT_FULL");
   };
 
   // ── TAB SWITCH & WINDOW FOCUS LOST PROCTORING LISTENER ──
@@ -844,34 +856,37 @@ export default function StudentAssignmentsPage() {
 
       {/* ── 4. FULL-SCREEN SECURE PROCTORED EXAMINATION SUITE ── */}
       {activeProctoredTest && (
-        <div className="fixed inset-0 z-50 bg-[#060d17] text-white flex flex-col h-screen w-screen overflow-hidden select-none">
-          {/* Top Secure Examination Control Bar */}
-          <div className="h-16 px-4 sm:px-6 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 flex items-center justify-between gap-3 shrink-0 z-20">
-            {/* Left: Test Identification & Live Security Status */}
+        <div className="fixed inset-0 z-50 bg-gray-50 text-gray-900 flex flex-col h-screen w-screen overflow-hidden select-none">
+          {/* Top Secure Examination Control Bar - Light Theme */}
+          <div className="h-14 px-4 sm:px-6 bg-white border-b border-gray-200 shadow-sm flex items-center justify-between gap-3 shrink-0 z-20">
+            {/* Left: Test ID */}
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+              <div className="w-8 h-8 rounded-xl bg-[#004b79]/10 border border-[#004b79]/20 flex items-center justify-center text-[#004b79] shrink-0">
                 <Camera className="w-4 h-4" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-sm sm:text-base font-black tracking-tight truncate">
+                  <h2 className="text-sm font-black tracking-tight truncate text-gray-900">
                     {activeProctoredTest.title}
                   </h2>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500 text-white flex items-center gap-1 animate-pulse shrink-0">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white" /> Proctored
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500 text-white flex items-center gap-1 animate-pulse shrink-0">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white" /> Live
                   </span>
+                  {isTestLocked && (
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-500 text-white shrink-0">Ended</span>
+                  )}
                 </div>
-                <div className="flex items-center gap-2 text-[11px] text-slate-400 truncate">
+                <div className="flex items-center gap-2 text-[10px] text-gray-500 truncate">
                   <span>{activeProctoredTest.subject}</span>
                   <span>•</span>
                   <span>Max: {activeProctoredTest.maxMarks} Marks</span>
                   <span>•</span>
                   {isFaceDetected ? (
-                    <span className="text-emerald-400 font-bold flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" /> In Frame
+                    <span className="text-emerald-600 font-bold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" /> In Frame
                     </span>
                   ) : (
-                    <span className="text-rose-400 font-bold flex items-center gap-1 animate-pulse">
+                    <span className="text-rose-500 font-bold flex items-center gap-1 animate-pulse">
                       <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block" /> Away ({awaySeconds}s)
                     </span>
                   )}
@@ -879,203 +894,159 @@ export default function StudentAssignmentsPage() {
               </div>
             </div>
 
-            {/* Center: Live Timer & Violation Badges */}
-            <div className="flex items-center gap-2.5">
-              {/* Timer Pill */}
-              <div className={`px-3.5 py-1.5 rounded-xl border flex items-center gap-2 transition-all ${
-                timeLeftSeconds <= 300
-                  ? "bg-rose-950/70 border-rose-600 text-rose-300 animate-pulse"
-                  : "bg-amber-950/40 border-amber-500/50 text-amber-300"
-              }`}>
-                <Clock className="w-4 h-4" />
-                <span className="font-mono font-black text-sm sm:text-base">
+            {/* Center: Timer + Warnings + View switcher */}
+            <div className="flex items-center gap-2">
+              {/* Timer */}
+              {!isTestLocked ? (
+                <div className={`px-3 py-1.5 rounded-xl border flex items-center gap-1.5 font-mono font-black text-sm transition-all ${
+                  timeLeftSeconds <= 300
+                    ? "bg-rose-50 border-rose-300 text-rose-600 animate-pulse"
+                    : "bg-amber-50 border-amber-300 text-amber-700"
+                }`}>
+                  <Clock className="w-3.5 h-3.5" />
                   {formatTime(timeLeftSeconds)}
-                </span>
-              </div>
+                </div>
+              ) : (
+                isTestLocked && !uploadExpired && (
+                  <div className={`px-3 py-1.5 rounded-xl border flex items-center gap-1.5 font-mono font-black text-sm transition-all ${
+                    uploadWindowSeconds <= 60
+                      ? "bg-rose-50 border-rose-300 text-rose-600 animate-pulse"
+                      : "bg-blue-50 border-blue-300 text-blue-600"
+                  }`}>
+                    <Timer className="w-3.5 h-3.5" />
+                    Upload: {Math.floor(uploadWindowSeconds/60).toString().padStart(2,"0")}:{(uploadWindowSeconds%60).toString().padStart(2,"0")}
+                  </div>
+                )
+              )}
 
-              {/* Warnings Pill */}
-              <div className={`px-2.5 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all ${
+              {/* Warnings pill */}
+              <div className={`px-2.5 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1 transition-all ${
                 warningCount > 0
-                  ? "bg-rose-900/60 border-rose-600 text-rose-200 animate-pulse"
-                  : "bg-slate-800/80 border-slate-700 text-slate-400"
+                  ? "bg-rose-50 border-rose-300 text-rose-600 animate-pulse"
+                  : "bg-gray-100 border-gray-200 text-gray-500"
               }`}>
                 <ShieldAlert className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Warnings:</span>
-                <span className="font-mono font-bold">{warningCount}</span>
+                <span>{warningCount}</span>
               </div>
 
-              {/* Split View Switcher */}
-              <div className="hidden md:flex items-center p-1 rounded-xl bg-slate-800/90 border border-slate-700 text-xs font-bold">
-                <button
-                  type="button"
-                  onClick={() => setSplitViewMode("PDF_FULL")}
-                  className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                    splitViewMode === "PDF_FULL"
-                      ? "bg-[#004b79] text-white shadow-xs"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  Paper Only
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSplitViewMode("SPLIT")}
-                  className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                    splitViewMode === "SPLIT"
-                      ? "bg-[#004b79] text-white shadow-xs"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  Split View
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSplitViewMode("SUBMIT_FULL")}
-                  className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                    splitViewMode === "SUBMIT_FULL"
-                      ? "bg-[#004b79] text-white shadow-xs"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  Proctor &amp; Upload
-                </button>
-              </div>
+              {/* Split View toggle - only during test */}
+              {!isTestLocked && (
+                <div className="hidden md:flex items-center p-1 rounded-xl bg-gray-100 border border-gray-200 text-xs font-bold">
+                  {(["PDF_FULL", "SPLIT", "SUBMIT_FULL"] as const).map((mode) => (
+                    <button key={mode} type="button" onClick={() => setSplitViewMode(mode)}
+                      className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                        splitViewMode === mode
+                          ? "bg-[#004b79] text-white shadow-sm"
+                          : "text-gray-500 hover:text-gray-800"
+                      }`}>
+                      {mode === "PDF_FULL" ? "Paper" : mode === "SPLIT" ? "Split" : "Camera"}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Right: Audio, Fullscreen, and Exit Controls */}
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => setIsSoundMuted(!isSoundMuted)}
-                title={isSoundMuted ? "Unmute Proctoring Alarm" : "Mute Proctoring Alarm"}
+            {/* Right: Sound, fullscreen, finish */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button type="button" onClick={() => setIsSoundMuted(!isSoundMuted)}
+                title={isSoundMuted ? "Unmute" : "Mute"}
                 className={`p-2 rounded-xl border transition-all cursor-pointer ${
                   isSoundMuted
-                    ? "bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300"
-                    : "bg-emerald-950/40 border-emerald-600/50 text-emerald-400 hover:bg-emerald-900/50"
-                }`}
-              >
+                    ? "bg-gray-100 border-gray-200 text-gray-400"
+                    : "bg-emerald-50 border-emerald-200 text-emerald-600"
+                }`}>
                 {isSoundMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
               </button>
 
-              <button
-                type="button"
-                onClick={toggleFullscreen}
-                title="Toggle Fullscreen Lockdown"
-                className="p-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 cursor-pointer transition-all"
-              >
+              <button type="button" onClick={toggleFullscreen} title="Toggle Fullscreen"
+                className="p-2 rounded-xl bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200 cursor-pointer transition-all">
                 {isExamFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
               </button>
 
-              <button
-                type="button"
-                onClick={handleCloseTestRoom}
-                className="px-3 py-1.5 rounded-xl bg-rose-600/20 hover:bg-rose-600 border border-rose-500/40 text-rose-300 hover:text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
-              >
-                <X className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Finish / Exit</span>
-              </button>
+              {!isTestLocked ? (
+                <button type="button" onClick={handleFinishTest}
+                  className="px-3 py-1.5 rounded-xl bg-[#004b79] hover:bg-[#003b60] text-white text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 shadow-sm">
+                  <Check className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Finish Test</span>
+                </button>
+              ) : (
+                <button type="button" onClick={handleCloseTestRoom}
+                  className="px-3 py-1.5 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5">
+                  <X className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Close</span>
+                </button>
+              )}
             </div>
           </div>
 
           {/* High-Visibility Floating Warning Banner */}
           {activeWarning && (
-            <div className="px-4 py-2.5 bg-rose-600 text-white flex items-center justify-between gap-3 shadow-lg animate-bounce z-30 shrink-0">
+            <div className="px-4 py-2.5 bg-rose-600 text-white flex items-center justify-between gap-3 shadow-lg z-30 shrink-0">
               <div className="flex items-center gap-2 text-xs sm:text-sm font-bold">
-                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <AlertTriangle className="w-4 h-4 shrink-0 animate-pulse" />
                 <span>{activeWarning.message}</span>
               </div>
-              <button
-                type="button"
-                onClick={() => setActiveWarning(null)}
-                className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white text-xs font-bold cursor-pointer shrink-0"
-              >
+              <button type="button" onClick={() => setActiveWarning(null)}
+                className="px-2.5 py-1 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-bold cursor-pointer shrink-0 border border-white/30">
                 Acknowledge
               </button>
             </div>
           )}
 
           {/* Main Examination Workspace: Split Screen Layout */}
-          <div className="flex-1 p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden">
-            {/* ═══════════════════════════════════════════════════════════ */}
-            {/* ── LEFT PANE: QUESTION PAPER / INTERACTIVE PDF VIEWER ── */}
-            {/* ═══════════════════════════════════════════════════════════ */}
+          <div className="flex-1 p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-12 gap-3 overflow-hidden">
+            {/* LEFT PANE: QUESTION PAPER / PDF VIEWER - light theme */}
             {(splitViewMode === "SPLIT" || splitViewMode === "PDF_FULL") && (
               <div className={`${
                 splitViewMode === "PDF_FULL" ? "lg:col-span-12" : "lg:col-span-7"
-              } h-full flex flex-col rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-2xl`}>
-                {/* PDF Viewer Header Toolbar */}
-                <div className="p-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between gap-2 shrink-0">
+              } h-full flex flex-col rounded-2xl bg-white border border-gray-200 overflow-hidden shadow-lg`}>
+                {/* PDF Viewer Header */}
+                <div className="px-3 py-2.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between gap-2 shrink-0">
                   <div className="flex items-center gap-2 truncate">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-rose-600 text-white shrink-0">
-                      PDF
-                    </span>
-                    <span className="text-xs font-bold text-slate-200 truncate">
-                      {activeProctoredTest.attachmentName || `${activeProctoredTest.title} Question Paper`}
+                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-rose-500 text-white shrink-0">PDF</span>
+                    <span className="text-xs font-semibold text-gray-700 truncate">
+                      {activeProctoredTest.attachmentName || `${activeProctoredTest.title} — Question Paper`}
                     </span>
                   </div>
-
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setPdfZoom((prev) => Math.max(50, prev - 15))}
-                      title="Zoom Out"
-                      className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer"
-                    >
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button type="button" onClick={() => setPdfZoom((prev) => Math.max(50, prev - 15))} title="Zoom Out"
+                      className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer transition-colors">
                       <ZoomOut className="w-3.5 h-3.5" />
                     </button>
-                    <span className="text-[11px] font-mono text-slate-400 w-10 text-center font-bold">
-                      {pdfZoom}%
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setPdfZoom((prev) => Math.min(200, prev + 15))}
-                      title="Zoom In"
-                      className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer"
-                    >
+                    <span className="text-[11px] font-mono text-gray-500 w-10 text-center font-bold">{pdfZoom}%</span>
+                    <button type="button" onClick={() => setPdfZoom((prev) => Math.min(200, prev + 15))} title="Zoom In"
+                      className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer transition-colors">
                       <ZoomIn className="w-3.5 h-3.5" />
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setPdfZoom(100)}
-                      title="Reset Zoom"
-                      className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer"
-                    >
+                    <button type="button" onClick={() => setPdfZoom(100)} title="Reset"
+                      className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer transition-colors">
                       <RotateCcw className="w-3.5 h-3.5" />
                     </button>
-
                     {activeProctoredTest.attachmentUrl && (
-                      <a
-                        href={activeProctoredTest.attachmentUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        title="Open in Full Browser Tab"
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white text-[11px] font-bold cursor-pointer ml-1"
-                      >
+                      <a href={activeProctoredTest.attachmentUrl} target="_blank" rel="noreferrer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white text-[11px] font-bold cursor-pointer ml-1">
                         <ExternalLink className="w-3 h-3" />
                         <span className="hidden sm:inline">Popout</span>
                       </a>
                     )}
                   </div>
                 </div>
-
-                {/* PDF Interactive Frame / Question Content */}
-                <div className="flex-1 bg-slate-950 overflow-hidden relative flex flex-col">
+                {/* PDF Frame */}
+                <div className="flex-1 overflow-hidden relative flex flex-col bg-gray-100">
                   {activeProctoredTest.attachmentUrl ? (
-                    <div className="w-full h-full flex-1 overflow-auto bg-slate-800 flex items-center justify-center p-2">
+                    <div className="w-full h-full overflow-auto flex items-start justify-center p-2">
                       <iframe
                         src={`${activeProctoredTest.attachmentUrl}#toolbar=0&navpanes=0`}
                         title="Question Paper PDF"
-                        className="w-full h-full rounded-xl bg-white border-0 shadow-lg"
-                        style={{
-                          transform: pdfZoom !== 100 ? `scale(${pdfZoom / 100})` : undefined,
-                          transformOrigin: "top center",
-                        }}
+                        className="w-full h-full rounded-xl bg-white border-0 shadow-md"
+                        style={{ transform: pdfZoom !== 100 ? `scale(${pdfZoom / 100})` : undefined, transformOrigin: "top center" }}
                       />
                     </div>
                   ) : (
-                    <div className="p-6 overflow-y-auto space-y-4 text-xs font-mono leading-relaxed text-slate-200">
-                      <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-                        <h4 className="font-bold text-sm text-amber-400 mb-2">Instructions &amp; Questions:</h4>
+                    <div className="p-6 overflow-y-auto space-y-4 text-xs font-mono leading-relaxed text-gray-700">
+                      <div className="p-4 rounded-xl bg-white border border-gray-200 shadow-sm">
+                        <h4 className="font-bold text-sm text-[#004b79] mb-2">Instructions & Questions:</h4>
                         <p className="whitespace-pre-wrap">{activeProctoredTest.description || "Answer all questions clearly on your blank paper. Show complete working steps."}</p>
                       </div>
                     </div>
@@ -1084,29 +1055,26 @@ export default function StudentAssignmentsPage() {
               </div>
             )}
 
-            {/* ═══════════════════════════════════════════════════════════ */}
-            {/* ── RIGHT PANE: LIVE AI PROCTORING & ANSWER SUBMISSION ── */}
-            {/* ═══════════════════════════════════════════════════════════ */}
+            {/* RIGHT PANE: CAMERA + UPLOAD - light theme */}
             {(splitViewMode === "SPLIT" || splitViewMode === "SUBMIT_FULL") && (
               <div className={`${
                 splitViewMode === "SUBMIT_FULL" ? "lg:col-span-12" : "lg:col-span-5"
-              } h-full flex flex-col gap-3 overflow-y-auto no-scrollbar pr-0.5`}>
-                {/* 1. Live Camera Feed - Compact, clean with face visible */}
-                <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shrink-0 shadow-xl">
-                  {/* Camera Header */}
-                  <div className="px-3 py-2 flex items-center justify-between bg-slate-950/80 border-b border-slate-800">
+              } h-full flex flex-col gap-3 overflow-y-auto pr-0.5`}>
+                {/* Camera card - light */}
+                <div className="rounded-2xl bg-white border border-gray-200 overflow-hidden shrink-0 shadow-md">
+                  {/* Camera Header - light */}
+                  <div className="px-3 py-2 flex items-center justify-between bg-gray-50 border-b border-gray-200">
                     <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full shrink-0 ${ isCameraStarted ? "bg-emerald-400 animate-pulse" : "bg-amber-400 animate-bounce" }`} />
-                      <span className="text-[11px] font-bold text-slate-300">Live Proctoring</span>
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${ isCameraStarted ? "bg-emerald-500 animate-pulse" : "bg-amber-400 animate-bounce" }`} />
+                      <span className="text-[11px] font-bold text-gray-700">Live Proctoring</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      {/* Status */}
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ isFaceDetected ? "text-emerald-300 bg-emerald-950/60" : "text-rose-300 bg-rose-950/60 animate-pulse" }`}>
+                      {/* In Frame / Away status */}
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ isFaceDetected ? "text-emerald-700 bg-emerald-100" : "text-rose-600 bg-rose-100 animate-pulse" }`}>
                         {isFaceDetected ? "● In Frame" : `⚠ Away ${awaySeconds}s`}
                       </span>
-                      {/* Warnings badge */}
                       {warningCount > 0 && (
-                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-rose-600/30 border border-rose-600/50 text-rose-300 flex items-center gap-1">
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-rose-100 border border-rose-200 text-rose-600 flex items-center gap-1">
                           <ShieldAlert className="w-2.5 h-2.5" />
                           {warningCount} {warningCount === 1 ? "Warning" : "Warnings"}
                         </span>
@@ -1145,28 +1113,28 @@ export default function StudentAssignmentsPage() {
 
                     {/* Camera initializing state */}
                     {!isCameraStarted && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center text-xs text-slate-400 bg-slate-950">
-                        <Camera className="w-8 h-8 text-amber-400 animate-pulse" />
-                        <span>Camera initializing…</span>
-                        {cameraError && <p className="text-[11px] text-rose-400 font-bold">{cameraError}</p>}
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center text-xs text-gray-400 bg-gray-100">
+                        <Camera className="w-8 h-8 text-[#004b79] animate-pulse" />
+                        <span className="text-gray-500 font-medium">Camera initializing…</span>
+                        {cameraError && <p className="text-[11px] text-rose-500 font-bold">{cameraError}</p>}
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* 2. Answer Sheet Upload Card — locked until test ends, expires after 5 min */}
-                <div className="rounded-2xl border overflow-hidden shadow-xl flex-1 flex flex-col" style={{background: "linear-gradient(135deg, #0d1f35 0%, #091525 100%)", borderColor: uploadExpired ? "#7f1d1d" : isTestLocked ? "#1d4ed8" : "#1e3a5f"}}>
+                {/* 2. Answer Sheet Upload Card — light theme */}
+                <div className={`rounded-2xl border overflow-hidden shadow-md flex-1 flex flex-col bg-white ${ uploadExpired ? "border-rose-300" : isTestLocked ? "border-blue-300" : "border-gray-200" }`}>
                   {/* Card Header */}
-                  <div className="px-4 py-3 border-b flex items-center justify-between gap-2" style={{borderColor: uploadExpired ? "#7f1d1d" : isTestLocked ? "#1d4ed8" : "#1e3a5f", background: uploadExpired ? "rgba(127,29,29,0.3)" : isTestLocked ? "rgba(29,78,216,0.2)" : "rgba(4,75,121,0.15)"}}>
+                  <div className={`px-4 py-3 border-b flex items-center justify-between gap-2 ${ uploadExpired ? "bg-rose-50 border-rose-200" : isTestLocked ? "bg-blue-50 border-blue-200" : "bg-gray-50 border-gray-200" }`}>
                     <div className="flex items-center gap-2">
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${ uploadExpired ? "bg-rose-600/30" : isTestLocked ? "bg-blue-500/30" : "bg-slate-700/80" }`}>
-                        {uploadExpired ? <AlertCircle className="w-3.5 h-3.5 text-rose-400" /> : isTestLocked ? <Upload className="w-3.5 h-3.5 text-blue-300" /> : <Upload className="w-3.5 h-3.5 text-slate-500" />}
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${ uploadExpired ? "bg-rose-100" : isTestLocked ? "bg-blue-100" : "bg-gray-100" }`}>
+                        {uploadExpired ? <AlertCircle className="w-3.5 h-3.5 text-rose-500" /> : isTestLocked ? <Upload className="w-3.5 h-3.5 text-blue-600" /> : <Upload className="w-3.5 h-3.5 text-gray-400" />}
                       </div>
                       <div>
-                        <p className={`text-xs font-black tracking-wide ${ uploadExpired ? "text-rose-300" : isTestLocked ? "text-blue-200" : "text-slate-500" }`}>
+                        <p className={`text-xs font-black tracking-wide ${ uploadExpired ? "text-rose-600" : isTestLocked ? "text-blue-700" : "text-gray-500" }`}>
                           {uploadExpired ? "Upload Window Closed" : isTestLocked ? "Upload Answer Sheet" : "Upload Locked"}
                         </p>
-                        <p className="text-[10px] text-slate-500 font-medium">
+                        <p className="text-[10px] text-gray-400 font-medium">
                           {uploadExpired ? "Submission window has expired" : isTestLocked ? "5-min window · Submit your handwritten work" : "Available only after test ends"}
                         </p>
                       </div>
@@ -1174,7 +1142,7 @@ export default function StudentAssignmentsPage() {
 
                     {/* Upload countdown timer */}
                     {isTestLocked && !uploadExpired && (
-                      <div className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 shrink-0 ${ uploadWindowSeconds <= 60 ? "bg-rose-950/70 border-rose-600 text-rose-300 animate-pulse" : "bg-blue-950/60 border-blue-600/60 text-blue-200" }`}>
+                      <div className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 shrink-0 ${ uploadWindowSeconds <= 60 ? "bg-rose-50 border-rose-300 text-rose-600 animate-pulse" : "bg-blue-50 border-blue-300 text-blue-600" }`}>
                         <Timer className="w-3 h-3" />
                         <span className="font-mono font-black text-xs">{Math.floor(uploadWindowSeconds / 60).toString().padStart(2,"0")}:{(uploadWindowSeconds % 60).toString().padStart(2,"0")}</span>
                       </div>
@@ -1183,28 +1151,28 @@ export default function StudentAssignmentsPage() {
 
                   {/* Card Body */}
                   <div className="p-4 flex flex-col gap-3 flex-1">
-                    {/* Locked State: test still running */}
+                    {/* Locked: test running */}
                     {!isTestLocked && (
-                      <div className="flex-1 flex flex-col items-center justify-center gap-3 py-4">
-                        <div className="w-14 h-14 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-center">
-                          <Timer className="w-7 h-7 text-slate-500" />
+                      <div className="flex-1 flex flex-col items-center justify-center gap-3 py-6">
+                        <div className="w-14 h-14 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center">
+                          <Timer className="w-7 h-7 text-gray-400" />
                         </div>
                         <div className="text-center space-y-1">
-                          <p className="text-xs font-bold text-slate-400">Complete your test first</p>
-                          <p className="text-[10px] text-slate-600 leading-relaxed">Upload will unlock once the timer reaches 0 or you click Finish / Exit</p>
+                          <p className="text-xs font-bold text-gray-600">Complete your test first</p>
+                          <p className="text-[10px] text-gray-400 leading-relaxed">Click “Finish Test” when done. You’ll get 5 minutes to upload your answer sheet.</p>
                         </div>
                       </div>
                     )}
 
-                    {/* Expired State */}
+                    {/* Expired */}
                     {uploadExpired && (
-                      <div className="flex-1 flex flex-col items-center justify-center gap-3 py-4">
-                        <div className="w-14 h-14 rounded-2xl bg-rose-950/60 border border-rose-800 flex items-center justify-center">
+                      <div className="flex-1 flex flex-col items-center justify-center gap-3 py-6">
+                        <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center">
                           <AlertCircle className="w-7 h-7 text-rose-500" />
                         </div>
                         <div className="text-center space-y-1">
-                          <p className="text-xs font-bold text-rose-300">Upload window expired</p>
-                          <p className="text-[10px] text-slate-500 leading-relaxed">The 5-minute upload window has closed. Your submission cannot be accepted. Contact your teacher.</p>
+                          <p className="text-xs font-bold text-rose-600">Upload window expired</p>
+                          <p className="text-[10px] text-gray-400 leading-relaxed">The 5-minute upload window has closed. Contact your teacher.</p>
                         </div>
                       </div>
                     )}
@@ -1221,48 +1189,44 @@ export default function StudentAssignmentsPage() {
                         />
 
                         {selectedFile ? (
-                          <div className="p-3 rounded-xl bg-slate-900/80 border border-blue-700/60 flex items-center justify-between text-xs">
+                          <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between text-xs">
                             <div className="flex items-center gap-2 truncate">
-                              <FileCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                              <FileCheck className="w-4 h-4 text-emerald-600 shrink-0" />
                               <div className="truncate">
-                                <p className="font-bold truncate text-slate-200 text-xs">{selectedFile.name}</p>
-                                <p className="text-[10px] text-slate-500 font-mono">{selectedFile.size}</p>
+                                <p className="font-bold truncate text-gray-800 text-xs">{selectedFile.name}</p>
+                                <p className="text-[10px] text-gray-400 font-mono">{selectedFile.size}</p>
                               </div>
                             </div>
-                            <button type="button" onClick={() => setSelectedFile(null)} className="p-1 text-slate-500 hover:text-rose-400 cursor-pointer shrink-0">
+                            <button type="button" onClick={() => setSelectedFile(null)} className="p-1 text-gray-400 hover:text-rose-500 cursor-pointer shrink-0">
                               <X className="w-4 h-4" />
                             </button>
                           </div>
                         ) : (
-                          <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="w-full py-5 border-2 border-dashed border-blue-500/50 rounded-xl flex flex-col items-center justify-center gap-2 text-xs font-bold hover:bg-blue-950/30 cursor-pointer transition-all group"
-                          >
-                            <Camera className="w-6 h-6 text-blue-400 group-hover:scale-110 transition-transform" />
-                            <span className="text-blue-200">Take Photo / Upload Answer Sheet</span>
-                            <span className="text-[10px] text-slate-500 font-normal">PNG, JPG or PDF · Max 25MB</span>
+                          <button type="button" onClick={() => fileInputRef.current?.click()}
+                            className="w-full py-6 border-2 border-dashed border-blue-300 rounded-xl flex flex-col items-center justify-center gap-2 text-xs font-bold hover:bg-blue-50 cursor-pointer transition-all group bg-white">
+                            <Camera className="w-6 h-6 text-blue-500 group-hover:scale-110 transition-transform" />
+                            <span className="text-blue-600">Take Photo / Upload Answer Sheet</span>
+                            <span className="text-[10px] text-gray-400 font-normal">PNG, JPG or PDF · Max 25MB</span>
                           </button>
                         )}
 
                         {successMessage && (
-                          <div className="p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-700 text-xs text-emerald-200 font-bold flex items-center gap-1.5">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-700 font-bold flex items-center gap-1.5">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                             <span>{successMessage}</span>
                           </div>
                         )}
                         {errorMessage && (
-                          <div className="p-2.5 rounded-xl bg-rose-950/80 border border-rose-800 text-xs text-rose-200 font-bold flex items-center gap-1.5">
-                            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                          <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-600 font-bold flex items-center gap-1.5">
+                            <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
                             <span>{errorMessage}</span>
                           </div>
                         )}
 
-                        <button
-                          type="button"
+                        <button type="button"
                           disabled={isSubmitting || !selectedFile}
                           onClick={(e) => handleSubmitWork(e, true)}
-                          className="w-full py-3 rounded-xl text-xs font-black bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-600 text-white flex items-center justify-center gap-2 cursor-pointer transition-all shadow-lg disabled:cursor-not-allowed mt-auto"
+                          className="w-full py-3 rounded-xl text-xs font-black bg-[#004b79] hover:bg-[#003b60] disabled:bg-gray-100 disabled:text-gray-400 text-white flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md disabled:cursor-not-allowed mt-auto"
                         >
                           {isSubmitting ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
