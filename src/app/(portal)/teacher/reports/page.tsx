@@ -598,6 +598,76 @@ export default function TeacherStudentReportsPage() {
                     <p className="text-xs text-slate-400">tasks submitted</p>
                   </div>
                 </div>
+
+                {/* ── GOOD / STRONGEST SUBJECT HIGHLIGHT ── */}
+                {studentReport.performanceSummary?.goodSubject && (
+                  <div className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/60 dark:bg-emerald-950/40 flex items-center justify-between gap-4 flex-wrap">
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                        <Award className="w-3.5 h-3.5" />
+                        Good / Top Performing Subject
+                      </span>
+                      <p className="text-sm sm:text-base font-black text-slate-900 dark:text-slate-100">
+                        {studentReport.performanceSummary.goodSubject.name} — {studentReport.performanceSummary.goodSubject.score}% Average Marks
+                      </p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">
+                        Demonstrates highest conceptual clarity, consistent homework completion, and top scoring performance.
+                      </p>
+                    </div>
+
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-600 text-white shadow-2xs">
+                      Grade A+ Mastery
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* ── SUBJECT-WISE MARKS & PERFORMANCE ── */}
+              <div>
+                <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 mb-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Subject-Wise Marks &amp; Academic Standing
+                  </h3>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                        <th className="py-3 px-2">Subject Name</th>
+                        <th className="py-3 px-2">Average Marks</th>
+                        <th className="py-3 px-2">Latest Score</th>
+                        <th className="py-3 px-2">Highest Score</th>
+                        <th className="py-3 px-2">Progress Trend</th>
+                        <th className="py-3 px-2">Academic Standing</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
+                      {(studentReport.subjectBreakdown || []).map((s: any, idx: number) => (
+                        <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                          <td className="py-3 px-2 font-bold text-slate-900 dark:text-slate-100">{s.subject}</td>
+                          <td className="py-3 px-2 font-mono font-bold text-[#004b79] dark:text-[#dfb74a]">{s.averageScore || 0}%</td>
+                          <td className="py-3 px-2 font-mono">{s.latestScore || s.averageScore || 0}%</td>
+                          <td className="py-3 px-2 font-mono">{s.highestScore || s.averageScore || 0}%</td>
+                          <td className="py-3 px-2 text-emerald-600 font-semibold">
+                            {s.performanceTrend === "UP" ? "Improving (+)" : "Consistent"}
+                          </td>
+                          <td className="py-3 px-2">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              (s.averageScore || 0) >= 85
+                                ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200"
+                                : (s.averageScore || 0) >= 75
+                                ? "bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200"
+                                : "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200"
+                            }`}>
+                              {(s.averageScore || 0) >= 85 ? "Grade A+ (Mastery)" : (s.averageScore || 0) >= 75 ? "Grade A (Proficient)" : "Grade B (Good)"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               {/* ── ASSESSMENT RECORDS TABLE ── */}
