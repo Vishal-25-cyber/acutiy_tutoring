@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
     const monthlyFee = (settings as any)?.monthlyTuitionFee ?? (settings as any)?.monthlyFee ?? 1999;
     const companyName = (settings as any)?.companyName || "Mantif Tutoring";
-    const upiId = (settings as any)?.upiId || "mantif.tutoring@upi";
+    const upiId = (settings as any)?.upiId || "karunyas001-1@okicici";
     const qrCodeImageUrl = (settings as any)?.qrCodeImageUrl || "";
     const currentMonthStr = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date());
 

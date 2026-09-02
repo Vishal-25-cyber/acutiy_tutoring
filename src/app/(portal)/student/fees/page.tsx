@@ -64,7 +64,7 @@ export default function StudentFeesPage() {
     };
   }, [isQrUnlocked, showPayModal]);
 
-  const upiId = (data?.settings?.upiId || "acuity.tutoring@upi").trim();
+  const upiId = (data?.settings?.upiId || "karunyas001-1@okicici").trim();
   const companyName = (data?.settings?.companyName || "Mantif Tutoring").trim();
   const monthlyFee = Number(data?.currentFee?.amount ?? data?.settings?.monthlyFee ?? 299);
   const customQrImage = data?.settings?.qrCodeImageUrl;
@@ -278,7 +278,7 @@ export default function StudentFeesPage() {
             <p className="text-xs text-slate-400">Once your tuition payment is submitted and verified, your official tax invoice will appear here.</p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-100 dark:divide-slate-850">
+          <div className="divide-y divide-slate-100 dark:divide-slate-855">
             {history.map((p, idx) => {
               const formattedDate = new Intl.DateTimeFormat("en-US", {
                 month: "short",
@@ -421,9 +421,16 @@ export default function StudentFeesPage() {
                       <span className="text-[10px] text-slate-400 uppercase font-bold block">
                         Official UPI ID
                       </span>
-                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs">
-                        {upiId}
-                      </span>
+                      {isQrUnlocked ? (
+                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs">
+                          {upiId}
+                        </span>
+                      ) : (
+                        <span className="font-mono font-bold text-slate-500 dark:text-slate-400 text-xs flex items-center gap-1">
+                          <Lock className="w-3 h-3 text-slate-400" />
+                          <span>karunyas***@okicici</span>
+                        </span>
+                      )}
                     </div>
                     <button
                       type="button"
