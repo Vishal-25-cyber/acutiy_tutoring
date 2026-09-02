@@ -14,6 +14,8 @@ import {
   RemoteTrack,
   RemoteTrackPublication,
   RemoteParticipant,
+  VideoPresets,
+  ScreenSharePresets,
 } from "livekit-client";
 
 /* ─────────────────────────────────────────────── */
@@ -136,9 +138,13 @@ export function JitsiClassroom({
   useEffect(() => { isScreenSharingRef.current = isScreenSharing; }, [isScreenSharing]);
 
   /* ── WebRTC & Realtime State ── */
-  const [remoteParticipant, setRemoteParticipant] = useState<{ id: string; name: string; role: string; isCameraOn?: boolean; isMicOn?: boolean; lastSeen?: number } | null>(null);
+  const [remoteParticipant, setRemoteParticipant] = useState<{ id: string; name: string; role: string; isCameraOn?: boolean; isMicOn?: boolean; lastSeen?: number; isHandRaised?: boolean } | null>(null);
   const [hasRemoteVideo, setHasRemoteVideo] = useState(false);
-  const [realtimeParticipants, setRealtimeParticipants] = useState<{ id: string; name: string; role: string; isCameraOn?: boolean; isMicOn?: boolean; lastSeen?: number }[]>([]);
+  const [realtimeParticipants, setRealtimeParticipants] = useState<{ id: string; name: string; role: string; isCameraOn?: boolean; isMicOn?: boolean; lastSeen?: number; isHandRaised?: boolean }[]>([]);
+  const [remoteHandRaised, setRemoteHandRaised] = useState(false);
+  const [isRemoteScreenSharing, setIsRemoteScreenSharing] = useState(false);
+  const isRemoteScreenSharingRef = useRef(false);
+  useEffect(() => { isRemoteScreenSharingRef.current = isRemoteScreenSharing; }, [isRemoteScreenSharing]);
 
   const stopAllMedia = useCallback(() => {
     try {
@@ -216,10 +222,22 @@ export function JitsiClassroom({
   ───────────────────────────────────────────────── */
   const stopAllMediaTracks = useCallback(() => {
     try {
+      if (livekitRoomRef.current) {
+        try {
+          livekitRoomRef.current.localParticipant.trackPublications.forEach((pub) => {
+            try {
+              pub.track?.stop();
+            } catch (e) {}
+          });
+          livekitRoomRef.current.disconnect(true);
+        } catch (e) {}
+        livekitRoomRef.current = null;
+      }
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach((track) => {
           try {
             track.stop();
+            track.enabled = false;
           } catch (e) {
             console.warn("Track stop error:", e);
           }
@@ -230,6 +248,7 @@ export function JitsiClassroom({
         screenStreamRef.current.getTracks().forEach((track) => {
           try {
             track.stop();
+            track.enabled = false;
           } catch (e) {
             console.warn("Screen track stop error:", e);
           }
@@ -239,6 +258,7 @@ export function JitsiClassroom({
       if (prejoinVideoRef.current) prejoinVideoRef.current.srcObject = null;
       if (localVideoRef.current) localVideoRef.current.srcObject = null;
       if (teacherVideoRef.current) teacherVideoRef.current.srcObject = null;
+      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
     } catch (err) {
       console.warn("stopAllMediaTracks error:", err);
     }
@@ -510,7 +530,12 @@ export function JitsiClassroom({
     isScreenSharingRef.current = nextState;
     if (livekitRoomRef.current) {
       try {
-        await livekitRoomRef.current.localParticipant.setScreenShareEnabled(nextState);
+        await livekitRoomRef.current.localParticipant.setScreenShareEnabled(nextState, {
+          audio: true,
+          selfBrowserSurface: "include",
+          surfaceSwitching: "include",
+          resolution: ScreenSharePresets.h1080fps30.resolution,
+        });
         if (nextState) {
           const screenPub = livekitRoomRef.current.localParticipant.getTrackPublication(Track.Source.ScreenShare);
           if (screenPub?.videoTrack && teacherVideoRef.current) {
@@ -558,22 +583,56 @@ export function JitsiClassroom({
         const { token, serverUrl } = await res.json();
         if (!token || !serverUrl || isDisposed) return;
 
+        // Optimized for low latency 30fps screen share & crisp video without transcode lag
         const room = new Room({
           adaptiveStream: true,
           dynacast: true,
+          videoCaptureDefaults: {
+            resolution: VideoPresets.h720.resolution,
+          },
           publishDefaults: {
-            simulcast: true,
+            simulcast: false,
+            videoCodec: "vp8",
+            screenShareEncoding: ScreenSharePresets.h1080fps30.encoding,
+            videoEncoding: VideoPresets.h720.encoding,
           },
         });
         roomInstance = room;
         livekitRoomRef.current = room;
 
-        // Remote track subscribed (Teacher or Student incoming feed)
+        const syncRoomParticipants = () => {
+          const list: Array<{ id: string; name: string; role: string; isCameraOn?: boolean; isMicOn?: boolean; lastSeen?: number }> = [];
+          room.remoteParticipants.forEach((p) => {
+            const isPTeacher = p.identity === classData?.teacherId || p.identity === (classData?.teacherId as any)?._id?.toString();
+            const hasCam = Array.from(p.trackPublications.values()).some((pub) => pub.source === Track.Source.Camera && pub.isSubscribed && !pub.isMuted);
+            const hasMic = Array.from(p.trackPublications.values()).some((pub) => pub.source === Track.Source.Microphone && pub.isSubscribed && !pub.isMuted);
+            list.push({
+              id: p.identity,
+              name: p.name || "Student",
+              role: isPTeacher ? "TEACHER" : "STUDENT",
+              isCameraOn: hasCam,
+              isMicOn: hasMic,
+              lastSeen: Date.now(),
+            });
+          });
+          setRealtimeParticipants(list);
+          if (list.length > 0) {
+            setRemoteParticipant(list[0]);
+          } else {
+            setRemoteParticipant(null);
+          }
+        };
+
+        // Remote track subscribed (Video, Audio, or Screen Share)
         room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant) => {
           if (track.kind === Track.Kind.Video) {
             setHasRemoteVideo(true);
             hasRemoteVideoRef.current = true;
-            if (remoteVideoRef.current) {
+            if (publication.source === Track.Source.ScreenShare || track.source === Track.Source.ScreenShare) {
+              setIsRemoteScreenSharing(true);
+              isRemoteScreenSharingRef.current = true;
+              if (remoteVideoRef.current) track.attach(remoteVideoRef.current);
+            } else if (!isRemoteScreenSharingRef.current && remoteVideoRef.current) {
               track.attach(remoteVideoRef.current);
             }
           }
@@ -582,6 +641,7 @@ export function JitsiClassroom({
             el.id = `lk-audio-${participant.identity}`;
             document.body.appendChild(el);
           }
+          syncRoomParticipants();
         });
 
         // Remote track unsubscribed
@@ -589,40 +649,75 @@ export function JitsiClassroom({
           track.detach();
           const el = document.getElementById(`lk-audio-${participant.identity}`);
           if (el) el.remove();
-          if (track.kind === Track.Kind.Video) {
+
+          if (publication.source === Track.Source.ScreenShare || track.source === Track.Source.ScreenShare) {
+            setIsRemoteScreenSharing(false);
+            isRemoteScreenSharingRef.current = false;
+            // Switch back to remote camera track
+            const camPub = participant.getTrackPublication(Track.Source.Camera);
+            if (camPub?.videoTrack && remoteVideoRef.current) {
+              camPub.videoTrack.attach(remoteVideoRef.current);
+            }
+          } else if (track.kind === Track.Kind.Video && !isRemoteScreenSharingRef.current) {
             setHasRemoteVideo(false);
             hasRemoteVideoRef.current = false;
           }
+          syncRoomParticipants();
         });
 
-        // Remote participant joined
-        room.on(RoomEvent.ParticipantConnected, (participant: RemoteParticipant) => {
-          setRemoteParticipant({
-            id: participant.identity,
-            name: participant.name || "Participant",
-            role: participant.identity === classData?.teacherId ? "TEACHER" : "STUDENT",
-            isCameraOn: true,
-            isMicOn: true,
-            lastSeen: Date.now(),
-          });
-        });
-
-        // Remote participant left (Student leaves or closes browser)
-        room.on(RoomEvent.ParticipantDisconnected, (participant: RemoteParticipant) => {
-          setRemoteParticipant(null);
+        // Participant state changes
+        room.on(RoomEvent.ParticipantConnected, () => syncRoomParticipants());
+        room.on(RoomEvent.ParticipantDisconnected, () => {
           setHasRemoteVideo(false);
           hasRemoteVideoRef.current = false;
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = null;
-          }
+          if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+          syncRoomParticipants();
         });
+        room.on(RoomEvent.TrackMuted, () => syncRoomParticipants());
+        room.on(RoomEvent.TrackUnmuted, () => syncRoomParticipants());
 
-        // Realtime data messages (emoji reactions)
+        // Realtime DataChannel messages (Chat, Hand Raise, Reactions)
         room.on(RoomEvent.DataReceived, (payload: Uint8Array, participant?: RemoteParticipant) => {
           try {
             const str = new TextDecoder().decode(payload);
             const data = JSON.parse(str);
-            if (data.type === "REACTION") {
+
+            if (data.type === "CHAT_MESSAGE") {
+              setMessages((prev) => {
+                if (prev.some((m) => m.id === data.id)) return prev;
+                return [
+                  ...prev,
+                  {
+                    id: data.id,
+                    sender: data.sender || participant?.name || "Peer",
+                    role: data.senderRole || "STUDENT",
+                    text: data.text,
+                    time: data.time || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                    isSelf: false,
+                  },
+                ];
+              });
+              setTimeout(() => {
+                chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+              }, 50);
+            } else if (data.type === "HAND_RAISE") {
+              setRemoteHandRaised(Boolean(data.isHandRaised));
+              if (data.isHandRaised) {
+                const rxId = `${Date.now()}-hand`;
+                setReactions((prev) => [
+                  ...prev.slice(-15),
+                  {
+                    id: rxId,
+                    emoji: "✋",
+                    senderName: `${data.senderName || participant?.name || "Student"} raised hand`,
+                    x: 45 + Math.random() * 10,
+                  },
+                ]);
+                setTimeout(() => {
+                  setReactions((prev) => prev.filter((r) => r.id !== rxId));
+                }, 3500);
+              }
+            } else if (data.type === "REACTION") {
               const rxId = `${Date.now()}-${Math.random()}`;
               setReactions((prev) => [
                 ...prev.slice(-15),
@@ -641,32 +736,7 @@ export function JitsiClassroom({
         });
 
         await room.connect(serverUrl, token);
-
-        // Check if other participant is already present in room
-        const existingParticipant = Array.from(room.remoteParticipants.values())[0];
-        if (existingParticipant) {
-          setRemoteParticipant({
-            id: existingParticipant.identity,
-            name: existingParticipant.name || "Participant",
-            role: existingParticipant.identity === classData?.teacherId ? "TEACHER" : "STUDENT",
-            isCameraOn: true,
-            isMicOn: true,
-            lastSeen: Date.now(),
-          });
-          existingParticipant.trackPublications.forEach((pub) => {
-            if (pub.track && pub.isSubscribed) {
-              if (pub.kind === Track.Kind.Video && remoteVideoRef.current) {
-                pub.track.attach(remoteVideoRef.current);
-                setHasRemoteVideo(true);
-                hasRemoteVideoRef.current = true;
-              }
-              if (pub.kind === Track.Kind.Audio) {
-                const el = pub.track.attach();
-                document.body.appendChild(el);
-              }
-            }
-          });
-        }
+        syncRoomParticipants();
 
         // Enable local camera and mic
         await room.localParticipant.setCameraEnabled(isCameraOnRef.current);
@@ -698,6 +768,90 @@ export function JitsiClassroom({
     };
   }, [stage, classId, classData?.teacherId]);
 
+  /* ── Live Hand Raise Handler ── */
+  const toggleHandRaise = useCallback(() => {
+    const nextState = !isHandRaised;
+    setIsHandRaised(nextState);
+    const curName = userInfoRef.current.name || userInfo.name || "You";
+    const curUserId = userInfoRef.current.id || currentUserId;
+
+    if (nextState) {
+      const rxId = `${Date.now()}-self-hand`;
+      setReactions((prev) => [
+        ...prev.slice(-15),
+        {
+          id: rxId,
+          emoji: "✋",
+          senderName: "You raised hand",
+          x: 45,
+        },
+      ]);
+      setTimeout(() => {
+        setReactions((prev) => prev.filter((r) => r.id !== rxId));
+      }, 3000);
+    }
+
+    if (livekitRoomRef.current) {
+      try {
+        const payload = new TextEncoder().encode(
+          JSON.stringify({
+            type: "HAND_RAISE",
+            senderId: curUserId,
+            senderName: curName,
+            isHandRaised: nextState,
+          })
+        );
+        livekitRoomRef.current.localParticipant.publishData(payload, { reliable: true });
+      } catch (e) {}
+    }
+  }, [isHandRaised, currentUserId, userInfo.name]);
+
+  /* ── Live Chat Message Handler ── */
+  const handleSendMessage = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    const text = newMessage.trim();
+    if (!text) return;
+    setNewMessage("");
+
+    const msgId = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const curName = userInfoRef.current.name || userInfo.name || "You";
+    const curRole = userInfoRef.current.isTeacher ? "TEACHER" : "STUDENT";
+
+    const msg: ChatMessage = {
+      id: msgId,
+      sender: curName,
+      role: curRole,
+      text,
+      time: timeStr,
+      isSelf: true,
+    };
+
+    setMessages((prev) => [...prev, msg]);
+    setTimeout(() => {
+      chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
+
+    if (livekitRoomRef.current) {
+      try {
+        const payload = new TextEncoder().encode(
+          JSON.stringify({
+            type: "CHAT_MESSAGE",
+            id: msgId,
+            text,
+            sender: curName,
+            senderRole: curRole,
+            time: timeStr,
+          })
+        );
+        livekitRoomRef.current.localParticipant.publishData(payload, { reliable: true });
+      } catch (err) {
+        console.warn("LiveKit publish chat error:", err);
+      }
+    }
+  }, [newMessage, userInfo.name]);
+
   /* ── Send Reaction Handler ── */
   const sendReaction = useCallback((emoji: string) => {
     const rxId = `${Date.now()}-${Math.random()}`;
@@ -711,6 +865,19 @@ export function JitsiClassroom({
     setTimeout(() => {
       setReactions((prev) => prev.filter((r) => r.id !== rxId));
     }, 2800);
+
+    if (livekitRoomRef.current) {
+      try {
+        const payload = new TextEncoder().encode(
+          JSON.stringify({
+            type: "REACTION",
+            emoji,
+            senderName: userInfoRef.current.name || userInfo.name || "You",
+          })
+        );
+        livekitRoomRef.current.localParticipant.publishData(payload, { reliable: true });
+      } catch (e) {}
+    }
 
     const curUserId = userInfoRef.current.id || currentUserId;
     fetch(`/api/classes/${classId}/signal`, {
@@ -936,27 +1103,7 @@ export function JitsiClassroom({
     return () => clearInterval(t);
   }, [stage, classId, userInfo.isTeacher]);
 
-  /* ─────────────────────────────────────────────────
-     7.  Chat
-  ───────────────────────────────────────────────── */
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
-    const now = new Date();
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: `msg-${Date.now()}`,
-        sender: userInfo.name,
-        role: userInfo.role,
-        text: newMessage.trim(),
-        time: `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`,
-        isSelf: true,
-      },
-    ]);
-    setNewMessage("");
-    setTimeout(() => chatBottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-  };
+
 
   /* ─────────────────────────────────────────────────
      Helpers
@@ -1582,27 +1729,67 @@ export function JitsiClassroom({
                           {initials(userInfo.name)}
                         </div>
                         <div>
-                          <p className="text-xs font-medium text-white">{userInfo.name} (You)</p>
+                          <p className="text-xs font-medium text-white flex items-center gap-1.5">
+                            {userInfo.name} (You)
+                            {isHandRaised && (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500 text-black font-bold flex items-center gap-0.5">
+                                ✋ Raised
+                              </span>
+                            )}
+                          </p>
                           <p className="text-[10px] text-slate-500">{userInfo.isTeacher ? "Host" : "Student"}</p>
                         </div>
                       </div>
-                      {isMicOn ? <Mic className="w-3.5 h-3.5 text-emerald-400" /> : <MicOff className="w-3.5 h-3.5 text-rose-400" />}
+                      <div className="flex items-center gap-1.5">
+                        {isCameraOn && <Video className="w-3.5 h-3.5 text-blue-400" />}
+                        {isMicOn ? <Mic className="w-3.5 h-3.5 text-emerald-400" /> : <MicOff className="w-3.5 h-3.5 text-rose-400" />}
+                      </div>
                     </div>
 
-                    {realtimeParticipants.filter((p) => p.id !== userInfo.id).map((p) => (
-                      <div key={p.id} className="p-2.5 rounded-lg bg-white/5 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-semibold text-slate-200">
-                            {initials(p.name)}
+                    {realtimeParticipants.filter((p) => p.id !== userInfo.id).map((p) => {
+                      const isHandUp = p.isHandRaised || (remoteParticipant?.id === p.id && remoteHandRaised);
+                      return (
+                        <div key={p.id} className="p-2.5 rounded-lg bg-white/5 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-semibold text-slate-200">
+                              {initials(p.name)}
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-white flex items-center gap-1.5">
+                                {p.name}
+                                {isHandUp && (
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500 text-black font-bold flex items-center gap-0.5">
+                                    ✋ Raised
+                                  </span>
+                                )}
+                              </p>
+                              <p className="text-[10px] text-slate-400 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                {p.role === "TEACHER" || p.role === "ADMIN" ? "Host" : "Student"} · Live
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-xs font-medium text-white">{p.name}</p>
-                            <p className="text-[10px] text-slate-400">{p.role === "TEACHER" || p.role === "ADMIN" ? "Host" : "Student"}</p>
+                          <div className="flex items-center gap-1.5">
+                            {p.isCameraOn && <Video className="w-3.5 h-3.5 text-blue-400" />}
+                            {p.isMicOn !== false ? <Mic className="w-3.5 h-3.5 text-emerald-400" /> : <MicOff className="w-3.5 h-3.5 text-rose-400" />}
                           </div>
                         </div>
-                        {p.isMicOn !== false ? <Mic className="w-3.5 h-3.5 text-emerald-400" /> : <MicOff className="w-3.5 h-3.5 text-rose-400" />}
+                      );
+                    })}
+
+                    {userInfo.isTeacher && admittedList.filter(a => !realtimeParticipants.some(p => p.id === a.userId)).length > 0 && (
+                      <div className="pt-2">
+                        <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">
+                          Admitted / Offline ({admittedList.filter(a => !realtimeParticipants.some(p => p.id === a.userId)).length})
+                        </p>
+                        {admittedList.filter(a => !realtimeParticipants.some(p => p.id === a.userId)).map((a) => (
+                          <div key={a.userId} className="p-2 rounded bg-white/[0.02] flex items-center justify-between text-xs text-slate-400">
+                            <span>{a.name || "Student"}</span>
+                            <span className="text-[10px] text-slate-500">Left / Reconnecting</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               )}
@@ -1700,7 +1887,7 @@ export function JitsiClassroom({
           </button>
 
           <button
-            onClick={() => setIsHandRaised(!isHandRaised)}
+            onClick={toggleHandRaise}
             className={`w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer ${
               isHandRaised ? "bg-amber-500 text-black" : "bg-slate-700 hover:bg-slate-600 text-white"
             }`}
