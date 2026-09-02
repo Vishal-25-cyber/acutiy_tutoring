@@ -29,6 +29,7 @@ export async function GET() {
     const [
       totalStudents,
       activeStudents,
+      pendingStudents,
       totalTeachers,
       activeTeachers,
       pendingTeachers,
@@ -44,6 +45,7 @@ export async function GET() {
     ] = await Promise.all([
       User.countDocuments({ role: "STUDENT" }),
       User.countDocuments({ role: "STUDENT", status: "ACTIVE" }),
+      User.countDocuments({ role: "STUDENT", status: "PENDING_APPROVAL" }),
       User.countDocuments({ role: "TEACHER" }),
       User.countDocuments({ role: "TEACHER", status: "ACTIVE" }),
       User.countDocuments({ role: "TEACHER", status: "PENDING_APPROVAL" }),
@@ -166,6 +168,7 @@ export async function GET() {
       metrics: {
         totalStudents,
         activeStudents,
+        pendingStudentApprovals: pendingStudents,
         totalTeachers,
         activeTeachers,
         pendingApprovals: pendingTeachers,

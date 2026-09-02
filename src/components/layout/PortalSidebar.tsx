@@ -73,12 +73,21 @@ export function PortalSidebar({ role }: SidebarProps) {
   const { data: dashboardData } = useFastFetch(role === "ADMIN" ? "/api/admin/dashboard" : "");
 
   const pendingTeacherCount = dashboardData?.metrics?.pendingApprovals ?? 0;
+  const pendingStudentCount = dashboardData?.metrics?.pendingStudentApprovals ?? 0;
   const teacherPendingBadge = pendingTeacherCount > 0 ? `${pendingTeacherCount} Pending` : undefined;
+  const studentPendingBadge = pendingStudentCount > 0 ? `${pendingStudentCount} Pending` : undefined;
 
   const adminLinks: SidebarLink[] = React.useMemo(() => [
     { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard, api: "/api/admin/dashboard" },
     { href: "/admin/reports", label: "Performance Reports", icon: Activity, api: "/api/teacher/reports" },
-    { href: "/admin/students", label: "Student Records", icon: Users2, api: "/api/admin/students" },
+    {
+      href: "/admin/students",
+      label: "Student Approvals",
+      icon: Users2,
+      badge: studentPendingBadge,
+      badgeVariant: "warning",
+      api: "/api/admin/students",
+    },
     {
       href: "/admin/teachers",
       label: "Faculty Approvals",
@@ -93,7 +102,7 @@ export function PortalSidebar({ role }: SidebarProps) {
     { href: "/admin/staff-attendance", label: "Faculty Attendance", icon: Clock, api: "/api/admin/staff-attendance" },
     { href: "/admin/finance", label: "Fee Accounts & Income", icon: DollarSign, api: "/api/admin/finance" },
     { href: "/admin/settings", label: "Institute Settings", icon: Settings, api: "/api/admin/settings" },
-  ], [teacherPendingBadge]);
+  ], [teacherPendingBadge, studentPendingBadge]);
 
   const links = role === "STUDENT" ? studentLinks : role === "TEACHER" ? teacherLinks : adminLinks;
 

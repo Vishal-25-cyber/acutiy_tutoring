@@ -272,6 +272,8 @@ export default function AdminStudentsPage() {
   };
 
   const pendingCount = students.filter((st: any) => st.userId?.status === "PENDING_APPROVAL").length;
+  const approvedCount = students.filter((st: any) => st.userId?.status === "ACTIVE").length;
+  const suspendedCount = students.filter((st: any) => st.userId?.status === "SUSPENDED").length;
 
   const filtered = students.filter((st: any) => {
     const matchesSearch = !search || (
@@ -291,28 +293,62 @@ export default function AdminStudentsPage() {
   return (
     <main className="w-full max-w-7xl mx-auto p-6 sm:p-8 space-y-6 sm:space-y-8 animate-in fade-in duration-150 select-none">
       {/* ── 1. CLEAN CARDLESS HEADER ── */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-              Student Directory &amp; Records
+              Student Approvals &amp; Directory
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-              {filtered.length} Enrolled
+              {filtered.length} Students
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Review pending registrations, approve student accounts, edit profiles, and manage schedules.
+            Review student registrations, approve portal logins, edit academic details, and manage records.
           </p>
         </div>
 
-        <button
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#004b79] hover:bg-[#003b60] text-white transition-all cursor-pointer shadow-sm self-start sm:self-auto shrink-0"
-          onClick={() => setIsAddModal(true)}
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Enroll New Student</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl">
+            {[
+              { id: "ALL", label: `All (${students.length})` },
+              {
+                id: "PENDING_APPROVAL",
+                label: "Pending Approvals",
+                count: pendingCount,
+              },
+              { id: "ACTIVE", label: `Approved (${approvedCount})` },
+              { id: "SUSPENDED", label: `Suspended (${suspendedCount})` },
+            ].map((tab: any) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setSelectedStatus(tab.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
+                  selectedStatus === tab.id
+                    ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs"
+                    : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
+                }`}
+              >
+                <span>{tab.label}</span>
+                {typeof tab.count === "number" && tab.count > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-amber-500 text-white animate-pulse">
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#004b79] hover:bg-[#003b60] text-white transition-all cursor-pointer shadow-sm shrink-0"
+            onClick={() => setIsAddModal(true)}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Enroll Student</span>
+          </button>
+        </div>
       </div>
 
       {/* ── Pending Approvals Banner ── */}
