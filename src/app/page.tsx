@@ -1282,10 +1282,10 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 4: TEAM (FOUNDER SPOTLIGHT ALONE - 100% SINGLE PAGE VIEW)
+          PAGE 4: TEAM (FOUNDER SPOTLIGHT - CENTERED IMAGE & NAME ALONE)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="team" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-white py-6 lg:py-8">
-        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 space-y-6 lg:space-y-8">
+      <section id="team" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-white py-10 lg:py-16">
+        <div className="w-full max-w-4xl mx-auto px-6 sm:px-10 lg:px-14 space-y-8 lg:space-y-10 text-center">
 
           {/* Section Header */}
           <div className="text-center max-w-3xl mx-auto space-y-1.5">
@@ -1297,68 +1297,29 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Founder Spotlight (50/50 Split with Larger Photo & Precision Alignment) */}
-          <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 xl:gap-20 items-center max-w-6xl mx-auto">
-            {/* Center Vertical Divider Line */}
-            <div className="hidden lg:block absolute left-1/2 top-2 bottom-2 w-px bg-slate-200 -translate-x-1/2" />
+          {/* Centered Founder Portrait with Name & Founder Title Underneath */}
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <div className="relative group">
+              <div className="absolute -inset-2 bg-gradient-to-r from-[#dfb74a]/30 to-[#004b79]/25 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition duration-500 pointer-events-none" />
 
-            {/* Left: Larger Founder Portrait */}
-            <div className="flex justify-center lg:justify-end lg:pr-8 xl:pr-12">
-              <div className="relative group">
-                <div className="absolute -inset-2 bg-gradient-to-r from-[#dfb74a]/25 to-[#004b79]/20 rounded-3xl blur-xl opacity-70 group-hover:opacity-100 transition duration-500 pointer-events-none" />
-
-                <div className="relative shrink-0 w-[310px] h-[388px] sm:w-[340px] sm:h-[425px] lg:w-[350px] lg:h-[438px] rounded-3xl overflow-hidden shadow-2xl border-2 border-slate-200/90 bg-white">
-                  <img
-                    src="/images/founder_karunya.png"
-                    alt="Karunya S - Founder of MANTIF"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                </div>
+              <div className="relative shrink-0 w-[280px] h-[350px] sm:w-[320px] sm:h-[400px] lg:w-[340px] lg:h-[425px] rounded-3xl overflow-hidden shadow-2xl border-2 border-slate-200/90 bg-white">
+                <img
+                  src="/images/founder_karunya.png"
+                  alt="Karunya S - Founder of MANTIF"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
               </div>
             </div>
 
-            {/* Right: Executive Founder Profile (Balanced Spacing) */}
-            <div className="w-full space-y-4 lg:pl-8 xl:pl-12 text-center lg:text-left">
-              <div className="space-y-1">
-                <span className="text-xs font-black uppercase text-[#b89047] tracking-widest">
-                  Leadership &amp; Vision
-                </span>
-                <h3 className="text-4xl sm:text-5xl font-black text-[#002137] tracking-tight pt-0.5">
-                  Karunya S
-                </h3>
-                <p className="text-base sm:text-lg font-extrabold text-[#b89047]">
-                  Founder &amp; Chief Educator — MANTIF
-                </p>
-              </div>
-
-              <p className="text-slate-700 text-sm sm:text-base leading-relaxed font-medium">
-                Educator with over 4 years of hands-on coaching leadership. Proud alumni of Kongu National Matriculation Higher Secondary School, passionate about revolutionizing student learning by bridging empathetic human teaching with cutting-edge artificial intelligence.
+            {/* Name & Title Underneath */}
+            <div className="space-y-1 text-center pt-1">
+              <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight">
+                Karunya S
+              </h3>
+              <p className="text-base sm:text-lg lg:text-xl font-black text-[#b89047] uppercase tracking-wider">
+                Founder
               </p>
-
-              {/* Styled Gold Quote Box */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/50 border-l-4 border-[#b89047] border-y border-r border-amber-200/60 text-slate-800 text-sm sm:text-base italic text-left relative">
-                <p className="font-semibold text-slate-800">
-                  “Education is about empowering students with curiosity, confidence, and genuine human care.”
-                </p>
-              </div>
-
-              {/* Key Badges */}
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 pt-1">
-                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-700 text-xs font-extrabold border border-slate-200 shadow-2xs">
-                  <GraduationCap className="w-3.5 h-3.5 text-slate-600" />
-                  Kongu Alumni
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-[#8f6d2b] border border-amber-200 text-xs font-extrabold shadow-2xs">
-                  <Award className="w-3.5 h-3.5 text-[#b89047]" />
-                  4+ Years Mentorship
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-blue-50 text-[#004b79] border border-blue-200 text-xs font-extrabold shadow-2xs">
-                  <Brain className="w-3.5 h-3.5 text-[#004b79]" />
-                  EdTech Innovator
-                </span>
-              </div>
             </div>
-
           </div>
 
         </div>
