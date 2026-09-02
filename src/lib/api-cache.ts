@@ -13,7 +13,7 @@ const cacheListeners = new Set<(urlPrefix: string) => void>();
  * Prefetches and caches an API endpoint in the background with deduplication.
  */
 export async function prefetchApi(url: string): Promise<any> {
-  if (!url || typeof window === "undefined") return null;
+  if (!url || typeof window === "undefined" || url.includes("/api/auth/me")) return null;
 
   const cached = memoryCache.get(url);
   if (cached && Date.now() - cached.timestamp < CACHE_STALE_MS) {
@@ -29,7 +29,9 @@ export async function prefetchApi(url: string): Promise<any> {
       const res = await fetch(url, { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
-        memoryCache.set(url, { data, timestamp: Date.now() });
+        if (!url.includes("/api/auth/me")) {
+          memoryCache.set(url, { data, timestamp: Date.now() });
+        }
         return data;
       }
     } catch (e) {
@@ -53,7 +55,6 @@ export function warmupPortalCache(role: string = "STUDENT") {
   const endpoints =
     role === "STUDENT"
       ? [
-        "/api/auth/me",
         "/api/student/dashboard",
         "/api/student/classes",
         "/api/student/materials",
@@ -64,7 +65,6 @@ export function warmupPortalCache(role: string = "STUDENT") {
       ]
       : role === "TEACHER"
       ? [
-        "/api/auth/me",
         "/api/teacher/dashboard",
         "/api/classes",
         "/api/teacher/materials",
@@ -74,7 +74,6 @@ export function warmupPortalCache(role: string = "STUDENT") {
         "/api/notifications",
       ]
       : [
-        "/api/auth/me",
         "/api/admin/dashboard",
         "/api/admin/students",
         "/api/admin/teachers?status=ALL",
@@ -104,11 +103,13 @@ export function useFastFetch<T = any>(
   initialFallback?: T,
   options: { pollIntervalMs?: number; disableAutoRevalidate?: boolean } = {}
 ): { data: T | null; isLoading: boolean; isRevalidating: boolean; error: any; refetch: () => Promise<void> } {
+  const isAuthMe = url?.includes("/api/auth/me");
+
   const getCached = useCallback(() => {
-    if (!url) return null;
+    if (!url || isAuthMe) return null;
     const entry = memoryCache.get(url);
     return entry ? entry.data : null;
-  }, [url]);
+  }, [url, isAuthMe]);
 
   const [data, setData] = useState<T | null>(() => {
     const cached = getCached();
@@ -131,6 +132,10 @@ export function useFastFetch<T = any>(
       setIsLoading(false);
       return;
     }
+    if (isAuthMe) {
+      setIsLoading(true);
+      return;
+    }
     const cached = memoryCache.get(url)?.data;
     if (cached !== undefined && cached !== null) {
       setData(cached);
@@ -138,13 +143,13 @@ export function useFastFetch<T = any>(
     } else {
       setIsLoading(true);
     }
-  }, [url]);
+  }, [url, isAuthMe]);
 
   const executeFetch = useCallback(
     async (isManual = false) => {
       if (!url) return;
 
-      const cached = memoryCache.get(url)?.data;
+      const cached = isAuthMe ? null : memoryCache.get(url)?.data;
       if (!isManual && cached !== undefined && cached !== null) {
         setIsLoading(false);
         setIsRevalidating(true);
@@ -155,11 +160,14 @@ export function useFastFetch<T = any>(
       try {
         const res = await fetch(url, {
           credentials: "include",
+          headers: isAuthMe ? { "Cache-Control": "no-cache" } : undefined,
         });
 
         if (res.ok) {
           const json = await res.json();
-          memoryCache.set(url, { data: json, timestamp: Date.now() });
+          if (!isAuthMe) {
+            memoryCache.set(url, { data: json, timestamp: Date.now() });
+          }
           if (isMountedRef.current) {
             setData(json);
             setError(null);
@@ -178,7 +186,7 @@ export function useFastFetch<T = any>(
         }
       }
     },
-    [url]
+    [url, isAuthMe]
   );
 
   useEffect(() => {

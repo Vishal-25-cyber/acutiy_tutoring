@@ -18,12 +18,18 @@ export default function PortalHeader({
 }: PortalHeaderProps) {
   const pathname = usePathname();
   const { data: authData } = useFastFetch("/api/auth/me");
-  const { data: studentData } = useFastFetch(propUserRole === "STUDENT" || pathname.includes("/student") ? "/api/student/dashboard" : "");
+  const isStudentRoute = pathname.includes("/student") || propUserRole === "STUDENT";
+  const isTeacherRoute = pathname.includes("/teacher") || propUserRole === "TEACHER";
+  const { data: studentData } = useFastFetch(isStudentRoute ? "/api/student/dashboard" : "");
 
   const user = authData?.user;
-  const rawName = propUserName || studentData?.student?.name || user?.name || "Student";
-  const safeName = typeof rawName === "string" && rawName.trim() ? rawName : "Student";
-  const userRole = propUserRole || user?.role || "STUDENT";
+  const rawName =
+    propUserName ||
+    studentData?.student?.name ||
+    (isStudentRoute ? (user?.role === "STUDENT" ? user?.name : "Student") : user?.name) ||
+    (isStudentRoute ? "Student" : isTeacherRoute ? "Faculty Member" : "Administrator");
+  const safeName = typeof rawName === "string" && rawName.trim() ? rawName : (isStudentRoute ? "Student" : "Faculty Member");
+  const userRole = propUserRole || (isStudentRoute ? "STUDENT" : isTeacherRoute ? "TEACHER" : user?.role || "ADMIN");
   const classLevel = studentData?.student?.classLevel || user?.profile?.currentClass || "Class 10";
 
   const getPageTitle = () => {

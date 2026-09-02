@@ -12,25 +12,25 @@ export default function StudentLayout({ children }: { children?: React.ReactNode
   const router = useRouter();
   const isClassroom = pathname.includes("/classroom/");
 
-  // Verify role with /api/auth/me
-  const { data: authData } = useFastFetch("/api/auth/me");
+  // Verify role with /api/auth/me (never cached, always live)
+  const { data: authData, isLoading } = useFastFetch("/api/auth/me");
 
   useEffect(() => {
-    if (authData?.user) {
+    if (!isLoading && authData?.user) {
       if (authData.user.role === "TEACHER") {
         router.replace("/teacher/dashboard");
       } else if (authData.user.role === "ADMIN") {
         router.replace("/admin/dashboard");
       }
     }
-  }, [authData, router]);
+  }, [authData, isLoading, router]);
 
   if (isClassroom) {
     return <>{children || <Outlet />}</>;
   }
 
-  // If user is actually teacher/admin, don't render student dashboard while redirecting
-  if (authData?.user && authData.user.role !== "STUDENT") {
+  // If user is confirmed to be teacher/admin, don't render student dashboard while redirecting
+  if (!isLoading && authData?.user && authData.user.role !== "STUDENT") {
     return null;
   }
 
