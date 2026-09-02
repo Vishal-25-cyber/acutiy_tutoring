@@ -293,7 +293,7 @@ export default function AdminStudentsPage() {
   return (
     <main className="w-full max-w-7xl mx-auto p-6 sm:p-8 space-y-6 sm:space-y-8 animate-in fade-in duration-150 select-none">
       {/* ── 1. CLEAN CARDLESS HEADER ── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
@@ -308,132 +308,88 @@ export default function AdminStudentsPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl">
-            {[
-              { id: "ALL", label: `All (${students.length})` },
-              {
-                id: "PENDING_APPROVAL",
-                label: "Pending Approvals",
-                count: pendingCount,
-              },
-              { id: "ACTIVE", label: `Approved (${approvedCount})` },
-              { id: "SUSPENDED", label: `Suspended (${suspendedCount})` },
-            ].map((tab: any) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setSelectedStatus(tab.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
-                  selectedStatus === tab.id
-                    ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs"
-                    : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
-                }`}
-              >
-                <span>{tab.label}</span>
-                {typeof tab.count === "number" && tab.count > 0 && (
-                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-amber-500 text-white animate-pulse">
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#004b79] hover:bg-[#003b60] text-white transition-all cursor-pointer shadow-sm shrink-0"
-            onClick={() => setIsAddModal(true)}
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Enroll Student</span>
-          </button>
+        {/* Status Filter Tabs with Counts (Exact Match to Faculty Approvals) */}
+        <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 rounded-xl overflow-x-auto self-start sm:self-auto shrink-0">
+          {[
+            { id: "ALL", label: `All (${students.length})` },
+            {
+              id: "PENDING_APPROVAL",
+              label: "Pending Approvals",
+              count: pendingCount,
+            },
+            { id: "ACTIVE", label: `Approved (${approvedCount})` },
+            { id: "SUSPENDED", label: `Suspended (${suspendedCount})` },
+          ].map((tab: any) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setSelectedStatus(tab.id)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
+                selectedStatus === tab.id
+                  ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs"
+                  : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
+              }`}
+            >
+              <span>{tab.label}</span>
+              {typeof tab.count === "number" && tab.count > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-amber-500 text-white animate-pulse">
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* ── Pending Approvals Banner ── */}
-      {pendingCount > 0 && selectedStatus !== "PENDING_APPROVAL" && (
-        <div className="py-3 px-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
-            <span className="font-bold text-amber-900 dark:text-amber-200">
-              {pendingCount} Student{pendingCount === 1 ? "" : "s"} awaiting your approval to access the portal.
-            </span>
+      {/* ── 2. CARDLESS SEARCH & FILTERS BAR WITH ENROLL BUTTON ── */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <div className="sm:col-span-2 relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+            <input
+              type="text"
+              placeholder="Search by name, email, phone, school..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-10 pr-4 text-xs font-medium focus:outline-none focus:border-[#004b79] shadow-xs"
+            />
           </div>
-          <button
-            type="button"
-            onClick={() => setSelectedStatus("PENDING_APPROVAL")}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white transition-all shadow-xs self-start sm:self-auto cursor-pointer"
-          >
-            Review Pending Approvals ({pendingCount})
-          </button>
-        </div>
-      )}
 
-      {/* ── 2. CARDLESS SEARCH & FILTERS BAR ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-6 gap-3">
-        <div className="sm:col-span-2 relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-          <input
-            type="text"
-            placeholder="Search by name, email, phone, school..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-10 pr-4 text-xs font-medium focus:outline-none focus:border-[#004b79] shadow-xs"
-          />
-        </div>
+          <div>
+            <select
+              value={selectedClass}
+              onChange={(e) => setSelectedClass(e.target.value)}
+              className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79] shadow-xs cursor-pointer"
+            >
+              <option value="ALL">All Classes (6-10)</option>
+              {CLASS_OPTIONS.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
 
-        <div>
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79] shadow-xs cursor-pointer"
-          >
-            <option value="ALL">All Statuses</option>
-            <option value="PENDING_APPROVAL">Pending Approval ({pendingCount})</option>
-            <option value="ACTIVE">Active (Approved)</option>
-            <option value="SUSPENDED">Suspended</option>
-          </select>
+          <div>
+            <select
+              value={selectedBoard}
+              onChange={(e) => setSelectedBoard(e.target.value)}
+              className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79] shadow-xs cursor-pointer"
+            >
+              <option value="ALL">All Boards</option>
+              {BOARD_OPTIONS.map((b) => (
+                <option key={b} value={b}>{b}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <div>
-          <select
-            value={selectedClass}
-            onChange={(e) => setSelectedClass(e.target.value)}
-            className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79] shadow-xs cursor-pointer"
-          >
-            <option value="ALL">All Classes (6-10)</option>
-            {CLASS_OPTIONS.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <select
-            value={selectedBoard}
-            onChange={(e) => setSelectedBoard(e.target.value)}
-            className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79] shadow-xs cursor-pointer"
-          >
-            <option value="ALL">All Boards</option>
-            {BOARD_OPTIONS.map((b) => (
-              <option key={b} value={b}>{b}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <select
-            value={selectedRisk}
-            onChange={(e) => setSelectedRisk(e.target.value)}
-            className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#004b79] shadow-xs cursor-pointer"
-          >
-            <option value="ALL">All Turnout Risks</option>
-            <option value="LOW">Low Risk (Regular)</option>
-            <option value="MEDIUM">Medium Risk</option>
-            <option value="HIGH">High Risk (&lt;75%)</option>
-          </select>
-        </div>
+        <button
+          type="button"
+          className="inline-flex items-center justify-center gap-1.5 px-4 h-10 rounded-xl text-xs font-bold bg-[#004b79] hover:bg-[#003b60] text-white transition-all cursor-pointer shadow-sm shrink-0"
+          onClick={() => setIsAddModal(true)}
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Enroll New Student</span>
+        </button>
       </div>
 
       {/* ── 3. CARDLESS 12-COLUMN MASTER STUDENT TABLE ── */}
