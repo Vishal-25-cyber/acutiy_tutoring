@@ -401,6 +401,8 @@ export default function StudentAssignmentsPage() {
               const isEvaluated = sub?.status === "EVALUATED";
               const isSubmitted = sub && !isEvaluated;
               const isTest = task.type === "TEST";
+              const isPastDeadline = task.dueDate ? new Date() > new Date(task.dueDate) : false;
+              const canResubmit = isSubmitted && !isEvaluated && !isPastDeadline && !isTest;
 
               return (
                 <div
@@ -460,9 +462,44 @@ export default function StudentAssignmentsPage() {
                         </div>
                         {sub.feedback && <p className="text-[11px] opacity-90">{sub.feedback}</p>}
                       </div>
+                    ) : canResubmit ? (
+                      <div className="space-y-2">
+                        <div className="p-2.5 rounded-xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-900/60 text-xs text-[#004b79] dark:text-blue-300 flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 font-semibold">
+                            <Check className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                            <span>Awaiting Faculty Review</span>
+                          </div>
+                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
+                            Open for Edit
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedTask(task);
+                            setSelectedFile(
+                              sub.fileUrl
+                                ? {
+                                    url: sub.fileUrl,
+                                    name: sub.fileName || (sub.fileUrl.split("/").pop() || "Submitted Attachment"),
+                                    isImage: /\.(png|jpe?g|webp|gif)$/i.test(sub.fileUrl),
+                                  }
+                                : null
+                            );
+                            setSubmissionText(sub.submissionText || "");
+                            setErrorMessage("");
+                            setSuccessMessage("");
+                          }}
+                          className="w-full py-2.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-[#004b79] dark:text-[#dfb74a] flex items-center justify-center gap-2 cursor-pointer transition-all shadow-2xs"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          <span>Resubmit / Update Work</span>
+                        </button>
+                      </div>
                     ) : isSubmitted ? (
                       <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs text-slate-500 flex items-center justify-between">
-                        <span>Awaiting Faculty Review</span>
+                        <span>Submitted (Deadline Closed)</span>
                         <Check className="w-4 h-4 text-blue-500" />
                       </div>
                     ) : isTest ? (
@@ -481,6 +518,8 @@ export default function StudentAssignmentsPage() {
                           setSelectedTask(task);
                           setSelectedFile(null);
                           setSubmissionText("");
+                          setErrorMessage("");
+                          setSuccessMessage("");
                         }}
                         className="w-full py-2.5 rounded-xl text-xs font-bold bg-[#004b79] hover:bg-[#003b60] text-white flex items-center justify-center gap-2 cursor-pointer transition-all shadow-xs"
                       >
@@ -739,9 +778,18 @@ export default function StudentAssignmentsPage() {
         <Modal
           isOpen={!!selectedTask}
           onClose={() => setSelectedTask(null)}
-          title={`Submit ${activeCategory === "HOMEWORK" ? "Homework" : "Assignment"}`}
+          title={selectedTask.submission ? `Resubmit ${activeCategory === "HOMEWORK" ? "Homework" : "Assignment"}` : `Submit ${activeCategory === "HOMEWORK" ? "Homework" : "Assignment"}`}
         >
           <form onSubmit={(e) => handleSubmitWork(e, false)} className="space-y-4 pt-2">
+            {selectedTask.submission && (
+              <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900/60 text-xs text-[#004b79] dark:text-blue-300 flex items-center gap-2.5">
+                <RefreshCw className="w-4 h-4 text-[#004b79] dark:text-[#dfb74a] shrink-0" />
+                <span>
+                  <strong>Resubmission Mode:</strong> You can update your solution and attachments anytime before the deadline. Your latest submission will replace the previous one.
+                </span>
+              </div>
+            )}
+
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-2 text-xs">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-[#004b79] dark:text-[#dfb74a]">
@@ -854,16 +902,26 @@ export default function StudentAssignmentsPage() {
               <button
                 type="button"
                 onClick={() => setSelectedTask(null)}
-                className="px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600"
+                className="px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting || (!selectedFile && !submissionText.trim())}
-                className="flex-1 py-2 text-xs font-bold rounded-xl bg-[#004b79] text-white hover:bg-[#003b60] disabled:opacity-60"
+                className="flex-1 py-2 text-xs font-bold rounded-xl bg-[#004b79] text-white hover:bg-[#003b60] disabled:opacity-60 cursor-pointer flex items-center justify-center gap-1.5"
               >
-                {isSubmitting ? "Submitting..." : "Submit Solution"}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5" />
+                    <span>{selectedTask.submission ? "Update & Resubmit Work" : "Submit Solution"}</span>
+                  </>
+                )}
               </button>
             </div>
           </form>
