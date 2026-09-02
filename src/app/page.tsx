@@ -1127,62 +1127,76 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 2: TUTORING HUB (WHERE IT ALL BEGAN - CENTERED CLEAN STORY)
+          PAGE 2: TUTORING HUB (WHERE IT ALL BEGAN - HEROIC SHOWCASE CARD)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="tutoring-hub" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-12 lg:py-16">
-        <div className="w-full max-w-4xl mx-auto px-6 sm:px-10 lg:px-14 space-y-8 text-center">
+      <section id="tutoring-hub" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-gradient-to-b from-slate-50/70 via-white to-slate-50/50 py-16 sm:py-20 lg:py-24 overflow-hidden">
+        {/* Subtle Ambient Background Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-gradient-to-r from-blue-100/40 via-[#dfb74a]/15 to-blue-50/30 blur-3xl rounded-full pointer-events-none -z-10" />
 
-          {/* Centered Heading at Top */}
-          <div className="space-y-1.5">
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
-              Tutoring Hub
-            </h2>
-            <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#b89047] tracking-tight">
-              Where It All Began
-            </p>
+        <div className="w-full max-w-4xl mx-auto px-6 sm:px-10 lg:px-14">
+          {/* Main Showcase Card with Balanced Symmetrical Layout */}
+          <div className="relative bg-white/95 backdrop-blur-md rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 p-8 sm:p-12 lg:p-14 text-center space-y-8">
+            
+            {/* Tagline Pill */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-100/90 border border-slate-200/90 text-[#002137] text-xs font-black uppercase tracking-wider shadow-2xs">
+              <Sparkles className="w-3.5 h-3.5 text-[#b89047]" />
+              <span>Heritage &amp; Evolution</span>
+            </div>
+
+            {/* Section Headings */}
+            <div className="space-y-2">
+              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
+                Tutoring Hub
+              </h2>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#b89047] tracking-tight">
+                Where It All Began
+              </p>
+            </div>
+
+            {/* Narrative Story */}
+            <div className="max-w-2xl mx-auto space-y-4 text-slate-600 text-sm sm:text-base lg:text-lg leading-relaxed font-medium">
+              <p>
+                For the past four years, <strong className="text-slate-900 font-bold">Tutoring Hub</strong> has been a dedicated physical learning space where we worked closely with students, refining our methodology, and gaining valuable classroom experience.
+              </p>
+              <p>
+                Today, we have evolved that foundational experience into <strong className="text-[#002137] font-extrabold">MANTIF</strong>—building modern, AI-enhanced learning solutions for students, educators, and institutions.
+              </p>
+            </div>
+
+            {/* Featured Quote Callout */}
+            <div className="relative max-w-xl mx-auto bg-gradient-to-r from-amber-50/60 via-amber-50/30 to-amber-50/60 border border-amber-200/70 rounded-2xl p-6 sm:p-7 shadow-xs">
+              <Quote className="w-6 h-6 text-[#b89047]/40 mx-auto mb-2" />
+              <p className="text-lg sm:text-xl font-black text-[#002137] leading-snug">
+                “Tutoring Hub gave us the foundation.
+              </p>
+              <p className="text-lg sm:text-xl font-black text-[#b89047] leading-snug">
+                MANTIF is taking it forward.”
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode("SIGNUP");
+                  setStep(1);
+                  document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="px-8 py-3.5 rounded-xl bg-[#002137] hover:bg-[#003659] text-white text-sm font-extrabold transition-all shadow-md shadow-[#002137]/15 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer flex items-center gap-2"
+              >
+                <span>Sign Up on MANTIF</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <a
+                href="#contact"
+                className="px-8 py-3.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-sm font-extrabold transition-all shadow-2xs hover:-translate-y-0.5 cursor-pointer"
+              >
+                Contact Us
+              </a>
+            </div>
+
           </div>
-
-          <div className="space-y-4 text-slate-700 text-base sm:text-lg leading-relaxed font-medium max-w-2xl mx-auto">
-            <p>
-              For the past four years, <strong>Tutoring Hub</strong> has been a physical learning space where we worked closely with students and gained valuable experience in teaching and managing educational programs.
-            </p>
-            <p>
-              Now, we are taking that experience online through <strong>MANTIF</strong>, creating meaningful learning solutions for both students and educational institutions.
-            </p>
-          </div>
-
-          {/* Gold Accent Quote */}
-          <div className="border-y border-[#b89047]/30 py-4 max-w-lg mx-auto space-y-1">
-            <p className="text-lg sm:text-xl font-black text-[#002137]">
-              “Tutoring Hub gave us the foundation.
-            </p>
-            <p className="text-lg sm:text-xl font-black text-[#b89047]">
-              MANTIF is taking it forward.”
-            </p>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMode("SIGNUP");
-                setStep(1);
-                document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
-              }}
-              className="px-6 py-3 rounded-xl bg-[#002137] hover:bg-[#003659] text-white text-sm font-extrabold transition-all shadow-sm cursor-pointer flex items-center gap-2"
-            >
-              <span>Sign Up on MANTIF</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-            <a
-              href="#contact"
-              className="px-6 py-3 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-sm font-extrabold transition-all cursor-pointer"
-            >
-              Contact Us
-            </a>
-          </div>
-
         </div>
       </section>
 
