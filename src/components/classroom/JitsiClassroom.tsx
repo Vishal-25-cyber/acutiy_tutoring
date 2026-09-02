@@ -85,7 +85,7 @@ export function JitsiClassroom({
   /* ── Teacher: pending knock list ── */
   const [pendingStudents, setPendingStudents] = useState<PendingStudent[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
-  const [admittedList, setAdmittedList] = useState<{ userId: string }[]>([]);
+  const [admittedList, setAdmittedList] = useState<{ userId: string; name?: string }[]>([]);
   const [admittingId, setAdmittingId] = useState<string | null>(null);
 
   /* ── Refs ── */
@@ -100,6 +100,8 @@ export function JitsiClassroom({
   const chatBottomRef      = useRef<HTMLDivElement | null>(null);
   const pollTimerRef       = useRef<NodeJS.Timeout | null>(null);
   const queuedIceCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
+  const lastSignalSeqRef   = useRef<number>(0);
+  const lastOfferTimeRef   = useRef<number>(0);
 
   const isMicOnRef = useRef(isMicOn);
   useEffect(() => { isMicOnRef.current = isMicOn; }, [isMicOn]);
@@ -234,7 +236,49 @@ export function JitsiClassroom({
   }, [stopAllMediaTracks]);
 
   /* ─────────────────────────────────────────────────
-     2.  Camera / Mic stream management
+     2a.  Add Tracks / Pre-allocate Transceivers
+  ───────────────────────────────────────────────── */
+  const addTracksToPeerConnection = useCallback((pc: RTCPeerConnection) => {
+    try {
+      const stream = screenStreamRef.current || localStreamRef.current;
+      if (!stream) {
+        // Pre-create transceivers so initial SDP offer/answer allocates audio & video slots
+        const senders = pc.getSenders();
+        if (!senders.some((s) => s.track?.kind === "audio" || (s as any).kind === "audio")) {
+          try { pc.addTransceiver("audio", { direction: "sendrecv" }); } catch (e) {}
+        }
+        if (!senders.some((s) => s.track?.kind === "video" || (s as any).kind === "video")) {
+          try { pc.addTransceiver("video", { direction: "sendrecv" }); } catch (e) {}
+        }
+        return;
+      }
+      stream.getTracks().forEach((track) => {
+        const senders = pc.getSenders();
+        const existingSender = senders.find(
+          (s) => s.track?.kind === track.kind || (s as any).kind === track.kind
+        );
+        if (existingSender) {
+          existingSender.replaceTrack(track).catch(() => {});
+        } else {
+          try {
+            pc.addTrack(track, stream);
+          } catch (e) {
+            const transceiver = pc.getTransceivers().find(
+              (t) => t.receiver?.track?.kind === track.kind || t.sender?.track?.kind === track.kind
+            );
+            if (transceiver?.sender) {
+              transceiver.sender.replaceTrack(track).catch(() => {});
+            }
+          }
+        }
+      });
+    } catch (e) {
+      console.warn("[WebRTC] addTracksToPeerConnection warning:", e);
+    }
+  }, []);
+
+  /* ─────────────────────────────────────────────────
+     2b.  Camera / Mic stream management
   ───────────────────────────────────────────────── */
   useEffect(() => {
     let active = true;
@@ -275,6 +319,11 @@ export function JitsiClassroom({
           localStreamRef.current = stream;
           // Sync initial audio state
           stream.getAudioTracks().forEach((t) => (t.enabled = isMicOn));
+
+          // Immediately pipe camera and mic tracks into active peer connection
+          if (peerConnectionRef.current) {
+            addTracksToPeerConnection(peerConnectionRef.current);
+          }
         }
 
         const ref =
@@ -298,7 +347,7 @@ export function JitsiClassroom({
     return () => {
       active = false;
     };
-  }, [isCameraOn, stage, userInfo.isTeacher, stopAllMediaTracks]);
+  }, [isCameraOn, stage, userInfo.isTeacher, stopAllMediaTracks, addTracksToPeerConnection]);
 
   // Sync audio track with mic toggle
   useEffect(() => {
@@ -316,25 +365,11 @@ export function JitsiClassroom({
       remoteVideoRef.current.srcObject = remoteStreamRef.current;
       remoteVideoRef.current.play().catch(() => {});
     }
-  }, [stage, userInfo.isTeacher, hasRemoteVideo, remoteParticipant?.id]);
+  }, [stage, userInfo.isTeacher, hasRemoteVideo, remoteParticipant?.id, admittedList.length]);
 
   /* ─────────────────────────────────────────────────
-     2b.  WebRTC Peer-to-Peer Streaming (Teacher <-> Student)
+     2c.  WebRTC Peer-to-Peer Streaming (Teacher <-> Student)
   ───────────────────────────────────────────────── */
-  const addTracksToPeerConnection = useCallback((pc: RTCPeerConnection) => {
-    const stream = screenStreamRef.current || localStreamRef.current;
-    if (!stream) return;
-    stream.getTracks().forEach((track) => {
-      const senders = pc.getSenders();
-      const existingSender = senders.find((s) => s.track?.kind === track.kind || (s as any).kind === track.kind);
-      if (existingSender) {
-        existingSender.replaceTrack(track).catch(() => {});
-      } else {
-        pc.addTrack(track, stream);
-      }
-    });
-  }, []);
-
   useEffect(() => {
     if (stage !== "LIVE_CLASS") return;
 
@@ -349,11 +384,20 @@ export function JitsiClassroom({
           { urls: "stun:stun4.l.google.com:19302" },
           { urls: "stun:stun.services.mozilla.com" },
           { urls: "stun:global.stun.twilio.com:3478" },
+          {
+            urls: [
+              "turn:openrelay.metered.ca:80",
+              "turn:openrelay.metered.ca:443",
+              "turn:openrelay.metered.ca:443?transport=tcp",
+            ],
+            username: "openrelayproject",
+            credential: "openrelayproject",
+          },
         ],
       });
       peerConnectionRef.current = pc;
 
-      // Add local media tracks to peer connection
+      // Add local media tracks or pre-allocate transceivers immediately
       addTracksToPeerConnection(pc);
 
       // Handle incoming remote audio/video tracks
@@ -363,7 +407,9 @@ export function JitsiClassroom({
           if (!remoteStreamRef.current) {
             remoteStreamRef.current = new MediaStream();
           }
-          remoteStreamRef.current.addTrack(event.track);
+          if (!remoteStreamRef.current.getTracks().some((t) => t.id === event.track.id)) {
+            remoteStreamRef.current.addTrack(event.track);
+          }
           stream = remoteStreamRef.current;
         } else {
           remoteStreamRef.current = stream;
@@ -375,7 +421,13 @@ export function JitsiClassroom({
         }
       };
 
-      const targetClassId = classData?.id || classData?.livekitRoomId || classId;
+      pc.onconnectionstatechange = () => {
+        if (pc?.connectionState === "connected") {
+          setHasRemoteVideo(true);
+        }
+      };
+
+      const targetClassId = classData?.id || classId;
 
       // Send local ICE candidates to server signaling
       pc.onicecandidate = (event) => {
@@ -395,8 +447,7 @@ export function JitsiClassroom({
       };
     }
 
-    const targetClassId = classData?.id || classData?.livekitRoomId || classId;
-    let lastSignalTime = 0;
+    const targetClassId = classData?.id || classId;
     let isCreatingOffer = false;
 
     // Send immediate "I am in the classroom" broadcast so remote peer knows we entered
@@ -414,7 +465,7 @@ export function JitsiClassroom({
       }),
     }).catch(() => {});
 
-    // Polling loop for WebRTC signals (Offers, Answers, ICE Candidates)
+    // Polling loop for WebRTC signals (Offers, Answers, ICE Candidates, Heartbeat)
     const signalInterval = setInterval(async () => {
       try {
         const activePC = peerConnectionRef.current;
@@ -434,11 +485,15 @@ export function JitsiClassroom({
           }),
         });
 
-        // Fetch pending signals
-        const res = await fetch(`/api/classes/${targetClassId}/signal?userId=${userInfo.id}&since=${lastSignalTime}`);
+        // Fetch pending signals using monotonic sequence ID
+        const res = await fetch(
+          `/api/classes/${targetClassId}/signal?userId=${encodeURIComponent(userInfo.id)}&sinceSeq=${lastSignalSeqRef.current}`
+        );
         if (!res.ok) return;
         const data = await res.json();
-        lastSignalTime = data.serverTime || Date.now();
+        if (typeof data.lastSeq === "number") {
+          lastSignalSeqRef.current = Math.max(lastSignalSeqRef.current, data.lastSeq);
+        }
 
         // Check if teacher concluded the class
         if (data.isEnded || (data.signals && data.signals.some((s: any) => s.type === "CLASS_ENDED"))) {
@@ -459,7 +514,7 @@ export function JitsiClassroom({
           const other = data.participants.find((p: any) => p.id !== userInfo.id);
           if (other) {
             setRemoteParticipant(other);
-          } else {
+          } else if (admittedList.length === 0) {
             setRemoteParticipant(null);
           }
         }
@@ -467,26 +522,37 @@ export function JitsiClassroom({
         // Process WebRTC signals
         for (const sig of data.signals || []) {
           if (sig.type === "CLIENT_JOINED" && userInfo.isTeacher && activePC) {
-            if (activePC.signalingState === "have-local-offer") {
-              await activePC.setLocalDescription({ type: "rollback" } as any).catch(() => {});
-            }
             addTracksToPeerConnection(activePC);
-            const offer = await activePC.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
-            await activePC.setLocalDescription(offer);
-            await fetch(`/api/classes/${targetClassId}/signal`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                senderId: userInfo.id,
-                name: userInfo.name,
-                role: userInfo.role,
-                to: sig.from,
-                type: "offer",
-                data: offer,
-              }),
-            });
+            if (activePC.signalingState === "stable" && !isCreatingOffer) {
+              isCreatingOffer = true;
+              lastOfferTimeRef.current = Date.now();
+              try {
+                const offer = await activePC.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
+                await activePC.setLocalDescription(offer);
+                await fetch(`/api/classes/${targetClassId}/signal`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    senderId: userInfo.id,
+                    name: userInfo.name,
+                    role: userInfo.role,
+                    to: sig.from,
+                    type: "offer",
+                    data: offer,
+                  }),
+                });
+              } catch (e) {
+                console.warn("[WebRTC] Offer error on CLIENT_JOINED:", e);
+              } finally {
+                isCreatingOffer = false;
+              }
+            }
           } else if (sig.type === "offer" && !userInfo.isTeacher && activePC) {
             addTracksToPeerConnection(activePC);
+            // Handle glare: polite student peer rolls back if in local-offer
+            if (activePC.signalingState !== "stable") {
+              await activePC.setLocalDescription({ type: "rollback" } as any).catch(() => {});
+            }
             await activePC.setRemoteDescription(new RTCSessionDescription(sig.data));
 
             // Flush queued candidates
@@ -529,47 +595,54 @@ export function JitsiClassroom({
           }
         }
 
-        // If Teacher and student is detected, initiate offer
-        if (userInfo.isTeacher && activePC && !isCreatingOffer) {
+        // Teacher initiates offer when student is detected and connection is stable
+        if (userInfo.isTeacher && activePC && activePC.signalingState === "stable" && !isCreatingOffer) {
           const other = data.participants?.find((p: any) => p.id !== userInfo.id);
-          if (other) {
-            if (activePC.signalingState === "have-local-offer" && !hasRemoteVideo) {
-              await activePC.setLocalDescription({ type: "rollback" } as any).catch(() => {});
-            }
-            if (activePC.signalingState === "stable") {
+          if (other && !hasRemoteVideo && activePC.connectionState !== "connected") {
+            const timeSinceLastOffer = Date.now() - lastOfferTimeRef.current;
+            // Wait at least 6 seconds between offers to avoid disrupting in-flight negotiations
+            if (timeSinceLastOffer > 6000) {
               isCreatingOffer = true;
+              lastOfferTimeRef.current = Date.now();
               addTracksToPeerConnection(activePC);
-              const offer = await activePC.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
-              await activePC.setLocalDescription(offer);
-              await fetch(`/api/classes/${targetClassId}/signal`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  senderId: userInfo.id,
-                  name: userInfo.name,
-                  role: userInfo.role,
-                  to: other.id,
-                  type: "offer",
-                  data: offer,
-                }),
-              });
-              isCreatingOffer = false;
+              try {
+                const offer = await activePC.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
+                await activePC.setLocalDescription(offer);
+                await fetch(`/api/classes/${targetClassId}/signal`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    senderId: userInfo.id,
+                    name: userInfo.name,
+                    role: userInfo.role,
+                    to: other.id,
+                    type: "offer",
+                    data: offer,
+                  }),
+                });
+              } catch (e) {
+                console.warn("[WebRTC] Periodic offer error:", e);
+              } finally {
+                isCreatingOffer = false;
+              }
             }
           }
         }
       } catch (err) {
         // quiet error handling
       }
-    }, 1000);
+    }, 600);
 
     return () => {
       clearInterval(signalInterval);
       if (peerConnectionRef.current) {
-        peerConnectionRef.current.close();
+        try {
+          peerConnectionRef.current.close();
+        } catch (e) {}
         peerConnectionRef.current = null;
       }
     };
-  }, [stage, userInfo.id, userInfo.name, userInfo.role, userInfo.isTeacher, classId, classData?.id, classData?.livekitRoomId, addTracksToPeerConnection, stopAllMedia]);
+  }, [stage, userInfo.id, userInfo.name, userInfo.role, userInfo.isTeacher, classId, classData?.id, addTracksToPeerConnection, stopAllMedia, admittedList.length, hasRemoteVideo]);
 
   /* ─────────────────────────────────────────────────
      3a.  STUDENT → knock & poll for admission
@@ -700,10 +773,11 @@ export function JitsiClassroom({
           body: JSON.stringify({ userId, action }),
         });
         // Optimistically remove from pending list
+        const admittedStudentName = pendingStudents.find((s) => s.userId === userId)?.name || "Student";
         setPendingStudents((prev) => prev.filter((s) => s.userId !== userId));
         setPendingCount((c) => Math.max(0, c - 1));
         if (action === "ADMIT") {
-          setAdmittedList((prev) => [...prev, { userId }]);
+          setAdmittedList((prev) => [...prev, { userId, name: admittedStudentName }]);
         }
       } catch (e) {
         console.warn("Admit/Deny failed:", e);
@@ -1271,7 +1345,13 @@ export function JitsiClassroom({
             ) : (
               <div className="relative w-full h-full flex items-center justify-center">
                 <video
-                  ref={remoteVideoRef}
+                  ref={(el) => {
+                    remoteVideoRef.current = el;
+                    if (el && remoteStreamRef.current) {
+                      el.srcObject = remoteStreamRef.current;
+                      el.play().catch(() => {});
+                    }
+                  }}
                   autoPlay
                   playsInline
                   className="w-full h-full object-contain bg-black"
@@ -1283,7 +1363,7 @@ export function JitsiClassroom({
                     </div>
                     <div>
                       <p className="text-sm font-medium text-white">{classData?.teacher?.name || "Faculty Teacher"}</p>
-                      <span className="text-xs text-slate-400">Connecting video feed...</span>
+                      <span className="text-xs text-slate-400">Connecting teacher live video...</span>
                     </div>
                   </div>
                 )}
@@ -1295,8 +1375,8 @@ export function JitsiClassroom({
             </div>
           </div>
 
-          {/* Student / Peer tile — Only render if a remote student exists or if user is student */}
-          {(!userInfo.isTeacher || remoteParticipant) && (
+          {/* Student / Peer tile — Render if remote student exists, or student is admitted, or has remote video, or if current user is student */}
+          {(!userInfo.isTeacher || remoteParticipant || admittedList.length > 0 || hasRemoteVideo) && (
             <div className="flex-1 relative rounded-xl overflow-hidden bg-[#1e1e1e] border border-white/10 flex items-center justify-center min-w-0">
               {!userInfo.isTeacher ? (
                 isCameraOn ? (
@@ -1318,7 +1398,13 @@ export function JitsiClassroom({
               ) : (
                 <div className="relative w-full h-full flex items-center justify-center">
                   <video
-                    ref={remoteVideoRef}
+                    ref={(el) => {
+                      remoteVideoRef.current = el;
+                      if (el && remoteStreamRef.current) {
+                        el.srcObject = remoteStreamRef.current;
+                        el.play().catch(() => {});
+                      }
+                    }}
                     autoPlay
                     playsInline
                     className="w-full h-full object-cover"
@@ -1326,9 +1412,12 @@ export function JitsiClassroom({
                   {!hasRemoteVideo && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#1e1e1e]">
                       <div className="w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center text-xl font-semibold text-slate-200">
-                        {initials(remoteParticipant?.name || "ST")}
+                        {initials(remoteParticipant?.name || admittedList[0]?.name || "Student")}
                       </div>
-                      <span className="text-xs text-slate-400">{remoteParticipant?.name || "Student"}</span>
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-white">{remoteParticipant?.name || admittedList[0]?.name || "Student"}</p>
+                        <span className="text-xs text-slate-400">Connecting student live video...</span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1337,7 +1426,7 @@ export function JitsiClassroom({
                 {(!userInfo.isTeacher ? isMicOn : remoteParticipant?.isMicOn !== false)
                   ? <Mic className="w-3 h-3 text-emerald-400" />
                   : <MicOff className="w-3 h-3 text-rose-400" />}
-                <span>{!userInfo.isTeacher ? `${userInfo.name} (You)` : (remoteParticipant?.name || "Student")}</span>
+                <span>{!userInfo.isTeacher ? `${userInfo.name} (You)` : (remoteParticipant?.name || admittedList[0]?.name || "Student")}</span>
               </div>
               {isHandRaised && !userInfo.isTeacher && (
                 <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-amber-500 text-[10px] font-bold text-black flex items-center gap-1 z-10">

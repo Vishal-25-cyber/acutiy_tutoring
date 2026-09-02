@@ -46,12 +46,14 @@ export async function PUT(
       const { getRoom } = await import("../signal/route");
       const r1 = getRoom(id);
       r1.isEnded = true;
-      r1.signals.push({ from: session.userId, type: "CLASS_ENDED", timestamp: Date.now() });
+      r1.signalSeq = (r1.signalSeq || 0) + 1;
+      r1.signals.push({ id: r1.signalSeq, from: session.userId, type: "CLASS_ENDED", timestamp: Date.now() });
 
       if (liveClass.livekitRoomId && liveClass.livekitRoomId !== id) {
         const r2 = getRoom(liveClass.livekitRoomId);
         r2.isEnded = true;
-        r2.signals.push({ from: session.userId, type: "CLASS_ENDED", timestamp: Date.now() });
+        r2.signalSeq = (r2.signalSeq || 0) + 1;
+        r2.signals.push({ id: r2.signalSeq, from: session.userId, type: "CLASS_ENDED", timestamp: Date.now() });
       }
     } catch {}
 

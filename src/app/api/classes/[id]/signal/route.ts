@@ -13,7 +13,8 @@ export const roomSignals: Record<
     isEnded?: boolean;
     admissions?: Record<string, "ADMITTED" | "DENIED">;
     participants: Record<string, { id: string; name: string; role: string; lastSeen: number; isCameraOn?: boolean; isMicOn?: boolean; isScreenSharing?: boolean }>;
-    signals: Array<{ from: string; to?: string; type: "offer" | "answer" | "candidate" | "leave" | "CLASS_ENDED" | "CLIENT_JOINED"; data?: any; timestamp: number }>;
+    signals: Array<{ id?: number; from: string; to?: string; type: "offer" | "answer" | "candidate" | "leave" | "CLASS_ENDED" | "CLIENT_JOINED" | string; data?: any; timestamp: number }>;
+    signalSeq: number;
   }
 > = {};
 
@@ -40,6 +41,13 @@ export async function resolveCanonicalRoomId(id: string): Promise<string> {
       roomAliases[id] = canonical;
       if (doc.meetingId) roomAliases[doc.meetingId] = canonical;
       if (doc.livekitRoomId) roomAliases[doc.livekitRoomId] = canonical;
+
+      // Link any existing room instances
+      if (roomSignals[id] && !roomSignals[canonical]) {
+        roomSignals[canonical] = roomSignals[id];
+      } else if (roomSignals[canonical]) {
+        roomSignals[id] = roomSignals[canonical];
+      }
       return canonical;
     }
   } catch {}
@@ -51,16 +59,23 @@ export async function resolveCanonicalRoomId(id: string): Promise<string> {
 export function getRoom(roomId: string) {
   const targetId = roomAliases[roomId] || roomId;
   if (!roomSignals[targetId]) {
-    roomSignals[targetId] = { participants: {}, signals: [], admissions: {} };
+    roomSignals[targetId] = { participants: {}, signals: [], admissions: {}, signalSeq: 0 };
   }
   if (!roomSignals[targetId].admissions) {
     roomSignals[targetId].admissions = {};
   }
-  // Clean up old signals (>30s) and inactive participants (>20s)
+  if (typeof roomSignals[targetId].signalSeq !== "number") {
+    roomSignals[targetId].signalSeq = 0;
+  }
+  if (roomId !== targetId) {
+    roomSignals[roomId] = roomSignals[targetId];
+  }
+
+  // Clean up old signals (>60s) and inactive participants (>25s)
   const now = Date.now();
-  roomSignals[targetId].signals = roomSignals[targetId].signals.filter((s) => now - s.timestamp < 30000);
+  roomSignals[targetId].signals = roomSignals[targetId].signals.filter((s) => now - s.timestamp < 60000);
   for (const [pid, p] of Object.entries(roomSignals[targetId].participants)) {
-    if (now - p.lastSeen > 20000) {
+    if (now - p.lastSeen > 25000) {
       delete roomSignals[targetId].participants[pid];
     }
   }
@@ -87,12 +102,14 @@ export async function POST(
 
     if (type === "CLASS_ENDED") {
       room.isEnded = true;
+      room.signalSeq = (room.signalSeq || 0) + 1;
       room.signals.push({
+        id: room.signalSeq,
         from: userId,
         type: "CLASS_ENDED",
         timestamp: Date.now(),
       });
-      return NextResponse.json({ success: true, isEnded: true });
+      return NextResponse.json({ success: true, isEnded: true, lastSeq: room.signalSeq });
     }
 
     // Update participant presence
@@ -108,7 +125,9 @@ export async function POST(
 
     // If signaling payload included (offer, answer, ICE candidate, CLIENT_JOINED)
     if (type) {
+      room.signalSeq = (room.signalSeq || 0) + 1;
       room.signals.push({
+        id: room.signalSeq,
         from: userId,
         to,
         type,
@@ -117,7 +136,12 @@ export async function POST(
       });
     }
 
-    return NextResponse.json({ success: true, isEnded: Boolean(room.isEnded), timestamp: Date.now() });
+    return NextResponse.json({
+      success: true,
+      isEnded: Boolean(room.isEnded),
+      timestamp: Date.now(),
+      lastSeq: room.signalSeq,
+    });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -132,7 +156,8 @@ export async function GET(
     const { id: roomId } = await params;
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId") || "";
-    const since = parseInt(searchParams.get("since") || "0", 10);
+    const sinceSeq = parseInt(searchParams.get("sinceSeq") || "0", 10);
+    const sinceTime = parseInt(searchParams.get("since") || "0", 10);
 
     const canonicalId = await resolveCanonicalRoomId(roomId);
     const room = getRoom(canonicalId);
@@ -140,7 +165,11 @@ export async function GET(
     // Signals meant for this user or broadcast to everyone, excluding self
     const relevantSignals = room.signals.filter((s) => {
       if (s.from === userId) return false;
-      if (s.timestamp <= since) return false;
+      if (sinceSeq > 0) {
+        if (typeof s.id === "number" && s.id <= sinceSeq) return false;
+      } else if (sinceTime > 0) {
+        if (s.timestamp <= sinceTime) return false;
+      }
       if (s.to && s.to !== userId) return false;
       return true;
     });
@@ -152,6 +181,7 @@ export async function GET(
       signals: relevantSignals,
       participants: activeParticipants,
       serverTime: Date.now(),
+      lastSeq: room.signalSeq || 0,
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
