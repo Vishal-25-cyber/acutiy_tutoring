@@ -660,9 +660,17 @@ export default function TeacherStudentReportsPage() {
                                 ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200"
                                 : (s.averageScore || 0) >= 75
                                 ? "bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200"
-                                : "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200"
+                                : (s.averageScore || 0) > 0
+                                ? "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200"
+                                : "bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700"
                             }`}>
-                              {(s.averageScore || 0) >= 85 ? "Grade A+ (Mastery)" : (s.averageScore || 0) >= 75 ? "Grade A (Proficient)" : "Grade B (Good)"}
+                              {(s.averageScore || 0) >= 85
+                                ? "Grade A+ (Mastery)"
+                                : (s.averageScore || 0) >= 75
+                                ? "Grade A (Proficient)"
+                                : (s.averageScore || 0) > 0
+                                ? "Grade B (Good)"
+                                : "Not Assessed"}
                             </span>
                           </td>
                         </tr>
@@ -680,46 +688,52 @@ export default function TeacherStudentReportsPage() {
                   </h3>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead>
-                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                        <th className="py-3 px-2">Test Title</th>
-                        <th className="py-3 px-2">Subject</th>
-                        <th className="py-3 px-2">Date</th>
-                        <th className="py-3 px-2">Marks</th>
-                        <th className="py-3 px-2">Percentage</th>
-                        <th className="py-3 px-2">Class Avg</th>
-                        <th className="py-3 px-2">Rank</th>
-                        <th className="py-3 px-2">Teacher Remarks</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
-                      {studentReport.testPerformance?.tests?.map((t: any, idx: number) => (
-                        <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                          <td className="py-3 px-2 font-bold text-slate-900 dark:text-slate-100">{t.testName}</td>
-                          <td className="py-3 px-2">{t.subject}</td>
-                          <td className="py-3 px-2 text-slate-500 font-mono">
-                            {new Date(t.testDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
-                          </td>
-                          <td className="py-3 px-2 font-mono font-bold">
-                            {t.marksObtained} / {t.maxMarks}
-                          </td>
-                          <td className="py-3 px-2 font-bold text-[#004b79] dark:text-[#dfb74a]">{t.percentage}%</td>
-                          <td className="py-3 px-2 text-slate-500">{t.classAverage}%</td>
-                          <td className="py-3 px-2">
-                            <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-bold">
-                              #{t.studentRank}
-                            </span>
-                          </td>
-                          <td className="py-3 px-2 text-slate-600 dark:text-slate-400 max-w-xs truncate">
-                            {t.teacherRemarks}
-                          </td>
+                {(studentReport.testPerformance?.tests || []).length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                          <th className="py-3 px-2">Test Title</th>
+                          <th className="py-3 px-2">Subject</th>
+                          <th className="py-3 px-2">Date</th>
+                          <th className="py-3 px-2">Marks</th>
+                          <th className="py-3 px-2">Percentage</th>
+                          <th className="py-3 px-2">Class Avg</th>
+                          <th className="py-3 px-2">Rank</th>
+                          <th className="py-3 px-2">Teacher Remarks</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
+                        {studentReport.testPerformance.tests.map((t: any, idx: number) => (
+                          <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                            <td className="py-3 px-2 font-bold text-slate-900 dark:text-slate-100">{t.testName}</td>
+                            <td className="py-3 px-2">{t.subject}</td>
+                            <td className="py-3 px-2 text-slate-500 font-mono">
+                              {new Date(t.testDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                            </td>
+                            <td className="py-3 px-2 font-mono font-bold">
+                              {t.marksObtained} / {t.maxMarks}
+                            </td>
+                            <td className="py-3 px-2 font-bold text-[#004b79] dark:text-[#dfb74a]">{t.percentage}%</td>
+                            <td className="py-3 px-2 text-slate-500">{t.classAverage}%</td>
+                            <td className="py-3 px-2">
+                              <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-bold">
+                                #{t.studentRank}
+                              </span>
+                            </td>
+                            <td className="py-3 px-2 text-slate-600 dark:text-slate-400 max-w-xs truncate">
+                              {t.teacherRemarks}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="py-6 text-center text-xs text-slate-400">
+                    No assessment tests recorded yet for this evaluation period.
+                  </div>
+                )}
               </div>
 
               {/* ── TEACHER REMARKS FORM ── */}

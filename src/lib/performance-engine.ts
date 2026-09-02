@@ -121,18 +121,19 @@ export async function generateStudentPerformanceReport(
 
   // 3. Resolve Standard Subjects for Class
   const classSubjects = getSubjectsForClassAndBoard(currentClass, board);
-
   // ─────────────────────────────────────────────────────────────
   // A. ATTENDANCE ANALYTICS
   // ─────────────────────────────────────────────────────────────
-  const totalClassesScheduled = Math.max(liveSessions.length, attendanceRecords.length, 1);
+  const totalClassesScheduled = liveSessions.length;
   const classesAttended = attendanceRecords.filter((a) => a.status === "PRESENT" || a.status === "LATE").length;
-  const classesAbsent = Math.max(0, totalClassesScheduled - classesAttended);
+  const classesAbsent = attendanceRecords.filter((a) => a.status === "ABSENT").length;
   const lateJoins = attendanceRecords.filter((a) => a.status === "LATE").length;
   const leaveCount = attendanceRecords.filter((a) => a.status === "ABSENT").length;
-  const attendancePercentage = Math.min(100, Math.round((classesAttended / totalClassesScheduled) * 100)) || 85;
+  const attendancePercentage = totalClassesScheduled > 0
+    ? Math.round((classesAttended / totalClassesScheduled) * 100)
+    : (attendanceRecords.length > 0 ? 100 : 0);
 
-  // Monthly Attendance & Performance Trend Curve
+  // Monthly Attendance & Performance Trend Curve (Real data only)
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const monthlyProgress = [];
   for (let i = 4; i >= 0; i--) {
@@ -144,8 +145,7 @@ export async function generateStudentPerformanceReport(
       return rDate.getMonth() === d.getMonth() && rDate.getFullYear() === d.getFullYear();
     });
     const mAttended = mRecords.filter((r) => r.status === "PRESENT" || r.status === "LATE").length;
-    const mTotal = Math.max(mRecords.length, 4);
-    const mAttPct = Math.min(100, Math.round((mAttended / mTotal) * 100)) || (80 + (4 - i) * 3);
+    const mAttPct = mRecords.length > 0 ? Math.round((mAttended / mRecords.length) * 100) : 0;
 
     // Calculate month test score
     const mTests = testResults.filter((tr) => {
@@ -154,7 +154,7 @@ export async function generateStudentPerformanceReport(
     });
     const mScore = mTests.length > 0
       ? Math.round(mTests.reduce((sum, t) => sum + t.percentage, 0) / mTests.length)
-      : 74 + (4 - i) * 3;
+      : 0;
 
     monthlyProgress.push({
       month: mName,
@@ -164,9 +164,8 @@ export async function generateStudentPerformanceReport(
   }
 
   // ─────────────────────────────────────────────────────────────
-  // B. TEST / EXAM ANALYTICS
+  // B. TEST / EXAM ANALYTICS (REAL DATABASE RECORDS ONLY)
   // ─────────────────────────────────────────────────────────────
-  // Seed realistic baseline test results if database has new student
   const formattedTests: any[] = [];
   if (testResults.length > 0) {
     for (const tr of testResults) {
@@ -176,83 +175,61 @@ export async function generateStudentPerformanceReport(
       );
       const classAvg = allPeerScoresForThisTest.length > 0
         ? Math.round(allPeerScoresForThisTest.reduce((sum, p) => sum + p.percentage, 0) / allPeerScoresForThisTest.length)
-        : Math.round(tr.percentage * 0.92);
+        : tr.percentage;
 
       formattedTests.push({
         _id: tr._id.toString(),
-        testName: test?.title || "Unit Assessment Test",
+        testName: test?.title || "Assessment Test",
         subject: test?.subject || "Mathematics",
         testDate: test?.testDate ? new Date(test.testDate).toISOString() : new Date(tr.createdAt).toISOString(),
         marksObtained: tr.marksObtained,
         maxMarks: tr.maxMarks,
         percentage: tr.percentage,
         classAverage: classAvg,
-        studentRank: tr.rank || 3,
-        teacherRemarks: tr.teacherRemarks || "Consistent concept clarity demonstrated.",
-        topic: test?.topic || "Core Curriculum",
+        studentRank: tr.rank || 1,
+        teacherRemarks: tr.teacherRemarks || (tr.percentage >= 80 ? "Good performance." : "Needs practice."),
+        topic: test?.topic || "Curriculum Unit",
       });
     }
-  } else {
-    // Generate authentic curriculum-aligned tests for display
-    const sampleSubjects = classSubjects.slice(0, 4);
-    const mockScores = [86, 78, 92, 84, 88];
-    mockScores.forEach((pct, idx) => {
-      const subj = sampleSubjects[idx % sampleSubjects.length] || "Mathematics";
-      const maxM = 50;
-      const marks = Math.round((pct / 100) * maxM);
-      const testDate = new Date(Date.now() - (4 - idx) * 14 * 24 * 60 * 60 * 1000);
-      formattedTests.push({
-        _id: `test-entry-${idx + 1}`,
-        testName: `${subj} Assessment Test #${idx + 1}`,
-        subject: subj,
-        testDate: testDate.toISOString(),
-        marksObtained: marks,
-        maxMarks: maxM,
-        percentage: pct,
-        classAverage: Math.max(65, pct - 8),
-        studentRank: idx === 2 ? 1 : idx + 2,
-        teacherRemarks: pct >= 85 ? "Excellent analytical accuracy." : "Good effort. Practice step-by-step proofs.",
-        topic: idx % 2 === 0 ? "Theory & Problem Solving" : "Application & Formulations",
-      });
-    });
   }
 
   const testPercentages = formattedTests.map((t) => t.percentage);
   const testAverage = testPercentages.length > 0
     ? Math.round(testPercentages.reduce((a, b) => a + b, 0) / testPercentages.length)
-    : 84;
-  const testHighest = testPercentages.length > 0 ? Math.max(...testPercentages) : 92;
-  const testLowest = testPercentages.length > 0 ? Math.min(...testPercentages) : 74;
+    : 0;
+  const testHighest = testPercentages.length > 0 ? Math.max(...testPercentages) : 0;
+  const testLowest = testPercentages.length > 0 ? Math.min(...testPercentages) : 0;
 
   // Previous Month vs Current Month Test Improvement
   const currentMonthScore = monthlyProgress[monthlyProgress.length - 1]?.score || testAverage;
-  const prevMonthScore = monthlyProgress[monthlyProgress.length - 2]?.score || (testAverage - 6);
+  const prevMonthScore = monthlyProgress[monthlyProgress.length - 2]?.score || testAverage;
   const improvementPercentage = `${currentMonthScore >= prevMonthScore ? "+" : ""}${currentMonthScore - prevMonthScore}%`;
 
   // ─────────────────────────────────────────────────────────────
-  // C. ASSIGNMENT / HOMEWORK ANALYTICS
+  // C. ASSIGNMENT / HOMEWORK ANALYTICS (REAL DATABASE RECORDS ONLY)
   // ─────────────────────────────────────────────────────────────
-  const totalAssignments = Math.max(assignments.length, assignmentSubmissions.length, 6);
+  const totalAssignments = assignments.length;
   const evaluatedSubmissions = assignmentSubmissions.filter((s) => s.status === "EVALUATED");
-  const submittedCount = Math.max(assignmentSubmissions.length, 5);
+  const submittedCount = assignmentSubmissions.length;
   const pendingCount = Math.max(0, totalAssignments - submittedCount);
   const lateSubmissions = assignmentSubmissions.filter((s) => s.status === "OVERDUE").length;
-  const assignmentCompletionPercentage = Math.min(100, Math.round((submittedCount / totalAssignments) * 100)) || 88;
+  const assignmentCompletionPercentage = totalAssignments > 0
+    ? Math.min(100, Math.round((submittedCount / totalAssignments) * 100))
+    : 0;
 
   const assignmentScoreSum = evaluatedSubmissions.reduce((sum, s: any) => {
     const max = s.maxMarks || (s.assignmentId as any)?.maxMarks || 20;
-    const marks = s.marksObtained || 16;
+    const marks = s.marksObtained || 0;
     return sum + (marks / max) * 100;
   }, 0);
   const averageAssignmentScore = evaluatedSubmissions.length > 0
     ? Math.round(assignmentScoreSum / evaluatedSubmissions.length)
-    : 86;
+    : 0;
 
   // List of active/recent assignments
-  const assignmentItems = assignments.slice(0, 6).map((a, idx) => {
+  const assignmentItems = assignments.map((a) => {
     const sub = assignmentSubmissions.find((s) => s.assignmentId?.toString() === a._id.toString());
     const isSubmitted = !!sub;
-    const isPending = !sub;
     return {
       _id: a._id.toString(),
       title: a.title,
@@ -264,76 +241,82 @@ export async function generateStudentPerformanceReport(
     };
   });
 
-  if (assignmentItems.length === 0) {
-    classSubjects.slice(0, 4).forEach((subj, idx) => {
-      assignmentItems.push({
-        _id: `hw-item-${idx}`,
-        title: `${subj} Weekly Practice Worksheet #${idx + 1}`,
-        subject: subj,
-        dueDate: new Date(Date.now() + (idx === 0 ? -2 : idx * 3) * 24 * 60 * 60 * 1000).toISOString(),
-        status: idx === 0 ? "EVALUATED" : idx === 1 ? "SUBMITTED" : "PENDING",
-        maxMarks: 20,
-        marksObtained: idx === 0 ? 18 : undefined,
-      });
-    });
-  }
-
   // ─────────────────────────────────────────────────────────────
   // D. LIVE CLASS ENGAGEMENT ANALYTICS
   // ─────────────────────────────────────────────────────────────
-  const totalDurationMinutes = attendanceRecords.reduce((sum, r) => sum + (r.durationMinutes || 52), 0);
+  const totalDurationMinutes = attendanceRecords.reduce((sum, r) => sum + (r.durationMinutes || 0), 0);
   const avgSessionDurationMinutes = attendanceRecords.length > 0
     ? Math.round(totalDurationMinutes / attendanceRecords.length)
-    : 54;
-  const questionsAsked = Math.max(studentProfile.streakCount * 3, 14);
-  const doubtsRaised = Math.max(Math.floor(studentProfile.streakCount * 1.5), 8);
-  const liveClassEngagementPercentage = Math.min(
-    98,
-    Math.round(attendancePercentage * 0.7 + (avgSessionDurationMinutes / 60) * 30)
-  ) || 91;
+    : 0;
+  const questionsAsked = studentProfile.streakCount > 0 ? studentProfile.streakCount * 2 : 0;
+  const doubtsRaised = studentProfile.streakCount > 0 ? studentProfile.streakCount : 0;
+  const liveClassEngagementPercentage = attendanceRecords.length > 0
+    ? Math.min(100, Math.round(attendancePercentage * 0.8 + (avgSessionDurationMinutes / 60) * 20))
+    : 0;
 
   // ─────────────────────────────────────────────────────────────
   // E. OVERALL PERFORMANCE SCORE & RANK
   // ─────────────────────────────────────────────────────────────
-  // Weighted: 40% Tests, 30% Assignments, 20% Attendance, 10% Live Engagement
-  const overallPerformanceScore = Math.round(
-    testAverage * 0.4 +
-    assignmentCompletionPercentage * 0.3 +
-    attendancePercentage * 0.2 +
-    liveClassEngagementPercentage * 0.1
-  );
+  const activeWeights: { weight: number; value: number }[] = [];
+  if (testPercentages.length > 0) activeWeights.push({ weight: 0.4, value: testAverage });
+  if (totalAssignments > 0) activeWeights.push({ weight: 0.3, value: assignmentCompletionPercentage });
+  if (totalClassesScheduled > 0 || attendanceRecords.length > 0) activeWeights.push({ weight: 0.3, value: attendancePercentage });
 
-  // Peer Rank Calculation
-  const currentRank = overallPerformanceScore >= 90 ? 2 : overallPerformanceScore >= 80 ? 4 : 7;
-  const totalClassStudents = 28;
+  const overallPerformanceScore = activeWeights.length > 0
+    ? Math.round(
+        activeWeights.reduce((sum, w) => sum + w.value * w.weight, 0) /
+        activeWeights.reduce((sum, w) => sum + w.weight, 0)
+      )
+    : 0;
+
+  const currentRank = 1;
+  const totalClassStudents = 1;
 
   // ─────────────────────────────────────────────────────────────
-  // F. SUBJECT-WISE PERFORMANCE & CHARTS
+  // F. SUBJECT-WISE PERFORMANCE (REAL DATA ONLY - 0 IF NOT DONE)
   // ─────────────────────────────────────────────────────────────
   const subjectBreakdown = classSubjects.map((subjectName) => {
-    const subjectTests = formattedTests.filter((t) => t.subject === subjectName);
-    const scores = subjectTests.map((t) => t.percentage);
-    const avgScore = scores.length > 0
-      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-      : Math.floor(75 + (subjectName.charCodeAt(0) % 18));
-    const latestScore = scores.length > 0 ? scores[scores.length - 1] : avgScore;
-    const highestScore = scores.length > 0 ? Math.max(...scores) : Math.min(100, avgScore + 6);
+    const subNorm = subjectName.trim().toLowerCase();
+    const subjectTests = formattedTests.filter(
+      (t) => (t.subject || "").trim().toLowerCase() === subNorm
+    );
+    const subjectSubs = evaluatedSubmissions.filter((s: any) => {
+      const asSubj = (s.assignmentId?.subject || "").trim().toLowerCase();
+      return asSubj === subNorm;
+    });
 
-    let status: "Excellent" | "Good" | "Needs Attention" | "Critical" = "Good";
+    const scores: number[] = [
+      ...subjectTests.map((t) => t.percentage),
+      ...subjectSubs.map((s: any) => {
+        const max = s.maxMarks || s.assignmentId?.maxMarks || 20;
+        return Math.round(((s.marksObtained || 0) / max) * 100);
+      }),
+    ];
+
+    const hasData = scores.length > 0;
+    const avgScore = hasData
+      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+      : 0;
+    const latestScore = hasData ? scores[scores.length - 1] : 0;
+    const highestScore = hasData ? Math.max(...scores) : 0;
+
+    let status = "Not Assessed";
     let trend: "UP" | "DOWN" | "STABLE" = "STABLE";
 
-    if (avgScore >= 85) {
-      status = "Excellent";
-      trend = "UP";
-    } else if (avgScore >= 72) {
-      status = "Good";
-      trend = "UP";
-    } else if (avgScore >= 60) {
-      status = "Needs Attention";
-      trend = "DOWN";
-    } else {
-      status = "Critical";
-      trend = "DOWN";
+    if (hasData) {
+      if (avgScore >= 85) {
+        status = "Grade A+ (Mastery)";
+        trend = "UP";
+      } else if (avgScore >= 70) {
+        status = "Grade A (Proficient)";
+        trend = "UP";
+      } else if (avgScore >= 50) {
+        status = "Grade B (Good)";
+        trend = "STABLE";
+      } else {
+        status = "Needs Attention";
+        trend = "DOWN";
+      }
     }
 
     return {
@@ -341,7 +324,7 @@ export async function generateStudentPerformanceReport(
       averageScore: avgScore,
       latestScore,
       highestScore,
-      numberOfTests: Math.max(subjectTests.length, 2),
+      numberOfTests: subjectTests.length,
       performancePercentage: avgScore,
       performanceTrend: trend,
       status,
@@ -508,14 +491,14 @@ export async function generateStudentPerformanceReport(
     teacherName: c.teacherName || "Academic Counselor",
   }));
 
-  const sortedSubjects = [...subjectBreakdown].sort((a, b) => (b.averageScore || 0) - (a.averageScore || 0));
-  const goodSubject = sortedSubjects[0]
+  const sortedSubjects = [...subjectBreakdown].filter((s) => s.averageScore > 0).sort((a, b) => (b.averageScore || 0) - (a.averageScore || 0));
+  const goodSubject = sortedSubjects.length > 0
     ? {
         name: sortedSubjects[0].subject,
         score: sortedSubjects[0].averageScore,
         status: sortedSubjects[0].status || "Mastery",
       }
-    : { name: "Mathematics", score: 90, status: "Mastery" };
+    : null;
 
   return {
     studentInfo: {
