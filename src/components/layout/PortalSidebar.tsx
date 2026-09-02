@@ -79,7 +79,7 @@ export function PortalSidebar({ role }: SidebarProps) {
 
   const adminLinks: SidebarLink[] = React.useMemo(() => [
     { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard, api: "/api/admin/dashboard" },
-    { href: "/admin/reports", label: "Performance Reports", icon: Activity, api: "/api/teacher/reports" },
+    { href: "/admin/analytics", label: "Analytics & Growth", icon: Activity, api: "/api/admin/analytics" },
     {
       href: "/admin/students",
       label: "Student Approvals",
