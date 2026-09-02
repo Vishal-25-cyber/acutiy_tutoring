@@ -1142,13 +1142,10 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Narrative Story */}
-          <div className="max-w-3xl mx-auto space-y-4 text-slate-700 text-base sm:text-lg lg:text-xl leading-relaxed font-medium">
+          {/* Narrative Story (Single Unified Paragraph) */}
+          <div className="max-w-3xl mx-auto text-slate-700 text-base sm:text-lg lg:text-xl leading-relaxed font-medium">
             <p>
-              For the past four years, <strong>Tutoring Hub</strong> has been a dedicated physical learning space where we worked closely with students, refining our methodology, and gaining valuable classroom experience.
-            </p>
-            <p>
-              Today, we have evolved that foundational experience into <strong className="text-[#002137] font-extrabold">MANTIF</strong>—building modern, AI-enhanced learning solutions for students, educators, and institutions.
+              For the past four years, <strong>Tutoring Hub</strong> has been a dedicated physical learning space where we worked closely with students, refining our methodology, and gaining valuable classroom experience. Today, we have evolved that foundational experience into <strong className="text-[#002137] font-extrabold">MANTIF</strong>—building modern, AI-enhanced learning solutions for students, educators, and institutions.
             </p>
           </div>
 
