@@ -7,44 +7,31 @@ import {
   Mail,
   Phone,
   Edit,
-  Save,
   CheckCircle2,
   AlertCircle,
   Clock,
   School,
   GraduationCap,
-  Sparkles,
   ShieldCheck,
   FileText,
   UserCheck,
   Eye,
-  CreditCard,
   Check,
-  Copy,
-  Receipt,
-  Award,
-  BookOpen,
-  Layers,
-  Activity,
-  Download,
-  Loader2,
 } from "lucide-react";
 import { useFastFetch, invalidateCache } from "@/lib/api-cache";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CLASS_LIST } from "@/lib/curriculum";
-import { generateStudentPerformanceReportPdf } from "@/lib/download";
 
 export default function TeacherStudentsPage() {
   const { data, refetch, isLoading } = useFastFetch("/api/teacher/students");
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("ALL");
 
-  // Modals & PDF state
+  // Modals state
   const [viewingStudent, setViewingStudent] = useState<any>(null);
   const [editingStudent, setEditingStudent] = useState<any>(null);
-  const [downloadingStudentId, setDownloadingStudentId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [copiedPhone, setCopiedPhone] = useState(false);
@@ -124,31 +111,6 @@ export default function TeacherStudentsPage() {
       setStatusMessage({ type: "error", text: "Network error. Please try again." });
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handleDownloadReportPdf = async (student: any) => {
-    const studentUserId = student.userId?._id || student.userId;
-    if (!studentUserId) {
-      alert("Student ID not found.");
-      return;
-    }
-
-    try {
-      setDownloadingStudentId(studentUserId);
-      const res = await fetch(`/api/teacher/students/${studentUserId}/report`);
-      if (!res.ok) throw new Error("Failed to load report data");
-      const rData = await res.json();
-      if (rData.report) {
-        generateStudentPerformanceReportPdf(rData.report);
-      } else {
-        alert("Unable to generate student performance report data.");
-      }
-    } catch (err) {
-      console.error("Download report error:", err);
-      alert("Failed to download student performance report PDF.");
-    } finally {
-      setDownloadingStudentId(null);
     }
   };
 
@@ -382,21 +344,6 @@ export default function TeacherStudentsPage() {
                           </div>
 
                           <div className="flex items-center gap-2 flex-wrap">
-                            <button
-                              type="button"
-                              disabled={downloadingStudentId === (s.userId?._id || s._id)}
-                              onClick={() => handleDownloadReportPdf(s)}
-                              className="font-bold text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 cursor-pointer transition-all shadow-2xs disabled:opacity-60"
-                              title="Download Official Student Performance Report PDF"
-                            >
-                              {downloadingStudentId === (s.userId?._id || s._id) ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              ) : (
-                                <Download className="w-3.5 h-3.5 text-emerald-600" />
-                              )}
-                              <span>Download PDF</span>
-                            </button>
-
                             <Button
                               variant="outline"
                               size="sm"
@@ -530,26 +477,12 @@ export default function TeacherStudentsPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-2 gap-2 flex-wrap">
-              <button
-                type="button"
-                disabled={downloadingStudentId === (viewingStudent.userId?._id || viewingStudent._id)}
-                onClick={() => handleDownloadReportPdf(viewingStudent)}
-                className="px-4 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-60"
-              >
-                {downloadingStudentId === (viewingStudent.userId?._id || viewingStudent._id) ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Download className="w-4 h-4" />
-                )}
-                <span>Download Full Performance Report PDF</span>
-              </button>
-
+            <div className="flex items-center justify-end pt-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setViewingStudent(null)}
-                className="font-bold text-xs rounded-xl"
+                className="font-bold text-xs rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
                 Close Dossier
               </Button>
