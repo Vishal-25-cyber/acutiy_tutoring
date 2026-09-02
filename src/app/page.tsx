@@ -1784,7 +1784,7 @@ export default function HomePage() {
                   </blockquote>
 
                   <p className="text-xs font-extrabold text-[#002137] tracking-wide pt-1">
-                    — Ms. Karunya S, Founder &amp; Alumini
+                    — Ms. Karunya S, Founder &amp; CEO, Alumini
                   </p>
                 </div>
 
@@ -1806,10 +1806,6 @@ export default function HomePage() {
                       </p>
                     </div>
                   </div>
-
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#004b79] bg-blue-50 border border-blue-200 px-3 py-1 rounded-full">
-                    2 Streams Available
-                  </span>
                 </div>
 
                 {/* 2-Column Responsive Video Grid */}
@@ -1825,21 +1821,9 @@ export default function HomePage() {
                     return (
                       <div className="space-y-2.5">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-black uppercase text-[#002137] tracking-wide truncate max-w-[220px]">
+                          <span className="text-xs font-black uppercase text-[#002137] tracking-wide truncate max-w-full">
                             {slotTitle1}
                           </span>
-                          <button
-                            onClick={() => {
-                              setActiveVideoSlotKey(slotKey);
-                              setActiveVideoSlotLabel(slotTitle1);
-                              setVideoInputUrl(customVideoUrls[slotKey] || "");
-                              setVideoModalOpen(true);
-                            }}
-                            className="inline-flex items-center gap-1 text-[11px] font-bold text-[#004b79] hover:text-[#b89047] bg-slate-100 hover:bg-amber-50 px-2 py-0.5 rounded-lg border border-slate-200 transition-colors cursor-pointer shrink-0"
-                          >
-                            <Plus className="w-3 h-3" />
-                            <span>Edit Video 1</span>
-                          </button>
                         </div>
 
                         {/* Player Container */}
@@ -1862,22 +1846,9 @@ export default function HomePage() {
                                   className="w-full h-full object-contain"
                                 />
                               )}
-                              <button
-                                onClick={() =>
-                                  setFullscreenVideo({
-                                    url: effectiveVid1,
-                                    title: `${selectedSchoolModal.name} — ${slotTitle1}`,
-                                  })
-                                }
-                                className="absolute top-2.5 right-2.5 z-20 px-2.5 py-1 rounded-lg bg-black/80 hover:bg-[#002137] text-white text-[11px] font-bold border border-white/20 backdrop-blur-sm transition-all cursor-pointer flex items-center gap-1 shadow-lg"
-                                title="Expand to Fullscreen"
-                              >
-                                <Play className="w-3 h-3 fill-current text-amber-400" />
-                                <span>Fullscreen</span>
-                              </button>
                             </div>
                           ) : (
-                            <div className="relative w-full h-full flex flex-col justify-between p-4 sm:p-5 text-white select-none overflow-hidden">
+                            <div className="relative w-full h-full flex items-center justify-center p-4 text-white select-none overflow-hidden">
                               {/* Video Real Thumbnail Background */}
                               {effectiveVid1 && !effectiveVid1.includes("youtube.com") && !effectiveVid1.includes("youtu.be") ? (
                                 <video
@@ -1888,28 +1859,14 @@ export default function HomePage() {
                               ) : null}
 
                               {/* Dark Gradient Overlay over Thumbnail */}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/60 group-hover:via-black/25 transition-all duration-300" />
-
-                              {/* Top Tags */}
-                              <div className="relative z-10 flex items-center justify-between">
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-600 text-white shadow-md">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                                  Stream 1
-                                </span>
-                                <span className="text-[10px] font-bold text-slate-200 bg-black/50 px-2 py-0.5 rounded-md backdrop-blur-xs">1080p HD</span>
-                              </div>
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/50 group-hover:via-black/10 transition-all duration-300" />
 
                               {/* Center Play Button */}
-                              <div className="relative z-10 flex flex-col items-center justify-center my-auto text-center space-y-2">
+                              <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-2">
                                 <button
                                   onClick={() => {
                                     if (effectiveVid1) {
                                       setPlayingVideoSlotId(slotKey);
-                                    } else {
-                                      setActiveVideoSlotKey(slotKey);
-                                      setActiveVideoSlotLabel(slotTitle1);
-                                      setVideoInputUrl("");
-                                      setVideoModalOpen(true);
                                     }
                                   }}
                                   className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all cursor-pointer group-hover:ring-4 group-hover:ring-amber-300/50"
@@ -1918,24 +1875,8 @@ export default function HomePage() {
                                   <Play className="w-6 h-6 fill-current ml-0.5" />
                                 </button>
                                 <p className="text-xs font-black text-white drop-shadow-md">
-                                  {effectiveVid1 ? "Click to Play Video" : "Click to Add Video URL"}
+                                  Click to Play Video
                                 </p>
-                              </div>
-
-                              {/* Bottom Bar */}
-                              <div className="relative z-10 flex items-center justify-between text-[11px] text-slate-200 pt-1.5 border-t border-white/20">
-                                <span className="truncate max-w-[170px] font-semibold">{slotTitle1}</span>
-                                <button
-                                  onClick={() => {
-                                    setActiveVideoSlotKey(slotKey);
-                                    setActiveVideoSlotLabel(slotTitle1);
-                                    setVideoInputUrl(customVideoUrls[slotKey] || "");
-                                    setVideoModalOpen(true);
-                                  }}
-                                  className="text-[#dfb74a] hover:underline font-bold cursor-pointer"
-                                >
-                                  + URL
-                                </button>
                               </div>
                             </div>
                           )}
@@ -1954,21 +1895,9 @@ export default function HomePage() {
                     return (
                       <div className="space-y-2.5">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-black uppercase text-[#002137] tracking-wide truncate max-w-[220px]">
+                          <span className="text-xs font-black uppercase text-[#002137] tracking-wide truncate max-w-full">
                             {slotTitle2}
                           </span>
-                          <button
-                            onClick={() => {
-                              setActiveVideoSlotKey(slotKey2);
-                              setActiveVideoSlotLabel(slotTitle2);
-                              setVideoInputUrl(customVideoUrls[slotKey2] || "");
-                              setVideoModalOpen(true);
-                            }}
-                            className="inline-flex items-center gap-1 text-[11px] font-bold text-[#004b79] hover:text-[#b89047] bg-slate-100 hover:bg-amber-50 px-2 py-0.5 rounded-lg border border-slate-200 transition-colors cursor-pointer shrink-0"
-                          >
-                            <Plus className="w-3 h-3" />
-                            <span>Edit Video 2</span>
-                          </button>
                         </div>
 
                         {/* Player Container */}
@@ -1991,22 +1920,9 @@ export default function HomePage() {
                                   className="w-full h-full object-contain"
                                 />
                               )}
-                              <button
-                                onClick={() =>
-                                  setFullscreenVideo({
-                                    url: effectiveVid2,
-                                    title: `${selectedSchoolModal.name} — ${slotTitle2}`,
-                                  })
-                                }
-                                className="absolute top-2.5 right-2.5 z-20 px-2.5 py-1 rounded-lg bg-black/80 hover:bg-[#002137] text-white text-[11px] font-bold border border-white/20 backdrop-blur-sm transition-all cursor-pointer flex items-center gap-1 shadow-lg"
-                                title="Expand to Fullscreen"
-                              >
-                                <Play className="w-3 h-3 fill-current text-amber-400" />
-                                <span>Fullscreen</span>
-                              </button>
                             </div>
                           ) : (
-                            <div className="relative w-full h-full flex flex-col justify-between p-4 sm:p-5 text-white select-none overflow-hidden">
+                            <div className="relative w-full h-full flex items-center justify-center p-4 text-white select-none overflow-hidden">
                               {/* Video Real Thumbnail Background */}
                               {effectiveVid2 && !effectiveVid2.includes("youtube.com") && !effectiveVid2.includes("youtu.be") ? (
                                 <video
@@ -2017,28 +1933,14 @@ export default function HomePage() {
                               ) : null}
 
                               {/* Dark Gradient Overlay over Thumbnail */}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/60 group-hover:via-black/25 transition-all duration-300" />
-
-                              {/* Top Tags */}
-                              <div className="relative z-10 flex items-center justify-between">
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-600 text-white shadow-md">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                                  Stream 2
-                                </span>
-                                <span className="text-[10px] font-bold text-slate-200 bg-black/50 px-2 py-0.5 rounded-md backdrop-blur-xs">1080p HD</span>
-                              </div>
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/50 group-hover:via-black/10 transition-all duration-300" />
 
                               {/* Center Play Button */}
-                              <div className="relative z-10 flex flex-col items-center justify-center my-auto text-center space-y-2">
+                              <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-2">
                                 <button
                                   onClick={() => {
                                     if (effectiveVid2) {
                                       setPlayingVideoSlotId(slotKey2);
-                                    } else {
-                                      setActiveVideoSlotKey(slotKey2);
-                                      setActiveVideoSlotLabel(slotTitle2);
-                                      setVideoInputUrl("");
-                                      setVideoModalOpen(true);
                                     }
                                   }}
                                   className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all cursor-pointer group-hover:ring-4 group-hover:ring-amber-300/50"
@@ -2047,24 +1949,8 @@ export default function HomePage() {
                                   <Play className="w-6 h-6 fill-current ml-0.5" />
                                 </button>
                                 <p className="text-xs font-black text-white drop-shadow-md">
-                                  {effectiveVid2 ? "Click to Play Video" : "Click to Add Video URL"}
+                                  Click to Play Video
                                 </p>
-                              </div>
-
-                              {/* Bottom Bar */}
-                              <div className="relative z-10 flex items-center justify-between text-[11px] text-slate-200 pt-1.5 border-t border-white/20">
-                                <span className="truncate max-w-[170px] font-semibold">{slotTitle2}</span>
-                                <button
-                                  onClick={() => {
-                                    setActiveVideoSlotKey(slotKey2);
-                                    setActiveVideoSlotLabel(slotTitle2);
-                                    setVideoInputUrl(customVideoUrls[slotKey2] || "");
-                                    setVideoModalOpen(true);
-                                  }}
-                                  className="text-[#dfb74a] hover:underline font-bold cursor-pointer"
-                                >
-                                  + URL
-                                </button>
                               </div>
                             </div>
                           )}
