@@ -1843,9 +1843,9 @@ export default function HomePage() {
                         </div>
 
                         {/* Player Container */}
-                        <div className="relative rounded-2xl overflow-hidden shadow-xl border-2 border-slate-300 bg-slate-950 aspect-video flex items-center justify-center group">
+                        <div className="relative rounded-2xl overflow-hidden shadow-xl border-2 border-slate-300 bg-black aspect-video flex items-center justify-center group">
                           {effectiveVid1 && isVidPlaying1 ? (
-                            <div className="relative w-full h-full">
+                            <div className="relative w-full h-full bg-black">
                               {effectiveVid1.includes("youtube.com") || effectiveVid1.includes("youtu.be") ? (
                                 <iframe
                                   src={`${getEmbedVideoUrl(effectiveVid1)}?autoplay=1`}
@@ -1877,23 +1877,34 @@ export default function HomePage() {
                               </button>
                             </div>
                           ) : (
-                            <div className="relative w-full h-full flex flex-col justify-between p-4 sm:p-5 bg-gradient-to-br from-slate-900 via-[#002137] to-slate-950 text-white select-none">
+                            <div className="relative w-full h-full flex flex-col justify-between p-4 sm:p-5 text-white select-none overflow-hidden">
+                              {/* Video Real Thumbnail Background */}
+                              {effectiveVid1 && !effectiveVid1.includes("youtube.com") && !effectiveVid1.includes("youtu.be") ? (
+                                <video
+                                  src={`${effectiveVid1}#t=0.5`}
+                                  preload="metadata"
+                                  className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                                />
+                              ) : null}
+
+                              {/* Dark Gradient Overlay over Thumbnail */}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/60 group-hover:via-black/25 transition-all duration-300" />
+
+                              {/* Top Tags */}
                               <div className="relative z-10 flex items-center justify-between">
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-600 text-white">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-600 text-white shadow-md">
                                   <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
                                   Stream 1
                                 </span>
-                                <span className="text-[10px] text-slate-300">1080p HD</span>
+                                <span className="text-[10px] font-bold text-slate-200 bg-black/50 px-2 py-0.5 rounded-md backdrop-blur-xs">1080p HD</span>
                               </div>
 
-                              <div className="relative z-10 flex flex-col items-center justify-center my-auto text-center space-y-1.5">
+                              {/* Center Play Button */}
+                              <div className="relative z-10 flex flex-col items-center justify-center my-auto text-center space-y-2">
                                 <button
                                   onClick={() => {
                                     if (effectiveVid1) {
-                                      setFullscreenVideo({
-                                        url: effectiveVid1,
-                                        title: `${selectedSchoolModal.name} — ${slotTitle1}`,
-                                      });
+                                      setPlayingVideoSlotId(slotKey);
                                     } else {
                                       setActiveVideoSlotKey(slotKey);
                                       setActiveVideoSlotLabel(slotTitle1);
@@ -1901,18 +1912,19 @@ export default function HomePage() {
                                       setVideoModalOpen(true);
                                     }
                                   }}
-                                  className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all cursor-pointer group-hover:ring-4 group-hover:ring-amber-300/40"
-                                  title="Play in Fullscreen"
+                                  className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all cursor-pointer group-hover:ring-4 group-hover:ring-amber-300/50"
+                                  title="Play Video"
                                 >
                                   <Play className="w-6 h-6 fill-current ml-0.5" />
                                 </button>
-                                <p className="text-xs font-bold text-white">
-                                  {effectiveVid1 ? "Play Video in Fullscreen" : "Click to Add Video URL"}
+                                <p className="text-xs font-black text-white drop-shadow-md">
+                                  {effectiveVid1 ? "Click to Play Video" : "Click to Add Video URL"}
                                 </p>
                               </div>
 
-                              <div className="relative z-10 flex items-center justify-between text-[11px] text-slate-300 pt-1 border-t border-white/10">
-                                <span className="truncate max-w-[150px]">{slotTitle1}</span>
+                              {/* Bottom Bar */}
+                              <div className="relative z-10 flex items-center justify-between text-[11px] text-slate-200 pt-1.5 border-t border-white/20">
+                                <span className="truncate max-w-[170px] font-semibold">{slotTitle1}</span>
                                 <button
                                   onClick={() => {
                                     setActiveVideoSlotKey(slotKey);
@@ -1960,9 +1972,9 @@ export default function HomePage() {
                         </div>
 
                         {/* Player Container */}
-                        <div className="relative rounded-2xl overflow-hidden shadow-xl border-2 border-slate-300 bg-slate-950 aspect-video flex items-center justify-center group">
+                        <div className="relative rounded-2xl overflow-hidden shadow-xl border-2 border-slate-300 bg-black aspect-video flex items-center justify-center group">
                           {effectiveVid2 && isVidPlaying2 ? (
-                            <div className="relative w-full h-full">
+                            <div className="relative w-full h-full bg-black">
                               {effectiveVid2.includes("youtube.com") || effectiveVid2.includes("youtu.be") ? (
                                 <iframe
                                   src={`${getEmbedVideoUrl(effectiveVid2)}?autoplay=1`}
@@ -1994,23 +2006,34 @@ export default function HomePage() {
                               </button>
                             </div>
                           ) : (
-                            <div className="relative w-full h-full flex flex-col justify-between p-4 sm:p-5 bg-gradient-to-br from-slate-900 via-[#002137] to-slate-950 text-white select-none">
+                            <div className="relative w-full h-full flex flex-col justify-between p-4 sm:p-5 text-white select-none overflow-hidden">
+                              {/* Video Real Thumbnail Background */}
+                              {effectiveVid2 && !effectiveVid2.includes("youtube.com") && !effectiveVid2.includes("youtu.be") ? (
+                                <video
+                                  src={`${effectiveVid2}#t=0.5`}
+                                  preload="metadata"
+                                  className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                                />
+                              ) : null}
+
+                              {/* Dark Gradient Overlay over Thumbnail */}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/60 group-hover:via-black/25 transition-all duration-300" />
+
+                              {/* Top Tags */}
                               <div className="relative z-10 flex items-center justify-between">
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-600 text-white">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-600 text-white shadow-md">
                                   <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
                                   Stream 2
                                 </span>
-                                <span className="text-[10px] text-slate-300">1080p HD</span>
+                                <span className="text-[10px] font-bold text-slate-200 bg-black/50 px-2 py-0.5 rounded-md backdrop-blur-xs">1080p HD</span>
                               </div>
 
-                              <div className="relative z-10 flex flex-col items-center justify-center my-auto text-center space-y-1.5">
+                              {/* Center Play Button */}
+                              <div className="relative z-10 flex flex-col items-center justify-center my-auto text-center space-y-2">
                                 <button
                                   onClick={() => {
                                     if (effectiveVid2) {
-                                      setFullscreenVideo({
-                                        url: effectiveVid2,
-                                        title: `${selectedSchoolModal.name} — ${slotTitle2}`,
-                                      });
+                                      setPlayingVideoSlotId(slotKey2);
                                     } else {
                                       setActiveVideoSlotKey(slotKey2);
                                       setActiveVideoSlotLabel(slotTitle2);
@@ -2018,18 +2041,19 @@ export default function HomePage() {
                                       setVideoModalOpen(true);
                                     }
                                   }}
-                                  className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all cursor-pointer group-hover:ring-4 group-hover:ring-amber-300/40"
-                                  title="Play in Fullscreen"
+                                  className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all cursor-pointer group-hover:ring-4 group-hover:ring-amber-300/50"
+                                  title="Play Video"
                                 >
                                   <Play className="w-6 h-6 fill-current ml-0.5" />
                                 </button>
-                                <p className="text-xs font-bold text-white">
-                                  {effectiveVid2 ? "Play Video in Fullscreen" : "Click to Add Video URL"}
+                                <p className="text-xs font-black text-white drop-shadow-md">
+                                  {effectiveVid2 ? "Click to Play Video" : "Click to Add Video URL"}
                                 </p>
                               </div>
 
-                              <div className="relative z-10 flex items-center justify-between text-[11px] text-slate-300 pt-1 border-t border-white/10">
-                                <span className="truncate max-w-[150px]">{slotTitle2}</span>
+                              {/* Bottom Bar */}
+                              <div className="relative z-10 flex items-center justify-between text-[11px] text-slate-200 pt-1.5 border-t border-white/20">
+                                <span className="truncate max-w-[170px] font-semibold">{slotTitle2}</span>
                                 <button
                                   onClick={() => {
                                     setActiveVideoSlotKey(slotKey2);
