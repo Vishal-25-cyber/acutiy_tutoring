@@ -1242,38 +1242,33 @@ export default function HomePage() {
                 key={school.id}
                 className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center"
               >
-                {/* Image Side: Sized proportionally to match content */}
+                {/* Image Side: Full Perfect Image Without Any Cropping */}
                 <div className="lg:col-span-6 flex items-center justify-center">
-                  <div className="relative w-full rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 border border-slate-200/90 bg-white group aspect-[16/9.5] flex items-center justify-center">
+                  <div className="relative w-full rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 border border-slate-200/90 bg-white group">
                     <img
                       src={school.bannerImage || "/images/ai_seminar_banner.png"}
                       alt={school.sessionTitle}
-                      className="w-full h-full object-cover object-center group-hover:scale-102 transition-transform duration-500"
+                      className="w-full h-auto block object-contain group-hover:scale-[1.01] transition-transform duration-500"
                     />
                   </div>
                 </div>
 
-                {/* Opposite Side: Content formatted to match photo height */}
+                {/* Opposite Side: Perfectly Aligned Content (No Top Pill Badge) */}
                 <div className="lg:col-span-6 flex flex-col justify-center space-y-3.5 text-left">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-amber-50 text-[#b89047] border border-amber-200/70 w-fit">
-                    <MapPin className="w-3.5 h-3.5 text-[#b89047]" />
-                    <span>{school.district} • Academic Faculty Seminar</span>
-                  </div>
-
-                  <h3 className="text-xl sm:text-2xl lg:text-[28px] font-black text-[#002137] tracking-tight leading-snug">
+                  <h3 className="text-2xl sm:text-3xl lg:text-[30px] font-black text-[#002137] tracking-tight leading-tight">
                     {school.name}
                   </h3>
 
                   <div className="space-y-0.5">
-                    <h4 className="text-sm sm:text-base font-extrabold text-[#004b79]">
+                    <h4 className="text-base sm:text-lg font-extrabold text-[#004b79]">
                       {school.sessionTitle}
                     </h4>
-                    <p className="text-xs font-semibold text-slate-500 italic">
+                    <p className="text-xs sm:text-sm font-semibold text-slate-500 italic">
                       {school.subtitle || "From Everyday AI Tools to Transformative Learning Experiences"}
                     </p>
                   </div>
 
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
+                  <p className="text-xs sm:text-sm lg:text-[14.5px] text-slate-600 leading-relaxed font-medium">
                     MANTIF conducted an interactive faculty empowerment seminar exploring practical AI tools, empowering teachers to enhance student engagement and modernize classroom learning.
                   </p>
 
