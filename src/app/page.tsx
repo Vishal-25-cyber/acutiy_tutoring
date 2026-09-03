@@ -463,6 +463,9 @@ export default function HomePage() {
             <img
               src="/images/mantif_logo.png"
               alt="MANTIF Logo"
+              width={50}
+              height={50}
+              fetchPriority="high"
               className="w-12 h-12 sm:w-[50px] sm:h-[50px] object-contain group-hover:scale-105 transition-transform shrink-0"
             />
             <div className="flex flex-col justify-center">
@@ -496,8 +499,9 @@ export default function HomePage() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors"
+            className="lg:hidden p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-slate-700 hover:bg-slate-100 transition-colors"
             aria-label="Toggle Menu"
+            aria-expanded={mobileMenuOpen}
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -529,7 +533,7 @@ export default function HomePage() {
         {/* Exact Center Vertical Divider Line */}
         <div className="hidden lg:block absolute left-1/2 top-12 bottom-12 w-px bg-slate-200 -translate-x-1/2" />
 
-        <div className="w-full px-6 sm:px-10 lg:px-14 xl:px-20 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 xl:gap-24 items-center">
+        <div className="w-full px-4 sm:px-10 lg:px-14 xl:px-20 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 xl:gap-24 items-center">
 
           {/* LEFT HALF (50%): GRAND MANTIF STATEMENT & 3 PILLARS */}
           <div className="w-full space-y-8 lg:pr-6 xl:pr-10">
@@ -588,7 +592,7 @@ export default function HomePage() {
 
           {/* RIGHT HALF (50%): ULTRA-SLEEK MODERN AUTH PANEL */}
           <div id="auth-card-section" className="w-full flex justify-center lg:pl-6 xl:pl-10">
-            <div className="w-full max-w-[450px] bg-white rounded-3xl border border-slate-200/90 shadow-[0_16px_40px_-8px_rgba(0,33,55,0.09)] p-7 sm:p-8 space-y-5">
+            <div className="w-full max-w-[450px] bg-white rounded-3xl border border-slate-200/90 shadow-[0_16px_40px_-8px_rgba(0,33,55,0.09)] p-5 sm:p-8 space-y-5">
 
               {/* Sleek Tab Switcher: Sign In vs Sign Up Alone */}
               <div className="flex border-b border-slate-200">
@@ -858,7 +862,7 @@ export default function HomePage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <div className="space-y-1">
                           <label className="block text-xs font-bold text-slate-700">Curriculum *</label>
                           <select
@@ -1017,7 +1021,7 @@ export default function HomePage() {
                   {/* Step 3: Student Guardian Details */}
                   {step === 3 && signupRole === "STUDENT" && (
                     <div className="space-y-3.5">
-                      <div className="grid grid-cols-2 gap-2.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <div className="space-y-1">
                           <label className="block text-xs font-bold text-slate-700">Parent Name *</label>
                           <input
@@ -1041,7 +1045,7 @@ export default function HomePage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <div className="space-y-1">
                           <label className="block text-xs font-bold text-slate-700">Gender</label>
                           <select
@@ -1325,6 +1329,10 @@ export default function HomePage() {
                 <img
                   src="/images/founder_karunya.png"
                   alt="Karunya S - Founder of MANTIF"
+                  loading="lazy"
+                  decoding="async"
+                  width={265}
+                  height={331}
                   className="w-full h-full object-cover object-[center_16%] group-hover:scale-105 transition-transform duration-500"
                 />
               </div>
@@ -1372,6 +1380,10 @@ export default function HomePage() {
                     <img
                       src="/images/mentor_revathi.jpg"
                       alt="Dr. A. Revathi - Educational Mentor"
+                      loading="lazy"
+                      decoding="async"
+                      width={240}
+                      height={300}
                       className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
@@ -1387,6 +1399,10 @@ export default function HomePage() {
                     <img
                       src="/images/mentor_lavanya.jpg"
                       alt="V Lavanya - Educational Mentor"
+                      loading="lazy"
+                      decoding="async"
+                      width={240}
+                      height={300}
                       className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
@@ -1415,6 +1431,10 @@ export default function HomePage() {
                     <img
                       src="/images/team_vishal.jpg"
                       alt="Vishal K - Software Team"
+                      loading="lazy"
+                      decoding="async"
+                      width={240}
+                      height={300}
                       className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
@@ -1430,6 +1450,10 @@ export default function HomePage() {
                     <img
                       src="/images/team_solairaj.jpg"
                       alt="Solairaj R - Software Team"
+                      loading="lazy"
+                      decoding="async"
+                      width={240}
+                      height={300}
                       className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
@@ -1445,6 +1469,10 @@ export default function HomePage() {
                     <img
                       src="/images/team_abinaya.png"
                       alt="Abinaya B - AI Team"
+                      loading="lazy"
+                      decoding="async"
+                      width={240}
+                      height={300}
                       className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
@@ -1460,6 +1488,10 @@ export default function HomePage() {
                     <img
                       src="/images/team_arunkarthick.png"
                       alt="Arunkarthick K - AI Team"
+                      loading="lazy"
+                      decoding="async"
+                      width={240}
+                      height={300}
                       className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
@@ -1607,6 +1639,8 @@ export default function HomePage() {
                 <img
                   src={item.src}
                   alt={item.title}
+                  loading="lazy"
+                  decoding="async"
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
                 />
 
@@ -1654,6 +1688,7 @@ export default function HomePage() {
                   onClick={() => setSelectedGalleryIdx(null)}
                   className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md hover:bg-black/80 text-white flex items-center justify-center transition-all cursor-pointer border border-white/15 pointer-events-auto shadow-md hover:scale-105"
                   title="Close (Esc)"
+                  aria-label="Close photo gallery"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1685,6 +1720,7 @@ export default function HomePage() {
                   }}
                   className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md hover:bg-black/90 text-white flex items-center justify-center transition-all cursor-pointer border border-white/15 shadow-md hover:scale-110"
                   title="Previous photo"
+                  aria-label="Previous photo"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
@@ -1696,6 +1732,7 @@ export default function HomePage() {
                   }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md hover:bg-black/90 text-white flex items-center justify-center transition-all cursor-pointer border border-white/15 shadow-md hover:scale-110"
                   title="Next photo"
+                  aria-label="Next photo"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>

@@ -1,51 +1,61 @@
-import React, { useEffect } from "react";
+import React, { useEffect, Suspense, lazy } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
-// Public / Landing Page & Contact
+// Public Landing Page is loaded directly for fastest First Contentful Paint (FCP / LCP)
 import LandingPage from "./app/page";
-import ContactPage from "./app/contact/page";
 
-// Student Portal
-import StudentLayout from "./app/(portal)/student/layout";
-import StudentDashboardPage from "./app/(portal)/student/dashboard/page";
-import StudentClassesPage from "./app/(portal)/student/classes/page";
-import StudentMaterialsPage from "./app/(portal)/student/materials/page";
-import StudentAssignmentsPage from "./app/(portal)/student/assignments/page";
-import StudentAttendancePage from "./app/(portal)/student/attendance/page";
-import StudentFeesPage from "./app/(portal)/student/fees/page";
-import StudentPerformancePage from "./app/(portal)/student/performance/page";
-import StudentParentViewPage from "./app/(portal)/student/parent-view/page";
-import StudentAiTutorPage from "./app/(portal)/student/ai-tutor/page";
-import StudentClassroomSessionPage from "./app/(portal)/student/classroom/[sessionId]/page";
+// Public Contact Page (Lazy)
+const ContactPage = lazy(() => import("./app/contact/page"));
 
-// Faculty / Teacher Portal
-import TeacherLayout from "./app/(portal)/teacher/layout";
-import TeacherDashboardPage from "./app/(portal)/teacher/dashboard/page";
-import TeacherSchedulePage from "./app/(portal)/teacher/schedule/page";
-import TeacherLiveClassCreatePage from "./app/(portal)/teacher/live-class/create/page";
-import TeacherMaterialsPage from "./app/(portal)/teacher/materials/page";
-import TeacherAssignmentsPage from "./app/(portal)/teacher/assignments/page";
-import TeacherStudentsPage from "./app/(portal)/teacher/students/page";
-import TeacherStudentReportsPage from "./app/(portal)/teacher/reports/page";
-import TeacherAttendancePage from "./app/(portal)/teacher/attendance/page";
-import TeacherClassAttendanceDetailPage from "./app/(portal)/teacher/attendance/[classId]/page";
-import TeacherClassroomSessionPage from "./app/(portal)/teacher/classroom/[sessionId]/page";
+// Student Portal (Lazy)
+const StudentLayout = lazy(() => import("./app/(portal)/student/layout"));
+const StudentDashboardPage = lazy(() => import("./app/(portal)/student/dashboard/page"));
+const StudentClassesPage = lazy(() => import("./app/(portal)/student/classes/page"));
+const StudentMaterialsPage = lazy(() => import("./app/(portal)/student/materials/page"));
+const StudentAssignmentsPage = lazy(() => import("./app/(portal)/student/assignments/page"));
+const StudentAttendancePage = lazy(() => import("./app/(portal)/student/attendance/page"));
+const StudentFeesPage = lazy(() => import("./app/(portal)/student/fees/page"));
+const StudentPerformancePage = lazy(() => import("./app/(portal)/student/performance/page"));
+const StudentParentViewPage = lazy(() => import("./app/(portal)/student/parent-view/page"));
+const StudentAiTutorPage = lazy(() => import("./app/(portal)/student/ai-tutor/page"));
+const StudentClassroomSessionPage = lazy(() => import("./app/(portal)/student/classroom/[sessionId]/page"));
 
-// Admin Portal
-import AdminLayout from "./app/(portal)/admin/layout";
-import AdminDashboardPage from "./app/(portal)/admin/dashboard/page";
-import AdminStudentsPage from "./app/(portal)/admin/students/page";
-import AdminTeachersPage from "./app/(portal)/admin/teachers/page";
-import AdminBatchesPage from "./app/(portal)/admin/batches/page";
-import AdminClassesPage from "./app/(portal)/admin/classes/page";
-import AdminAttendancePage from "./app/(portal)/admin/attendance/page";
-import AdminStaffAttendancePage from "./app/(portal)/admin/staff-attendance/page";
-import AdminFinancePage from "./app/(portal)/admin/finance/page";
-import AdminAnalyticsPage from "./app/(portal)/admin/analytics/page";
-import AdminSettingsPage from "./app/(portal)/admin/settings/page";
+// Faculty / Teacher Portal (Lazy)
+const TeacherLayout = lazy(() => import("./app/(portal)/teacher/layout"));
+const TeacherDashboardPage = lazy(() => import("./app/(portal)/teacher/dashboard/page"));
+const TeacherSchedulePage = lazy(() => import("./app/(portal)/teacher/schedule/page"));
+const TeacherLiveClassCreatePage = lazy(() => import("./app/(portal)/teacher/live-class/create/page"));
+const TeacherMaterialsPage = lazy(() => import("./app/(portal)/teacher/materials/page"));
+const TeacherAssignmentsPage = lazy(() => import("./app/(portal)/teacher/assignments/page"));
+const TeacherStudentsPage = lazy(() => import("./app/(portal)/teacher/students/page"));
+const TeacherStudentReportsPage = lazy(() => import("./app/(portal)/teacher/reports/page"));
+const TeacherAttendancePage = lazy(() => import("./app/(portal)/teacher/attendance/page"));
+const TeacherClassAttendanceDetailPage = lazy(() => import("./app/(portal)/teacher/attendance/[classId]/page"));
+const TeacherClassroomSessionPage = lazy(() => import("./app/(portal)/teacher/classroom/[sessionId]/page"));
 
-// Live Classroom
-import ClassroomPage from "./app/classroom/[classId]/page";
+// Admin Portal (Lazy)
+const AdminLayout = lazy(() => import("./app/(portal)/admin/layout"));
+const AdminDashboardPage = lazy(() => import("./app/(portal)/admin/dashboard/page"));
+const AdminStudentsPage = lazy(() => import("./app/(portal)/admin/students/page"));
+const AdminTeachersPage = lazy(() => import("./app/(portal)/admin/teachers/page"));
+const AdminBatchesPage = lazy(() => import("./app/(portal)/admin/batches/page"));
+const AdminClassesPage = lazy(() => import("./app/(portal)/admin/classes/page"));
+const AdminAttendancePage = lazy(() => import("./app/(portal)/admin/attendance/page"));
+const AdminStaffAttendancePage = lazy(() => import("./app/(portal)/admin/staff-attendance/page"));
+const AdminFinancePage = lazy(() => import("./app/(portal)/admin/finance/page"));
+const AdminAnalyticsPage = lazy(() => import("./app/(portal)/admin/analytics/page"));
+const AdminSettingsPage = lazy(() => import("./app/(portal)/admin/settings/page"));
+
+// Live Classroom (Lazy)
+const ClassroomPage = lazy(() => import("./app/classroom/[classId]/page"));
+
+function RouteLoadingFallback() {
+  return (
+    <div className="min-h-[50vh] w-full flex items-center justify-center bg-transparent text-slate-400 py-16">
+      <div className="w-8 h-8 rounded-full border-2 border-[#002137] dark:border-[#dfb74a] border-t-transparent animate-spin" />
+    </div>
+  );
+}
 
 function RouteSEOAndScroll() {
   const { pathname } = useLocation();
@@ -124,67 +134,69 @@ export default function App() {
   return (
     <>
       <RouteSEOAndScroll />
-      <Routes>
-        {/* ── Public Landing Page & Auth Redirects ── */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/login" element={<Navigate to="/" replace />} />
-        <Route path="/register" element={<Navigate to="/" replace />} />
-        <Route path="/register/student" element={<Navigate to="/" replace />} />
-        <Route path="/register/teacher" element={<Navigate to="/" replace />} />
+      <Suspense fallback={<RouteLoadingFallback />}>
+        <Routes>
+          {/* ── Public Landing Page & Auth Redirects ── */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/login" element={<Navigate to="/" replace />} />
+          <Route path="/register" element={<Navigate to="/" replace />} />
+          <Route path="/register/student" element={<Navigate to="/" replace />} />
+          <Route path="/register/teacher" element={<Navigate to="/" replace />} />
 
-        {/* ── Student Portal Nested Routes (Persistent Layout) ── */}
-        <Route path="/student" element={<StudentLayout />}>
-          <Route index element={<Navigate to="/student/dashboard" replace />} />
-          <Route path="dashboard" element={<StudentDashboardPage />} />
-          <Route path="classes" element={<StudentClassesPage />} />
-          <Route path="materials" element={<StudentMaterialsPage />} />
-          <Route path="assignments" element={<StudentAssignmentsPage />} />
-          <Route path="attendance" element={<StudentAttendancePage />} />
-          <Route path="fees" element={<StudentFeesPage />} />
-          <Route path="performance" element={<StudentPerformancePage />} />
-          <Route path="parent-view" element={<StudentParentViewPage />} />
-          <Route path="ai-tutor" element={<StudentAiTutorPage />} />
-          <Route path="classroom/:sessionId" element={<StudentClassroomSessionPage />} />
-        </Route>
+          {/* ── Student Portal Nested Routes (Persistent Layout) ── */}
+          <Route path="/student" element={<StudentLayout />}>
+            <Route index element={<Navigate to="/student/dashboard" replace />} />
+            <Route path="dashboard" element={<StudentDashboardPage />} />
+            <Route path="classes" element={<StudentClassesPage />} />
+            <Route path="materials" element={<StudentMaterialsPage />} />
+            <Route path="assignments" element={<StudentAssignmentsPage />} />
+            <Route path="attendance" element={<StudentAttendancePage />} />
+            <Route path="fees" element={<StudentFeesPage />} />
+            <Route path="performance" element={<StudentPerformancePage />} />
+            <Route path="parent-view" element={<StudentParentViewPage />} />
+            <Route path="ai-tutor" element={<StudentAiTutorPage />} />
+            <Route path="classroom/:sessionId" element={<StudentClassroomSessionPage />} />
+          </Route>
 
-        {/* ── Teacher Portal Nested Routes (Persistent Layout) ── */}
-        <Route path="/teacher" element={<TeacherLayout />}>
-          <Route index element={<Navigate to="/teacher/dashboard" replace />} />
-          <Route path="dashboard" element={<TeacherDashboardPage />} />
-          <Route path="reports" element={<TeacherStudentReportsPage />} />
-          <Route path="schedule" element={<TeacherSchedulePage />} />
-          <Route path="live-class/create" element={<TeacherLiveClassCreatePage />} />
-          <Route path="materials" element={<TeacherMaterialsPage />} />
-          <Route path="assignments" element={<TeacherAssignmentsPage />} />
-          <Route path="students" element={<TeacherStudentsPage />} />
-          <Route path="attendance" element={<TeacherAttendancePage />} />
-          <Route path="attendance/:classId" element={<TeacherClassAttendanceDetailPage />} />
-          <Route path="classroom/:sessionId" element={<TeacherClassroomSessionPage />} />
-        </Route>
+          {/* ── Teacher Portal Nested Routes (Persistent Layout) ── */}
+          <Route path="/teacher" element={<TeacherLayout />}>
+            <Route index element={<Navigate to="/teacher/dashboard" replace />} />
+            <Route path="dashboard" element={<TeacherDashboardPage />} />
+            <Route path="reports" element={<TeacherStudentReportsPage />} />
+            <Route path="schedule" element={<TeacherSchedulePage />} />
+            <Route path="live-class/create" element={<TeacherLiveClassCreatePage />} />
+            <Route path="materials" element={<TeacherMaterialsPage />} />
+            <Route path="assignments" element={<TeacherAssignmentsPage />} />
+            <Route path="students" element={<TeacherStudentsPage />} />
+            <Route path="attendance" element={<TeacherAttendancePage />} />
+            <Route path="attendance/:classId" element={<TeacherClassAttendanceDetailPage />} />
+            <Route path="classroom/:sessionId" element={<TeacherClassroomSessionPage />} />
+          </Route>
 
-        {/* ── Admin Portal Nested Routes (Persistent Layout) ── */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="dashboard" element={<AdminDashboardPage />} />
-          <Route path="reports" element={<TeacherStudentReportsPage />} />
-          <Route path="students" element={<AdminStudentsPage />} />
-          <Route path="teachers" element={<AdminTeachersPage />} />
-          <Route path="batches" element={<AdminBatchesPage />} />
-          <Route path="classes" element={<AdminClassesPage />} />
-          <Route path="attendance" element={<AdminAttendancePage />} />
-          <Route path="staff-attendance" element={<AdminStaffAttendancePage />} />
-          <Route path="finance" element={<AdminFinancePage />} />
-          <Route path="analytics" element={<AdminAnalyticsPage />} />
-          <Route path="settings" element={<AdminSettingsPage />} />
-        </Route>
+          {/* ── Admin Portal Nested Routes (Persistent Layout) ── */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDashboardPage />} />
+            <Route path="reports" element={<TeacherStudentReportsPage />} />
+            <Route path="students" element={<AdminStudentsPage />} />
+            <Route path="teachers" element={<AdminTeachersPage />} />
+            <Route path="batches" element={<AdminBatchesPage />} />
+            <Route path="classes" element={<AdminClassesPage />} />
+            <Route path="attendance" element={<AdminAttendancePage />} />
+            <Route path="staff-attendance" element={<AdminStaffAttendancePage />} />
+            <Route path="finance" element={<AdminFinancePage />} />
+            <Route path="analytics" element={<AdminAnalyticsPage />} />
+            <Route path="settings" element={<AdminSettingsPage />} />
+          </Route>
 
-        {/* ── Live Classroom Route ── */}
-        <Route path="/classroom/:classId" element={<ClassroomPage />} />
+          {/* ── Live Classroom Route ── */}
+          <Route path="/classroom/:classId" element={<ClassroomPage />} />
 
-        {/* ── Fallback Redirect ── */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* ── Fallback Redirect ── */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </>
   );
 }
