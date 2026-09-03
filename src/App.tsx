@@ -125,6 +125,15 @@ function RouteSEOAndScroll() {
     } else {
       metaRobots.setAttribute("content", "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1");
     }
+
+    // Google Analytics 4 (GA4) SPA Manual Page View Tracking (Exactly 1 event per navigation)
+    if (typeof window !== "undefined" && typeof (window as any).gtag === "function") {
+      (window as any).gtag("event", "page_view", {
+        page_title: pageTitle,
+        page_location: window.location.href,
+        page_path: pathname,
+      });
+    }
   }, [pathname]);
 
   return null;
