@@ -1292,26 +1292,13 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Animatic Loading for "Still more" */}
-          <div className="pt-1 flex items-center justify-center">
-            <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-white border border-slate-200/90 shadow-sm text-slate-800 hover:border-[#dfb74a] transition-all">
-              {/* Animatic Spinner Ring */}
-              <div className="relative flex items-center justify-center w-4 h-4">
-                <span className="w-4 h-4 rounded-full border-2 border-[#b89047] border-t-transparent animate-spin" />
-                <span className="absolute w-1 h-1 rounded-full bg-[#dfb74a] animate-ping" />
-              </div>
-
-              {/* Text */}
-              <span className="text-[11px] sm:text-xs font-black text-[#002137] tracking-wider uppercase">
-                Still more
+          {/* Animated Loading Symbol for "Still more" (Clean Loading Animation, No AI Symbols) */}
+          <div className="pt-2 flex items-center justify-center">
+            <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-white border border-slate-200/90 shadow-xs text-slate-700 hover:border-[#b89047]/70 transition-all">
+              <Loader2 className="w-4 h-4 text-[#b89047] animate-spin shrink-0" />
+              <span className="text-xs font-bold text-[#002137] tracking-wide">
+                Still more...
               </span>
-
-              {/* Animatic Bouncing Loading Dots */}
-              <div className="flex items-center gap-1 pl-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#b89047] animate-bounce [animation-delay:-0.3s]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-[#b89047] animate-bounce [animation-delay:-0.15s]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-[#b89047] animate-bounce" />
-              </div>
             </div>
           </div>
 
