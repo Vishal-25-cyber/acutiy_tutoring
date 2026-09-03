@@ -520,9 +520,9 @@ export default function HomePage() {
       </a>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          STICKY NAVBAR (EXACT REQ: About, Tutoring Hub, Our Side, Team, Testimonials, Gallery)
+          FIXED NAVBAR (Permanently visible at top while scrolling)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <header className="sticky top-0 z-50 w-full border-b border-slate-200/90 bg-white/95 backdrop-blur-md transition-all shadow-xs">
+      <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-slate-200/90 bg-white/95 backdrop-blur-md shadow-xs">
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 h-20 flex items-center justify-between">
 
           {/* Logo & Brand Identity (Left Side - Clean Logo, Shifted Left, Stylized Λ matching the logo) */}
@@ -627,7 +627,7 @@ export default function HomePage() {
       </header>
 
       {/* Semantic Main Landmark for Accessibility (WCAG 1.3.1) */}
-      <main id="main-content">
+      <main id="main-content" className="pt-20">
 
         {/* ═══════════════════════════════════════════════════════════════════════
             PAGE 1: ABOUT (HERO SPLIT: PERFECT CENTER LINE & COMPACT PRO CARD)
