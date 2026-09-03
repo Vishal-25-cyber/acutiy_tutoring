@@ -20,7 +20,6 @@ import {
 import { useFastFetch } from "@/lib/api-cache";
 import { formatStudentId } from "@/lib/id-generator";
 import { PortalHeader } from "@/components/layout/PortalHeader";
-import { TrialCountdownCornerTimer } from "@/components/student/TrialCountdownCornerTimer";
 
 
 export default function StudentDashboardPage() {
@@ -109,19 +108,9 @@ export default function StudentDashboardPage() {
           Welcome, {safeName}
         </h1>
 
-        <div className="flex items-center gap-3">
-          {/* Animated Loading Corner Timer */}
-          {isTrialActive && (
-            <TrialCountdownCornerTimer
-              trialEndsAt={trial?.trialEndsAt}
-              remainingHours={trial?.remainingHours}
-            />
-          )}
-
-          <div className="hidden sm:flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 sm:pl-3 sm:border-l sm:border-slate-200 sm:dark:border-slate-800">
-            <Calendar className="w-4 h-4 text-slate-400" />
-            <span>{todayFormatted}</span>
-          </div>
+        <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
+          <Calendar className="w-4 h-4 text-slate-400" />
+          <span>{todayFormatted}</span>
         </div>
       </div>
 

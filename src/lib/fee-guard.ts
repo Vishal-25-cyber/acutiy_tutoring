@@ -66,11 +66,12 @@ export async function getStudentFeeAccessStatus(userId: string): Promise<FeeAcce
     };
   }
 
-  // 2. Check 2-Day Free Trial (48 Hours from user/profile creation date)
-  const userCreatedAt = user?.createdAt || (profile as any)?.createdAt;
-  const registrationTime = userCreatedAt ? new Date(userCreatedAt).getTime() : Date.now();
-  const trialDurationMs = 2 * 24 * 60 * 60 * 1000; // 48 hours = 2 days
-  const trialExpiresAt = new Date(registrationTime + trialDurationMs);
+  // 2. Check 2-Day Free Trial (48 Hours from user/profile creation date or profile.trialEndsAt)
+  const start = profile?.trialStartDate || (profile as any)?.createdAt || user?.createdAt || new Date();
+  const registrationTime = new Date(start).getTime();
+  const trialExpiresAt = profile?.trialEndsAt
+    ? new Date(profile.trialEndsAt)
+    : new Date(registrationTime + 2 * 24 * 60 * 60 * 1000);
   const nowMs = Date.now();
 
   const isTrialActive = nowMs < trialExpiresAt.getTime();
