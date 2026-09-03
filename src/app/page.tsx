@@ -1228,16 +1228,16 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Direct Side-by-Side Presentation: Pure Image on One Side, Wordings on the Opposite Side (No Card Wrapper) */}
-          <div className="space-y-12">
+          {/* Direct Presentation: Pure Image on One Side, Little Content on the Other */}
+          <div className="space-y-10">
             {outreachSchools.map((school: any) => (
               <div
                 key={school.id}
                 className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center"
               >
-                {/* Image Side: Pure Image with its natural size, rounded corners, and shadow */}
+                {/* Image Side: Pure Image with its natural size */}
                 <div className="lg:col-span-6 flex items-center justify-center">
-                  <div className="relative w-full rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 border border-slate-200/80 bg-slate-900 group">
+                  <div className="relative w-full rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 border border-slate-200/80 bg-white group">
                     <img
                       src={school.bannerImage || "/images/ai_seminar_banner.png"}
                       alt={school.sessionTitle}
@@ -1246,63 +1246,28 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Opposite Side: Wordings and Content */}
-                <div className="lg:col-span-6 space-y-5 text-left">
-                  {/* District & Event Badges */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-amber-50 text-[#b89047] border border-amber-200/70">
-                      <MapPin className="w-3 h-3 text-[#b89047]" />
-                      {school.district}
-                    </span>
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-blue-50 text-[#004b79] border border-blue-200/70">
-                      {school.tag}
-                    </span>
+                {/* Opposite Side: Little Content */}
+                <div className="lg:col-span-6 space-y-4 text-left">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-amber-50 text-[#b89047] border border-amber-200/70">
+                    <MapPin className="w-3.5 h-3.5 text-[#b89047]" />
+                    <span>{school.district} • Academic Faculty Seminar</span>
                   </div>
 
-                  {/* School Name */}
                   <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#002137] tracking-tight leading-tight">
                     {school.name}
                   </h3>
 
-                  {/* Session Title & Subtitle */}
-                  <div className="space-y-1">
-                    <h4 className="text-base sm:text-lg lg:text-xl font-extrabold text-[#004b79]">
-                      {school.sessionTitle}
-                    </h4>
-                    <p className="text-xs sm:text-sm font-semibold text-slate-500 italic">
-                      {school.subtitle || "From Everyday AI Tools to Transformative Learning Experiences"}
-                    </p>
-                  </div>
-
-                  {/* Content Overview */}
-                  <p className="text-xs sm:text-sm lg:text-base text-slate-600 leading-relaxed font-medium">
-                    {school.summary} {school.description}
+                  <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal">
+                    MANTIF conducted an interactive faculty empowerment seminar exploring practical AI tools, empowering teachers to enhance student engagement and modernize classroom learning.
                   </p>
 
-                  {/* Highlights Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-bold text-slate-700 pt-1">
-                    <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                      <span>Hands-On Faculty Enablement</span>
-                    </div>
-                    <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100">
-                      <span className="w-2 h-2 rounded-full bg-[#dfb74a] shrink-0" />
-                      <span>Interactive AI Classroom Tools</span>
-                    </div>
-                    <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100 sm:col-span-2">
-                      <span className="w-2 h-2 rounded-full bg-[#004b79] shrink-0" />
-                      <span>Founder Karunya S Alma Mater Homecoming</span>
-                    </div>
-                  </div>
-
-                  {/* Action CTA Button */}
                   <div className="pt-2">
                     <button
                       onClick={() => setSelectedSchoolModal(school)}
-                      className="group inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl bg-[#002137] hover:bg-[#004b79] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+                      className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-2xl bg-[#002137] hover:bg-[#004b79] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
                     >
                       <BookOpen className="w-4 h-4 text-[#dfb74a]" />
-                      <span>View Session Story, Details &amp; Video</span>
+                      <span>View Session Story &amp; Video</span>
                       <ArrowRight className="w-4 h-4 text-amber-300 group-hover:translate-x-1 transition-transform" />
                     </button>
                   </div>
@@ -1311,14 +1276,26 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Minimal "Still more" Indicator */}
-          <div className="pt-2 flex items-center justify-center">
-            <div className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-white border border-slate-200/90 shadow-xs hover:border-[#dfb74a] transition-all">
-              <Sparkles className="w-4 h-4 text-[#dfb74a] animate-pulse" />
-              <span className="text-xs sm:text-sm font-black text-[#002137] tracking-wide">
-                Still more...
+          {/* Animatic Loading for "Still more" */}
+          <div className="pt-4 flex items-center justify-center">
+            <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-white border border-slate-200/90 shadow-md text-slate-800 hover:border-[#dfb74a] transition-all">
+              {/* Animatic Spinner Ring */}
+              <div className="relative flex items-center justify-center w-5 h-5">
+                <span className="w-5 h-5 rounded-full border-2 border-[#b89047] border-t-transparent animate-spin" />
+                <span className="absolute w-1.5 h-1.5 rounded-full bg-[#dfb74a] animate-ping" />
+              </div>
+
+              {/* Text */}
+              <span className="text-xs sm:text-sm font-black text-[#002137] tracking-wider uppercase">
+                Still more
               </span>
-              <span className="text-[#b89047] text-xs font-black">✦</span>
+
+              {/* Animatic Bouncing Loading Dots */}
+              <div className="flex items-center gap-1 pl-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#b89047] animate-bounce [animation-delay:-0.3s]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#b89047] animate-bounce [animation-delay:-0.15s]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#b89047] animate-bounce" />
+              </div>
             </div>
           </div>
 
