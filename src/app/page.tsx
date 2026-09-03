@@ -1318,52 +1318,14 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Under Empty Space: "Still Coming" Upcoming Seminars Section */}
-          <div className="relative p-6 sm:p-8 lg:p-10 rounded-3xl border-2 border-dashed border-slate-300/90 bg-gradient-to-br from-slate-50/90 via-white to-amber-50/20 shadow-sm hover:border-[#b89047]/60 transition-all text-center space-y-5">
-            <div className="space-y-2 max-w-2xl mx-auto">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200/80 text-[#b89047] text-xs font-black uppercase tracking-wider shadow-2xs">
-                <Clock className="w-3.5 h-3.5 text-[#b89047] animate-spin" style={{ animationDuration: "8s" }} />
-                <span>Still Coming • Institutional Outreach Seminars</span>
-              </div>
-              <h3 className="text-xl sm:text-2xl lg:text-3xl font-black text-[#002137] tracking-tight">
-                More School &amp; College AI Seminars Coming Soon
-              </h3>
-              <p className="text-xs sm:text-sm font-medium text-slate-600 leading-relaxed">
-                MANTIF is actively scheduling and rolling out practical AI enablement seminars to matriculation, CBSE, and higher secondary institutions across Tamil Nadu and beyond. Stay tuned as new partner schools and session highlights are added!
-              </p>
-            </div>
-
-            {/* Upcoming District Nodes / Ticker */}
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs font-bold text-slate-700">
-              <span className="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#dfb74a]" /> Erode (Completed)
+          {/* Minimal "Still more" Indicator */}
+          <div className="pt-2 flex items-center justify-center">
+            <div className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-white border border-slate-200/90 shadow-xs hover:border-[#dfb74a] transition-all">
+              <Sparkles className="w-4 h-4 text-[#dfb74a] animate-pulse" />
+              <span className="text-xs sm:text-sm font-black text-[#002137] tracking-wide">
+                Still more...
               </span>
-              <span className="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-1.5 text-slate-500">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" /> Coimbatore (Scheduling)
-              </span>
-              <span className="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-1.5 text-slate-500">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" /> Salem (Scheduling)
-              </span>
-              <span className="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-1.5 text-slate-500">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" /> Tirupur (In Talks)
-              </span>
-              <span className="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-1.5 text-slate-500">
-                <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" /> Chennai (Upcoming)
-              </span>
-            </div>
-
-            {/* School Invitation CTA */}
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <a
-                href="#contact"
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#002137] hover:bg-[#004b79] text-white text-xs sm:text-sm font-bold transition-all shadow-sm cursor-pointer"
-              >
-                <span>Host an AI Seminar at Your School</span>
-                <ArrowRight className="w-3.5 h-3.5 text-[#dfb74a]" />
-              </a>
-              <span className="text-xs text-slate-500 font-semibold">
-                Free workshop curriculum &amp; live tools demo for educators
-              </span>
+              <span className="text-[#b89047] text-xs font-black">✦</span>
             </div>
           </div>
 
