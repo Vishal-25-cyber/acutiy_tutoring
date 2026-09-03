@@ -1349,7 +1349,7 @@ export default function HomePage() {
           {/* Section Header */}
           <div className="text-center max-w-3xl mx-auto space-y-1">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
-              Mentors &amp; Tech Team
+              Mentors &amp; Tech Teams
             </h2>
             <p className="text-sm sm:text-base lg:text-lg font-bold text-[#b89047] tracking-normal max-w-2xl mx-auto">
               Experienced educators, software engineers, and AI researchers shaping the future of learning.
