@@ -61,28 +61,6 @@ export default function StudentLayout({ children }: { children?: React.ReactNode
       )}
 
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto" id="student-portal-scroll-area">
-        {/* Active 2-Day Trial Notification Banner Across All Student Pages */}
-        {isTrialActive && (
-          <div className="bg-gradient-to-r from-[#002137] via-[#003659] to-[#004b79] text-white px-4 sm:px-6 py-2.5 flex items-center justify-between shadow-xs border-b border-[#dfb74a]/25 shrink-0 select-none">
-            <div className="flex items-center gap-2.5 text-xs sm:text-sm">
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span className="font-extrabold text-[#dfb74a]">2-Day Free Trial Active:</span>
-              <span className="text-slate-200 text-xs hidden md:inline">
-                Full unrestricted access to all live interactive classrooms, study notes, and assignments unlocked.
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[11px] font-bold px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-emerald-400" />
-                <span>{trial?.remainingHours || 48}h Remaining</span>
-              </span>
-            </div>
-          </div>
-        )}
-
         {/* Expired 2-Day Trial Warning Banner on Fees Page */}
         {isTrialExpired && isFeesPage && (
           <div className="bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white px-4 sm:px-6 py-2.5 flex items-center justify-between shadow-xs border-b border-amber-400/40 shrink-0 select-none">

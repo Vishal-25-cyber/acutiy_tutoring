@@ -20,6 +20,7 @@ import {
 import { useFastFetch } from "@/lib/api-cache";
 import { formatStudentId } from "@/lib/id-generator";
 import { PortalHeader } from "@/components/layout/PortalHeader";
+import { TrialCountdownCornerTimer } from "@/components/student/TrialCountdownCornerTimer";
 
 
 export default function StudentDashboardPage() {
@@ -104,21 +105,23 @@ export default function StudentDashboardPage() {
       
       {/* ── 1. CLEAN HEADER (PERFECT ALIGNMENT) ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200 dark:border-slate-800">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-            Welcome, {safeName}
-          </h1>
-          {isTrialActive && (
-            <span className="text-[11px] font-extrabold px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/50 flex items-center gap-1.5 shadow-2xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              2-Day Free Trial ({trial?.remainingHours || 48}h left)
-            </span>
-          )}
-        </div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+          Welcome, {safeName}
+        </h1>
 
-        <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
-          <Calendar className="w-4 h-4 text-slate-400" />
-          <span>{todayFormatted}</span>
+        <div className="flex items-center gap-3">
+          {/* Animated Loading Corner Timer */}
+          {isTrialActive && (
+            <TrialCountdownCornerTimer
+              trialEndsAt={trial?.trialEndsAt}
+              remainingHours={trial?.remainingHours}
+            />
+          )}
+
+          <div className="hidden sm:flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 sm:pl-3 sm:border-l sm:border-slate-200 sm:dark:border-slate-800">
+            <Calendar className="w-4 h-4 text-slate-400" />
+            <span>{todayFormatted}</span>
+          </div>
         </div>
       </div>
 
@@ -235,7 +238,7 @@ export default function StudentDashboardPage() {
             </div>
             <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              {isTrialActive ? `2-Day Trial Active (${trial?.remainingHours || 48}h)` : "Active"}
+              Active
             </span>
           </div>
 

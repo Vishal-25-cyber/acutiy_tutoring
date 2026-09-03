@@ -63,8 +63,8 @@ export function PortalSidebar({ role }: SidebarProps) {
         label: "Dashboard",
         icon: LayoutDashboard,
         api: "/api/student/dashboard",
-        badge: isTrialExpired ? "Locked" : isTrialActive ? `${trial?.remainingHours || 48}h Trial` : undefined,
-        badgeVariant: isTrialExpired ? "warning" : "default",
+        badge: isTrialExpired ? "Locked" : undefined,
+        badgeVariant: isTrialExpired ? "warning" : undefined,
         isLocked: isTrialExpired,
       },
       {
@@ -288,23 +288,6 @@ export function PortalSidebar({ role }: SidebarProps) {
       </nav>
 
       {/* Trial Status Quick Card for Students */}
-      {isStudent && isTrialActive && (
-        <div className="mx-2.5 mb-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-900 dark:text-emerald-200 select-none">
-          <div className="flex items-center justify-between text-xs font-bold text-emerald-700 dark:text-emerald-400">
-            <span className="flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-              <span>2-Day Free Trial</span>
-            </span>
-            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-extrabold">
-              {trial?.remainingHours || 48}h left
-            </span>
-          </div>
-          <p className="text-[10.5px] text-emerald-700/85 dark:text-emerald-300/80 mt-1 leading-tight">
-            Full portal access unlocked. Fees not required.
-          </p>
-        </div>
-      )}
-
       {isStudent && isTrialExpired && (
         <div className="mx-2.5 mb-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 select-none">
           <div className="flex items-center gap-1.5 font-bold text-xs text-amber-700 dark:text-amber-400">
