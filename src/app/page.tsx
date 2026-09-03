@@ -1408,11 +1408,11 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* 2. Combined: Software Teams & AI Team (Identical Image Sizes Across All 4) */}
+            {/* 2. Combined: Software Teams & AI Teams (Identical Image Sizes Across All 4) */}
             <div className="space-y-4">
               <div className="text-center">
                 <h3 className="text-xl sm:text-2xl font-black text-[#002137] tracking-tight">
-                  Software Teams &amp; AI Team
+                  Software Teams &amp; AI Teams
                 </h3>
               </div>
 
