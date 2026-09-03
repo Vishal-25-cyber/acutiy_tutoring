@@ -86,6 +86,8 @@ const outreachSchools = [
     district: "Erode District",
     tag: "Academic Faculty Empowerment Seminar",
     sessionTitle: "AI in Education: Empowering Students Today",
+    bannerImage: "/images/ai_seminar_banner.png",
+    subtitle: "From Everyday AI Tools to Transformative Learning Experiences",
     summary:
       "MANTIF conducted a specialized session on “AI in Education: Empowering Students Today” for the teachers of Kongu National Higher Secondary School, Nanjanapuram.",
     description:
@@ -1211,10 +1213,10 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 3: OUR SIDE (CLEAN SINGLE-LINE SCHOOL NAME + ACTION LINK)
+          PAGE 3: OUR SIDE (SIDE-BY-SIDE SHOWCASE + STILL COMING SESSIONS)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="our-side" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/30 to-white pt-8 sm:pt-10 lg:pt-14 pb-28 sm:pb-36 lg:pb-48 flex flex-col justify-start">
-        <div className="w-full max-w-6xl mx-auto px-6 sm:px-10 lg:px-14 space-y-10 lg:space-y-14">
+      <section id="our-side" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white pt-8 sm:pt-10 lg:pt-14 pb-20 sm:pb-28 lg:pb-36 flex flex-col justify-start">
+        <div className="w-full max-w-6xl mx-auto px-6 sm:px-10 lg:px-14 space-y-10 lg:space-y-12">
 
           {/* Section Heading */}
           <div className="text-center space-y-2">
@@ -1226,38 +1228,143 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Clean List of Schools (Centered Single Line Name + Centered View Button) */}
-          <div className="divide-y divide-slate-200">
-            {outreachSchools.map((school) => (
-              <div key={school.id} className="py-8 first:pt-0 last:pb-0 space-y-4 text-center flex flex-col items-center">
-
-                {/* School Name on Single Line Centered */}
-                <div className="space-y-1.5 text-center">
-                  <h3 className="text-xl sm:text-2xl md:text-[26px] lg:text-3xl font-black text-[#002137] tracking-tight leading-snug">
-                    {school.name}
-                  </h3>
-                  <p className="text-xs sm:text-sm font-bold text-[#b89047] uppercase tracking-wide flex items-center justify-center gap-1.5 flex-wrap">
-                    <MapPin className="w-3.5 h-3.5 text-[#b89047] shrink-0" />
-                    <span>{school.district}</span>
-                    <span className="text-slate-300">•</span>
-                    <span>{school.tag}</span>
-                  </p>
+          {/* Side-by-Side School Showcase Card: Image on One Side, Wordings on Other Side */}
+          <div className="space-y-10">
+            {outreachSchools.map((school: any) => (
+              <div
+                key={school.id}
+                className="bg-white rounded-3xl border border-slate-200/90 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch group"
+              >
+                {/* Side 1: AI Seminar Banner Image */}
+                <div className="lg:col-span-6 relative bg-[#001726] flex items-center justify-center p-4 sm:p-6 lg:p-7 overflow-hidden border-b lg:border-b-0 lg:border-r border-slate-200/80">
+                  <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl group/img bg-slate-900 border border-slate-700/50 flex items-center justify-center">
+                    <img
+                      src={school.bannerImage || "/images/ai_seminar_banner.png"}
+                      alt={school.sessionTitle}
+                      className="w-full h-auto object-contain group-hover/img:scale-102 transition-transform duration-500"
+                    />
+                    {/* Overlay Tag */}
+                    <div className="absolute top-3 left-3 bg-[#002137]/90 backdrop-blur-md border border-white/20 text-white px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 shadow-md">
+                      <Sparkles className="w-3.5 h-3.5 text-[#dfb74a]" />
+                      <span>Official Seminar Keynote</span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Centered Action Button */}
-                <div className="pt-1 flex items-center justify-center">
-                  <button
-                    onClick={() => setSelectedSchoolModal(school)}
-                    className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-2xl bg-[#002137] hover:bg-[#004b79] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
-                  >
-                    <BookOpen className="w-4 h-4 text-[#dfb74a]" />
-                    <span>View Session Story, Details &amp; Video</span>
-                    <ArrowRight className="w-4 h-4 text-amber-300 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                </div>
+                {/* Side 2: Seminar Wordings & Rich Content */}
+                <div className="lg:col-span-6 p-6 sm:p-8 lg:p-10 flex flex-col justify-between space-y-6">
+                  <div className="space-y-4">
+                    {/* District & Event Tag Badges */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-amber-50 text-[#b89047] border border-amber-200/70">
+                        <MapPin className="w-3 h-3 text-[#b89047]" />
+                        {school.district}
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-blue-50 text-[#004b79] border border-blue-200/70">
+                        {school.tag}
+                      </span>
+                    </div>
 
+                    {/* School Name */}
+                    <h3 className="text-xl sm:text-2xl lg:text-[26px] font-black text-[#002137] tracking-tight leading-snug">
+                      {school.name}
+                    </h3>
+
+                    {/* Session Title & Subtitle */}
+                    <div className="space-y-1">
+                      <h4 className="text-base sm:text-lg font-extrabold text-[#004b79]">
+                        {school.sessionTitle}
+                      </h4>
+                      <p className="text-xs sm:text-sm font-semibold text-slate-500 italic">
+                        {school.subtitle || "From Everyday AI Tools to Transformative Learning Experiences"}
+                      </p>
+                    </div>
+
+                    {/* Rich Content Overview */}
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                      {school.summary} {school.description}
+                    </p>
+
+                    {/* Key Highlights Grid */}
+                    <div className="pt-1 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] sm:text-xs font-bold text-slate-700">
+                      <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                        <span>Hands-On Faculty Enablement</span>
+                      </div>
+                      <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100">
+                        <span className="w-2 h-2 rounded-full bg-[#dfb74a] shrink-0" />
+                        <span>Interactive AI Classroom Tools</span>
+                      </div>
+                      <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100 sm:col-span-2">
+                        <span className="w-2 h-2 rounded-full bg-[#004b79] shrink-0" />
+                        <span>Founder Karunya S Alma Mater Homecoming</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action CTA Button */}
+                  <div className="pt-2">
+                    <button
+                      onClick={() => setSelectedSchoolModal(school)}
+                      className="group w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-[#002137] hover:bg-[#004b79] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+                    >
+                      <BookOpen className="w-4 h-4 text-[#dfb74a]" />
+                      <span>View Session Story, Details &amp; Video</span>
+                      <ArrowRight className="w-4 h-4 text-amber-300 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </div>
+                </div>
               </div>
             ))}
+          </div>
+
+          {/* Under Empty Space: "Still Coming" Upcoming Seminars Section */}
+          <div className="relative p-6 sm:p-8 lg:p-10 rounded-3xl border-2 border-dashed border-slate-300/90 bg-gradient-to-br from-slate-50/90 via-white to-amber-50/20 shadow-sm hover:border-[#b89047]/60 transition-all text-center space-y-5">
+            <div className="space-y-2 max-w-2xl mx-auto">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200/80 text-[#b89047] text-xs font-black uppercase tracking-wider shadow-2xs">
+                <Clock className="w-3.5 h-3.5 text-[#b89047] animate-spin" style={{ animationDuration: "8s" }} />
+                <span>Still Coming • Institutional Outreach Seminars</span>
+              </div>
+              <h3 className="text-xl sm:text-2xl lg:text-3xl font-black text-[#002137] tracking-tight">
+                More School &amp; College AI Seminars Coming Soon
+              </h3>
+              <p className="text-xs sm:text-sm font-medium text-slate-600 leading-relaxed">
+                MANTIF is actively scheduling and rolling out practical AI enablement seminars to matriculation, CBSE, and higher secondary institutions across Tamil Nadu and beyond. Stay tuned as new partner schools and session highlights are added!
+              </p>
+            </div>
+
+            {/* Upcoming District Nodes / Ticker */}
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs font-bold text-slate-700">
+              <span className="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#dfb74a]" /> Erode (Completed)
+              </span>
+              <span className="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-1.5 text-slate-500">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" /> Coimbatore (Scheduling)
+              </span>
+              <span className="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-1.5 text-slate-500">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" /> Salem (Scheduling)
+              </span>
+              <span className="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-1.5 text-slate-500">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" /> Tirupur (In Talks)
+              </span>
+              <span className="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-1.5 text-slate-500">
+                <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" /> Chennai (Upcoming)
+              </span>
+            </div>
+
+            {/* School Invitation CTA */}
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <a
+                href="#contact"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#002137] hover:bg-[#004b79] text-white text-xs sm:text-sm font-bold transition-all shadow-sm cursor-pointer"
+              >
+                <span>Host an AI Seminar at Your School</span>
+                <ArrowRight className="w-3.5 h-3.5 text-[#dfb74a]" />
+              </a>
+              <span className="text-xs text-slate-500 font-semibold">
+                Free workshop curriculum &amp; live tools demo for educators
+              </span>
+            </div>
           </div>
 
         </div>
@@ -1728,6 +1835,17 @@ export default function HomePage() {
                 </button>
               </div>
 
+              {/* Modal Banner Image */}
+              {selectedSchoolModal.bannerImage && (
+                <div className="rounded-2xl overflow-hidden shadow-md border border-slate-200/90 aspect-[21/9] sm:aspect-[24/9] w-full bg-slate-900">
+                  <img
+                    src={selectedSchoolModal.bannerImage}
+                    alt={selectedSchoolModal.sessionTitle}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+
               {/* Unified Full-Width Narrative Paragraph */}
               <div className="space-y-2.5">
                 <div className="space-y-0.5">
@@ -2108,19 +2226,19 @@ export default function HomePage() {
                   <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#dfb74a]">Connect With Us</p>
                   <div className="flex items-center justify-center md:justify-start gap-2.5">
                     <a
-                      href="https://instagram.com"
+                      href="https://www.instagram.com/mantif.ai?igsi=NHoxb2J2cWdrNG5q"
                       target="_blank"
                       rel="noreferrer"
-                      title="Instagram"
+                      title="Follow MANTIF on Instagram"
                       className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow-sm"
                     >
                       <InstagramIcon className="w-4 h-4" />
                     </a>
                     <a
-                      href="https://linkedin.com"
+                      href="https://www.linkedin.com/in/acuity-learning-hub-871102401/"
                       target="_blank"
                       rel="noreferrer"
-                      title="LinkedIn"
+                      title="Connect with MANTIF on LinkedIn"
                       className="w-8 h-8 rounded-lg bg-[#0077b5] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow-sm"
                     >
                       <LinkedInIcon className="w-4 h-4" />
