@@ -1318,12 +1318,11 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Animated Loading Symbol for "Still more" (Clean Loading Animation, No AI Symbols) */}
+          {/* "Still more to grow" Badge */}
           <div className="pt-2 flex items-center justify-center">
-            <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-white border border-slate-200/90 shadow-xs text-slate-700 hover:border-[#b89047]/70 transition-all">
-              <Loader2 className="w-4 h-4 text-[#b89047] animate-spin shrink-0" />
-              <span className="text-xs font-bold text-[#002137] tracking-wide">
-                Still more...
+            <div className="inline-flex items-center px-5 py-2 rounded-full bg-white border border-slate-200/90 shadow-xs text-slate-700">
+              <span className="text-xs sm:text-sm font-bold text-[#002137] tracking-wide">
+                Still more to grow
               </span>
             </div>
           </div>
