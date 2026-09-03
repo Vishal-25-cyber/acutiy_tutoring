@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { clearAuthAndCaches } from "@/lib/api-cache";
@@ -232,6 +232,67 @@ export default function HomePage() {
     { name: "Testimonials", href: "#testimonials" },
     { name: "Gallery", href: "#gallery" },
   ];
+
+  // Active Section & Animated Navbar Indicator State
+  const [activeSection, setActiveSection] = useState("about");
+  const navItemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 });
+
+  // Update sliding bar indicator position whenever activeSection or window size changes
+  useEffect(() => {
+    const updateIndicator = () => {
+      const activeEl = navItemRefs.current[activeSection];
+      if (activeEl) {
+        setIndicatorStyle({
+          left: activeEl.offsetLeft,
+          width: activeEl.offsetWidth,
+          opacity: 1,
+        });
+      }
+    };
+
+    updateIndicator();
+    const timer = setTimeout(updateIndicator, 60);
+    window.addEventListener("resize", updateIndicator);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", updateIndicator);
+    };
+  }, [activeSection]);
+
+  // ScrollSpy to track active section while scrolling
+  useEffect(() => {
+    const sectionIds = ["about", "tutoring-hub", "our-side", "team", "testimonials", "gallery"];
+
+    const handleScroll = () => {
+      const scrollPos = window.scrollY + 120;
+
+      // Bottom of page detection -> activate gallery
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 60) {
+        setActiveSection("gallery");
+        return;
+      }
+
+      for (let i = sectionIds.length - 1; i >= 0; i--) {
+        const id = sectionIds[i];
+        const el = document.getElementById(id);
+        if (el) {
+          const top = el.offsetTop;
+          if (scrollPos >= top) {
+            setActiveSection(id);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   // Fetch batches and settings on mount
   useEffect(() => {
@@ -487,18 +548,39 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Desktop Navigation Links (Moved to Right Side, No Contact Us / Portal Login buttons) */}
-          <nav className="hidden lg:flex items-center gap-7 xl:gap-9 text-sm font-bold text-slate-700">
-            {navItems.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                className="relative py-1 text-slate-600 hover:text-[#004b79] transition-colors group"
-              >
-                <span>{item.name}</span>
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#004b79] transition-all duration-300 group-hover:w-full" />
-              </a>
-            ))}
+          {/* Desktop Navigation Links with Animated Sliding Indicator Bar */}
+          <nav className="hidden lg:flex items-center gap-7 xl:gap-9 text-sm font-bold text-slate-700 relative py-1">
+            {/* Sliding Animated Active Bar */}
+            <span
+              className="absolute bottom-0 h-[3px] bg-gradient-to-r from-[#002137] via-[#004b79] to-[#8c6924] transition-all duration-300 ease-out rounded-full pointer-events-none"
+              style={{
+                left: `${indicatorStyle.left}px`,
+                width: `${indicatorStyle.width}px`,
+                opacity: indicatorStyle.opacity,
+              }}
+            />
+
+            {navItems.map((item) => {
+              const sectionId = item.href.replace("#", "");
+              const isActive = activeSection === sectionId;
+              return (
+                <a
+                  key={item.name}
+                  ref={(el) => {
+                    navItemRefs.current[sectionId] = el;
+                  }}
+                  href={item.href}
+                  onClick={() => {
+                    setActiveSection(sectionId);
+                  }}
+                  className={`relative py-1.5 transition-colors duration-200 cursor-pointer ${
+                    isActive ? "text-[#004b79] font-black" : "text-slate-600 hover:text-[#004b79]"
+                  }`}
+                >
+                  <span>{item.name}</span>
+                </a>
+              );
+            })}
           </nav>
 
           {/* Mobile Hamburger Menu */}
@@ -515,18 +597,30 @@ export default function HomePage() {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-b border-slate-200 bg-white px-8 py-6 space-y-4 shadow-xl">
-            <div className="flex flex-col space-y-3 text-base font-bold">
-              {navItems.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-slate-700 py-1.5 hover:text-[#004b79] transition-colors"
-                >
-                  {item.name}
-                </a>
-              ))}
+          <div className="lg:hidden border-b border-slate-200 bg-white px-6 py-4 space-y-2 shadow-xl">
+            <div className="flex flex-col space-y-1 text-base font-bold">
+              {navItems.map((item) => {
+                const sectionId = item.href.replace("#", "");
+                const isActive = activeSection === sectionId;
+                return (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => {
+                      setActiveSection(sectionId);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`py-2 px-3.5 rounded-xl transition-all flex items-center justify-between ${
+                      isActive
+                        ? "bg-[#002137] text-[#dfb74a] font-black"
+                        : "text-slate-700 hover:text-[#004b79] hover:bg-slate-50"
+                    }`}
+                  >
+                    <span>{item.name}</span>
+                    {isActive && <span className="w-2 h-2 rounded-full bg-[#dfb74a]" />}
+                  </a>
+                );
+              })}
             </div>
           </div>
         )}
