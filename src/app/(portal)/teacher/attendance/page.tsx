@@ -505,12 +505,6 @@ export default function TeacherAttendancePage() {
                     <span>Pending Check-in</span>
                   </span>
                 )}
-                {todayRecord && (
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950 text-[#004b79] dark:text-[#dfb74a] border border-blue-200 dark:border-[#004b79]/40 flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3" />
-                    <span>Admin Notified &amp; Synced</span>
-                  </span>
-                )}
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {todayRecord
