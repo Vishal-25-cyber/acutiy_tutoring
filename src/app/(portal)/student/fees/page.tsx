@@ -21,9 +21,11 @@ import {
 import { Modal } from "@/components/ui/modal";
 import { useFastFetch } from "@/lib/api-cache";
 import { downloadReceiptPDF } from "@/lib/download";
+import { cn } from "@/components/ui/button";
 
 export default function StudentFeesPage() {
   const { data, refetch } = useFastFetch("/api/student/payments");
+  const { data: authData } = useFastFetch("/api/auth/me");
   const [isPaying, setIsPaying] = useState(false);
   const [showPayModal, setShowPayModal] = useState(false);
   const [isQrUnlocked, setIsQrUnlocked] = useState(false);
@@ -32,6 +34,11 @@ export default function StudentFeesPage() {
   const [transactionIdInput, setTransactionIdInput] = useState("");
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [downloadingReceiptId, setDownloadingReceiptId] = useState<string | null>(null);
+
+  const trial = authData?.user?.trial;
+  const hasPaid = !!trial?.hasPaid;
+  const isTrialActive = !hasPaid && !!trial?.isTrialActive;
+  const isTrialExpired = !hasPaid && !!trial?.isTrialExpired;
 
   useEffect(() => {
     const handleLiveUpdate = () => {
@@ -66,7 +73,8 @@ export default function StudentFeesPage() {
 
   const upiId = (data?.settings?.upiId || "karunyas001-1@okicici").trim();
   const companyName = (data?.settings?.companyName || "Mantif Tutoring").trim();
-  const monthlyFee = Number(data?.currentFee?.amount ?? data?.settings?.monthlyFee ?? 299);
+  const rawFee = Number(data?.currentFee?.amount || data?.settings?.monthlyTuitionFee || data?.settings?.monthlyFee);
+  const monthlyFee = !isNaN(rawFee) && rawFee > 0 ? rawFee : 1999;
   const customQrImage = data?.settings?.qrCodeImageUrl;
   const currentMonthStr = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date());
 
@@ -216,21 +224,45 @@ export default function StudentFeesPage() {
 
         <div className="py-2 sm:px-6 space-y-1">
           <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Tuition Status</span>
-          <p className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 font-mono">
-            <CheckCircle2 className="w-6 h-6 text-emerald-500" />
-            <span>{currentFee ? "Pending Dues" : "Cleared"}</span>
+          <p className={cn(
+            "text-2xl sm:text-3xl font-black flex items-center gap-1.5 font-mono",
+            hasPaid
+              ? "text-emerald-600 dark:text-emerald-400"
+              : isTrialActive
+                ? "text-[#004b79] dark:text-[#dfb74a]"
+                : "text-amber-600 dark:text-amber-400"
+          )}>
+            <CheckCircle2 className="w-6 h-6 shrink-0" />
+            <span>
+              {hasPaid ? "Cleared" : isTrialActive ? "2-Day Trial" : "Pending Dues"}
+            </span>
           </p>
-          <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-            {currentFee ? `₹${currentFee.amount} invoice due` : "No outstanding invoices"}
+          <p className="text-xs text-slate-500 font-medium">
+            {hasPaid
+              ? "No outstanding invoices"
+              : isTrialActive
+                ? `Complimentary access (${trial?.remainingHours || 48}h left)`
+                : `₹${monthlyFee.toLocaleString("en-IN")} invoice due to unlock`}
           </p>
         </div>
 
         <div className="py-2 sm:px-6 space-y-1">
           <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Portal Access</span>
-          <p className="text-2xl sm:text-3xl font-black text-[#004b79] dark:text-[#dfb74a]">
-            Full Access
+          <p className={cn(
+            "text-2xl sm:text-3xl font-black",
+            isTrialExpired
+              ? "text-rose-600 dark:text-rose-400"
+              : "text-[#004b79] dark:text-[#dfb74a]"
+          )}>
+            {isTrialExpired ? "Locked" : isTrialActive ? "Trial Access" : "Full Access"}
           </p>
-          <p className="text-xs text-slate-500 font-medium">Live classrooms &amp; notes unlocked</p>
+          <p className="text-xs text-slate-500 font-medium">
+            {isTrialExpired
+              ? "Submit UTR below to unlock"
+              : isTrialActive
+                ? `Unrestricted for ${trial?.remainingHours || 48} more hours`
+                : "Live classrooms & notes unlocked"}
+          </p>
         </div>
       </div>
 

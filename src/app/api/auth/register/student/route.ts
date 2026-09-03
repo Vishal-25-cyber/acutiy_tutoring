@@ -74,13 +74,15 @@ export async function POST(req: NextRequest) {
       streakCount: 1,
       attendanceRiskLevel: "LOW",
       earnedBadges: ["First Class", "Eager Learner"],
+      trialStartDate: new Date(),
+      trialEndsAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 48 Hours Free Trial
     });
 
     // Send Welcome Notification
     await Notification.create({
       userId: user._id,
-      title: "Welcome to Mantif Tutoring!",
-      message: `You are enrolled in ${data.currentClass} (${batch.name}). Live classes and learning hub materials are now accessible.`,
+      title: "Welcome to Mantif Tutoring! (2-Day Free Trial)",
+      message: `Your 2-Day Free Trial is now active! You are enrolled in ${data.currentClass} (${batch.name}). Full access to all live classrooms, timetable, and study materials is unlocked.`,
       type: "SYSTEM",
     });
 

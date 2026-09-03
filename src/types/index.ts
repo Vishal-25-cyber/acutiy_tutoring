@@ -54,6 +54,20 @@ export interface IStudentProfile {
   attendanceRiskLevel: RiskLevel;
   totalClassesAttended: number;
   totalClassesScheduled: number;
+  trialStartDate?: Date;
+  trialEndsAt?: Date;
+}
+
+export interface ITrialInfo {
+  isTrialActive: boolean;
+  isTrialExpired: boolean;
+  trialEndsAt: string | Date;
+  trialStartDate?: string | Date;
+  remainingHours: number;
+  remainingMinutes?: number;
+  hasPaid: boolean;
+  hasAccess: boolean;
+  pendingVerification: boolean;
 }
 
 export interface ITeacherProfile {

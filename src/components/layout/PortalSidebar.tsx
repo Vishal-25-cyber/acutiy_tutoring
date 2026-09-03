@@ -24,6 +24,7 @@ import {
   Activity,
   History,
   LogOut,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/components/ui/button";
 import { warmupPortalCache, prefetchApi, invalidateCache, clearAuthAndCaches, useFastFetch } from "@/lib/api-cache";
@@ -35,6 +36,7 @@ interface SidebarLink {
   badge?: string;
   badgeVariant?: "default" | "warning" | "success" | "live";
   api?: string;
+  isLocked?: boolean;
 }
 
 interface SidebarProps {
@@ -45,19 +47,81 @@ export function PortalSidebar({ role }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const studentLinks: SidebarLink[] = React.useMemo(() => [
-    { href: "/student/dashboard", label: "Dashboard", icon: LayoutDashboard, api: "/api/student/dashboard" },
-    { href: "/student/classes", label: "Live Classes & Timetable", icon: Video, api: "/api/student/classes" },
-    { href: "/student/materials", label: "Study Materials", icon: BookOpen, api: "/api/student/materials" },
-    { href: "/student/assignments", label: "Assignments & Tasks", icon: FileCheck, api: "/api/student/assignments" },
-    { href: "/student/attendance", label: "Attendance Record", icon: CalendarCheck2, api: "/api/student/attendance" },
-    {
-      href: "/student/fees",
-      label: "Fee Receipts & QR",
-      icon: CreditCard,
-      api: "/api/student/payments",
-    },
-  ], []);
+  // Fetch current user auth data including live trial calculations
+  const { data: authData } = useFastFetch("/api/auth/me");
+  const trial = authData?.user?.trial;
+
+  const isStudent = role === "STUDENT";
+  const hasPaid = !!trial?.hasPaid;
+  const isTrialActive = isStudent && !hasPaid && !!trial?.isTrialActive;
+  const isTrialExpired = isStudent && !hasPaid && !!trial?.isTrialExpired;
+
+  const studentLinks: SidebarLink[] = React.useMemo(() => {
+    const baseLinks: SidebarLink[] = [
+      {
+        href: "/student/dashboard",
+        label: "Dashboard",
+        icon: LayoutDashboard,
+        api: "/api/student/dashboard",
+        badge: isTrialExpired ? "Locked" : isTrialActive ? `${trial?.remainingHours || 48}h Trial` : undefined,
+        badgeVariant: isTrialExpired ? "warning" : "default",
+        isLocked: isTrialExpired,
+      },
+      {
+        href: "/student/classes",
+        label: "Live Classes & Timetable",
+        icon: Video,
+        api: "/api/student/classes",
+        badge: isTrialExpired ? "Locked" : undefined,
+        badgeVariant: "warning",
+        isLocked: isTrialExpired,
+      },
+      {
+        href: "/student/materials",
+        label: "Study Materials",
+        icon: BookOpen,
+        api: "/api/student/materials",
+        badge: isTrialExpired ? "Locked" : undefined,
+        badgeVariant: "warning",
+        isLocked: isTrialExpired,
+      },
+      {
+        href: "/student/assignments",
+        label: "Assignments & Tasks",
+        icon: FileCheck,
+        api: "/api/student/assignments",
+        badge: isTrialExpired ? "Locked" : undefined,
+        badgeVariant: "warning",
+        isLocked: isTrialExpired,
+      },
+      {
+        href: "/student/attendance",
+        label: "Attendance Record",
+        icon: CalendarCheck2,
+        api: "/api/student/attendance",
+        badge: isTrialExpired ? "Locked" : undefined,
+        badgeVariant: "warning",
+        isLocked: isTrialExpired,
+      },
+    ];
+
+    // REQUIREMENT: "in 2 days trial fees dont show in the sidebar"
+    // REQUIREMENT: "and then after 2 days of trail ended... that time fees receip should show in the side bar"
+    // Also show when student has paid (to view & download receipts)
+    if (!isTrialActive || hasPaid || isTrialExpired) {
+      baseLinks.push({
+        href: "/student/fees",
+        label: "Fee Receipts & QR",
+        icon: CreditCard,
+        api: "/api/student/payments",
+        badge: isTrialExpired ? "Payment Due" : undefined,
+        badgeVariant: isTrialExpired ? "warning" : "default",
+        isLocked: false,
+      });
+    }
+
+    return baseLinks;
+  }, [isTrialActive, isTrialExpired, hasPaid, trial?.remainingHours]);
 
   const teacherLinks: SidebarLink[] = React.useMemo(() => [
     { href: "/teacher/dashboard", label: "Dashboard", icon: LayoutDashboard, api: "/api/teacher/dashboard" },
@@ -183,14 +247,20 @@ export function PortalSidebar({ role }: SidebarProps) {
                 "flex items-center justify-between px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all group",
                 isActive
                   ? "bg-[#002137] text-white dark:bg-[#002842] dark:text-[#dfb74a] shadow-sm border border-[#002137] dark:border-[#b89047]/40"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100"
+                  : item.isLocked
+                    ? "text-slate-400 dark:text-slate-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/40"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100"
               )}
             >
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2.5 min-w-0">
                 <Icon
                   className={cn(
-                    "w-4 h-4 transition-colors",
-                    isActive ? "text-[#dfb74a]" : "text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300"
+                    "w-4 h-4 transition-colors shrink-0",
+                    isActive
+                      ? "text-[#dfb74a]"
+                      : item.isLocked
+                        ? "text-slate-400"
+                        : "text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300"
                   )}
                 />
                 <span className="truncate">{item.label}</span>
@@ -198,7 +268,7 @@ export function PortalSidebar({ role }: SidebarProps) {
               {item.badge && (
                 <span
                   className={cn(
-                    "text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                    "text-[10px] px-1.5 py-0.5 rounded-full font-bold shrink-0 flex items-center gap-1",
                     item.badgeVariant === "warning"
                       ? "bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30"
                       : item.badgeVariant === "live"
@@ -208,13 +278,50 @@ export function PortalSidebar({ role }: SidebarProps) {
                           : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                   )}
                 >
-                  {item.badge}
+                  {item.isLocked && <Lock className="w-2.5 h-2.5" />}
+                  <span>{item.badge}</span>
                 </span>
               )}
             </Link>
           );
         })}
       </nav>
+
+      {/* Trial Status Quick Card for Students */}
+      {isStudent && isTrialActive && (
+        <div className="mx-2.5 mb-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-900 dark:text-emerald-200 select-none">
+          <div className="flex items-center justify-between text-xs font-bold text-emerald-700 dark:text-emerald-400">
+            <span className="flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+              <span>2-Day Free Trial</span>
+            </span>
+            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-extrabold">
+              {trial?.remainingHours || 48}h left
+            </span>
+          </div>
+          <p className="text-[10.5px] text-emerald-700/85 dark:text-emerald-300/80 mt-1 leading-tight">
+            Full portal access unlocked. Fees not required.
+          </p>
+        </div>
+      )}
+
+      {isStudent && isTrialExpired && (
+        <div className="mx-2.5 mb-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 select-none">
+          <div className="flex items-center gap-1.5 font-bold text-xs text-amber-700 dark:text-amber-400">
+            <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <span>Trial Ended</span>
+          </div>
+          <p className="text-[10.5px] text-amber-800/80 dark:text-amber-300/80 mt-1 leading-tight">
+            Tuition fee payment required to unlock classes.
+          </p>
+          <Link
+            href="/student/fees"
+            className="mt-2 block text-center py-1 px-2 rounded-lg bg-[#004b79] hover:bg-[#003b60] text-white font-bold text-[11px] transition-colors"
+          >
+            Pay Tuition &amp; QR →
+          </Link>
+        </div>
+      )}
 
       {/* Footer: Sign Out */}
       <div className="p-2.5 border-t border-slate-200 dark:border-slate-800">

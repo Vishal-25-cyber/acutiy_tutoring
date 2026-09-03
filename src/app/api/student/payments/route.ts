@@ -22,7 +22,8 @@ export async function GET(req: NextRequest) {
       StudentProfile.findOne({ userId: session.userId }).lean(),
     ]);
 
-    const monthlyFee = (settings as any)?.monthlyTuitionFee ?? (settings as any)?.monthlyFee ?? 1999;
+    const rawFee = Number((settings as any)?.monthlyTuitionFee ?? (settings as any)?.monthlyFee);
+    const monthlyFee = !isNaN(rawFee) && rawFee > 0 ? rawFee : 1999;
     const companyName = (settings as any)?.companyName || "Mantif Tutoring";
     const upiId = (settings as any)?.upiId || "karunyas001-1@okicici";
     const qrCodeImageUrl = (settings as any)?.qrCodeImageUrl || "";
@@ -63,7 +64,7 @@ export async function GET(req: NextRequest) {
           seenMonths.add(key);
           if (
             (p.status === "PENDING" || p.status === "PENDING_VERIFICATION") &&
-            (p.amount !== monthlyFee || p.billingMonth === "February 2025" || !p.billingMonth)
+            (p.amount !== monthlyFee || !p.amount || p.amount <= 0 || p.billingMonth === "February 2025" || !p.billingMonth)
           ) {
             await Payment.updateOne(
               { _id: p._id },

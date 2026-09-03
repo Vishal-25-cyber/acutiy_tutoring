@@ -3,6 +3,7 @@ import connectToDatabase from "@/lib/db/mongoose";
 import User from "@/models/User";
 import StudentProfile from "@/models/StudentProfile";
 import TeacherProfile from "@/models/TeacherProfile";
+import Payment from "@/models/Payment";
 import { getSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
@@ -50,8 +51,42 @@ export async function GET(req: NextRequest) {
     }
 
     let profileData: any = null;
+    let trialData: any = null;
+
     if (user.role === "STUDENT") {
       profileData = await StudentProfile.findOne({ userId: user._id }).populate("batchId").lean();
+
+      // Check real payment records for this student
+      const payments = await Payment.find({ studentId: user._id }).lean();
+      const hasPaid = payments.some((p: any) => p.status === "PAID");
+      const pendingVerification = payments.some((p: any) => p.status === "PENDING_VERIFICATION");
+
+      // Calculate 2-Day (48 Hours) Free Trial
+      const start = profileData?.trialStartDate || profileData?.createdAt || user.createdAt || new Date();
+      const startDate = new Date(start);
+      const endDate = profileData?.trialEndsAt
+        ? new Date(profileData.trialEndsAt)
+        : new Date(startDate.getTime() + 2 * 24 * 60 * 60 * 1000);
+
+      const now = new Date();
+      const diffMs = endDate.getTime() - now.getTime();
+      const remainingHours = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60)));
+      const remainingMinutes = Math.max(0, Math.ceil(diffMs / (1000 * 60)));
+      const isTrialActive = !hasPaid && diffMs > 0;
+      const isTrialExpired = !hasPaid && diffMs <= 0;
+      const hasAccess = hasPaid || isTrialActive;
+
+      trialData = {
+        isTrialActive,
+        isTrialExpired,
+        trialEndsAt: endDate.toISOString(),
+        trialStartDate: startDate.toISOString(),
+        remainingHours,
+        remainingMinutes,
+        hasPaid,
+        hasAccess,
+        pendingVerification,
+      };
     } else if (user.role === "TEACHER") {
       profileData = teacherProfile || (await TeacherProfile.findOne({ userId: user._id }).lean());
     }
@@ -68,6 +103,7 @@ export async function GET(req: NextRequest) {
           status: user.status,
           avatarUrl: user.avatarUrl,
           profile: profileData,
+          trial: trialData,
         },
       },
       {

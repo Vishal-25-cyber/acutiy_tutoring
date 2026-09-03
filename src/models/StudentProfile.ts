@@ -53,6 +53,8 @@ const StudentProfileSchema = new Schema<IStudentProfileDocument>(
     },
     totalClassesAttended: { type: Number, default: 0 },
     totalClassesScheduled: { type: Number, default: 0 },
+    trialStartDate: { type: Date, default: Date.now },
+    trialEndsAt: { type: Date },
   },
   {
     timestamps: true,

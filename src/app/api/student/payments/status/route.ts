@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db/mongoose";
 import { getSession } from "@/lib/auth/session";
 import Payment from "@/models/Payment";
+import StudentProfile from "@/models/StudentProfile";
+import User from "@/models/User";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +19,21 @@ export async function GET(req: NextRequest) {
 
     await connectToDatabase();
 
+    const [userDoc, profileDoc] = await Promise.all([
+      User.findById(session.userId).lean(),
+      StudentProfile.findOne({ userId: session.userId }).lean(),
+    ]);
+
+    const start = profileDoc?.trialStartDate || (profileDoc as any)?.createdAt || (userDoc as any)?.createdAt || new Date();
+    const startDate = new Date(start);
+    const endDate = profileDoc?.trialEndsAt
+      ? new Date(profileDoc.trialEndsAt)
+      : new Date(startDate.getTime() + 2 * 24 * 60 * 60 * 1000);
+
+    const now = new Date();
+    const diffMs = endDate.getTime() - now.getTime();
+    const remainingHours = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60)));
+
     if (paymentId) {
       const payment = await Payment.findOne({
         _id: paymentId,
@@ -27,10 +44,23 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: "Payment record not found" }, { status: 404 });
       }
 
+      const hasPaid = payment.status === "PAID";
+      const isTrialActive = !hasPaid && diffMs > 0;
+      const isTrialExpired = !hasPaid && diffMs <= 0;
+      const hasAccess = hasPaid || isTrialActive;
+
       return NextResponse.json({
         success: true,
         status: payment.status,
-        hasAccess: payment.status === "PAID",
+        hasAccess,
+        trial: {
+          isTrialActive,
+          isTrialExpired,
+          trialEndsAt: endDate.toISOString(),
+          remainingHours,
+          hasPaid,
+          hasAccess,
+        },
         payment: {
           id: payment._id.toString(),
           amount: payment.amount,
@@ -54,9 +84,22 @@ export async function GET(req: NextRequest) {
 
     const pendingVerification = payments.find((p) => p.status === "PENDING_VERIFICATION");
     const latestPaid = payments.find((p) => p.status === "PAID");
+    const hasPaid = !!latestPaid;
+    const isTrialActive = !hasPaid && diffMs > 0;
+    const isTrialExpired = !hasPaid && diffMs <= 0;
+    const hasAccess = hasPaid || isTrialActive;
 
     return NextResponse.json({
       success: true,
+      hasAccess,
+      trial: {
+        isTrialActive,
+        isTrialExpired,
+        trialEndsAt: endDate.toISOString(),
+        remainingHours,
+        hasPaid,
+        hasAccess,
+      },
       pendingVerification: pendingVerification
         ? {
             id: pendingVerification._id.toString(),
