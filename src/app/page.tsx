@@ -452,6 +452,14 @@ export default function HomePage() {
       className="min-h-screen bg-slate-50 text-slate-900 selection:bg-[#dfb74a]/20 selection:text-[#002137]"
       style={{ fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" }}
     >
+      {/* Skip to Main Content for Accessibility (WCAG 2.4.1) */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2.5 focus:bg-[#002137] focus:text-white focus:rounded-xl focus:shadow-2xl focus:font-bold focus:outline-none focus:ring-2 focus:ring-[#dfb74a]"
+      >
+        Skip to main content
+      </a>
+
       {/* ═══════════════════════════════════════════════════════════════════════
           STICKY NAVBAR (EXACT REQ: About, Tutoring Hub, Our Side, Team, Testimonials, Gallery)
       ═══════════════════════════════════════════════════════════════════════ */}
@@ -473,9 +481,9 @@ export default function HomePage() {
                 className="font-black text-[22px] tracking-[0.16em] text-[#002137] leading-tight select-none"
                 style={{ fontFamily: "'Montserrat', 'Outfit', 'Inter', sans-serif" }}
               >
-                M<span className="text-[#b89047]">Λ</span>NTIF
+                M<span className="text-[#8c6924]">Λ</span>NTIF
               </span>
-              <p className="text-[11px] font-bold text-[#b89047] tracking-tight leading-none mt-0.5">
+              <p className="text-[11px] font-bold text-[#8c6924] tracking-tight leading-none mt-0.5">
                 Human x Artificial Intelligence
               </p>
             </div>
@@ -526,10 +534,13 @@ export default function HomePage() {
         )}
       </header>
 
-      {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 1: ABOUT (HERO SPLIT: PERFECT CENTER LINE & COMPACT PRO CARD)
-      ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="about" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-12 lg:py-16">
+      {/* Semantic Main Landmark for Accessibility (WCAG 1.3.1) */}
+      <main id="main-content">
+
+        {/* ═══════════════════════════════════════════════════════════════════════
+            PAGE 1: ABOUT (HERO SPLIT: PERFECT CENTER LINE & COMPACT PRO CARD)
+        ═══════════════════════════════════════════════════════════════════════ */}
+        <section id="about" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-12 lg:py-16">
         {/* Exact Center Vertical Divider Line */}
         <div className="hidden lg:block absolute left-1/2 top-12 bottom-12 w-px bg-slate-200 -translate-x-1/2" />
 
@@ -543,10 +554,10 @@ export default function HomePage() {
                   className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-[0.06em] leading-[1.04]"
                   style={{ fontFamily: "'Montserrat', 'Outfit', 'Inter', sans-serif" }}
                 >
-                  M<span className="text-[#b89047]">Λ</span>NTIF
+                  M<span className="text-[#8c6924]">Λ</span>NTIF
                   <span className="sr-only"> — Intelligent Online Tutoring &amp; Learning Platform for Classes 6 to 10</span>
                 </h1>
-                <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#b89047] tracking-tight">
+                <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#8c6924] tracking-tight">
                   Human x Artificial Intelligence
                 </p>
               </div>
@@ -601,7 +612,7 @@ export default function HomePage() {
                   onClick={() => { setAuthMode("SIGNIN"); clear(); }}
                   className={`flex-1 pb-3 text-center text-sm sm:text-base font-extrabold tracking-tight transition-all border-b-2 cursor-pointer ${authMode === "SIGNIN"
                     ? "border-[#002137] text-[#002137]"
-                    : "border-transparent text-slate-400 hover:text-slate-700"
+                    : "border-transparent text-slate-600 hover:text-slate-900"
                     }`}
                 >
                   Sign In
@@ -611,7 +622,7 @@ export default function HomePage() {
                   onClick={() => { setAuthMode("SIGNUP"); setStep(1); clear(); }}
                   className={`flex-1 pb-3 text-center text-sm sm:text-base font-extrabold tracking-tight transition-all border-b-2 cursor-pointer ${authMode === "SIGNUP"
                     ? "border-[#002137] text-[#002137]"
-                    : "border-transparent text-slate-400 hover:text-slate-700"
+                    : "border-transparent text-slate-600 hover:text-slate-900"
                     }`}
                 >
                   Sign Up
@@ -661,7 +672,7 @@ export default function HomePage() {
 
                   <form onSubmit={handleSignIn} className="space-y-3.5 pt-1">
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-bold text-slate-700">
+                      <label htmlFor="signin-identifier" className="block text-xs font-bold text-slate-700">
                         {loginRole === "STUDENT"
                           ? "Student Email or Registered Mobile"
                           : loginRole === "TEACHER"
@@ -669,6 +680,7 @@ export default function HomePage() {
                             : "Administrator Email"}
                       </label>
                       <input
+                        id="signin-identifier"
                         type="text"
                         autoComplete="username"
                         data-lpignore="true"
@@ -687,7 +699,7 @@ export default function HomePage() {
 
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <label className="block text-xs font-bold text-slate-700">Password</label>
+                        <label htmlFor="signin-password" className="block text-xs font-bold text-slate-700">Password</label>
                         <button
                           type="button"
                           onClick={() => setShowPw(!showPw)}
@@ -697,6 +709,7 @@ export default function HomePage() {
                         </button>
                       </div>
                       <input
+                        id="signin-password"
                         type={showPw ? "text" : "password"}
                         autoComplete="current-password"
                         data-lpignore="true"
@@ -761,15 +774,16 @@ export default function HomePage() {
                   {/* Step progress */}
                   <div className="flex items-center justify-between text-xs font-bold text-slate-500 py-0.5">
                     <span>Step {step} of {totalSteps}: <strong className="text-[#004b79]">{stepLabels[step - 1]}</strong></span>
-                    <span className="text-[11px] text-slate-400">Secure Registration</span>
+                    <span className="text-[11px] text-slate-500 font-medium">Secure Registration</span>
                   </div>
 
                   {/* Step 1: Base Credentials */}
                   {step === 1 && (
                     <div className="space-y-3.5">
                       <div className="space-y-1">
-                        <label className="block text-xs font-bold text-slate-700">Full Legal Name *</label>
+                        <label htmlFor="signup-name" className="block text-xs font-bold text-slate-700">Full Legal Name *</label>
                         <input
+                          id="signup-name"
                           type="text"
                           value={sName}
                           onChange={(e) => setSName(e.target.value)}
@@ -780,8 +794,9 @@ export default function HomePage() {
 
                       <div className="grid grid-cols-2 gap-2.5">
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">Email *</label>
+                          <label htmlFor="signup-email" className="block text-xs font-bold text-slate-700">Email *</label>
                           <input
+                            id="signup-email"
                             type="email"
                             value={sEmail}
                             onChange={(e) => setSEmail(e.target.value)}
@@ -790,8 +805,9 @@ export default function HomePage() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">Mobile *</label>
+                          <label htmlFor="signup-phone" className="block text-xs font-bold text-slate-700">Mobile *</label>
                           <input
+                            id="signup-phone"
                             type="tel"
                             maxLength={10}
                             value={sPhone}
@@ -804,8 +820,9 @@ export default function HomePage() {
 
                       <div className="grid grid-cols-2 gap-2.5">
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">Password *</label>
+                          <label htmlFor="signup-password" className="block text-xs font-bold text-slate-700">Password *</label>
                           <input
+                            id="signup-password"
                             type="password"
                             value={sPw}
                             onChange={(e) => setSPw(e.target.value)}
@@ -814,8 +831,9 @@ export default function HomePage() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">Confirm *</label>
+                          <label htmlFor="signup-confirm-password" className="block text-xs font-bold text-slate-700">Confirm *</label>
                           <input
+                            id="signup-confirm-password"
                             type="password"
                             value={sCPw}
                             onChange={(e) => setSCPw(e.target.value)}
@@ -841,8 +859,9 @@ export default function HomePage() {
                     <div className="space-y-3.5">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">School Name *</label>
+                          <label htmlFor="signup-school" className="block text-xs font-bold text-slate-700">School Name *</label>
                           <input
+                            id="signup-school"
                             type="text"
                             value={sSchool}
                             onChange={(e) => setSSchool(e.target.value)}
@@ -851,8 +870,9 @@ export default function HomePage() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">District *</label>
+                          <label htmlFor="signup-district" className="block text-xs font-bold text-slate-700">District *</label>
                           <input
+                            id="signup-district"
                             type="text"
                             value={sDistrict}
                             onChange={(e) => setSDistrict(e.target.value)}
@@ -864,8 +884,9 @@ export default function HomePage() {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">Curriculum *</label>
+                          <label htmlFor="signup-curriculum" className="block text-xs font-bold text-slate-700">Curriculum *</label>
                           <select
+                            id="signup-curriculum"
                             value={sBoard}
                             onChange={(e) => setSBoard(e.target.value as any)}
                             className="w-full px-3.5 py-2.5 sm:py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white text-slate-900 font-medium cursor-pointer"
@@ -875,8 +896,9 @@ export default function HomePage() {
                           </select>
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">Class *</label>
+                          <label htmlFor="signup-class" className="block text-xs font-bold text-slate-700">Class *</label>
                           <select
+                            id="signup-class"
                             value={sClass}
                             onChange={(e) => setSClass(e.target.value)}
                             className="w-full px-3.5 py-2.5 sm:py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white text-slate-900 font-medium cursor-pointer"
@@ -889,8 +911,9 @@ export default function HomePage() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="block text-xs font-bold text-slate-700">Batch Timing *</label>
+                        <label htmlFor="signup-batch" className="block text-xs font-bold text-slate-700">Batch Timing *</label>
                         <select
+                          id="signup-batch"
                           value={sBatch}
                           onChange={(e) => setSBatch(e.target.value)}
                           className="w-full px-3.5 py-2.5 sm:py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white text-slate-900 font-medium cursor-pointer"
@@ -953,8 +976,9 @@ export default function HomePage() {
 
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">Degree *</label>
+                          <label htmlFor="signup-teacher-degree" className="block text-xs font-bold text-slate-700">Degree *</label>
                           <input
+                            id="signup-teacher-degree"
                             type="text"
                             value={tQual}
                             onChange={(e) => setTQual(e.target.value)}
@@ -963,8 +987,9 @@ export default function HomePage() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">Specialization *</label>
+                          <label htmlFor="signup-teacher-spec" className="block text-xs font-bold text-slate-700">Specialization *</label>
                           <input
+                            id="signup-teacher-spec"
                             type="text"
                             value={tSpec}
                             onChange={(e) => setTSpec(e.target.value)}
@@ -976,8 +1001,9 @@ export default function HomePage() {
 
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">Experience (Yrs)</label>
+                          <label htmlFor="signup-teacher-exp" className="block text-xs font-bold text-slate-700">Experience (Yrs)</label>
                           <input
+                            id="signup-teacher-exp"
                             type="number"
                             min="0"
                             value={tExp}
@@ -987,8 +1013,9 @@ export default function HomePage() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">District *</label>
+                          <label htmlFor="signup-teacher-district" className="block text-xs font-bold text-slate-700">District *</label>
                           <input
+                            id="signup-teacher-district"
                             type="text"
                             value={tDistrict}
                             onChange={(e) => setTDistrict(e.target.value)}
@@ -1023,8 +1050,9 @@ export default function HomePage() {
                     <div className="space-y-3.5">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">Parent Name *</label>
+                          <label htmlFor="signup-parent-name" className="block text-xs font-bold text-slate-700">Parent Name *</label>
                           <input
+                            id="signup-parent-name"
                             type="text"
                             value={spName}
                             onChange={(e) => setSpName(e.target.value)}
@@ -1033,8 +1061,9 @@ export default function HomePage() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">Parent Mobile *</label>
+                          <label htmlFor="signup-parent-phone" className="block text-xs font-bold text-slate-700">Parent Mobile *</label>
                           <input
+                            id="signup-parent-phone"
                             type="tel"
                             maxLength={10}
                             value={spPhone}
@@ -1047,8 +1076,9 @@ export default function HomePage() {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">Gender</label>
+                          <label htmlFor="signup-gender" className="block text-xs font-bold text-slate-700">Gender</label>
                           <select
+                            id="signup-gender"
                             value={sGender}
                             onChange={(e) => setSGender(e.target.value as any)}
                             className="w-full px-3.5 py-2.5 sm:py-3 text-sm rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white font-medium"
@@ -1059,8 +1089,9 @@ export default function HomePage() {
                           </select>
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">Date of Birth</label>
+                          <label htmlFor="signup-dob" className="block text-xs font-bold text-slate-700">Date of Birth</label>
                           <input
+                            id="signup-dob"
                             type="date"
                             value={sDob}
                             onChange={(e) => setSdob(e.target.value)}
@@ -1118,7 +1149,7 @@ export default function HomePage() {
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight">
               Tutoring Hub
             </h2>
-            <p className="text-lg sm:text-xl lg:text-2xl font-extrabold text-[#b89047] tracking-tight">
+            <p className="text-lg sm:text-xl lg:text-2xl font-extrabold text-[#8c6924] tracking-tight">
               Where It All Began
             </p>
           </div>
@@ -1130,7 +1161,7 @@ export default function HomePage() {
               {/* LEFT: Tutoring Hub (The Foundation) */}
               <div className="space-y-3 text-left md:pr-8">
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-black uppercase tracking-widest text-[#b89047] bg-amber-50 px-2.5 py-0.5 rounded-md border border-[#b89047]/30">
+                  <span className="text-[11px] font-black uppercase tracking-widest text-[#8c6924] bg-amber-50 px-2.5 py-0.5 rounded-md border border-[#8c6924]/40">
                     2020 – 2024 • Physical Classroom
                   </span>
                 </div>
@@ -1186,7 +1217,7 @@ export default function HomePage() {
             <p className="text-lg sm:text-xl lg:text-2xl font-black text-[#002137] tracking-tight">
               “Tutoring Hub gave us the foundation.
             </p>
-            <p className="text-lg sm:text-xl lg:text-2xl font-black text-[#b89047] tracking-tight">
+            <p className="text-lg sm:text-xl lg:text-2xl font-black text-[#8c6924] tracking-tight">
               MANTIF is taking it forward.”
             </p>
           </div>
@@ -1230,7 +1261,7 @@ export default function HomePage() {
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight">
               Our Side
             </h2>
-            <p className="text-xs sm:text-sm lg:text-base font-bold text-[#b89047] tracking-normal max-w-xl mx-auto">
+            <p className="text-xs sm:text-sm lg:text-base font-bold text-[#8c6924] tracking-normal max-w-xl mx-auto">
               Empowering school teachers and academic institutions with practical AI tools.
             </p>
           </div>
@@ -1311,7 +1342,7 @@ export default function HomePage() {
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Our Team
             </h2>
-            <p className="text-sm sm:text-base lg:text-lg font-bold text-[#b89047] tracking-normal max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base lg:text-lg font-bold text-[#8c6924] tracking-normal max-w-2xl mx-auto">
               Passionate educators, engineering minds, and AI practitioners dedicated to student success.
             </p>
           </div>
@@ -1331,8 +1362,8 @@ export default function HomePage() {
                 />
               </div>
               <div className="space-y-0.5 pt-0.5">
-                <h4 className="font-black text-lg sm:text-xl text-[#002137]">Karunya S</h4>
-                <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">Founder</p>
+                <h3 className="font-black text-lg sm:text-xl text-[#002137]">Karunya S</h3>
+                <p className="text-xs sm:text-sm font-extrabold text-[#8c6924]">Founder</p>
               </div>
             </div>
           </div>
@@ -1351,7 +1382,7 @@ export default function HomePage() {
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Mentors &amp; Tech Teams
             </h2>
-            <p className="text-sm sm:text-base lg:text-lg font-bold text-[#b89047] tracking-normal max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base lg:text-lg font-bold text-[#8c6924] tracking-normal max-w-2xl mx-auto">
               Experienced educators, software engineers, and AI researchers shaping the future of learning.
             </p>
           </div>
@@ -1383,7 +1414,7 @@ export default function HomePage() {
                   </div>
                   <div className="space-y-0.5">
                     <h4 className="font-black text-base sm:text-lg text-[#002137]">Dr. A. Revathi</h4>
-                    <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">PhD Chemistry</p>
+                    <p className="text-xs sm:text-sm font-extrabold text-[#8c6924]">PhD Chemistry</p>
                   </div>
                 </div>
 
@@ -1402,7 +1433,7 @@ export default function HomePage() {
                   </div>
                   <div className="space-y-0.5">
                     <h4 className="font-black text-base sm:text-lg text-[#002137]">V Lavanya</h4>
-                    <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">MSc MPhil Maths</p>
+                    <p className="text-xs sm:text-sm font-extrabold text-[#8c6924]">MSc MPhil Maths</p>
                   </div>
                 </div>
               </div>
@@ -1472,7 +1503,7 @@ export default function HomePage() {
                   </div>
                   <div className="space-y-0.5">
                     <h4 className="font-black text-base sm:text-lg text-[#002137]">Abinaya B</h4>
-                    <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">AI Team</p>
+                    <p className="text-xs sm:text-sm font-extrabold text-[#8c6924]">AI Team</p>
                   </div>
                 </div>
 
@@ -1491,7 +1522,7 @@ export default function HomePage() {
                   </div>
                   <div className="space-y-0.5">
                     <h4 className="font-black text-base sm:text-lg text-[#002137]">Arunkarthick K</h4>
-                    <p className="text-xs sm:text-sm font-extrabold text-[#b89047]">AI Team</p>
+                    <p className="text-xs sm:text-sm font-extrabold text-[#8c6924]">AI Team</p>
                   </div>
                 </div>
 
@@ -1513,7 +1544,7 @@ export default function HomePage() {
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
               Testimonials
             </h2>
-            <p className="text-sm sm:text-base lg:text-lg font-bold text-[#b89047] tracking-normal max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base lg:text-lg font-bold text-[#8c6924] tracking-normal max-w-2xl mx-auto">
               Real experiences from students who walked through our doors and excelled with us.
             </p>
           </div>
@@ -1587,8 +1618,8 @@ export default function HomePage() {
                     </p>
                   </div>
                   <div className="pt-3.5 border-t border-slate-100 space-y-0.5 shrink-0">
-                    <h4 className="font-black text-sm sm:text-base text-[#002137]">{item.name}</h4>
-                    <p className="text-xs sm:text-sm font-bold text-[#b89047]">{item.role}</p>
+                    <h3 className="font-black text-sm sm:text-base text-[#002137]">{item.name}</h3>
+                    <p className="text-xs sm:text-sm font-bold text-[#8c6924]">{item.role}</p>
                     <p className="text-[11px] sm:text-xs text-slate-500 font-medium">{item.sub}</p>
                   </div>
                 </div>
@@ -2066,7 +2097,7 @@ export default function HomePage() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-amber-50 text-[#b89047] border border-amber-200">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-amber-50 text-[#8c6924] border border-amber-200">
                     <Video className="w-3.5 h-3.5" />
                     <span>School Session Video Stream</span>
                   </div>
@@ -2080,17 +2111,19 @@ export default function HomePage() {
                 <button
                   onClick={() => setVideoModalOpen(false)}
                   className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-all cursor-pointer"
+                  aria-label="Close modal"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               <div className="space-y-3">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+                <label htmlFor="video-url-input" className="block text-xs font-bold text-slate-700 uppercase tracking-wide">
                   Video URL (YouTube or Direct Video Stream):
                 </label>
                 <div className="relative">
                   <input
+                    id="video-url-input"
                     type="url"
                     value={videoInputUrl}
                     onChange={(e) => setVideoInputUrl(e.target.value)}
@@ -2098,7 +2131,7 @@ export default function HomePage() {
                     className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#004b79] focus:ring-2 focus:ring-[#004b79]/20 outline-none text-xs sm:text-sm text-slate-800 font-medium transition-all"
                   />
                 </div>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500 font-medium">
                   Supported formats: YouTube URLs, YouTube Shorts, MP4 video links
                 </p>
               </div>
@@ -2126,7 +2159,9 @@ export default function HomePage() {
           </div>
         )}
 
-      </section>
+        </section>
+
+      </main>
 
       {/* ═══════════════════════════════════════════════════════════════════════
           FOOTER: PROFESSIONAL CONTACT FOOTER (HELPLINES, EMAIL, INSTA & LINKEDIN)
@@ -2182,6 +2217,7 @@ export default function HomePage() {
                       target="_blank"
                       rel="noreferrer"
                       title="Follow MANTIF on Instagram"
+                      aria-label="Follow MANTIF on Instagram"
                       className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow-sm"
                     >
                       <InstagramIcon className="w-4 h-4" />
@@ -2191,6 +2227,7 @@ export default function HomePage() {
                       target="_blank"
                       rel="noreferrer"
                       title="Connect with MANTIF on LinkedIn"
+                      aria-label="Connect with MANTIF on LinkedIn"
                       className="w-8 h-8 rounded-lg bg-[#0077b5] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow-sm"
                     >
                       <LinkedInIcon className="w-4 h-4" />
