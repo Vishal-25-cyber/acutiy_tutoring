@@ -47,7 +47,7 @@ import AdminSettingsPage from "./app/(portal)/admin/settings/page";
 // Live Classroom
 import ClassroomPage from "./app/classroom/[classId]/page";
 
-function ScrollToTop() {
+function RouteSEOAndScroll() {
   const { pathname } = useLocation();
 
   useEffect(() => {
@@ -58,6 +58,63 @@ function ScrollToTop() {
     scrollContainers.forEach((el) => {
       el.scrollTop = 0;
     });
+
+    // Dynamic Title per route
+    let pageTitle = "Mantif — Human x Artificial Intelligence | Online Tutoring & Learning Platform";
+    let isPrivate = false;
+
+    if (pathname === "/contact") {
+      pageTitle = "Contact & Admissions | Mantif Tutoring";
+    } else if (pathname.startsWith("/student")) {
+      isPrivate = true;
+      if (pathname.includes("/dashboard")) pageTitle = "Student Dashboard | Mantif";
+      else if (pathname.includes("/classes")) pageTitle = "Live Classes & Timetable | Mantif";
+      else if (pathname.includes("/materials")) pageTitle = "Study Materials & Notes | Mantif";
+      else if (pathname.includes("/assignments")) pageTitle = "Assignments & Proctored Tests | Mantif";
+      else if (pathname.includes("/attendance")) pageTitle = "Attendance Record | Mantif";
+      else if (pathname.includes("/fees")) pageTitle = "Fee Receipts & Billing | Mantif";
+      else if (pathname.includes("/performance")) pageTitle = "Academic Performance | Mantif";
+      else pageTitle = "Student Portal | Mantif";
+    } else if (pathname.startsWith("/teacher")) {
+      isPrivate = true;
+      if (pathname.includes("/dashboard")) pageTitle = "Faculty Dashboard | Mantif";
+      else if (pathname.includes("/schedule")) pageTitle = "Teaching Schedule & Timetable | Mantif";
+      else if (pathname.includes("/materials")) pageTitle = "Study Resources | Mantif";
+      else if (pathname.includes("/assignments")) pageTitle = "Assignments & Grading | Mantif";
+      else if (pathname.includes("/students")) pageTitle = "Student Roster | Mantif";
+      else if (pathname.includes("/reports")) pageTitle = "Student Performance Reports | Mantif";
+      else pageTitle = "Faculty Portal | Mantif";
+    } else if (pathname.startsWith("/admin")) {
+      isPrivate = true;
+      pageTitle = "Administration Console | Mantif";
+    } else if (pathname.startsWith("/classroom")) {
+      isPrivate = true;
+      pageTitle = "Live Interactive Classroom | Mantif";
+    }
+
+    document.title = pageTitle;
+
+    // Canonical link tag pointing to mantif.com
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.setAttribute("rel", "canonical");
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute("href", `https://mantif.com${pathname === "/" ? "" : pathname}`);
+
+    // Robots meta tag: public index for landing/contact, noindex for private authenticated portals
+    let metaRobots = document.querySelector('meta[name="robots"]');
+    if (!metaRobots) {
+      metaRobots = document.createElement("meta");
+      metaRobots.setAttribute("name", "robots");
+      document.head.appendChild(metaRobots);
+    }
+    if (isPrivate) {
+      metaRobots.setAttribute("content", "noindex, nofollow");
+    } else {
+      metaRobots.setAttribute("content", "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1");
+    }
   }, [pathname]);
 
   return null;
@@ -66,7 +123,7 @@ function ScrollToTop() {
 export default function App() {
   return (
     <>
-      <ScrollToTop />
+      <RouteSEOAndScroll />
       <Routes>
         {/* ── Public Landing Page & Auth Redirects ── */}
         <Route path="/" element={<LandingPage />} />

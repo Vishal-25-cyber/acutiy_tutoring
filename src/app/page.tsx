@@ -538,6 +538,7 @@ export default function HomePage() {
                   style={{ fontFamily: "'Montserrat', 'Outfit', 'Inter', sans-serif" }}
                 >
                   M<span className="text-[#b89047]">Λ</span>NTIF
+                  <span className="sr-only"> — Intelligent Online Tutoring &amp; Learning Platform for Classes 6 to 10</span>
                 </h1>
                 <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#b89047] tracking-tight">
                   Human x Artificial Intelligence
