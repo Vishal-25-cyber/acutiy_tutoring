@@ -61,6 +61,7 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^20.17.9",
     "@types/react": "^19.0.1",
-    "@types/react-dom": "^19.0.1"
+    "@types/react-dom": "^19.0.1",
+    "png-to-ico": "^3.0.2"
   }
 }
