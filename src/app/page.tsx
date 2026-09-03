@@ -1798,17 +1798,6 @@ export default function HomePage() {
                 </button>
               </div>
 
-              {/* Modal Banner Image */}
-              {selectedSchoolModal.bannerImage && (
-                <div className="rounded-2xl overflow-hidden shadow-md border border-slate-200/90 aspect-[21/9] sm:aspect-[24/9] w-full bg-slate-900">
-                  <img
-                    src={selectedSchoolModal.bannerImage}
-                    alt={selectedSchoolModal.sessionTitle}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-
               {/* Unified Full-Width Narrative Paragraph */}
               <div className="space-y-2.5">
                 <div className="space-y-0.5">
