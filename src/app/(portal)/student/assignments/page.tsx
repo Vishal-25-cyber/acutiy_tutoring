@@ -20,6 +20,7 @@ import {
   RefreshCw,
   Timer,
   Play,
+  Lock,
   ShieldCheck,
   ShieldAlert,
   Eye,
@@ -232,23 +233,68 @@ export default function StudentAssignmentsPage() {
     }
   };
 
+  // ── 3-WARNING PROCTORING AUTO-TERMINATION & AWAY STATE ──
+  const [terminationModalOpen, setTerminationModalOpen] = useState(false);
+  const [terminatedTestTitle, setTerminatedTestTitle] = useState("");
+
+  const handleAutoTerminateTest = async (testToTerminate: any, snapshotUrl?: string) => {
+    if (!testToTerminate) return;
+    const testId = testToTerminate._id;
+    const testTitle = testToTerminate.title || "Proctored Test";
+
+    handleCloseTestRoom();
+    setTerminatedTestTitle(testTitle);
+    setTerminationModalOpen(true);
+
+    try {
+      await fetch("/api/student/assignments/violation-terminate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assignmentId: testId,
+          violationCount: 3,
+          proctoringSnapshotUrl: snapshotUrl || capturedProctoringSnapshot || "",
+        }),
+      });
+      invalidateCache("/api/student/assignments");
+      refetch();
+    } catch (e) {
+      console.error("Auto-terminate violation error:", e);
+    }
+  };
+
   // ── PROCTORING VIOLATION TRIGGER ──
   const triggerProctoringViolation = (
     type: "TAB_SWITCH" | "LOOK_AWAY" | "CAMERA_LOST",
     message: string
   ) => {
-    setWarningCount((prev) => prev + 1);
-    setActiveWarning({
-      type,
-      message,
-      timestamp: Date.now(),
-    });
+    setWarningCount((prev) => {
+      const nextCount = prev + 1;
+      const now = Date.now();
+      if (now - lastSoundRef.current > 2000) {
+        lastSoundRef.current = now;
+        playWarningSound("ALARM");
+      }
 
-    const now = Date.now();
-    if (now - lastSoundRef.current > 2500) {
-      lastSoundRef.current = now;
-      playWarningSound("ALARM");
-    }
+      if (nextCount >= 3) {
+        setActiveWarning({
+          type,
+          message: "🚫 3rd Warning Reached: Test Terminated due to Proctoring Violations!",
+          timestamp: Date.now(),
+        });
+        setTimeout(() => {
+          handleAutoTerminateTest(activeProctoredTest);
+        }, 500);
+        return 3;
+      }
+
+      setActiveWarning({
+        type,
+        message: `⚠️ Warning ${nextCount} of 3: ${message}`,
+        timestamp: Date.now(),
+      });
+      return nextCount;
+    });
   };
 
   // ── FULLSCREEN TOGGLE HELPER ──
@@ -350,6 +396,11 @@ export default function StudentAssignmentsPage() {
       return;
     }
 
+    if (test.submission?.isDisqualified && !test.submission?.retestPermitted) {
+      alert("Test Locked: You reached 3 proctoring violations on this test. Teacher permission is required to retake.");
+      return;
+    }
+
     setActiveProctoredTest(test);
     setIsTestLocked(false);
     setCapturedProctoringSnapshot(null);
@@ -401,36 +452,76 @@ export default function StudentAssignmentsPage() {
     }
   };
 
-  // ── TAB SWITCH & WINDOW FOCUS LOST PROCTORING LISTENER ──
+  // ── UNIFIED 5-SECOND AWAY PROCTORING LISTENER ──
+  const [isWindowAway, setIsWindowAway] = useState(false);
+
   useEffect(() => {
-    if (!activeProctoredTest || isTestLocked) return;
+    if (!activeProctoredTest || isTestLocked) {
+      setIsWindowAway(false);
+      return;
+    }
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        triggerProctoringViolation(
-          "TAB_SWITCH",
-          "⚠️ Tab Switch Violation: Navigating away from the test tab is strictly prohibited & recorded!"
-        );
+        setIsWindowAway(true);
+      } else if (document.hasFocus()) {
+        setIsWindowAway(false);
       }
     };
 
     const handleBlur = () => {
-      triggerProctoringViolation(
-        "TAB_SWITCH",
-        "⚠️ Window Focus Lost: Please return and keep the examination window active on your screen!"
-      );
+      setIsWindowAway(true);
+    };
+
+    const handleFocus = () => {
+      if (!document.hidden) {
+        setIsWindowAway(false);
+      }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("blur", handleBlur);
+    window.addEventListener("focus", handleFocus);
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("focus", handleFocus);
     };
   }, [activeProctoredTest, isTestLocked]);
 
-  // ── WEBCAM ATTENTION & 5-SECOND LOOK-AWAY TRACKER ──
+  // Away ticker: if candidate is away (tab hidden, window blurred, or face absent) for 5 seconds -> 1 warning
+  useEffect(() => {
+    if (!activeProctoredTest || isTestLocked) {
+      setAwaySeconds(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const isCandidateAway = isWindowAway || (isCameraStarted && !isFaceDetected);
+      if (isCandidateAway) {
+        setAwaySeconds((prev) => {
+          const next = prev + 1;
+          if (next >= 5) {
+            triggerProctoringViolation(
+              isWindowAway ? "TAB_SWITCH" : "LOOK_AWAY",
+              isWindowAway
+                ? "Navigated away from test screen / switched tabs for 5+ seconds!"
+                : "Candidate absent or looking away from camera frame for 5+ seconds!"
+            );
+            return 0; // reset counter for next 5-second block
+          }
+          return next;
+        });
+      } else {
+        setAwaySeconds(0);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [activeProctoredTest, isTestLocked, isWindowAway, isCameraStarted, isFaceDetected]);
+
+  // ── WEBCAM FACE DETECTION ANALYSIS ──
   useEffect(() => {
     if (!activeProctoredTest || isTestLocked || !isCameraStarted) return;
 
@@ -446,7 +537,6 @@ export default function StudentAssignmentsPage() {
             const imgData = ctx.getImageData(0, 0, 64, 48);
             const data = imgData.data;
 
-            // Sample brightness and variance in central face zone
             let totalLuma = 0;
             let centerVariance = 0;
             let sampledPixels = 0;
@@ -472,23 +562,7 @@ export default function StudentAssignmentsPage() {
 
             // If camera covered or face absent
             const facePresent = avgLuma > 15 && avgLuma < 245 && avgVariance > 10;
-
-            if (facePresent) {
-              setIsFaceDetected(true);
-              setAwaySeconds(0);
-            } else {
-              setIsFaceDetected(false);
-              setAwaySeconds((prev) => {
-                const next = prev + 1;
-                if (next >= 5) {
-                  triggerProctoringViolation(
-                    "LOOK_AWAY",
-                    "⚠️ Attention Warning: Candidate looking away or absent from camera frame for 5+ seconds! Keep eyes on screen."
-                  );
-                }
-                return next;
-              });
-            }
+            setIsFaceDetected(facePresent);
           }
         } catch (e) {
           console.warn("Proctoring frame analysis warning:", e);
@@ -603,9 +677,9 @@ export default function StudentAssignmentsPage() {
           assignmentId: currentTask._id,
           submissionText: submissionText.trim(),
           fileUrl: selectedFile?.url || "",
-          proctoringSnapshotUrl: snapshotUrl || "",
+          proctoringSnapshotUrl: isProctoredTest ? (snapshotUrl || "") : "",
           violationCount: isProctoredTest ? warningCount : 0,
-          type: activeCategory,
+          type: currentTask.type || activeCategory,
         }),
       });
 
@@ -752,11 +826,13 @@ export default function StudentAssignmentsPage() {
             {filteredTasks.map((task: any) => {
               const sub = task.submission;
               const isEvaluated = sub?.status === "EVALUATED";
-              const isSubmitted = sub && !isEvaluated;
+              const isDisqualified = !!sub?.isDisqualified || sub?.status === "DISQUALIFIED" || ((sub?.violationCount || 0) >= 3 && !sub?.retestPermitted);
+              const isRetestPermitted = !!sub?.retestPermitted;
+              const isSubmitted = sub && !isEvaluated && !isDisqualified;
               const isTest = task.type === "TEST";
               const isPastDeadline = task.dueDate ? new Date() > new Date(task.dueDate) : false;
-              // Allow student to resubmit/retake any assignment, test, or homework before deadline as long as it is not graded yet
-              const canResubmit = isSubmitted && !isEvaluated && !isPastDeadline;
+              // Allow student to resubmit/retake any assignment, test, or homework before deadline as long as it is not graded yet and not locked by disqualification
+              const canResubmit = isSubmitted && !isEvaluated && !isPastDeadline && !isDisqualified;
 
               return (
                 <div
@@ -821,7 +897,51 @@ export default function StudentAssignmentsPage() {
                       )}
                     </div>
 
-                    {isEvaluated ? (
+                    {isDisqualified ? (
+                      <div className="space-y-2">
+                        {isRetestPermitted ? (
+                          <>
+                            <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-300 space-y-1">
+                              <div className="font-bold flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400">
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>Retest Permission Granted</span>
+                              </div>
+                              <p className="text-[11px] text-emerald-700/90 dark:text-emerald-300/90 leading-tight">
+                                Faculty has granted permission to retake this test.
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleStartTest(task)}
+                              className="w-full py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2 cursor-pointer transition-all shadow-xs"
+                            >
+                              <RefreshCw className="w-3.5 h-3.5" />
+                              <span>Start Retest Now →</span>
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs text-rose-800 dark:text-rose-300 space-y-1">
+                              <div className="font-bold flex items-center gap-1.5 text-rose-700 dark:text-rose-400">
+                                <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                                <span>Test Disqualified (3 Warnings)</span>
+                              </div>
+                              <p className="text-[11px] text-rose-600 dark:text-rose-400/90 leading-tight">
+                                Closed due to 3 proctoring violations. You cannot retest unless your teacher grants permission.
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              disabled
+                              className="w-full py-2.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2 cursor-not-allowed opacity-80"
+                            >
+                              <Lock className="w-3.5 h-3.5" />
+                              <span>Retest Locked (Teacher Permission Required)</span>
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    ) : isEvaluated ? (
                       <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-xs text-emerald-800 dark:text-emerald-300 space-y-1">
                         <div className="font-bold flex items-center gap-1">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
@@ -1036,15 +1156,37 @@ export default function StudentAssignmentsPage() {
             {/* Right Controls */}
             <div className="flex items-center gap-1.5 shrink-0">
               {!isTestLocked && (
-                <button type="button" onClick={() => setIsSoundMuted(!isSoundMuted)}
-                  title={isSoundMuted ? "Unmute" : "Mute"}
-                  className={`p-2 rounded-xl border transition-all cursor-pointer ${
-                    isSoundMuted
-                      ? "bg-gray-100 border-gray-200 text-gray-400"
-                      : "bg-emerald-50 border-emerald-200 text-emerald-600"
+                <>
+                  {/* Proctoring Warnings Badge */}
+                  <div className={`px-2.5 py-1.5 rounded-xl border flex items-center gap-1.5 text-xs font-bold font-mono ${
+                    warningCount === 0
+                      ? "bg-slate-100 border-slate-200 text-slate-700"
+                      : warningCount === 1
+                      ? "bg-amber-50 border-amber-300 text-amber-800"
+                      : "bg-rose-50 border-rose-300 text-rose-700 animate-pulse"
                   }`}>
-                  {isSoundMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                </button>
+                    <ShieldAlert className="w-3.5 h-3.5" />
+                    <span>Warnings: {warningCount}/3</span>
+                  </div>
+
+                  {/* 5-Second Away Live Countdown Indicator */}
+                  {awaySeconds > 0 && (
+                    <div className="px-2.5 py-1.5 rounded-xl bg-rose-600 text-white font-bold text-xs flex items-center gap-1.5 animate-pulse shadow-sm">
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-300" />
+                      <span>Away: Warning in {5 - awaySeconds}s!</span>
+                    </div>
+                  )}
+
+                  <button type="button" onClick={() => setIsSoundMuted(!isSoundMuted)}
+                    title={isSoundMuted ? "Unmute" : "Mute"}
+                    className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                      isSoundMuted
+                        ? "bg-gray-100 border-gray-200 text-gray-400"
+                        : "bg-emerald-50 border-emerald-200 text-emerald-600"
+                    }`}>
+                    {isSoundMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  </button>
+                </>
               )}
 
               <button type="button" onClick={toggleFullscreen} title="Toggle Fullscreen"
@@ -1530,6 +1672,46 @@ export default function StudentAssignmentsPage() {
           </form>
         </Modal>
       )}
+      {/* ── 3-WARNING PROCTORING AUTO-TERMINATION MODAL ── */}
+      <Modal
+        isOpen={terminationModalOpen}
+        onClose={() => setTerminationModalOpen(false)}
+        maxWidth="md"
+        title="🚫 Test Terminated: 3 Warnings"
+        description="Examination closed due to repeated proctoring violations."
+      >
+        <div className="space-y-4 pt-1 text-slate-800 dark:text-slate-100 select-none">
+          <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 space-y-2 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-900/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <h3 className="text-base font-extrabold text-rose-900 dark:text-rose-200">
+              3 Proctoring Violations Recorded
+            </h3>
+            <p className="text-xs text-rose-700 dark:text-rose-300 leading-relaxed max-w-md mx-auto">
+              You were detected away from the test window or camera frame for 5+ seconds on 3 separate occasions. As per examination rules, this test has been automatically closed and locked.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
+            <div className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300">
+              <Lock className="w-3.5 h-3.5 text-slate-500" />
+              <span>Teacher Retest Permission Required</span>
+            </div>
+            <p className="text-slate-500 dark:text-slate-400">
+              You cannot re-enter <strong>{terminatedTestTitle}</strong> unless your teacher grants retest permission from their teacher portal.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setTerminationModalOpen(false)}
+            className="w-full py-2.5 px-4 rounded-xl bg-[#002137] hover:bg-[#003659] text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
+          >
+            <span>Understood &amp; Return to Dashboard</span>
+          </button>
+        </div>
+      </Modal>
     </main>
   );
 }

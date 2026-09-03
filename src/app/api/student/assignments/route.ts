@@ -78,6 +78,10 @@ export async function GET(req: NextRequest) {
               marksObtained: submission.marksObtained,
               feedback: submission.feedback,
               gradedAt: submission.gradedAt,
+              isDisqualified: !!submission.isDisqualified,
+              disqualifiedReason: submission.disqualifiedReason || "",
+              retestPermitted: !!submission.retestPermitted,
+              violationCount: submission.violationCount || 0,
             }
           : null,
         calculatedStatus: status,

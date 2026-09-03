@@ -26,6 +26,7 @@ import {
   Upload,
   X,
   Paperclip,
+  AlertTriangle,
 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { getSubjectsForClassAndBoard, CLASS_LIST } from "@/lib/curriculum";
@@ -200,6 +201,31 @@ export default function TeacherAssignmentsPage() {
       : subTab === "COMPLETED"
         ? gradedSubmissions
         : filteredCategorySubmissions;
+
+  const [grantingRetestId, setGrantingRetestId] = useState<string | null>(null);
+
+  const handleGrantRetest = async (submissionId: string) => {
+    setGrantingRetestId(submissionId);
+    try {
+      const res = await fetch("/api/teacher/assignments/grant-retest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ submissionId }),
+      });
+      const resData = await res.json();
+      if (res.ok) {
+        invalidateCache("/api/teacher/assignments");
+        refetch();
+        alert(resData.message || "Retest permission granted! Student has been notified.");
+      } else {
+        alert(resData.error || "Failed to grant retest permission.");
+      }
+    } catch (e: any) {
+      alert("Error granting retest: " + (e.message || "Network error"));
+    } finally {
+      setGrantingRetestId(null);
+    }
+  };
 
   const formatDueDateTime = (dStr: string | Date) => {
     if (!dStr) return "No deadline";
@@ -414,7 +440,11 @@ export default function TeacherAssignmentsPage() {
                   : "Assignment Solution Submissions"}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Review student answers, inspect webcam proctoring audit snapshots, and award marks.
+              {activeCategory === "TEST"
+                ? "Review student answers, inspect webcam proctoring audit snapshots, and award marks."
+                : activeCategory === "HOMEWORK"
+                  ? "Review student daily homework worksheet solutions and award marks."
+                  : "Review student coursework assignment solutions and award marks."}
             </p>
           </div>
 
@@ -488,6 +518,12 @@ export default function TeacherAssignmentsPage() {
                           Proctored Test
                         </span>
                       )}
+                      {(sub.isDisqualified || sub.status === "DISQUALIFIED" || ((sub.violationCount || 0) >= 3 && !sub.retestPermitted)) && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900 flex items-center gap-1">
+                          <AlertTriangle className="w-3 h-3 text-rose-600" />
+                          Disqualified (3 Warnings)
+                        </span>
+                      )}
                     </div>
 
                     <p className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
@@ -507,7 +543,7 @@ export default function TeacherAssignmentsPage() {
                           minute: "2-digit",
                         })}
                       </span>
-                      {sub.proctoringSnapshotUrl && (
+                      {isTest && sub.proctoringSnapshotUrl && (
                         <>
                           <span>•</span>
                           <span className="text-emerald-600 font-semibold flex items-center gap-1">
@@ -519,7 +555,26 @@ export default function TeacherAssignmentsPage() {
                   </div>
 
                   <div className="flex items-center gap-3 shrink-0">
-                    {isEvaluated ? (
+                    {sub.isDisqualified || sub.status === "DISQUALIFIED" || ((sub.violationCount || 0) >= 3 && !sub.retestPermitted) ? (
+                      <div className="flex items-center gap-2">
+                        {sub.retestPermitted ? (
+                          <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                            Retest Granted
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={grantingRetestId === sub._id}
+                            onClick={() => handleGrantRetest(sub._id)}
+                            className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer transition-all shadow-2xs flex items-center gap-1.5 disabled:opacity-60"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>{grantingRetestId === sub._id ? "Granting..." : "Grant Retest Permission"}</span>
+                          </button>
+                        )}
+                      </div>
+                    ) : isEvaluated ? (
                       <div className="text-right">
                         <span className="text-xs font-black text-emerald-600">
                           {sub.marksObtained} / {asg.maxMarks || 20} Marks
@@ -861,8 +916,8 @@ export default function TeacherAssignmentsPage() {
               <div className="flex items-center justify-between font-bold flex-wrap gap-2">
                 <span className="text-slate-900 dark:text-slate-100">{selectedSub.studentId?.name}</span>
                 <div className="flex items-center gap-2">
-                  {/* Proctoring Violation Badge */}
-                  {typeof selectedSub.violationCount === "number" && (
+                  {/* Proctoring Violation Badge - ONLY FOR PROCTORED TESTS */}
+                  {((selectedSub.type || selectedSub.assignmentId?.type) === "TEST") && typeof selectedSub.violationCount === "number" && (
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-black flex items-center gap-1 border ${ selectedSub.violationCount === 0 ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800" : selectedSub.violationCount <= 2 ? "bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700" : "bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800" }`}>
                       <ShieldAlert className="w-3 h-3" />
                       {selectedSub.violationCount === 0 ? "No Violations" : `${selectedSub.violationCount} Violation${selectedSub.violationCount > 1 ? "s" : ""}`}
@@ -871,7 +926,8 @@ export default function TeacherAssignmentsPage() {
                   <span className="text-[#004b79] dark:text-[#dfb74a]">{selectedSub.assignmentId?.title}</span>
                 </div>
               </div>
-              {selectedSub.proctoringSnapshotUrl && (
+              {/* Webcam Proctoring Snapshot - ONLY FOR PROCTORED TESTS */}
+              {((selectedSub.type || selectedSub.assignmentId?.type) === "TEST") && selectedSub.proctoringSnapshotUrl && (
                 <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
                   <span className="text-[11px] font-bold text-slate-500 block mb-1">Webcam Proctoring Snapshot:</span>
                   <img

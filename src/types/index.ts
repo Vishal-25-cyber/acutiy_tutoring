@@ -235,6 +235,11 @@ export interface IAssignmentSubmission {
   status: SubmissionStatus;
   marksObtained?: number;
   feedback?: string;
+  isDisqualified?: boolean;
+  disqualifiedReason?: string;
+  retestPermitted?: boolean;
+  retestGrantedBy?: string | IUser;
+  retestGrantedAt?: Date;
   gradedBy?: string | IUser;
   gradedAt?: Date;
 }
