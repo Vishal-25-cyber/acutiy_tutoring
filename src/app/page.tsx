@@ -1217,58 +1217,70 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 3: OUR SIDE (SIDE-BY-SIDE SHOWCASE + STILL COMING SESSIONS)
+          PAGE 3: OUR SIDE (ALL-IN-ONE SINGLE VIEWPORT MATCHED SHOWCASE)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="our-side" className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white pt-8 sm:pt-10 lg:pt-14 pb-20 sm:pb-28 lg:pb-36 flex flex-col justify-start">
-        <div className="w-full max-w-6xl mx-auto px-6 sm:px-10 lg:px-14 space-y-10 lg:space-y-12">
+      <section
+        id="our-side"
+        className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] lg:h-[calc(100vh-5rem)] border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-6 lg:py-8 flex flex-col justify-center"
+      >
+        <div className="w-full max-w-6xl mx-auto px-6 sm:px-10 lg:px-14 flex flex-col justify-center space-y-6 lg:space-y-7">
 
           {/* Section Heading */}
-          <div className="text-center space-y-2">
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#002137] tracking-tight">
+          <div className="text-center space-y-1">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight">
               Our Side
             </h2>
-            <p className="text-sm sm:text-base lg:text-lg font-bold text-[#b89047] tracking-normal max-w-2xl mx-auto">
+            <p className="text-xs sm:text-sm lg:text-base font-bold text-[#b89047] tracking-normal max-w-xl mx-auto">
               Empowering school teachers and academic institutions with practical AI tools.
             </p>
           </div>
 
-          {/* Direct Presentation: Pure Image on One Side, Little Content on the Other */}
-          <div className="space-y-10">
+          {/* Direct Matched Presentation: Image Height Matches Opposite Content */}
+          <div>
             {outreachSchools.map((school: any) => (
               <div
                 key={school.id}
-                className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center"
+                className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center"
               >
-                {/* Image Side: Pure Image with its natural size */}
+                {/* Image Side: Sized proportionally to match content */}
                 <div className="lg:col-span-6 flex items-center justify-center">
-                  <div className="relative w-full rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 border border-slate-200/80 bg-white group">
+                  <div className="relative w-full rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 border border-slate-200/90 bg-white group aspect-[16/9.5] flex items-center justify-center">
                     <img
                       src={school.bannerImage || "/images/ai_seminar_banner.png"}
                       alt={school.sessionTitle}
-                      className="w-full h-auto object-contain group-hover:scale-102 transition-transform duration-500"
+                      className="w-full h-full object-cover object-center group-hover:scale-102 transition-transform duration-500"
                     />
                   </div>
                 </div>
 
-                {/* Opposite Side: Little Content */}
-                <div className="lg:col-span-6 space-y-4 text-left">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-amber-50 text-[#b89047] border border-amber-200/70">
+                {/* Opposite Side: Content formatted to match photo height */}
+                <div className="lg:col-span-6 flex flex-col justify-center space-y-3.5 text-left">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-amber-50 text-[#b89047] border border-amber-200/70 w-fit">
                     <MapPin className="w-3.5 h-3.5 text-[#b89047]" />
                     <span>{school.district} • Academic Faculty Seminar</span>
                   </div>
 
-                  <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#002137] tracking-tight leading-tight">
+                  <h3 className="text-xl sm:text-2xl lg:text-[28px] font-black text-[#002137] tracking-tight leading-snug">
                     {school.name}
                   </h3>
 
-                  <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal">
+                  <div className="space-y-0.5">
+                    <h4 className="text-sm sm:text-base font-extrabold text-[#004b79]">
+                      {school.sessionTitle}
+                    </h4>
+                    <p className="text-xs font-semibold text-slate-500 italic">
+                      {school.subtitle || "From Everyday AI Tools to Transformative Learning Experiences"}
+                    </p>
+                  </div>
+
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
                     MANTIF conducted an interactive faculty empowerment seminar exploring practical AI tools, empowering teachers to enhance student engagement and modernize classroom learning.
                   </p>
 
-                  <div className="pt-2">
+                  <div className="pt-1">
                     <button
                       onClick={() => setSelectedSchoolModal(school)}
-                      className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-2xl bg-[#002137] hover:bg-[#004b79] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+                      className="group inline-flex items-center gap-2.5 px-6 py-2.5 rounded-xl bg-[#002137] hover:bg-[#004b79] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
                     >
                       <BookOpen className="w-4 h-4 text-[#dfb74a]" />
                       <span>View Session Story &amp; Video</span>
@@ -1281,21 +1293,21 @@ export default function HomePage() {
           </div>
 
           {/* Animatic Loading for "Still more" */}
-          <div className="pt-4 flex items-center justify-center">
-            <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-white border border-slate-200/90 shadow-md text-slate-800 hover:border-[#dfb74a] transition-all">
+          <div className="pt-1 flex items-center justify-center">
+            <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-white border border-slate-200/90 shadow-sm text-slate-800 hover:border-[#dfb74a] transition-all">
               {/* Animatic Spinner Ring */}
-              <div className="relative flex items-center justify-center w-5 h-5">
-                <span className="w-5 h-5 rounded-full border-2 border-[#b89047] border-t-transparent animate-spin" />
-                <span className="absolute w-1.5 h-1.5 rounded-full bg-[#dfb74a] animate-ping" />
+              <div className="relative flex items-center justify-center w-4 h-4">
+                <span className="w-4 h-4 rounded-full border-2 border-[#b89047] border-t-transparent animate-spin" />
+                <span className="absolute w-1 h-1 rounded-full bg-[#dfb74a] animate-ping" />
               </div>
 
               {/* Text */}
-              <span className="text-xs sm:text-sm font-black text-[#002137] tracking-wider uppercase">
+              <span className="text-[11px] sm:text-xs font-black text-[#002137] tracking-wider uppercase">
                 Still more
               </span>
 
               {/* Animatic Bouncing Loading Dots */}
-              <div className="flex items-center gap-1 pl-1">
+              <div className="flex items-center gap-1 pl-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#b89047] animate-bounce [animation-delay:-0.3s]" />
                 <span className="w-1.5 h-1.5 rounded-full bg-[#b89047] animate-bounce [animation-delay:-0.15s]" />
                 <span className="w-1.5 h-1.5 rounded-full bg-[#b89047] animate-bounce" />
