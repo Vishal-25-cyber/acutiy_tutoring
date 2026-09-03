@@ -2164,84 +2164,145 @@ export default function HomePage() {
       </main>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          FOOTER: PROFESSIONAL CONTACT FOOTER (HELPLINES, EMAIL, INSTA & LINKEDIN)
+          FOOTER: MODERN LUXURY FOOTER (BRAND, NAVIGATION, CONTACT & SOCIAL)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <footer id="contact" className="scroll-mt-20 w-full min-w-full bg-[#00111f] border-t border-white/10 text-white overflow-hidden">
-        <div className="w-full max-w-5xl mx-auto px-6 sm:px-10 lg:px-12 py-10">
+      <footer id="contact" className="scroll-mt-20 w-full min-w-full bg-[#00111f] border-t border-white/10 text-white overflow-hidden relative">
+        {/* Subtle background glow accents */}
+        <div className="absolute top-0 left-1/4 w-96 h-32 bg-[#dfb74a]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-32 bg-[#004b79]/20 rounded-full blur-3xl pointer-events-none" />
 
-          {/* 2-Equal-Column Grid with divider */}
-          <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/15 items-center">
+        <div className="relative w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 pt-12 pb-8 space-y-10">
 
-            {/* Col 1: Helplines */}
-            <div className="flex justify-center items-center py-4 px-6 sm:px-10">
-              <div className="space-y-2 text-center md:text-left">
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#dfb74a]">Helplines</p>
+          {/* Main Footer Content: 3 Columns Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 lg:gap-12 items-start">
+
+            {/* Col 1: Brand & Mission Statement (Span 5) */}
+            <div className="md:col-span-5 space-y-4 text-left">
+              <Link href="#about" className="inline-flex items-center gap-3.5 group cursor-pointer">
+                <img
+                  src="/images/mantif_logo.png"
+                  alt="MANTIF Logo"
+                  width={46}
+                  height={46}
+                  className="w-11 h-11 object-contain group-hover:scale-105 transition-transform"
+                />
                 <div>
+                  <span
+                    className="font-black text-2xl tracking-[0.16em] text-white leading-tight block"
+                    style={{ fontFamily: "'Montserrat', 'Outfit', 'Inter', sans-serif" }}
+                  >
+                    M<span className="text-[#dfb74a]">Λ</span>NTIF
+                  </span>
+                  <p className="text-[11px] font-extrabold text-[#dfb74a] tracking-tight uppercase">
+                    Human x Artificial Intelligence
+                  </p>
+                </div>
+              </Link>
+
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-md font-normal">
+                Personalized online tutoring for Classes 6 to 10. Combining experienced educators with intelligent learning systems to ensure conceptual clarity and academic excellence.
+              </p>
+
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-semibold text-emerald-400">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Admissions &amp; Academic Consultations Active</span>
+              </div>
+            </div>
+
+            {/* Col 2: Quick Navigation Links (Span 3) */}
+            <div className="md:col-span-3 space-y-3.5 text-left">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#dfb74a]">
+                Quick Navigation
+              </p>
+              <ul className="space-y-2.5 text-xs sm:text-sm font-semibold text-slate-300">
+                {navItems.map((item) => (
+                  <li key={item.name}>
+                    <a
+                      href={item.href}
+                      className="hover:text-[#dfb74a] transition-colors inline-flex items-center gap-2 group"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#dfb74a]/40 group-hover:bg-[#dfb74a] group-hover:scale-125 transition-all" />
+                      <span>{item.name}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Col 3: Contact & Helplines (Span 4) */}
+            <div className="md:col-span-4 space-y-4 text-left">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-[#dfb74a] mb-2.5">
+                  Helplines (Call / WhatsApp)
+                </p>
+                <div className="space-y-2">
                   {[
                     { num: "+91 98427 43538", tel: "tel:+919842743538" },
                     { num: "+91 80564 53211", tel: "tel:+918056453211" },
                     { num: "+91 63811 80488", tel: "tel:+916381180488" },
                   ].map((h, i) => (
-                    <div key={i}>
-                      <a
-                        href={h.tel}
-                        className="block py-1.5 text-sm font-black font-mono text-slate-100 hover:text-[#dfb74a] transition-colors tracking-wide"
-                      >
-                        {h.num}
-                      </a>
-                      {i < 2 && <div className="h-px bg-white/8" />}
-                    </div>
+                    <a
+                      key={i}
+                      href={h.tel}
+                      className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#dfb74a]/50 text-slate-200 hover:text-white font-mono text-xs sm:text-sm font-bold tracking-wide transition-all group"
+                    >
+                      <Phone className="w-3.5 h-3.5 text-[#dfb74a] group-hover:scale-110 transition-transform" />
+                      <span>{h.num}</span>
+                    </a>
                   ))}
                 </div>
               </div>
-            </div>
 
-            {/* Col 2: Email + Connect With Us (Insta & LinkedIn) */}
-            <div className="flex justify-center items-center py-4 px-6 sm:px-10">
-              <div className="space-y-4 text-center md:text-left">
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#dfb74a]">Official Email</p>
+              {/* Official Email & Social */}
+              <div className="space-y-2 pt-1">
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-[#dfb74a]">
+                  Official Inquiries &amp; Social
+                </p>
+                <div>
                   <a
                     href="mailto:info@mantif.com"
-                    className="inline-flex items-center gap-2 text-sm font-bold font-mono text-slate-100 hover:text-[#dfb74a] transition-colors"
+                    className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold font-mono text-slate-200 hover:text-[#dfb74a] transition-colors"
                   >
                     <Mail className="w-3.5 h-3.5 text-[#dfb74a] shrink-0" />
                     info@mantif.com
                   </a>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#dfb74a]">Connect With Us</p>
-                  <div className="flex items-center justify-center md:justify-start gap-2.5">
-                    <a
-                      href="https://www.instagram.com/mantif.ai?igsi=NHoxb2J2cWdrNG5q"
-                      target="_blank"
-                      rel="noreferrer"
-                      title="Follow MANTIF on Instagram"
-                      aria-label="Follow MANTIF on Instagram"
-                      className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow-sm"
-                    >
-                      <InstagramIcon className="w-4 h-4" />
-                    </a>
-                    <a
-                      href="https://www.linkedin.com/in/acuity-learning-hub-871102401/"
-                      target="_blank"
-                      rel="noreferrer"
-                      title="Connect with MANTIF on LinkedIn"
-                      aria-label="Connect with MANTIF on LinkedIn"
-                      className="w-8 h-8 rounded-lg bg-[#0077b5] text-white flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow-sm"
-                    >
-                      <LinkedInIcon className="w-4 h-4" />
-                    </a>
-                  </div>
+
+                <div className="flex items-center gap-2.5 pt-1">
+                  <a
+                    href="https://www.instagram.com/mantif.ai?igsi=NHoxb2J2cWdrNG5q"
+                    target="_blank"
+                    rel="noreferrer"
+                    title="Follow MANTIF on Instagram"
+                    aria-label="Follow MANTIF on Instagram"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-tr from-[#f09433]/20 via-[#dc2743]/20 to-[#bc1888]/20 hover:from-[#f09433] hover:via-[#dc2743] hover:to-[#bc1888] border border-white/10 text-white text-xs font-bold transition-all duration-300 shadow-xs"
+                  >
+                    <InstagramIcon className="w-3.5 h-3.5" />
+                    <span>Instagram</span>
+                  </a>
+                  <a
+                    href="https://www.linkedin.com/in/acuity-learning-hub-871102401/"
+                    target="_blank"
+                    rel="noreferrer"
+                    title="Connect with MANTIF on LinkedIn"
+                    aria-label="Connect with MANTIF on LinkedIn"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0077b5]/20 hover:bg-[#0077b5] border border-white/10 text-white text-xs font-bold transition-all duration-300 shadow-xs"
+                  >
+                    <LinkedInIcon className="w-3.5 h-3.5" />
+                    <span>LinkedIn</span>
+                  </a>
                 </div>
               </div>
             </div>
 
           </div>
 
-          {/* Copyright */}
-          <div className="mt-8 pt-5 border-t border-white/8 text-center text-xs text-slate-400 font-medium">
-            <p>© 2026 @mantif.All Rights Reserved.</p>
+          {/* Bottom Copyright & Tagline Bar */}
+          <div className="pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 font-medium">
+            <p>© 2026 MANTIF. All Rights Reserved.</p>
+            <p className="text-slate-400">
+              Human Expertise Augmented with Intelligent Learning Systems.
+            </p>
           </div>
 
         </div>
