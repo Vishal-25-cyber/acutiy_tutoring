@@ -449,7 +449,7 @@ export default function HomePage() {
 
   return (
     <div
-      className="min-h-screen bg-slate-50 text-slate-900 selection:bg-[#dfb74a]/20 selection:text-[#002137]"
+      className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50 text-slate-900 selection:bg-[#dfb74a]/20 selection:text-[#002137]"
       style={{ fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" }}
     >
       {/* Skip to Main Content for Accessibility (WCAG 2.4.1) */}
@@ -2166,14 +2166,14 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           FOOTER: PROFESSIONAL CONTACT FOOTER (HELPLINES, EMAIL, INSTA & LINKEDIN)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <footer id="contact" className="scroll-mt-20 bg-[#00111f] border-t border-white/10 text-white">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <footer id="contact" className="scroll-mt-20 w-full min-w-full bg-[#00111f] border-t border-white/10 text-white overflow-hidden">
+        <div className="w-full max-w-5xl mx-auto px-6 sm:px-10 lg:px-12 py-10">
 
           {/* 2-Equal-Column Grid with divider */}
           <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/15 items-center">
 
             {/* Col 1: Helplines */}
-            <div className="flex justify-center items-center py-4 px-4 sm:px-6">
+            <div className="flex justify-center items-center py-4 px-6 sm:px-10">
               <div className="space-y-2 text-center md:text-left">
                 <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#dfb74a]">Helplines</p>
                 <div>
@@ -2197,7 +2197,7 @@ export default function HomePage() {
             </div>
 
             {/* Col 2: Email + Connect With Us (Insta & LinkedIn) */}
-            <div className="flex justify-center items-center py-4 px-4 sm:px-6">
+            <div className="flex justify-center items-center py-4 px-6 sm:px-10">
               <div className="space-y-4 text-center md:text-left">
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#dfb74a]">Official Email</p>
@@ -2240,7 +2240,7 @@ export default function HomePage() {
           </div>
 
           {/* Copyright */}
-          <div className="mt-7 pt-5 border-t border-white/8 text-center text-xs text-slate-400 font-medium">
+          <div className="mt-8 pt-5 border-t border-white/8 text-center text-xs text-slate-400 font-medium">
             <p>© 2026 @mantif.All Rights Reserved.</p>
           </div>
 
