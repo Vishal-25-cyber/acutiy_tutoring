@@ -1508,19 +1508,11 @@ export default function StudentAssignmentsPage() {
               </div>
             )}
 
-            <div className="flex gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setSelectedTask(null)}
-                className="px-4 py-2.5 text-xs font-bold rounded-xl bg-slate-100 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-600 hover:text-rose-600 transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-2xs group"
-              >
-                <X className="w-3.5 h-3.5 text-slate-400 group-hover:text-rose-500 group-hover:rotate-90 transition-all duration-200" />
-                <span>Cancel</span>
-              </button>
+            <div className="pt-2">
               <button
                 type="submit"
                 disabled={isSubmitting || (!selectedFile && !submissionText.trim())}
-                className="flex-1 py-2 text-xs font-bold rounded-xl bg-[#004b79] text-white hover:bg-[#003b60] disabled:opacity-60 cursor-pointer flex items-center justify-center gap-1.5"
+                className="w-full py-2.5 text-xs font-bold rounded-xl bg-[#004b79] text-white hover:bg-[#003b60] disabled:opacity-60 cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
               >
                 {isSubmitting ? (
                   <>
