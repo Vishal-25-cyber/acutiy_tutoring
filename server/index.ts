@@ -199,6 +199,12 @@ import * as ContactRoute from "../src/app/api/contact/route";
 
 app.post("/api/contact", adaptRoute(ContactRoute.POST));
 
+// Fast Health Check Endpoint for Load Balancers, Uptime Monitors, and Cloudflare Pre-warming
+app.get("/api/health", (req: any, res: any) => {
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.status(200).json({ status: "ok", uptime: process.uptime(), timestamp: Date.now() });
+});
+
 import path from "path";
 import fs from "fs";
 
@@ -215,12 +221,15 @@ app.use(
   express.static(distPath, {
     index: "index.html",
     setHeaders: (res: any, filePath: string) => {
-      if (filePath.endsWith("index.html")) {
+      const normalizedPath = filePath.replace(/\\/g, "/");
+      if (normalizedPath.endsWith("index.html")) {
         res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         res.setHeader("Pragma", "no-cache");
         res.setHeader("Expires", "0");
-      } else if (filePath.includes("/assets/")) {
+      } else if (normalizedPath.includes("/assets/")) {
         res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      } else if (/\.(jpe?g|png|webp|svg|gif|ico|avif|woff2?|ttf|eot|mp4|webm)$/i.test(normalizedPath)) {
+        res.setHeader("Cache-Control", "public, max-age=604800, stale-while-revalidate=86400");
       }
     },
   })
@@ -303,6 +312,24 @@ app.listen(PORT, () => {
         }
       } catch (err: any) {
         console.warn("[Acuity] Faculty account verification warning:", err.message);
+      }
+
+      // Self-ping to prevent Render free-tier cold-starts (every 14 minutes in cloud environments)
+      if (process.env.NODE_ENV === "production" || process.env.RENDER) {
+        const keepAliveMinutes = 14;
+        setInterval(async () => {
+          try {
+            const pingUrl = process.env.RENDER_EXTERNAL_URL
+              ? `${process.env.RENDER_EXTERNAL_URL}/api/health`
+              : "https://mantif.com/api/health";
+            const pingRes = await fetch(pingUrl);
+            if (pingRes.ok) {
+              console.log(`[KeepAlive] Pinged ${pingUrl} successfully (status: ${pingRes.status}).`);
+            }
+          } catch {
+            // silent fail
+          }
+        }, keepAliveMinutes * 60 * 1000);
       }
     })
     .catch((err) => {

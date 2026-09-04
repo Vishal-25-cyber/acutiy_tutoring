@@ -231,12 +231,29 @@ export default function HomePage() {
     { name: "Tutoring Hub", href: "#tutoring-hub" },
     { name: "Our Side", href: "#our-side" },
     { name: "Team", href: "#team" },
+    { name: "Mentors", href: "#mentors" },
     { name: "Testimonials", href: "#testimonials" },
     { name: "Gallery", href: "#gallery" },
   ];
 
-  // Fetch batches and settings on mount
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith("#")) {
+      e.preventDefault();
+      const targetId = href.replace("#", "");
+      const targetEl = document.getElementById(targetId);
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
+        window.history.pushState(null, "", href);
+      }
+      setMobileMenuOpen(false);
+    }
+  };
+
+  // Fetch batches and settings on mount & pre-warm server
   useEffect(() => {
+    // Immediate pre-warm to wake up dormant cloud instances with zero delay
+    fetch("/api/health").catch(() => { });
+
     fetch("/api/batches")
       .then((r) => r.json())
       .then((d) => {
@@ -274,18 +291,30 @@ export default function HomePage() {
     e.preventDefault();
     setQErr("");
     setQOk("");
-    if (!qName.trim() || !qPhone.trim() || !qMessage.trim()) {
-      setQErr("Please fill in your name, mobile number, and message.");
-      return;
-    }
+    if (!qName.trim()) { setQErr("Please enter your name."); return; }
+    if (qPhone.replace(/\D/g, "").length < 10) { setQErr("Please enter a valid 10-digit phone number."); return; }
+    if (!qMessage.trim()) { setQErr("Please enter your query."); return; }
     setQLoading(true);
     try {
-      await new Promise((r) => setTimeout(r, 600));
-      setQOk("Thank you! Your query has been submitted to Mantif Admissions. We will reach out shortly.");
-      setQName("");
-      setQPhone("");
-      setQEmail("");
-      setQMessage("");
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: qName.trim(),
+          phone: qPhone.trim(),
+          email: qEmail.trim(),
+          message: qMessage.trim(),
+          studentClass: qClass,
+          type: "GENERAL_INQUIRY",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setQErr(data.error || "Failed to send query. Please try calling directly.");
+        return;
+      }
+      setQOk("Query sent successfully! Our counselors will reach out to you shortly.");
+      setQName(""); setQPhone(""); setQEmail(""); setQMessage("");
     } catch {
       setQErr("Failed to send query. Please call or WhatsApp our hotlines directly.");
     } finally {
@@ -299,44 +328,62 @@ export default function HomePage() {
     if (!uid.trim()) { setErr("Please enter your email or mobile number."); return; }
     if (!pw) { setErr("Please enter your password."); return; }
     setLoading(true);
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: uid.trim(), password: pw, role: loginRole }),
-      });
-      let data: any = {};
+
+    const attemptLogin = async (retryCount = 0): Promise<boolean> => {
       try {
-        data = await res.json();
-      } catch {
-        data = { error: "Server connection error. Please try again." };
-      }
-      if (!res.ok) {
-        setErr(data.error || "Invalid login credentials.");
-        return;
-      }
-      clearAuthAndCaches();
-      if (data.token && typeof window !== "undefined") {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier: uid.trim(), password: pw, role: loginRole }),
+        });
+        let data: any = {};
         try {
-          localStorage.setItem("acuity_auth_token", data.token);
-          if (data.user?.name) localStorage.setItem("acuity_user_name", data.user.name);
-          if (data.user?.role) localStorage.setItem("acuity_user_role", data.user.role);
-          sessionStorage.setItem("acuity_auth_token", data.token);
-        } catch { }
+          data = await res.json();
+        } catch {
+          data = { error: "Server connection error. Please try again." };
+        }
+        if (!res.ok) {
+          setErr(data.error || "Invalid login credentials.");
+          return true;
+        }
+        clearAuthAndCaches();
+        if (data.token && typeof window !== "undefined") {
+          try {
+            localStorage.setItem("acuity_auth_token", data.token);
+            if (data.user?.name) localStorage.setItem("acuity_user_name", data.user.name);
+            if (data.user?.role) localStorage.setItem("acuity_user_role", data.user.role);
+            sessionStorage.setItem("acuity_auth_token", data.token);
+          } catch { }
+        }
+        setOk("Login verified. Redirecting…");
+        setTimeout(() => {
+          const resolvedRole = data.user?.role || loginRole;
+          const targetUrl =
+            resolvedRole === "TEACHER"
+              ? "/teacher/dashboard"
+              : resolvedRole === "ADMIN"
+                ? "/admin/dashboard"
+                : "/student/dashboard";
+          window.location.href = targetUrl;
+        }, 250);
+        return true;
+      } catch (e: any) {
+        if (retryCount < 2) {
+          setErr("Connecting to secure server... Please wait a moment.");
+          await new Promise((r) => setTimeout(r, 1500));
+          return attemptLogin(retryCount + 1);
+        }
+        setErr(
+          e.message === "Failed to fetch"
+            ? "Secure server is waking up. Please click Sign In again in a few seconds."
+            : e.message || "Network connection error. Please try again."
+        );
+        return false;
       }
-      setOk("Login verified. Redirecting…");
-      setTimeout(() => {
-        const resolvedRole = data.user?.role || loginRole;
-        const targetUrl =
-          resolvedRole === "TEACHER"
-            ? "/teacher/dashboard"
-            : resolvedRole === "ADMIN"
-              ? "/admin/dashboard"
-              : "/student/dashboard";
-        window.location.href = targetUrl;
-      }, 250);
-    } catch (e: any) {
-      setErr(e.message || "Network connection error.");
+    };
+
+    try {
+      await attemptLogin(0);
     } finally {
       setLoading(false);
     }
@@ -496,7 +543,8 @@ export default function HomePage() {
                 <a
                   key={item.name}
                   href={item.href}
-                  className="relative py-1 text-slate-600 hover:text-[#004b79] transition-colors group"
+                  onClick={(e) => handleNavClick(e, item.href)}
+                  className="relative py-1 text-slate-600 hover:text-[#004b79] transition-colors group cursor-pointer"
                 >
                   <span>{item.name}</span>
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#004b79] transition-all duration-300 group-hover:w-full" />
@@ -569,8 +617,8 @@ export default function HomePage() {
                   <a
                     key={item.name}
                     href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm sm:text-base font-bold text-slate-700 hover:text-[#004b79] hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all group"
+                    onClick={(e) => handleNavClick(e, item.href)}
+                    className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm sm:text-base font-bold text-slate-700 hover:text-[#004b79] hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all group cursor-pointer"
                   >
                     <span>{item.name}</span>
                     <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#004b79] group-hover:translate-x-1 transition-all" />
@@ -1464,11 +1512,11 @@ export default function HomePage() {
             </div>
 
             {/* Centered Founder Card in Optimal Size Matching Team Cards */}
-            <div className="flex justify-center items-center">
+            <div className="flex flex-col justify-center items-center space-y-4">
               <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-[#b89047]/40 transition-all flex flex-col items-center text-center space-y-3 w-full max-w-[245px] sm:max-w-[265px]">
                 <div className="w-full aspect-4/5 rounded-2xl overflow-hidden shadow-md border-2 border-slate-100 bg-slate-100 relative group">
                   <img
-                    src="/images/founder_karunya.png"
+                    src="/images/founder_karunya.jpg"
                     alt="Karunya S - Founder of MANTIF"
                     loading="lazy"
                     decoding="async"
@@ -1482,6 +1530,14 @@ export default function HomePage() {
                   <p className="text-xs sm:text-sm font-extrabold text-[#8c6924]">Founder</p>
                 </div>
               </div>
+              <a
+                href="#mentors"
+                onClick={(e) => handleNavClick(e, "#mentors")}
+                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#004b79] hover:text-[#002137] bg-slate-100/80 hover:bg-slate-200/80 px-4 py-2 rounded-full border border-slate-200 transition-all cursor-pointer shadow-2xs"
+              >
+                <span>Explore Mentors &amp; Tech Teams</span>
+                <span className="text-sm">↓</span>
+              </a>
             </div>
 
           </div>
@@ -1490,8 +1546,7 @@ export default function HomePage() {
         {/* ═══════════════════════════════════════════════════════════════════════
           PAGE 5: MENTORS & TECH TEAM (EDUCATIONAL MENTORS, SOFTWARE TEAM, AI TEAM)
       ═══════════════════════════════════════════════════════════════════════ */}
-        <section id="team" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-slate-50/60 py-6 lg:py-8 relative">
-          <div id="mentors" className="absolute top-0 pointer-events-none scroll-mt-20" />
+        <section id="mentors" className="scroll-mt-20 min-h-[calc(100vh-5rem)] flex items-center justify-center border-b border-slate-200/80 bg-slate-50/60 py-6 lg:py-8 relative">
           <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 space-y-6 lg:space-y-8">
 
             {/* Section Header */}

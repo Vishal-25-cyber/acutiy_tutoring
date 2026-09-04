@@ -9,6 +9,25 @@ const CACHE_STALE_MS = 60000; // 60s stale time: instant UI transitions with bac
 // Global event bus for instant cache invalidation across tabs / components
 const cacheListeners = new Set<(urlPrefix: string) => void>();
 
+function getAuthHeaders(isAuthMe = false): Record<string, string> {
+  const headers: Record<string, string> = {};
+  if (isAuthMe) {
+    headers["Cache-Control"] = "no-cache";
+  }
+  if (typeof window !== "undefined") {
+    try {
+      const token = localStorage.getItem("acuity_auth_token") || sessionStorage.getItem("acuity_auth_token");
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+        headers["x-auth-token"] = token;
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return headers;
+}
+
 /**
  * Prefetches and caches an API endpoint in the background with deduplication.
  */
@@ -26,7 +45,11 @@ export async function prefetchApi(url: string): Promise<any> {
 
   const fetchPromise = (async () => {
     try {
-      const res = await fetch(url, { credentials: "include" });
+      const headers = getAuthHeaders(false);
+      const res = await fetch(url, {
+        credentials: "include",
+        headers: Object.keys(headers).length > 0 ? headers : undefined,
+      });
       if (res.ok) {
         const data = await res.json();
         if (!url.includes("/api/auth/me")) {
@@ -158,9 +181,10 @@ export function useFastFetch<T = any>(
       }
 
       try {
+        const headers = getAuthHeaders(Boolean(isAuthMe));
         const res = await fetch(url, {
           credentials: "include",
-          headers: isAuthMe ? { "Cache-Control": "no-cache" } : undefined,
+          headers: Object.keys(headers).length > 0 ? headers : undefined,
         });
 
         if (res.ok) {
