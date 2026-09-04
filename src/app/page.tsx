@@ -272,6 +272,21 @@ export default function HomePage() {
         }
       })
       .catch(() => { });
+
+    // Handle smooth scrolling for direct hash links or mode=contact redirects
+    if (typeof window !== "undefined") {
+      const hash = window.location.hash;
+      const search = window.location.search;
+      const target = hash ? hash.replace("#", "") : search.includes("contact") ? "contact" : null;
+      if (target) {
+        setTimeout(() => {
+          const el = document.getElementById(target);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }, 200);
+      }
+    }
   }, []);
 
   const phone1 = (contactSettings?.supportPhone1 || "9876543210").replace(/\D/g, "").slice(-10);
@@ -514,7 +529,15 @@ export default function HomePage() {
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 h-20 flex items-center justify-between">
 
           {/* Logo & Brand Identity (Left Side - Clean Logo, Shifted Left, Stylized Λ matching the logo) */}
-          <Link href="#about" className="flex items-center gap-3.5 group text-left cursor-pointer shrink-0">
+          <Link
+            href="#about"
+            onClick={(e) => {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: "smooth" });
+              window.history.pushState(null, "", "/");
+            }}
+            className="flex items-center gap-3.5 group text-left cursor-pointer shrink-0"
+          >
             <img
               src="/images/mantif_logo.png"
               alt="MANTIF Logo"
@@ -580,11 +603,18 @@ export default function HomePage() {
             >
               {/* Top Header of Sidebar */}
               <div className="h-20 px-6 flex items-center justify-between border-b border-slate-100 bg-slate-50/80 shrink-0">
-                <div className="flex items-center gap-3">
+                <div
+                  onClick={() => {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                    setMobileMenuOpen(false);
+                    window.history.pushState(null, "", "/");
+                  }}
+                  className="flex items-center gap-3 cursor-pointer group"
+                >
                   <img
                     src="/images/mantif_logo.png"
                     alt="MANTIF Logo"
-                    className="w-10 h-10 object-contain shrink-0"
+                    className="w-10 h-10 object-contain shrink-0 group-hover:scale-105 transition-transform"
                   />
                   <div className="flex flex-col">
                     <span
