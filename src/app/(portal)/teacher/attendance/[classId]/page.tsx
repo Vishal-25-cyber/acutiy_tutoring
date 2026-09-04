@@ -164,7 +164,7 @@ export default function TeacherClassAttendanceDetailPage() {
   if (isLoading) {
     return (
       <main className="w-full max-w-7xl mx-auto p-6 sm:p-8 space-y-6 text-center text-xs text-slate-400 animate-pulse">
-        Loading class attendance session roster...
+        Loading class attendance records...
       </main>
     );
   }

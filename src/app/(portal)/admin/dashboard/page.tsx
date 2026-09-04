@@ -147,7 +147,7 @@ export default function AdminDashboardPage() {
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Real-time live operations, enrolled students, faculty roster, and tuition fee records.
+            Real-time live operations, enrolled students, faculty members, and tuition fee records.
           </p>
         </div>
 

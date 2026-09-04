@@ -154,7 +154,7 @@ export default function TeacherStudentsPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-              Batch Student Roster &amp; Academic Dossier
+              Batch Student List &amp; Academic Profiles
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
@@ -230,10 +230,10 @@ export default function TeacherStudentsPage() {
         </div>
       </div>
 
-      {/* ── 3. CLASS-WISE ROSTER SECTIONS ── */}
+      {/* ── 3. CLASS-WISE STUDENT LIST SECTIONS ── */}
       <div className="space-y-8">
         {isLoading ? (
-          <div className="p-12 text-center text-xs text-slate-400 animate-pulse">Loading live student roster...</div>
+          <div className="p-12 text-center text-xs text-slate-400 animate-pulse">Loading enrolled students...</div>
         ) : totalFilteredCount === 0 ? (
           <div className="py-16 px-6 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-900/50 space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-[#002137] text-[#004b79] dark:text-[#dfb74a] mx-auto flex items-center justify-center shadow-xs">
@@ -266,7 +266,7 @@ export default function TeacherStudentsPage() {
                     </div>
                     <div>
                       <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-wide">
-                        {cls} Roster
+                        {cls} Students
                       </h2>
                     </div>
                   </div>
@@ -276,7 +276,7 @@ export default function TeacherStudentsPage() {
                   </span>
                 </div>
 
-                {/* Class Student Rows / Modern Roster Cards */}
+                {/* Class Student Rows / Modern Student Cards */}
                 <div className="space-y-3">
                   {classStudents.map((s: any, idx: number) => {
                     const studentId = s.studentId || formatStudentId(s, idx);

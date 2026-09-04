@@ -379,7 +379,7 @@ export default function TeacherStudentReportsPage() {
               <div>
                 <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 mb-3">
                   <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Consolidated Student Marksheet &amp; Performance Roster
+                    Consolidated Student Marksheet &amp; Performance Records
                   </h2>
                   <span className="text-xs text-slate-400">
                     {(schoolReport?.studentMarksheet?.length ?? schoolReport?.studentRoster?.length ?? 0)} Students Listed

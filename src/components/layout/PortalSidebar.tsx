@@ -129,7 +129,7 @@ export function PortalSidebar({ role }: SidebarProps) {
     { href: "/teacher/schedule", label: "Schedule & Timetable", icon: CalendarCheck2, api: "/api/classes" },
     { href: "/teacher/live-class/create", label: "Launch Live Class", icon: Video, badge: "Host" },
     { href: "/teacher/assignments", label: "Assignments & Grading", icon: FileCheck, api: "/api/teacher/assignments" },
-    { href: "/teacher/students", label: "Student Roster", icon: Users2, api: "/api/teacher/students" },
+    { href: "/teacher/students", label: "Student List", icon: Users2, api: "/api/teacher/students" },
     { href: "/teacher/materials", label: "Study Resources", icon: BookOpen, api: "/api/teacher/materials" },
     { href: "/teacher/attendance", label: "Staff Attendance Log", icon: Clock },
   ], []);

@@ -91,7 +91,7 @@ function RouteSEOAndScroll() {
       else if (pathname.includes("/schedule")) pageTitle = "Teaching Schedule & Timetable | Mantif";
       else if (pathname.includes("/materials")) pageTitle = "Study Resources | Mantif";
       else if (pathname.includes("/assignments")) pageTitle = "Assignments & Grading | Mantif";
-      else if (pathname.includes("/students")) pageTitle = "Student Roster | Mantif";
+      else if (pathname.includes("/students")) pageTitle = "Student List | Mantif";
       else if (pathname.includes("/reports")) pageTitle = "Student Performance Reports | Mantif";
       else pageTitle = "Faculty Portal | Mantif";
     } else if (pathname.startsWith("/admin")) {
