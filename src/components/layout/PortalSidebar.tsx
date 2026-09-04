@@ -25,6 +25,7 @@ import {
   History,
   LogOut,
   Lock,
+  Menu,
 } from "lucide-react";
 import { cn } from "@/components/ui/button";
 import { warmupPortalCache, prefetchApi, invalidateCache, clearAuthAndCaches, useFastFetch } from "@/lib/api-cache";
@@ -55,6 +56,24 @@ export function PortalSidebar({ role }: SidebarProps) {
   const hasPaid = !!trial?.hasPaid;
   const isTrialActive = isStudent && !hasPaid && !!trial?.isTrialActive;
   const isTrialExpired = isStudent && !hasPaid && !!trial?.isTrialExpired;
+
+  // Collapsible sidebar state (persisted in localStorage)
+  const [isCollapsed, setIsCollapsed] = React.useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("portal_sidebar_collapsed") === "true";
+    }
+    return false;
+  });
+
+  const toggleSidebar = () => {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("portal_sidebar_collapsed", String(next));
+      }
+      return next;
+    });
+  };
 
   const studentLinks: SidebarLink[] = React.useMemo(() => {
     const baseLinks: SidebarLink[] = [
@@ -198,36 +217,72 @@ export function PortalSidebar({ role }: SidebarProps) {
   };
 
   return (
-    <aside className="w-64 border-r border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#001726] flex flex-col h-screen sticky top-0 shrink-0 select-none z-30 transition-colors">
+    <aside
+      className={cn(
+        "border-r border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#001726] flex flex-col h-screen sticky top-0 shrink-0 select-none z-30 transition-all duration-300 ease-in-out",
+        isCollapsed ? "w-20" : "w-64"
+      )}
+    >
       {/* Sidebar Header */}
-      <div className="h-20 px-4 flex items-center border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#00121e]/50">
-        <Link href="/" className="flex items-center gap-3 group">
-          <img
-            src="/images/mantif_logo.png"
-            alt="Mantif Logo"
-            className="w-11 h-11 object-contain group-hover:scale-105 transition-transform shrink-0"
-          />
-          <div className="flex flex-col justify-center min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span
-                className="font-black text-[18px] tracking-[0.14em] text-[#002137] dark:text-white leading-tight select-none truncate"
-                style={{ fontFamily: "'Montserrat', 'Outfit', 'Inter', sans-serif" }}
-              >
-                M<span className="text-[#b89047] dark:text-[#dfb74a]">Λ</span>NTIF
-              </span>
-              <span className="text-[8px] font-extrabold px-1.5 py-0.5 rounded-md bg-[#b89047]/15 text-[#8f6d2b] dark:text-[#dfb74a] uppercase tracking-wider border border-[#b89047]/30 shrink-0">
-                {role}
-              </span>
-            </div>
-            <p className="text-[9.5px] font-bold text-[#b89047] dark:text-[#dfb74a] tracking-tight leading-none mt-0.5 truncate">
-              Human x Artificial Intelligence
-            </p>
-          </div>
-        </Link>
+      <div
+        className={cn(
+          "h-20 flex items-center border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#00121e]/50 transition-all",
+          isCollapsed ? "justify-center px-2" : "justify-between px-4"
+        )}
+      >
+        {!isCollapsed ? (
+          <>
+            <Link href="/" className="flex items-center gap-3 group min-w-0">
+              <img
+                src="/images/mantif_logo.png"
+                alt="Mantif Logo"
+                className="w-10 h-10 object-contain group-hover:scale-105 transition-transform shrink-0"
+              />
+              <div className="flex flex-col justify-center min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="font-black text-[17px] tracking-[0.14em] text-[#002137] dark:text-white leading-tight select-none truncate"
+                    style={{ fontFamily: "'Montserrat', 'Outfit', 'Inter', sans-serif" }}
+                  >
+                    M<span className="text-[#b89047] dark:text-[#dfb74a]">Λ</span>NTIF
+                  </span>
+                  <span className="text-[8px] font-extrabold px-1.5 py-0.5 rounded-md bg-[#b89047]/15 text-[#8f6d2b] dark:text-[#dfb74a] uppercase tracking-wider border border-[#b89047]/30 shrink-0">
+                    {role}
+                  </span>
+                </div>
+                <p className="text-[9px] font-bold text-[#b89047] dark:text-[#dfb74a] tracking-tight leading-none mt-0.5 truncate">
+                  Human x AI
+                </p>
+              </div>
+            </Link>
+
+            {/* 3-Lines (Hamburger) Button to Collapse */}
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0 ml-1"
+              title="Collapse sidebar"
+              aria-label="Collapse sidebar"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          </>
+        ) : (
+          /* Collapsed Header: 3-Lines Button to Expand */
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="p-2.5 rounded-xl text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer flex flex-col items-center gap-1"
+            title="Open sidebar"
+            aria-label="Open sidebar"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 py-3.5 px-3 space-y-1 overflow-y-auto">
+      <nav className={cn("flex-1 py-3.5 space-y-1 overflow-y-auto", isCollapsed ? "px-2" : "px-3")}>
         {links.map((item) => {
           const Icon = item.icon;
           const isActive =
@@ -241,10 +296,14 @@ export function PortalSidebar({ role }: SidebarProps) {
               key={item.href}
               href={item.href}
               prefetch={true}
+              title={isCollapsed ? item.label : undefined}
               onMouseEnter={() => handleHoverPrefetch(item)}
               onFocus={() => handleHoverPrefetch(item)}
               className={cn(
-                "flex items-center justify-between px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all group",
+                "rounded-xl font-semibold transition-all group relative",
+                isCollapsed
+                  ? "flex items-center justify-center p-3 text-center"
+                  : "flex items-center justify-between px-3 py-2.5 text-[13px]",
                 isActive
                   ? "bg-[#002137] text-white dark:bg-[#002842] dark:text-[#dfb74a] shadow-sm border border-[#002137] dark:border-[#b89047]/40"
                   : item.isLocked
@@ -252,7 +311,7 @@ export function PortalSidebar({ role }: SidebarProps) {
                     : "text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100"
               )}
             >
-              <div className="flex items-center gap-2.5 min-w-0">
+              <div className={cn("flex items-center", isCollapsed ? "justify-center" : "gap-2.5 min-w-0")}>
                 <Icon
                   className={cn(
                     "w-4 h-4 transition-colors shrink-0",
@@ -263,9 +322,10 @@ export function PortalSidebar({ role }: SidebarProps) {
                         : "text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300"
                   )}
                 />
-                <span className="truncate">{item.label}</span>
+                {!isCollapsed && <span className="truncate">{item.label}</span>}
               </div>
-              {item.badge && (
+
+              {!isCollapsed && item.badge && (
                 <span
                   className={cn(
                     "text-[10px] px-1.5 py-0.5 rounded-full font-bold shrink-0 flex items-center gap-1",
@@ -282,13 +342,18 @@ export function PortalSidebar({ role }: SidebarProps) {
                   <span>{item.badge}</span>
                 </span>
               )}
+
+              {/* Collapsed Active Indicator Dot */}
+              {isCollapsed && isActive && (
+                <span className="absolute right-1 top-1 w-2 h-2 rounded-full bg-[#dfb74a]" />
+              )}
             </Link>
           );
         })}
       </nav>
 
       {/* Trial Status Quick Card for Students */}
-      {isStudent && isTrialExpired && (
+      {isStudent && isTrialExpired && !isCollapsed && (
         <div className="mx-2.5 mb-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 select-none">
           <div className="flex items-center gap-1.5 font-bold text-xs text-amber-700 dark:text-amber-400">
             <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
@@ -310,10 +375,14 @@ export function PortalSidebar({ role }: SidebarProps) {
       <div className="p-2.5 border-t border-slate-200 dark:border-slate-800">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+          title={isCollapsed ? "Sign Out" : undefined}
+          className={cn(
+            "w-full flex items-center justify-center rounded-md text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors",
+            isCollapsed ? "py-3 px-2" : "gap-2 px-3 py-2"
+          )}
         >
-          <LogOut className="w-3.5 h-3.5" />
-          <span>Sign Out</span>
+          <LogOut className="w-4 h-4 shrink-0" />
+          {!isCollapsed && <span>Sign Out</span>}
         </button>
       </div>
     </aside>

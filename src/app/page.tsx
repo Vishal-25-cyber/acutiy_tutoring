@@ -489,47 +489,163 @@ export default function HomePage() {
             </div>
           </Link>
 
-          {/* Desktop Navigation Links (Moved to Right Side, No Contact Us / Portal Login buttons) */}
-          <nav className="hidden lg:flex items-center gap-7 xl:gap-9 text-sm font-bold text-slate-700">
-            {navItems.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                className="relative py-1 text-slate-600 hover:text-[#004b79] transition-colors group"
-              >
-                <span>{item.name}</span>
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#004b79] transition-all duration-300 group-hover:w-full" />
-              </a>
-            ))}
-          </nav>
-
-          {/* Mobile Hamburger Menu */}
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-slate-700 hover:bg-slate-100 transition-colors"
-            aria-label="Toggle Menu"
-            aria-expanded={mobileMenuOpen}
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-
-        {/* Mobile Navigation Drawer */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden border-b border-slate-200 bg-white px-8 py-6 space-y-4 shadow-xl">
-            <div className="flex flex-col space-y-3 text-base font-bold">
+          {/* Desktop Navigation Links (About, Tutoring Hub, Our Side, Team, Testimonials, Gallery) */}
+          <div className="flex items-center gap-4 sm:gap-6">
+            <nav className="hidden lg:flex items-center gap-7 xl:gap-8 text-sm font-bold text-slate-700">
               {navItems.map((item) => (
                 <a
                   key={item.name}
                   href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-slate-700 py-1.5 hover:text-[#004b79] transition-colors"
+                  className="relative py-1 text-slate-600 hover:text-[#004b79] transition-colors group"
                 >
-                  {item.name}
+                  <span>{item.name}</span>
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#004b79] transition-all duration-300 group-hover:w-full" />
                 </a>
               ))}
-            </div>
+            </nav>
+
+            {/* 3-Lines (Hamburger) Toggle Button for Sidebar (Available on Desktop & Mobile) */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-slate-700 hover:text-[#004b79] hover:bg-slate-100 border border-slate-200/80 transition-all cursor-pointer shadow-2xs"
+              aria-label="Toggle Navigation Sidebar"
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Slide-out Sidebar Drawer with Backdrop Overlay */}
+        {mobileMenuOpen && (
+          <div className="fixed inset-0 z-50 overflow-hidden">
+            {/* Dark Backdrop (Click to close) */}
+            <div
+              className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs transition-opacity duration-300"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+
+            {/* Slide-in Sidebar Panel from Right */}
+            <aside
+              className="fixed top-0 right-0 bottom-0 w-80 sm:w-96 max-w-[88vw] bg-white text-slate-900 shadow-2xl z-50 flex flex-col justify-between border-l border-slate-200 animate-in slide-in-from-right duration-300"
+            >
+              {/* Top Header of Sidebar */}
+              <div className="h-20 px-6 flex items-center justify-between border-b border-slate-100 bg-slate-50/80 shrink-0">
+                <div className="flex items-center gap-3">
+                  <img
+                    src="/images/mantif_logo.png"
+                    alt="MANTIF Logo"
+                    className="w-10 h-10 object-contain shrink-0"
+                  />
+                  <div className="flex flex-col">
+                    <span
+                      className="font-black text-lg tracking-[0.14em] text-[#002137] leading-tight"
+                      style={{ fontFamily: "'Montserrat', 'Outfit', 'Inter', sans-serif" }}
+                    >
+                      M<span className="text-[#8c6924]">Λ</span>NTIF
+                    </span>
+                    <span className="text-[10px] font-bold text-[#8c6924] tracking-tight">
+                      Human x Artificial Intelligence
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-200/70 transition-colors cursor-pointer"
+                  aria-label="Close sidebar"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Navigation Links List */}
+              <div className="flex-1 overflow-y-auto px-6 py-5 space-y-1.5">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-2 px-1">
+                  Navigation
+                </p>
+                {navItems.map((item) => (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm sm:text-base font-bold text-slate-700 hover:text-[#004b79] hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all group"
+                  >
+                    <span>{item.name}</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#004b79] group-hover:translate-x-1 transition-all" />
+                  </a>
+                ))}
+
+                {/* Direct Helplines Section in Sidebar */}
+                <div className="pt-5 border-t border-slate-100 mt-5 space-y-2">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8c6924] px-1">
+                    Helplines (Call / WhatsApp)
+                  </p>
+                  <div className="space-y-1">
+                    {[
+                      { num: "+91 98427 43538", tel: "tel:+919842743538" },
+                      { num: "+91 80564 53211", tel: "tel:+918056453211" },
+                      { num: "+91 63811 80488", tel: "tel:+916381180488" },
+                    ].map((h, i) => (
+                      <a
+                        key={i}
+                        href={h.tel}
+                        className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold text-slate-600 hover:text-[#004b79] hover:bg-slate-50 transition-colors"
+                      >
+                        <Phone className="w-3.5 h-3.5 text-[#8c6924] shrink-0" />
+                        <span>{h.num}</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Social Media Links */}
+                <div className="pt-4 border-t border-slate-100 space-y-2">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 px-1">
+                    Connect With Us
+                  </p>
+                  <div className="flex items-center gap-2 px-1">
+                    <a
+                      href="https://www.instagram.com/mantif.ai?igsi=NHoxb2J2cWdrNG5q"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white flex items-center justify-center hover:scale-105 transition-transform"
+                      title="Instagram"
+                    >
+                      <InstagramIcon className="w-3.5 h-3.5" />
+                    </a>
+                    <a
+                      href="https://www.linkedin.com/in/acuity-learning-hub-871102401/"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-8 h-8 rounded-lg bg-[#0077b5] text-white flex items-center justify-center hover:scale-105 transition-transform"
+                      title="LinkedIn"
+                    >
+                      <LinkedInIcon className="w-3.5 h-3.5" />
+                    </a>
+                    <a
+                      href="mailto:info@mantif.com"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-mono font-bold transition-colors"
+                    >
+                      <Mail className="w-3.5 h-3.5 text-[#8c6924]" />
+                      <span>info@mantif.com</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Quick Admission Action */}
+              <div className="p-5 border-t border-slate-100 bg-slate-50/70 shrink-0">
+                <a
+                  href="#about"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full py-2.5 px-4 rounded-xl bg-[#002137] hover:bg-[#003657] text-white text-center font-bold text-xs sm:text-sm block transition-all shadow-sm"
+                >
+                  Admission &amp; Portal Login →
+                </a>
+              </div>
+            </aside>
           </div>
         )}
       </header>
