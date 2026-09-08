@@ -89,7 +89,7 @@ export default function StudentClassesPage() {
   const isClassCurrentlyLive = Boolean(liveClassDoc);
   const liveOrTodayDbClass = activeDoc;
 
-  const weeklySchedule = (
+  const rawWeeklySchedule = (
     Array.isArray(data?.weeklySchedule) ? data.weeklySchedule : []
   ).map((item: any) => {
     const isToday = currentDay.toLowerCase() === item.day?.toLowerCase() || liveDay.toLowerCase() === item.day?.toLowerCase();
@@ -107,6 +107,15 @@ export default function StudentClassesPage() {
       };
     }
     return item;
+  });
+
+  // Client-side deduplication safeguard to guarantee identical classes are never duplicated
+  const seenWeeklyKeys = new Set<string>();
+  const weeklySchedule = rawWeeklySchedule.filter((item: any) => {
+    const key = `${item.date || item.day}_${item.startTime || item.time}_${(item.subject || "").trim().toLowerCase()}_${(item.topic || "").trim().toLowerCase()}`;
+    if (seenWeeklyKeys.has(key)) return false;
+    seenWeeklyKeys.add(key);
+    return true;
   });
 
   const todayScheduleItem =

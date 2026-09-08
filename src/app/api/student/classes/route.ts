@@ -101,7 +101,22 @@ export async function GET(req: NextRequest) {
       .sort({ date: 1, startTime: 1 })
       .lean();
 
-    const dbClasses = sortClassesByPriority(rawClasses as any[]);
+    const sortedClasses = sortClassesByPriority(rawClasses as any[]);
+
+    // Deduplicate any duplicate classes in database (same date, startTime, subject, and classLevel/topic)
+    const seenSessionKeys = new Set<string>();
+    const dbClasses: any[] = [];
+
+    for (const c of sortedClasses) {
+      const normSubject = (c.subject || "").trim().toLowerCase();
+      const normClassLevel = (c.classLevel || "").trim().toLowerCase();
+      const normTopic = (c.topic || "").trim().toLowerCase();
+      const key = `${c.date}_${c.startTime}_${normSubject}_${normClassLevel || normTopic}`;
+      if (!seenSessionKeys.has(key)) {
+        seenSessionKeys.add(key);
+        dbClasses.push(c);
+      }
+    }
 
     const todayClasses = dbClasses.filter(
       (c: any) =>

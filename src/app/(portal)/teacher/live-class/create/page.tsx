@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -26,6 +26,7 @@ import { getSubjectsForClassAndBoard, CLASS_LIST } from "@/lib/curriculum";
 
 export default function TeacherCreateLiveClassPage() {
   const router = useRouter();
+  const isSubmittingRef = useRef(false);
   const [batches, setBatches] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -150,6 +151,8 @@ export default function TeacherCreateLiveClassPage() {
   };
 
   const handleSaveClass = async (status: "DRAFT" | "PUBLISHED") => {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsLoading(true);
     setErrorMessage("");
     setSuccessMessage("");
@@ -199,6 +202,7 @@ export default function TeacherCreateLiveClassPage() {
       setErrorMessage(err.message || "An unexpected error occurred.");
     } finally {
       setIsLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 

@@ -6,7 +6,7 @@ import {
   Video, VideoOff, Mic, MicOff, Users, Clock, PhoneOff,
   AlertCircle, Info, Hand, MonitorUp, MessageSquare, Send,
   Volume2, X, Loader2, CheckCircle2, XCircle, Bell, Smile,
-  Pin, PinOff,
+  Pin, PinOff, Maximize2, Minimize2,
 } from "lucide-react";
 import {
   Room,
@@ -175,6 +175,43 @@ export function JitsiClassroom({
   useEffect(() => { isCameraOnRef.current = isCameraOn; }, [isCameraOn]);
   const isScreenSharingRef = useRef(isScreenSharing);
   useEffect(() => { isScreenSharingRef.current = isScreenSharing; }, [isScreenSharing]);
+
+  /* ── Main Stage Fullscreen ── */
+  const mainStageRef = useRef<HTMLDivElement | null>(null);
+  const [isHostFullscreen, setIsHostFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsHostFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleHostFullscreen = useCallback(() => {
+    try {
+      if (!document.fullscreenElement) {
+        const el = mainStageRef.current;
+        if (el?.requestFullscreen) {
+          el.requestFullscreen().catch(() => {});
+        } else if ((el as any)?.webkitRequestFullscreen) {
+          (el as any).webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        } else if ((document as any)?.webkitExitFullscreen) {
+          (document as any).webkitExitFullscreen();
+        }
+      }
+    } catch (e) {
+      console.warn("Fullscreen toggle error:", e);
+    }
+  }, []);
 
   /* ── WebRTC & Realtime State ── */
   const [remoteTracks, setRemoteTracks] = useState<Record<string, ParticipantTrackInfo>>({});
@@ -1611,7 +1648,10 @@ export function JitsiClassroom({
         </div>
 
         {/* ── 1. Main Stage (Spotlight) ── */}
-        <div className="flex-1 h-full min-h-0 min-w-0 relative rounded-2xl overflow-hidden bg-[#141414] border border-white/10 flex items-center justify-center shadow-2xl group">
+        <div
+          ref={mainStageRef}
+          className="flex-1 h-full min-h-0 min-w-0 relative rounded-2xl overflow-hidden bg-[#141414] border border-white/10 flex items-center justify-center shadow-2xl group"
+        >
           {(() => {
             const currentClass = classData;
             const teacherId = String(
@@ -1766,17 +1806,37 @@ export function JitsiClassroom({
             );
           })()}
 
-          {/* Unpin button if a participant is pinned */}
-          {pinnedParticipantId && (
+          {/* Top-Right Action Bar: Unpin and Full Screen Toggle */}
+          <div className="absolute top-3 right-3 flex items-center gap-2 z-20">
+            {pinnedParticipantId && (
+              <button
+                onClick={() => setPinnedParticipantId(null)}
+                className="px-2.5 py-1.5 rounded-lg bg-black/75 hover:bg-black/90 text-white text-xs font-medium flex items-center gap-1.5 backdrop-blur-sm border border-white/20 transition-all cursor-pointer shadow-md"
+                title="Unpin and return to Host"
+              >
+                <PinOff className="w-3.5 h-3.5 text-blue-400" />
+                <span>Unpin</span>
+              </button>
+            )}
+
             <button
-              onClick={() => setPinnedParticipantId(null)}
-              className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-black/70 hover:bg-black/90 text-white text-xs font-medium flex items-center gap-1.5 z-20 backdrop-blur-sm border border-white/20 transition-all cursor-pointer shadow-md"
-              title="Unpin and return to Host"
+              onClick={toggleHostFullscreen}
+              className="px-2.5 py-1.5 rounded-lg bg-black/75 hover:bg-black/90 text-white text-xs font-medium flex items-center gap-1.5 backdrop-blur-sm border border-white/20 hover:border-white/40 transition-all cursor-pointer shadow-md"
+              title={isHostFullscreen ? "Exit Full Screen" : "View on Full Screen"}
             >
-              <PinOff className="w-3.5 h-3.5 text-blue-400" />
-              <span>Unpin</span>
+              {isHostFullscreen ? (
+                <>
+                  <Minimize2 className="w-3.5 h-3.5 text-indigo-400" />
+                  <span className="hidden sm:inline">Exit Full Screen</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="w-3.5 h-3.5 text-indigo-400" />
+                  <span className="hidden sm:inline">Full Screen</span>
+                </>
+              )}
             </button>
-          )}
+          </div>
         </div>
 
         {/* ── 2. Right Side Filmstrip (Users in Small Tiles, Google Meet Style) ── */}
@@ -1865,70 +1925,78 @@ export function JitsiClassroom({
             </div>
           )}
 
-          {/* Other Remote Participants (Students) */}
-          {realtimeParticipants
-            .filter((p) => {
-              if (p.id === userInfo.id) return false;
-              if (p.role === "TEACHER" && !pinnedParticipantId) return false; // Remote teacher is on main stage
-              if (pinnedParticipantId === p.id) return false; // Pinned participant is on main stage
-              return true;
-            })
-            .map((p) => {
-              const track = remoteTracks[p.id]?.videoTrack;
-              const isHandUp = p.isHandRaised || (remoteParticipant?.id === p.id && remoteHandRaised);
+          {/* Other Remote Participants (Students, Co-hosts, All Joined Members) */}
+          {(() => {
+            const activeRemoteTeacher = realtimeParticipants.find((p) => p.role === "TEACHER" && p.id !== userInfo.id);
 
-              return (
-                <div
-                  key={p.id}
-                  className="aspect-video w-full rounded-xl overflow-hidden bg-[#1e1e1e] border border-white/10 relative flex items-center justify-center min-h-[120px] shrink-0 group transition-all hover:border-white/30"
-                >
-                  {p.isCameraOn && track ? (
-                    <RemoteVideoView track={track} className="w-full h-full object-cover bg-black" />
-                  ) : (
-                    <div className="flex flex-col items-center gap-1.5 text-center px-2">
-                      <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-200 shadow">
-                        {initials(p.name)}
-                      </div>
-                      <p className="text-[11px] font-medium text-white truncate max-w-[120px]">{p.name}</p>
-                      <span className="text-[9px] text-slate-500">
-                        {p.isCameraOn ? "Connecting camera..." : "Camera off"}
-                      </span>
-                    </div>
-                  )}
+            return realtimeParticipants
+              .filter((p) => {
+                // Do not duplicate oneself
+                if (p.id === userInfo.id) return false;
+                // If a participant is pinned, they are already on the main stage
+                if (pinnedParticipantId && p.id === pinnedParticipantId) return false;
+                // If student is viewing without pinning, the main stage already spotlights activeRemoteTeacher
+                if (!userInfo.isTeacher && !pinnedParticipantId && p.id === activeRemoteTeacher?.id) return false;
+                // All other participants are rendered live without restriction
+                return true;
+              })
+              .map((p) => {
+                const track = remoteTracks[p.id]?.videoTrack;
+                const isHandUp = p.isHandRaised || (remoteParticipant?.id === p.id && remoteHandRaised);
 
-                  {/* Label badge */}
-                  <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded bg-black/75 backdrop-blur-sm text-[10px] font-medium text-white flex items-center gap-1 z-10 border border-white/10">
-                    {p.isMicOn !== false ? (
-                      <Mic className="w-2.5 h-2.5 text-emerald-400" />
-                    ) : (
-                      <MicOff className="w-2.5 h-2.5 text-rose-400" />
-                    )}
-                    <span className="truncate max-w-[110px]">{p.name}</span>
-                  </div>
-
-                  {/* Hand raised badge */}
-                  {isHandUp && (
-                    <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-amber-500 text-black text-[9px] font-black flex items-center gap-1 z-10 shadow">
-                      <Hand className="w-2.5 h-2.5" />
-                      <span>Raised</span>
-                    </div>
-                  )}
-
-                  {/* Pin action button */}
-                  <button
-                    onClick={() => setPinnedParticipantId(p.id)}
-                    className="absolute top-1.5 right-1.5 p-1 rounded bg-black/60 hover:bg-black/90 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
-                    title={`Pin ${p.name} to main stage`}
+                return (
+                  <div
+                    key={p.id}
+                    className="aspect-video w-full rounded-xl overflow-hidden bg-[#1e1e1e] border border-white/10 relative flex items-center justify-center min-h-[120px] shrink-0 group transition-all hover:border-white/30"
                   >
-                    <Pin className="w-3 h-3" />
-                  </button>
-                </div>
-              );
-            })}
+                    {p.isCameraOn && track ? (
+                      <RemoteVideoView track={track} className="w-full h-full object-cover bg-black" />
+                    ) : (
+                      <div className="flex flex-col items-center gap-1.5 text-center px-2">
+                        <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-200 shadow">
+                          {initials(p.name)}
+                        </div>
+                        <p className="text-[11px] font-medium text-white truncate max-w-[120px]">{p.name}</p>
+                        <span className="text-[9px] text-slate-500">
+                          {p.isCameraOn ? "Connecting camera..." : "Camera off"}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Label badge */}
+                    <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded bg-black/75 backdrop-blur-sm text-[10px] font-medium text-white flex items-center gap-1 z-10 border border-white/10">
+                      {p.isMicOn !== false ? (
+                        <Mic className="w-2.5 h-2.5 text-emerald-400" />
+                      ) : (
+                        <MicOff className="w-2.5 h-2.5 text-rose-400" />
+                      )}
+                      <span className="truncate max-w-[110px]">{p.name}</span>
+                    </div>
+
+                    {/* Hand raised badge */}
+                    {isHandUp && (
+                      <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-amber-500 text-black text-[9px] font-black flex items-center gap-1 z-10 shadow">
+                        <Hand className="w-2.5 h-2.5" />
+                        <span>Raised</span>
+                      </div>
+                    )}
+
+                    {/* Pin action button */}
+                    <button
+                      onClick={() => setPinnedParticipantId(p.id)}
+                      className="absolute top-1.5 right-1.5 p-1 rounded bg-black/60 hover:bg-black/90 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
+                      title={`Pin ${p.name} to main stage`}
+                    >
+                      <Pin className="w-3 h-3" />
+                    </button>
+                  </div>
+                );
+              });
+          })()}
 
           {/* Empty state when teacher is live and no students joined yet */}
           {userInfo.isTeacher &&
-            realtimeParticipants.filter((p) => p.role !== "TEACHER").length === 0 && (
+            realtimeParticipants.filter((p) => p.id !== userInfo.id).length === 0 && (
               <div className="p-4 rounded-xl bg-white/[0.03] border border-dashed border-white/10 flex flex-col items-center justify-center text-center gap-2 py-8 text-slate-400">
                 <Users className="w-6 h-6 text-slate-500" />
                 <p className="text-xs font-medium text-slate-300">Students appear here</p>

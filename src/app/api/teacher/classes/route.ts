@@ -64,6 +64,31 @@ export async function POST(req: NextRequest) {
     const generatedTitle = title?.trim() || `${classLevel} ${subject} — ${topic}`;
     const normalizedStatus = status.toUpperCase() === "DRAFT" ? "DRAFT" : "PUBLISHED";
 
+    // Deduplication check: check if class already exists
+    const existingSession = await LiveSession.findOne({
+      date,
+      startTime,
+      classLevel,
+      subject,
+      status: { $ne: "CANCELLED" },
+    });
+
+    if (existingSession) {
+      existingSession.topic = topic;
+      existingSession.title = generatedTitle;
+      existingSession.description = description || "";
+      existingSession.endTime = endTime;
+      existingSession.status = normalizedStatus;
+      if (Array.isArray(materials) && materials.length) existingSession.materials = materials;
+      await existingSession.save();
+
+      return NextResponse.json({
+        success: true,
+        message: "Class session updated successfully.",
+        session: existingSession,
+      }, { status: 200 });
+    }
+
     const newSession = await LiveSession.create({
       title: generatedTitle,
       subject,

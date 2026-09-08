@@ -110,7 +110,19 @@ export async function GET(req: NextRequest) {
       .populate("teacherId", "name email avatarUrl")
       .lean();
 
-    const classes = sortClassesByPriority(rawClasses as any[]);
+    const sortedClasses = sortClassesByPriority(rawClasses as any[]);
+
+    // Deduplicate identical class records
+    const seenClassKeys = new Set<string>();
+    const classes = sortedClasses.filter((c: any) => {
+      const normSub = (c.subject || "").trim().toLowerCase();
+      const normLvl = (c.classLevel || "").trim().toLowerCase();
+      const normTop = (c.topic || "").trim().toLowerCase();
+      const key = `${c.date}_${c.startTime}_${normSub}_${normLvl || normTop}`;
+      if (seenClassKeys.has(key)) return false;
+      seenClassKeys.add(key);
+      return true;
+    });
 
     return NextResponse.json({ classes });
   } catch (error: any) {
@@ -171,6 +183,33 @@ export async function POST(req: NextRequest) {
       const Batch = (await import("@/models/Batch")).default;
       const fallbackBatch = await Batch.findOne({ classLevel });
       resolvedBatchId = fallbackBatch?._id;
+    }
+
+    // Deduplication check: prevent creating duplicate session if an identical class exists
+    const existingSession = await LiveSession.findOne({
+      date,
+      startTime,
+      classLevel,
+      subject,
+      status: { $ne: "CANCELLED" },
+    });
+
+    if (existingSession) {
+      existingSession.topic = topic.trim();
+      existingSession.description = description.trim();
+      existingSession.title = resolvedTitle;
+      existingSession.endTime = endTime;
+      existingSession.status = isLiveNow ? "LIVE" : (status || existingSession.status);
+      if (materials && Array.isArray(materials)) existingSession.materials = materials;
+      if (resolvedBatchId) existingSession.batchId = resolvedBatchId;
+      if (isLiveNow && !existingSession.actualStartTime) existingSession.actualStartTime = new Date();
+      await existingSession.save();
+
+      return NextResponse.json({
+        success: true,
+        message: "Class session updated successfully.",
+        class: existingSession,
+      }, { status: 200 });
     }
 
     // Generate unique livekit room id
