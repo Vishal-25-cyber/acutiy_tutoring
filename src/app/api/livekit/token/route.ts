@@ -57,6 +57,17 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Student profile not found." }, { status: 404 });
       }
 
+      // If class has completed, students cannot connect
+      if (liveSession.status === "COMPLETED") {
+        return NextResponse.json(
+          {
+            error: "This live session has been concluded by the instructor.",
+            isEnded: true,
+          },
+          { status: 403 }
+        );
+      }
+
       // If class is not already LIVE, check class level and batch assignment
       if (liveSession.status !== "LIVE") {
         if (studentProfile.currentClass && liveSession.classLevel && studentProfile.currentClass !== liveSession.classLevel) {

@@ -129,20 +129,31 @@ export async function POST(
 
     const isTeacher = userSession.role === "TEACHER" || userSession.role === "ADMIN";
 
-    // Re-open if teacher or active session today
+    // If class has been concluded, inform students and prevent reviving
     if (liveClass.status === "COMPLETED") {
-      if (isTeacher) {
-        liveClass.status = "LIVE";
-        liveClass.actualStartTime = new Date();
-        await liveClass.save();
-      } else {
-        const now = new Date();
-        const todayDateStr = now.toISOString().split("T")[0];
-        if (liveClass.date === todayDateStr) {
-          liveClass.status = "LIVE";
-          await liveClass.save();
-        }
+      if (!isTeacher) {
+        return NextResponse.json(
+          {
+            error: "This class session has been concluded by the instructor.",
+            isEnded: true,
+            class: {
+              id: liveClass._id.toString(),
+              title: liveClass.title,
+              subject: liveClass.subject,
+              topic: liveClass.topic,
+              status: "COMPLETED",
+              startTime: liveClass.startTime,
+              endTime: liveClass.endTime,
+              teacher: liveClass.teacherId,
+            },
+          },
+          { status: 403 }
+        );
       }
+      // Staff / Teacher re-opening session
+      liveClass.status = "LIVE";
+      liveClass.actualStartTime = new Date();
+      await liveClass.save();
     }
 
     if (liveClass.status === "CANCELLED") {

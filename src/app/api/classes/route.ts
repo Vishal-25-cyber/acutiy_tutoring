@@ -22,16 +22,15 @@ export async function GET(req: NextRequest) {
     const now = new Date();
     const todayDateStr = now.toISOString().split("T")[0];
 
-    // Auto-conclude any stale LIVE sessions where date < today or active for >60 mins
+    // Auto-conclude stale LIVE sessions strictly from past calendar dates or running for >12 hours
     try {
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
       await LiveSession.updateMany(
         {
           status: "LIVE",
           $or: [
-            { actualStartTime: { $lt: oneHourAgo } },
-            { updatedAt: { $lt: oneHourAgo } },
             { date: { $lt: todayDateStr } },
+            { actualStartTime: { $lt: twelveHoursAgo } },
             { title: /General Live Session/i },
           ],
         },

@@ -261,10 +261,24 @@ export function JitsiClassroom({
           },
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to join class session.");
+        if (!res.ok) {
+          if (data.isEnded || data.class?.status === "COMPLETED") {
+            if (mounted) {
+              if (data.class) setClassData(data.class);
+              setStage("ENDED");
+            }
+            return;
+          }
+          throw new Error(data.error || "Failed to join class session.");
+        }
         if (!mounted) return;
 
         setClassData(data.class);
+        if (data.class?.status === "COMPLETED") {
+          setStage("ENDED");
+          return;
+        }
+
         const resolvedUser = data.user || {};
         setUserInfo({
           id: resolvedUser.id || currentUserId,
@@ -517,27 +531,29 @@ export function JitsiClassroom({
   useEffect(() => { admittedListRef.current = admittedList; }, [admittedList]);
 
   const handleLeaveClass = useCallback(async () => {
-    stopAllMediaTracks();
     if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-    stopAllMedia();
     const curUserId = userInfoRef.current.id || currentUserId;
-
-    // Send immediate CLIENT_LEFT signal to notify remote peer
-    try {
-      fetch(`/api/classes/${classId}/signal`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        keepalive: true,
-        body: JSON.stringify({
-          senderId: curUserId,
-          type: "CLIENT_LEFT",
-        }),
-      }).catch(() => {});
-    } catch {}
-
     const targetClassId = classDataRef.current?.id || classDataRef.current?.livekitRoomId || classId;
 
     if (userInfoRef.current.isTeacher) {
+      // 1. Broadcast CLASS_ENDED to all connected students across LiveKit DataChannel
+      if (livekitRoomRef.current) {
+        try {
+          const endPayload = new TextEncoder().encode(
+            JSON.stringify({
+              type: "CLASS_ENDED",
+              senderId: curUserId,
+              senderRole: "TEACHER",
+              message: "The faculty instructor has concluded today's live class.",
+            })
+          );
+          await livekitRoomRef.current.localParticipant.publishData(endPayload, { reliable: true });
+        } catch (e) {
+          console.warn("LiveKit broadcast CLASS_ENDED warning:", e);
+        }
+      }
+
+      // 2. Mark class as COMPLETED in database
       try {
         await fetch(`/api/classes/${targetClassId}/end`, {
           method: "PUT",
@@ -546,12 +562,30 @@ export function JitsiClassroom({
       } catch (e) {
         console.warn("Failed to mark class as ended:", e);
       }
+
+      // 3. Stop media and redirect teacher
+      stopAllMediaTracks();
+      stopAllMedia();
       if (typeof window !== "undefined") {
         window.location.href = "/teacher/dashboard";
       } else {
         router.push("/teacher/dashboard");
       }
     } else {
+      // Student leaving call
+      stopAllMediaTracks();
+      stopAllMedia();
+      try {
+        fetch(`/api/classes/${classId}/signal`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          keepalive: true,
+          body: JSON.stringify({
+            senderId: curUserId,
+            type: "CLIENT_LEFT",
+          }),
+        }).catch(() => {});
+      } catch {}
       try {
         await fetch(`/api/classes/${targetClassId}/admit`, {
           method: "DELETE",
@@ -657,6 +691,7 @@ export function JitsiClassroom({
     async function initLivekit() {
       try {
         const authTok = typeof window !== "undefined" ? (localStorage.getItem("acuity_auth_token") || sessionStorage.getItem("acuity_auth_token")) : "";
+        const targetClassId = classDataRef.current?.id || classId;
         const res = await fetch("/api/livekit/token", {
           method: "POST",
           credentials: "include",
@@ -664,7 +699,7 @@ export function JitsiClassroom({
             "Content-Type": "application/json",
             ...(authTok ? { Authorization: `Bearer ${authTok}` } : {}),
           },
-          body: JSON.stringify({ sessionId: classId }),
+          body: JSON.stringify({ sessionId: targetClassId }),
         });
         if (!res.ok) {
           console.warn("Failed to fetch LiveKit token, status:", res.status);
@@ -735,6 +770,12 @@ export function JitsiClassroom({
               isPTeacher = true;
             }
 
+            // Check admitted list for accurate name if still generic
+            if (!parsedName || parsedName === "Student") {
+              const matchedAdmitted = admittedListRef.current.find(a => String(a.userId) === String(p.identity));
+              if (matchedAdmitted?.name) parsedName = matchedAdmitted.name;
+            }
+
             const hasCam = Array.from(p.trackPublications.values()).some(
               (pub) => pub.source === Track.Source.Camera && pub.isSubscribed && !pub.isMuted
             );
@@ -755,6 +796,22 @@ export function JitsiClassroom({
               lastSeen: Date.now(),
             });
           });
+
+          // If Host/Teacher: also immediately display admitted students who are currently connecting
+          if (userInfoRef.current.isTeacher) {
+            admittedListRef.current.forEach((admitted) => {
+              if (seen.has(admitted.userId) || String(admitted.userId) === String(userInfoRef.current.id)) return;
+              seen.add(admitted.userId);
+              list.push({
+                id: admitted.userId,
+                name: admitted.name || "Student",
+                role: "STUDENT",
+                isCameraOn: false,
+                isMicOn: false,
+                lastSeen: Date.now(),
+              });
+            });
+          }
 
           setRealtimeParticipants(list);
           const primaryRemote = list.find((p) => p.role === "TEACHER") || list[0] || null;
@@ -815,7 +872,7 @@ export function JitsiClassroom({
           syncRoomParticipants();
         });
 
-        // Participant state changes
+        // Comprehensive Participant state events for zero-lag updates
         room.on(RoomEvent.ParticipantConnected, () => syncRoomParticipants());
         room.on(RoomEvent.ParticipantDisconnected, (participant: RemoteParticipant) => {
           setRemoteTracks((prev) => {
@@ -825,16 +882,35 @@ export function JitsiClassroom({
           });
           syncRoomParticipants();
         });
+        room.on(RoomEvent.TrackPublished, () => syncRoomParticipants());
         room.on(RoomEvent.TrackMuted, () => syncRoomParticipants());
         room.on(RoomEvent.TrackUnmuted, () => syncRoomParticipants());
+        room.on(RoomEvent.ActiveSpeakersChanged, () => syncRoomParticipants());
+        room.on(RoomEvent.ParticipantMetadataChanged, () => syncRoomParticipants());
+        room.on(RoomEvent.ConnectionStateChanged, () => syncRoomParticipants());
 
-        // Realtime DataChannel messages (Chat, Hand Raise, Reactions)
+        // Realtime DataChannel messages (Chat, Hand Raise, Reactions, Class Ended, Peer Joined)
         room.on(RoomEvent.DataReceived, (payload: Uint8Array, participant?: RemoteParticipant) => {
           try {
             const str = new TextDecoder().decode(payload);
             const data = JSON.parse(str);
 
-            if (data.type === "CHAT_MESSAGE") {
+            if (data.type === "CLASS_ENDED") {
+              // Host ended class: immediate transition for all students
+              stopAllMediaTracks();
+              stopAllMedia();
+              setStage("ENDED");
+              setTimeout(() => {
+                if (typeof window !== "undefined") {
+                  window.location.href = "/student/classes";
+                } else {
+                  router.push("/student/classes");
+                }
+              }, 2500);
+              return;
+            } else if (data.type === "PEER_JOINED" || data.type === "PEER_PONG") {
+              syncRoomParticipants();
+            } else if (data.type === "CHAT_MESSAGE") {
               setMessages((prev) => {
                 if (prev.some((m) => m.id === data.id)) return prev;
                 return [
@@ -890,6 +966,22 @@ export function JitsiClassroom({
         await room.connect(serverUrl, token);
         syncRoomParticipants();
 
+        // Broadcast PEER_JOINED so other peers immediately know we connected
+        try {
+          const curUid = userInfoRef.current.id || currentUserId;
+          const curUName = userInfoRef.current.name || currentUserName;
+          const curURole = userInfoRef.current.isTeacher ? "TEACHER" : "STUDENT";
+          const joinPayload = new TextEncoder().encode(
+            JSON.stringify({
+              type: "PEER_JOINED",
+              senderId: curUid,
+              senderName: curUName,
+              senderRole: curURole,
+            })
+          );
+          await room.localParticipant.publishData(joinPayload, { reliable: true });
+        } catch (e) {}
+
         // Enable local camera and mic
         await room.localParticipant.setCameraEnabled(isCameraOnRef.current);
         await room.localParticipant.setMicrophoneEnabled(isMicOnRef.current);
@@ -902,6 +994,12 @@ export function JitsiClassroom({
             camPub.videoTrack.attach(localEl);
           }
         }
+
+        // Fast periodic sync (every 1s) to ensure zero state divergence without manual page refresh
+        const periodicSync = setInterval(syncRoomParticipants, 1000);
+        return () => {
+          clearInterval(periodicSync);
+        };
       } catch (err) {
         console.warn("LiveKit connection error:", err);
       }
@@ -1124,7 +1222,7 @@ export function JitsiClassroom({
     };
 
     if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-    pollTimerRef.current = setInterval(poll, 700);
+    pollTimerRef.current = setInterval(poll, 600);
     // Also poll immediately
     poll();
   }, [classId, userInfo.id, userInfo.name, classData, currentUserId]);
@@ -1150,7 +1248,7 @@ export function JitsiClassroom({
   }, []);
 
   /* ─────────────────────────────────────────────────
-     3b.  TEACHER → poll pending list every 1.5 seconds & chime
+     3b.  TEACHER → poll pending list every 1.0 second & chime
   ───────────────────────────────────────────────── */
   const lastPendingCountRef = useRef(0);
   useEffect(() => {
@@ -1194,7 +1292,7 @@ export function JitsiClassroom({
     };
 
     fetchPending();
-    const timer = setInterval(fetchPending, 1500);
+    const timer = setInterval(fetchPending, 1000);
     return () => clearInterval(timer);
   }, [stage, userInfo.isTeacher, classId, classData]);
 
@@ -1241,19 +1339,50 @@ export function JitsiClassroom({
   }, [stage]);
 
   /* ─────────────────────────────────────────────────
-     5.  Attendance heartbeat (students, every 20s)
+     5.  Student Live Session Monitor & Attendance
   ───────────────────────────────────────────────── */
   useEffect(() => {
     if (stage !== "LIVE_CLASS" || userInfo.isTeacher) return;
-    const t = setInterval(() => {
+    const targetClassId = classDataRef.current?.id || classId;
+
+    // Fast check: if instructor has concluded the call, transition immediately to ENDED
+    const checkStatus = async () => {
+      try {
+        const res = await fetch(`/api/classes/${targetClassId}`, { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.class?.status === "COMPLETED") {
+            stopAllMediaTracks();
+            stopAllMedia();
+            setStage("ENDED");
+            setTimeout(() => {
+              if (typeof window !== "undefined") {
+                window.location.href = "/student/classes";
+              } else {
+                router.push("/student/classes");
+              }
+            }, 2500);
+          }
+        }
+      } catch {}
+    };
+
+    const statusInterval = setInterval(checkStatus, 2000);
+
+    // Heartbeat every 20s
+    const hbInterval = setInterval(() => {
       fetch("/api/attendance/heartbeat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ classId }),
+        body: JSON.stringify({ classId: targetClassId }),
       }).catch(() => {});
     }, 20_000);
-    return () => clearInterval(t);
-  }, [stage, classId, userInfo.isTeacher]);
+
+    return () => {
+      clearInterval(statusInterval);
+      clearInterval(hbInterval);
+    };
+  }, [stage, classId, userInfo.isTeacher, stopAllMediaTracks, stopAllMedia, router]);
 
 
 

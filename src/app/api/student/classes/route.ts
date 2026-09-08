@@ -50,16 +50,15 @@ export async function GET(req: NextRequest) {
     const currentDayName = dayFormatter.format(now);
     const todayDateStr = now.toISOString().split("T")[0];
 
-    // Robust auto-cleanup: Any session that was live for >60 mins or from past days or generic session is auto-concluded
+    // Robust auto-cleanup: Stale sessions strictly from past calendar dates or running for >12 hours
     try {
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
       await LiveSession.updateMany(
         {
           status: "LIVE",
           $or: [
-            { actualStartTime: { $lt: oneHourAgo } },
-            { updatedAt: { $lt: oneHourAgo } },
             { date: { $lt: todayDateStr } },
+            { actualStartTime: { $lt: twelveHoursAgo } },
             { title: /General Live Session/i },
           ],
         },
