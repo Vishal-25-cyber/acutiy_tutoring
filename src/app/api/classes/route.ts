@@ -43,6 +43,34 @@ export async function GET(req: NextRequest) {
       console.warn("Auto-conclude stale classes error:", cleanErr);
     }
 
+    // Auto-normalize any afternoon classes entered in 12h AM format (e.g. 03:51 -> 15:51)
+    try {
+      const activeSlotsToFix = await LiveSession.find({
+        date: todayDateStr,
+        status: { $in: ["PUBLISHED", "SCHEDULED", "UPCOMING"] },
+        startTime: { $regex: /^0[1-6]:/ },
+      });
+      for (const slot of activeSlotsToFix) {
+        if (slot.startTime) {
+          const [sh, sm] = slot.startTime.split(":");
+          const nh = parseInt(sh, 10);
+          if (nh >= 1 && nh <= 6) {
+            slot.startTime = `${String(nh + 12).padStart(2, "0")}:${sm || "00"}`;
+          }
+        }
+        if (slot.endTime) {
+          const [eh, em] = slot.endTime.split(":");
+          const neh = parseInt(eh, 10);
+          if (neh >= 1 && neh <= 6) {
+            slot.endTime = `${String(neh + 12).padStart(2, "0")}:${em || "00"}`;
+          }
+        }
+        await slot.save();
+      }
+    } catch (normErr) {
+      console.warn("Time normalization error:", normErr);
+    }
+
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
     const date = searchParams.get("date");
@@ -178,6 +206,21 @@ export async function POST(req: NextRequest) {
 
     await connectToDatabase();
 
+    const normalizeTutoringHour = (t: string) => {
+      if (!t) return t;
+      const parts = t.split(":");
+      if (parts.length >= 2) {
+        const h = parseInt(parts[0], 10);
+        if (h >= 1 && h <= 6) {
+          return `${String(h + 12).padStart(2, "0")}:${parts[1]}`;
+        }
+      }
+      return t;
+    };
+
+    const resolvedStartTime = normalizeTutoringHour(startTime);
+    const resolvedEndTime = normalizeTutoringHour(endTime);
+
     let resolvedBatchId = batchId;
     if (!resolvedBatchId) {
       const Batch = (await import("@/models/Batch")).default;
@@ -188,7 +231,7 @@ export async function POST(req: NextRequest) {
     // Deduplication check: prevent creating duplicate session if an identical class exists
     const existingSession = await LiveSession.findOne({
       date,
-      startTime,
+      startTime: { $in: [startTime, resolvedStartTime] },
       classLevel,
       subject,
       status: { $ne: "CANCELLED" },
@@ -198,7 +241,8 @@ export async function POST(req: NextRequest) {
       existingSession.topic = topic.trim();
       existingSession.description = description.trim();
       existingSession.title = resolvedTitle;
-      existingSession.endTime = endTime;
+      existingSession.startTime = resolvedStartTime;
+      existingSession.endTime = resolvedEndTime;
       existingSession.status = isLiveNow ? "LIVE" : (status || existingSession.status);
       if (materials && Array.isArray(materials)) existingSession.materials = materials;
       if (resolvedBatchId) existingSession.batchId = resolvedBatchId;
@@ -242,8 +286,8 @@ export async function POST(req: NextRequest) {
       batchId: resolvedBatchId,
       teacherId: teacherUserId,
       date,
-      startTime,
-      endTime,
+      startTime: resolvedStartTime,
+      endTime: resolvedEndTime,
       meetingId: livekitRoomId,
       livekitRoomId,
       status: isLiveNow ? "LIVE" : (status || "PUBLISHED"),

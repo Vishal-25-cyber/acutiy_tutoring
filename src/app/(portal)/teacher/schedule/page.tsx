@@ -39,6 +39,7 @@ function TeacherScheduleClassRow({
 
   const batchData = {
     ...(cls.batchId || {}),
+    status: cls.status,
     date: cls.date,
     startTime: cls.startTime || cls.batchId?.startTime,
     endTime: cls.endTime || cls.batchId?.endTime,
@@ -84,7 +85,7 @@ function TeacherScheduleClassRow({
           ) : (
             <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
               <Clock className="w-3 h-3 text-amber-500 animate-spin" />
-              {timing.countdownText}
+              {timing.countdownText === "Concluded" || timing.statusBadge === "CONCLUDED" ? "Upcoming Session" : timing.countdownText}
             </span>
           )}
         </div>

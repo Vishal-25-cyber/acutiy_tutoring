@@ -1,6 +1,7 @@
 export interface BatchInfo {
   _id?: string;
   name?: string;
+  status?: string;
   date?: string;      // "YYYY-MM-DD"
   startTime?: string; // "19:00"
   endTime?: string;   // "20:00"
@@ -120,7 +121,23 @@ export function computeClassTimingStatus(batch?: BatchInfo | null): ClassTimingS
         };
       }
 
-      // 3. Concluded for today
+      // 3. If class is published/scheduled, it is ready to launch / upcoming for today
+      if (batch?.status === "PUBLISHED" || batch?.status === "SCHEDULED" || batch?.status === "UPCOMING") {
+        return {
+          isLiveNow: false,
+          canJoin: true,
+          statusLabel: "Scheduled for Today",
+          statusBadge: "UPCOMING",
+          countdownText: "Ready to Launch",
+          detailedCountdown: `Session is scheduled for today at ${startTimeFormatted}.`,
+          permanentRoomId,
+          startTimeFormatted,
+          endTimeFormatted,
+          nextSessionText: `Today at ${startTimeFormatted}`,
+        };
+      }
+
+      // Concluded for today
       return {
         isLiveNow: false,
         canJoin: false,
@@ -269,14 +286,14 @@ export function getClassLiveState(cls?: { date?: string; startTime?: string; end
 
   const now = new Date();
   const todayStr = now.toISOString().split("T")[0];
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  const endMinutes = parseTimeToMinutes(cls.endTime || "20:00");
   const sessionDate = cls.date || todayStr;
 
-  if (sessionDate < todayStr || (sessionDate === todayStr && nowMinutes > endMinutes)) {
+  // Only auto-mark as COMPLETED if date is strictly in the past (< todayStr)
+  if (sessionDate < todayStr) {
     return "COMPLETED";
   }
 
+  // Any class scheduled for today or future is UPCOMING!
   return "UPCOMING";
 }
 

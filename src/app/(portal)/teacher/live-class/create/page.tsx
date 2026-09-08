@@ -167,8 +167,22 @@ export default function TeacherCreateLiveClassPage() {
         formData.title?.trim() ||
         `${formData.classLevel} ${formData.subject} — ${formData.topic.trim()}`;
 
+      const normalizeTutoringHour = (t: string) => {
+        if (!t) return t;
+        const parts = t.split(":");
+        if (parts.length >= 2) {
+          const h = parseInt(parts[0], 10);
+          if (h >= 1 && h <= 6) {
+            return `${String(h + 12).padStart(2, "0")}:${parts[1]}`;
+          }
+        }
+        return t;
+      };
+
       const payload = {
         ...formData,
+        startTime: normalizeTutoringHour(formData.startTime),
+        endTime: normalizeTutoringHour(formData.endTime),
         title: resolvedTitle,
         topic: formData.topic.trim(),
         description: formData.description.trim(),
