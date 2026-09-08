@@ -6,6 +6,7 @@ import {
   Video, VideoOff, Mic, MicOff, Users, Clock, PhoneOff,
   AlertCircle, Info, Hand, MonitorUp, MessageSquare, Send,
   Volume2, X, Loader2, CheckCircle2, XCircle, Bell, Smile,
+  Pin, PinOff,
 } from "lucide-react";
 import {
   Room,
@@ -19,8 +20,46 @@ import {
 } from "livekit-client";
 
 /* ─────────────────────────────────────────────── */
+/*  Remote Video Element Component                 */
+/* ─────────────────────────────────────────────── */
+function RemoteVideoView({
+  track,
+  className = "w-full h-full object-cover bg-black",
+}: {
+  track?: RemoteTrack | null;
+  className?: string;
+}) {
+  const videoElRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    const el = videoElRef.current;
+    if (!el || !track) return;
+    track.attach(el);
+    el.play().catch(() => {});
+    return () => {
+      try {
+        track.detach(el);
+      } catch {}
+    };
+  }, [track]);
+
+  return (
+    <video
+      ref={videoElRef}
+      autoPlay
+      playsInline
+      className={className}
+    />
+  );
+}
+
+/* ─────────────────────────────────────────────── */
 /*  Types                                          */
 /* ─────────────────────────────────────────────── */
+interface ParticipantTrackInfo {
+  videoTrack?: RemoteTrack | null;
+  screenTrack?: RemoteTrack | null;
+}
 interface JitsiClassroomProps {
   classId: string;
   currentUserRole?: "STUDENT" | "TEACHER" | "ADMIN";
@@ -138,6 +177,8 @@ export function JitsiClassroom({
   useEffect(() => { isScreenSharingRef.current = isScreenSharing; }, [isScreenSharing]);
 
   /* ── WebRTC & Realtime State ── */
+  const [remoteTracks, setRemoteTracks] = useState<Record<string, ParticipantTrackInfo>>({});
+  const [pinnedParticipantId, setPinnedParticipantId] = useState<string | null>(null);
   const [remoteParticipant, setRemoteParticipant] = useState<{ id: string; name: string; role: string; isCameraOn?: boolean; isMicOn?: boolean; lastSeen?: number; isHandRaised?: boolean } | null>(null);
   const [hasRemoteVideo, setHasRemoteVideo] = useState(false);
   const [realtimeParticipants, setRealtimeParticipants] = useState<{ id: string; name: string; role: string; isCameraOn?: boolean; isMicOn?: boolean; lastSeen?: number; isHandRaised?: boolean }[]>([]);
@@ -174,9 +215,13 @@ export function JitsiClassroom({
     let mounted = true;
     async function load() {
       try {
+        const authTok = typeof window !== "undefined" ? (localStorage.getItem("acuity_auth_token") || sessionStorage.getItem("acuity_auth_token")) : "";
         const res = await fetch(`/api/classes/${classId}/join`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(authTok ? { Authorization: `Bearer ${authTok}` } : {}),
+          },
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Failed to join class session.");
@@ -609,26 +654,75 @@ export function JitsiClassroom({
         livekitRoomRef.current = room;
 
         const syncRoomParticipants = () => {
-          const list: Array<{ id: string; name: string; role: string; isCameraOn?: boolean; isMicOn?: boolean; lastSeen?: number }> = [];
+          const currentClass = classDataRef.current;
+          const teacherId = String(
+            currentClass?.teacherId ||
+            currentClass?.teacher?._id ||
+            currentClass?.teacher?.id ||
+            (typeof currentClass?.teacher === "string" ? currentClass.teacher : "") ||
+            ""
+          );
+          const teacherName = currentClass?.teacher?.name || "";
+
+          const list: Array<{
+            id: string;
+            name: string;
+            role: "TEACHER" | "STUDENT";
+            isCameraOn: boolean;
+            isMicOn: boolean;
+            isScreenSharing?: boolean;
+            lastSeen: number;
+          }> = [];
+
+          const seen = new Set<string>();
+
           room.remoteParticipants.forEach((p) => {
-            const isPTeacher = p.identity === classData?.teacherId || p.identity === (classData?.teacherId as any)?._id?.toString();
-            const hasCam = Array.from(p.trackPublications.values()).some((pub) => pub.source === Track.Source.Camera && pub.isSubscribed && !pub.isMuted);
-            const hasMic = Array.from(p.trackPublications.values()).some((pub) => pub.source === Track.Source.Microphone && pub.isSubscribed && !pub.isMuted);
+            if (seen.has(p.identity)) return;
+            seen.add(p.identity);
+
+            let isPTeacher = false;
+            let parsedName = p.name || "";
+
+            if (p.metadata) {
+              try {
+                const meta = JSON.parse(p.metadata);
+                if (meta.role === "TEACHER" || meta.isTeacher === true) isPTeacher = true;
+                if (meta.name) parsedName = meta.name;
+              } catch {}
+            }
+
+            if (!isPTeacher && teacherId && String(p.identity) === teacherId) {
+              isPTeacher = true;
+            }
+            if (!isPTeacher && teacherName && p.name && p.name.trim().toLowerCase() === teacherName.trim().toLowerCase()) {
+              isPTeacher = true;
+            }
+
+            const hasCam = Array.from(p.trackPublications.values()).some(
+              (pub) => pub.source === Track.Source.Camera && pub.isSubscribed && !pub.isMuted
+            );
+            const hasMic = Array.from(p.trackPublications.values()).some(
+              (pub) => pub.source === Track.Source.Microphone && pub.isSubscribed && !pub.isMuted
+            );
+            const hasScreen = Array.from(p.trackPublications.values()).some(
+              (pub) => pub.source === Track.Source.ScreenShare && pub.isSubscribed && !pub.isMuted
+            );
+
             list.push({
               id: p.identity,
-              name: p.name || "Student",
+              name: parsedName || (isPTeacher ? (teacherName || "Teacher") : "Student"),
               role: isPTeacher ? "TEACHER" : "STUDENT",
               isCameraOn: hasCam,
               isMicOn: hasMic,
+              isScreenSharing: hasScreen,
               lastSeen: Date.now(),
             });
           });
+
           setRealtimeParticipants(list);
-          if (list.length > 0) {
-            setRemoteParticipant(list[0]);
-          } else {
-            setRemoteParticipant(null);
-          }
+          const primaryRemote = list.find((p) => p.role === "TEACHER") || list[0] || null;
+          setRemoteParticipant(primaryRemote);
+          setHasRemoteVideo(list.some((p) => p.isCameraOn || p.isScreenSharing));
         };
 
         // Remote track subscribed (Video, Audio, or Screen Share)
@@ -636,12 +730,18 @@ export function JitsiClassroom({
           if (track.kind === Track.Kind.Video) {
             setHasRemoteVideo(true);
             hasRemoteVideoRef.current = true;
-            if (publication.source === Track.Source.ScreenShare || track.source === Track.Source.ScreenShare) {
+            const isScreen = publication.source === Track.Source.ScreenShare || track.source === Track.Source.ScreenShare;
+            setRemoteTracks((prev) => ({
+              ...prev,
+              [participant.identity]: {
+                ...prev[participant.identity],
+                videoTrack: !isScreen ? track : prev[participant.identity]?.videoTrack,
+                screenTrack: isScreen ? track : prev[participant.identity]?.screenTrack,
+              },
+            }));
+            if (isScreen) {
               setIsRemoteScreenSharing(true);
               isRemoteScreenSharingRef.current = true;
-              if (remoteVideoRef.current) track.attach(remoteVideoRef.current);
-            } else if (!isRemoteScreenSharingRef.current && remoteVideoRef.current) {
-              track.attach(remoteVideoRef.current);
             }
           }
           if (track.kind === Track.Kind.Audio) {
@@ -658,27 +758,34 @@ export function JitsiClassroom({
           const el = document.getElementById(`lk-audio-${participant.identity}`);
           if (el) el.remove();
 
-          if (publication.source === Track.Source.ScreenShare || track.source === Track.Source.ScreenShare) {
+          const isScreen = publication.source === Track.Source.ScreenShare || track.source === Track.Source.ScreenShare;
+          if (isScreen) {
             setIsRemoteScreenSharing(false);
             isRemoteScreenSharingRef.current = false;
-            // Switch back to remote camera track
-            const camPub = participant.getTrackPublication(Track.Source.Camera);
-            if (camPub?.videoTrack && remoteVideoRef.current) {
-              camPub.videoTrack.attach(remoteVideoRef.current);
-            }
-          } else if (track.kind === Track.Kind.Video && !isRemoteScreenSharingRef.current) {
-            setHasRemoteVideo(false);
-            hasRemoteVideoRef.current = false;
           }
+
+          setRemoteTracks((prev) => {
+            const cur = prev[participant.identity];
+            if (!cur) return prev;
+            return {
+              ...prev,
+              [participant.identity]: {
+                videoTrack: !isScreen && cur.videoTrack === track ? null : cur.videoTrack,
+                screenTrack: isScreen && cur.screenTrack === track ? null : cur.screenTrack,
+              },
+            };
+          });
           syncRoomParticipants();
         });
 
         // Participant state changes
         room.on(RoomEvent.ParticipantConnected, () => syncRoomParticipants());
-        room.on(RoomEvent.ParticipantDisconnected, () => {
-          setHasRemoteVideo(false);
-          hasRemoteVideoRef.current = false;
-          if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+        room.on(RoomEvent.ParticipantDisconnected, (participant: RemoteParticipant) => {
+          setRemoteTracks((prev) => {
+            const copy = { ...prev };
+            delete copy[participant.identity];
+            return copy;
+          });
           syncRoomParticipants();
         });
         room.on(RoomEvent.TrackMuted, () => syncRoomParticipants());
@@ -1129,8 +1236,17 @@ export function JitsiClassroom({
   const fmt = (s: number) =>
     `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
 
-  const initials = (name: string) =>
-    name.split(" ").map((w) => w[0] || "").join("").slice(0, 2).toUpperCase();
+  const initials = (name?: string) => {
+    if (!name) return "U";
+    return name
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((w) => w[0] || "")
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "U";
+  };
 
   /* ══════════════════════════════════════════════
      RENDER — LOADING
@@ -1477,102 +1593,198 @@ export function JitsiClassroom({
         </div>
       )}
 
-      {/* ── Main: Video Grid + Sidebar ── */}
-      <div className="flex-1 flex overflow-hidden">
+      {/* ── Main: Video Area + Sidebar ── */}
+      <div className="flex-1 flex overflow-hidden min-h-0 min-w-0 p-2 sm:p-3 gap-2 sm:gap-3 relative">
 
-        {/* Video Grid: 2-tile split (Vertical on mobile, Horizontal on desktop) */}
-        <div className="flex-1 p-2 sm:p-3 flex flex-col sm:flex-row gap-2 sm:gap-3 overflow-hidden relative">
+        {/* Floating live reactions overlay */}
+        <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden">
+          {reactions.map((r) => (
+            <div
+              key={r.id}
+              className="absolute bottom-12 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-sm border border-white/20 shadow-lg text-white animate-float-reaction pointer-events-none"
+              style={{ left: `${r.x}%` }}
+            >
+              <span className="text-2xl">{r.emoji}</span>
+              <span className="text-xs font-semibold text-slate-200">{r.senderName}</span>
+            </div>
+          ))}
+        </div>
 
-          {/* Floating live reactions overlay */}
-          <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden">
-            {reactions.map((r) => (
-              <div
-                key={r.id}
-                className="absolute bottom-12 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-sm border border-white/20 shadow-lg text-white animate-float-reaction pointer-events-none"
-                style={{ left: `${r.x}%` }}
-              >
-                <span className="text-2xl">{r.emoji}</span>
-                <span className="text-xs font-semibold text-slate-200">{r.senderName}</span>
-              </div>
-            ))}
-          </div>
+        {/* ── 1. Main Stage (Spotlight) ── */}
+        <div className="flex-1 h-full min-h-0 min-w-0 relative rounded-2xl overflow-hidden bg-[#141414] border border-white/10 flex items-center justify-center shadow-2xl group">
+          {(() => {
+            const currentClass = classData;
+            const teacherId = String(
+              currentClass?.teacherId ||
+              currentClass?.teacher?._id ||
+              currentClass?.teacher?.id ||
+              (typeof currentClass?.teacher === "string" ? currentClass.teacher : "") ||
+              ""
+            );
+            const teacherName = currentClass?.teacher?.name || (userInfo.isTeacher ? userInfo.name : "Faculty Teacher");
 
-          {/* Teacher tile */}
-          <div className="flex-1 w-full sm:w-1/2 h-1/2 sm:h-full relative rounded-xl overflow-hidden bg-[#181818] border border-white/10 flex items-center justify-center min-h-0 min-w-0">
-            {userInfo.isTeacher ? (
-              (isCameraOn || isScreenSharing) ? (
-                <video
-                  ref={(el) => {
-                    teacherVideoRef.current = el;
-                    if (el) {
-                      const stream = screenStreamRef.current || localStreamRef.current;
-                      if (stream && el.srcObject !== stream) {
-                        el.srcObject = stream;
-                      }
-                      el.play().catch(() => {});
-                    }
-                  }}
-                  autoPlay
-                  playsInline
-                  muted
-                  className={`w-full h-full ${isScreenSharing ? "object-contain bg-black" : "object-cover -scale-x-100"}`}
-                />
-              ) : (
-                <div className="flex flex-col items-center gap-3 text-center px-4">
-                  <div className="w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-slate-700 flex items-center justify-center text-xl sm:text-2xl font-semibold text-slate-200">
-                    {initials(userInfo.name)}
+            const remoteTeacher = realtimeParticipants.find((p) => p.role === "TEACHER");
+            const teacherTrackInfo = remoteTeacher ? remoteTracks[remoteTeacher.id] : null;
+
+            // Check pinned participant
+            if (pinnedParticipantId) {
+              if (pinnedParticipantId === userInfo.id) {
+                // Pinned self
+                return (
+                  <div className="relative w-full h-full flex items-center justify-center">
+                    {(isCameraOn || isScreenSharing) ? (
+                      <video
+                        ref={(el) => {
+                          const refTarget = userInfo.isTeacher ? teacherVideoRef : localVideoRef;
+                          refTarget.current = el;
+                          if (el) {
+                            const stream = screenStreamRef.current || localStreamRef.current;
+                            if (stream && el.srcObject !== stream) el.srcObject = stream;
+                            el.play().catch(() => {});
+                          }
+                        }}
+                        autoPlay
+                        playsInline
+                        muted
+                        className={`w-full h-full ${isScreenSharing ? "object-contain bg-black" : "object-cover -scale-x-100"}`}
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-3 text-center px-4">
+                        <div className="w-20 sm:w-24 h-20 sm:h-24 rounded-full bg-blue-700 flex items-center justify-center text-2xl sm:text-3xl font-bold text-white shadow-xl ring-4 ring-white/10">
+                          {initials(userInfo.name)}
+                        </div>
+                        <div>
+                          <p className="text-base font-semibold text-white">{userInfo.name} (You)</p>
+                          <span className="text-xs text-slate-400">Camera is off</span>
+                        </div>
+                      </div>
+                    )}
+                    <div className="absolute bottom-3 left-3 px-2.5 py-1 rounded-md bg-black/70 backdrop-blur-sm text-xs font-medium text-white flex items-center gap-1.5 z-10 border border-white/10">
+                      {isMicOn ? <Mic className="w-3.5 h-3.5 text-emerald-400" /> : <MicOff className="w-3.5 h-3.5 text-rose-400" />}
+                      <span>{userInfo.name} (You) · {userInfo.isTeacher ? "Host" : "Student"}</span>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs sm:text-sm font-medium text-white">{userInfo.name} (You)</p>
-                    <span className="text-[11px] sm:text-xs text-slate-400">Camera is off</span>
+                );
+              }
+
+              // Pinned remote participant
+              const pinnedP = realtimeParticipants.find((p) => p.id === pinnedParticipantId);
+              if (pinnedP) {
+                const track = remoteTracks[pinnedP.id]?.screenTrack || remoteTracks[pinnedP.id]?.videoTrack;
+                const isScreen = Boolean(remoteTracks[pinnedP.id]?.screenTrack);
+
+                return (
+                  <div className="relative w-full h-full flex items-center justify-center">
+                    {track && (pinnedP.isCameraOn || isScreen) ? (
+                      <RemoteVideoView track={track} className={isScreen ? "w-full h-full object-contain bg-black" : "w-full h-full object-cover bg-black"} />
+                    ) : (
+                      <div className="flex flex-col items-center gap-3 text-center px-4">
+                        <div className="w-20 sm:w-24 h-20 sm:h-24 rounded-full bg-slate-700 flex items-center justify-center text-2xl sm:text-3xl font-bold text-slate-200 shadow-xl ring-4 ring-white/10">
+                          {initials(pinnedP.name)}
+                        </div>
+                        <div>
+                          <p className="text-base font-semibold text-white">{pinnedP.name}</p>
+                          <span className="text-xs text-slate-400">{pinnedP.role === "TEACHER" ? "Host" : "Student"} · Camera is off</span>
+                        </div>
+                      </div>
+                    )}
+                    <div className="absolute bottom-3 left-3 px-2.5 py-1 rounded-md bg-black/70 backdrop-blur-sm text-xs font-medium text-white flex items-center gap-1.5 z-10 border border-white/10">
+                      {pinnedP.isMicOn !== false ? <Mic className="w-3.5 h-3.5 text-emerald-400" /> : <MicOff className="w-3.5 h-3.5 text-rose-400" />}
+                      <span>{pinnedP.name} · {pinnedP.role === "TEACHER" ? "Host" : "Student"}</span>
+                    </div>
+                  </div>
+                );
+              }
+            }
+
+            // Default spotlight: Host Teacher
+            if (userInfo.isTeacher) {
+              // Current user is the Host Teacher
+              return (
+                <div className="relative w-full h-full flex items-center justify-center">
+                  {(isCameraOn || isScreenSharing) ? (
+                    <video
+                      ref={(el) => {
+                        teacherVideoRef.current = el;
+                        if (el) {
+                          const stream = screenStreamRef.current || localStreamRef.current;
+                          if (stream && el.srcObject !== stream) el.srcObject = stream;
+                          el.play().catch(() => {});
+                        }
+                      }}
+                      autoPlay
+                      playsInline
+                      muted
+                      className={`w-full h-full ${isScreenSharing ? "object-contain bg-black" : "object-cover -scale-x-100"}`}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-3 text-center px-4">
+                      <div className="w-20 sm:w-24 h-20 sm:h-24 rounded-full bg-indigo-700 flex items-center justify-center text-2xl sm:text-3xl font-bold text-white shadow-xl ring-4 ring-white/10">
+                        {initials(userInfo.name)}
+                      </div>
+                      <div>
+                        <p className="text-base sm:text-lg font-semibold text-white">{userInfo.name} (You)</p>
+                        <span className="text-xs text-slate-400">Camera is off · Host</span>
+                      </div>
+                    </div>
+                  )}
+                  <div className="absolute bottom-3 left-3 px-2.5 py-1 rounded-md bg-black/70 backdrop-blur-sm text-xs font-medium text-white flex items-center gap-1.5 z-10 border border-white/10">
+                    {isMicOn ? <Mic className="w-3.5 h-3.5 text-emerald-400" /> : <MicOff className="w-3.5 h-3.5 text-rose-400" />}
+                    <span>{userInfo.name} (You) · {isScreenSharing ? "Screen Sharing" : "Host"}</span>
                   </div>
                 </div>
-              )
-            ) : (
+              );
+            }
+
+            // Current user is Student: spotlight remote teacher
+            const teacherTrack = teacherTrackInfo?.screenTrack || teacherTrackInfo?.videoTrack;
+            const isScreen = Boolean(teacherTrackInfo?.screenTrack);
+
+            return (
               <div className="relative w-full h-full flex items-center justify-center">
-                <video
-                  ref={(el) => {
-                    remoteVideoRef.current = el;
-                    if (el && remoteStreamRef.current) {
-                      if (el.srcObject !== remoteStreamRef.current) {
-                        el.srcObject = remoteStreamRef.current;
-                      }
-                      el.play().catch(() => {
-                        el.muted = true;
-                        el.play().catch(() => {});
-                      });
-                    }
-                  }}
-                  autoPlay
-                  playsInline
-                  className="w-full h-full object-cover bg-black"
-                />
-                {!hasRemoteVideo && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center px-4 bg-[#181818]">
-                    <div className="w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-slate-700 flex items-center justify-center text-xl sm:text-2xl font-semibold text-slate-200">
-                      {initials(classData?.teacher?.name || "TC")}
+                {teacherTrack && (remoteTeacher?.isCameraOn || isScreen) ? (
+                  <RemoteVideoView track={teacherTrack} className={isScreen ? "w-full h-full object-contain bg-black" : "w-full h-full object-cover bg-black"} />
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3.5 text-center px-4 bg-[#141414]">
+                    <div className="w-20 sm:w-24 h-20 sm:h-24 rounded-full bg-gradient-to-tr from-blue-700 via-indigo-600 to-cyan-500 flex items-center justify-center text-2xl sm:text-3xl font-bold text-white shadow-2xl ring-4 ring-white/10">
+                      {initials(teacherName)}
                     </div>
                     <div>
-                      <p className="text-xs sm:text-sm font-medium text-white">{classData?.teacher?.name || "Faculty Teacher"}</p>
-                      <span className="text-[11px] sm:text-xs text-slate-400 flex items-center justify-center gap-1.5 mt-1">
-                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                        Connecting faculty live video...
+                      <p className="text-base sm:text-lg font-semibold text-white tracking-wide">{teacherName}</p>
+                      <span className="inline-flex items-center gap-2 mt-1 px-3 py-0.5 rounded-full bg-white/5 border border-white/10 text-[11px] sm:text-xs text-slate-300">
+                        <span className={`w-2 h-2 rounded-full ${remoteTeacher ? "bg-emerald-400" : "bg-amber-400 animate-ping"}`} />
+                        Host · {remoteTeacher ? (remoteTeacher.isCameraOn ? "Live Video" : "Camera off • Audio Live") : "Connecting faculty live video..."}
                       </span>
                     </div>
                   </div>
                 )}
+                <div className="absolute bottom-3 left-3 px-2.5 py-1 rounded-md bg-black/70 backdrop-blur-sm text-xs font-medium text-white flex items-center gap-1.5 z-10 border border-white/10">
+                  {remoteTeacher?.isMicOn !== false ? <Mic className="w-3.5 h-3.5 text-emerald-400" /> : <MicOff className="w-3.5 h-3.5 text-rose-400" />}
+                  <span>{teacherName} · {isScreen ? "Screen Sharing" : "Host"}</span>
+                </div>
               </div>
-            )}
-            <div className="absolute bottom-2 left-2 px-2 py-1 rounded-md bg-black/70 text-[10px] sm:text-[11px] font-medium text-white flex items-center gap-1.5 z-10">
-              <Mic className="w-3 h-3 text-emerald-400" />
-              <span>{userInfo.isTeacher ? `${userInfo.name} (You)` : (classData?.teacher?.name || "Teacher")} · {isScreenSharing && userInfo.isTeacher ? "Screen Sharing" : "Host"}</span>
-            </div>
-          </div>
+            );
+          })()}
 
-          {/* Student tile */}
-          <div className="flex-1 w-full sm:w-1/2 h-1/2 sm:h-full relative rounded-xl overflow-hidden bg-[#181818] border border-white/10 flex items-center justify-center min-h-0 min-w-0">
-            {!userInfo.isTeacher ? (
-              isCameraOn ? (
+          {/* Unpin button if a participant is pinned */}
+          {pinnedParticipantId && (
+            <button
+              onClick={() => setPinnedParticipantId(null)}
+              className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-black/70 hover:bg-black/90 text-white text-xs font-medium flex items-center gap-1.5 z-20 backdrop-blur-sm border border-white/20 transition-all cursor-pointer shadow-md"
+              title="Unpin and return to Host"
+            >
+              <PinOff className="w-3.5 h-3.5 text-blue-400" />
+              <span>Unpin</span>
+            </button>
+          )}
+        </div>
+
+        {/* ── 2. Right Side Filmstrip (Users in Small Tiles, Google Meet Style) ── */}
+        <div className="w-64 sm:w-72 md:w-80 h-full min-h-0 flex flex-col gap-2.5 overflow-y-auto shrink-0 pr-1 select-none">
+          {/* If Student: Show Self-View Tile First */}
+          {!userInfo.isTeacher && (
+            <div className="aspect-video w-full rounded-xl overflow-hidden bg-[#1e1e1e] border border-white/10 relative flex items-center justify-center min-h-[120px] shrink-0 group">
+              {isCameraOn ? (
                 <video
                   ref={(el) => {
                     localVideoRef.current = el;
@@ -1589,64 +1801,145 @@ export function JitsiClassroom({
                   className="w-full h-full object-cover -scale-x-100"
                 />
               ) : (
-                <div className="flex flex-col items-center gap-3 text-center px-4">
-                  <div className="w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-slate-700 flex items-center justify-center text-xl sm:text-2xl font-semibold text-slate-200">
+                <div className="flex flex-col items-center gap-1.5 text-center px-2">
+                  <div className="w-10 h-10 rounded-full bg-blue-700 flex items-center justify-center text-xs font-bold text-white shadow">
                     {initials(userInfo.name)}
                   </div>
-                  <div>
-                    <p className="text-xs sm:text-sm font-medium text-white">{userInfo.name} (You)</p>
-                    <span className="text-[11px] sm:text-xs text-slate-400">Camera is off</span>
-                  </div>
+                  <span className="text-[11px] font-medium text-slate-300 truncate max-w-[120px]">
+                    {userInfo.name} (You)
+                  </span>
+                  <span className="text-[9px] text-slate-500">Camera off</span>
                 </div>
-              )
-            ) : (
-              <div className="relative w-full h-full flex items-center justify-center">
+              )}
+              <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded bg-black/75 backdrop-blur-sm text-[10px] font-medium text-white flex items-center gap-1 z-10 border border-white/10">
+                {isMicOn ? <Mic className="w-2.5 h-2.5 text-emerald-400" /> : <MicOff className="w-2.5 h-2.5 text-rose-400" />}
+                <span className="truncate max-w-[110px]">{userInfo.name} (You)</span>
+              </div>
+              {isHandRaised && (
+                <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-amber-500 text-black text-[9px] font-black flex items-center gap-1 z-10 shadow">
+                  <Hand className="w-2.5 h-2.5" />
+                  <span>Raised</span>
+                </div>
+              )}
+              <button
+                onClick={() => setPinnedParticipantId(pinnedParticipantId === userInfo.id ? null : userInfo.id)}
+                className="absolute top-1.5 right-1.5 p-1 rounded bg-black/60 hover:bg-black/90 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
+                title="Pin to main stage"
+              >
+                <Pin className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+
+          {/* If Teacher and Someone Else is Pinned: Show Teacher's Self-View in Strip */}
+          {userInfo.isTeacher && pinnedParticipantId && pinnedParticipantId !== userInfo.id && (
+            <div className="aspect-video w-full rounded-xl overflow-hidden bg-[#1e1e1e] border border-white/10 relative flex items-center justify-center min-h-[120px] shrink-0 group">
+              {isCameraOn || isScreenSharing ? (
                 <video
                   ref={(el) => {
-                    remoteVideoRef.current = el;
-                    if (el && remoteStreamRef.current) {
-                      if (el.srcObject !== remoteStreamRef.current) {
-                        el.srcObject = remoteStreamRef.current;
-                      }
-                      el.play().catch(() => {
-                        el.muted = true;
-                        el.play().catch(() => {});
-                      });
+                    teacherVideoRef.current = el;
+                    if (el) {
+                      const stream = screenStreamRef.current || localStreamRef.current;
+                      if (stream && el.srcObject !== stream) el.srcObject = stream;
+                      el.play().catch(() => {});
                     }
                   }}
                   autoPlay
                   playsInline
-                  className="w-full h-full object-cover bg-black"
+                  muted
+                  className={`w-full h-full ${isScreenSharing ? "object-contain bg-black" : "object-cover -scale-x-100"}`}
                 />
-                {!hasRemoteVideo && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#181818] text-center px-4">
-                    <div className="w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-slate-700 flex items-center justify-center text-xl sm:text-2xl font-semibold text-slate-200">
-                      {initials(remoteParticipant?.name || admittedList[0]?.name || "Student")}
-                    </div>
-                    <div>
-                      <p className="text-xs sm:text-sm font-medium text-white">{remoteParticipant?.name || admittedList[0]?.name || "Student"}</p>
-                      <span className="text-[11px] sm:text-xs text-slate-400 flex items-center justify-center gap-1.5 mt-1">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                        {remoteParticipant ? "Connecting student live video..." : "Class is live • Waiting for student to join..."}
+              ) : (
+                <div className="flex flex-col items-center gap-1.5 text-center px-2">
+                  <div className="w-10 h-10 rounded-full bg-indigo-700 flex items-center justify-center text-xs font-bold text-white shadow">
+                    {initials(userInfo.name)}
+                  </div>
+                  <span className="text-[11px] font-medium text-slate-300">{userInfo.name} (You)</span>
+                  <span className="text-[9px] text-slate-500">Camera off · Host</span>
+                </div>
+              )}
+              <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded bg-black/75 backdrop-blur-sm text-[10px] font-medium text-white flex items-center gap-1 z-10 border border-white/10">
+                {isMicOn ? <Mic className="w-2.5 h-2.5 text-emerald-400" /> : <MicOff className="w-2.5 h-2.5 text-rose-400" />}
+                <span>{userInfo.name} (You) · Host</span>
+              </div>
+            </div>
+          )}
+
+          {/* Other Remote Participants (Students) */}
+          {realtimeParticipants
+            .filter((p) => {
+              if (p.id === userInfo.id) return false;
+              if (p.role === "TEACHER" && !pinnedParticipantId) return false; // Remote teacher is on main stage
+              if (pinnedParticipantId === p.id) return false; // Pinned participant is on main stage
+              return true;
+            })
+            .map((p) => {
+              const track = remoteTracks[p.id]?.videoTrack;
+              const isHandUp = p.isHandRaised || (remoteParticipant?.id === p.id && remoteHandRaised);
+
+              return (
+                <div
+                  key={p.id}
+                  className="aspect-video w-full rounded-xl overflow-hidden bg-[#1e1e1e] border border-white/10 relative flex items-center justify-center min-h-[120px] shrink-0 group transition-all hover:border-white/30"
+                >
+                  {p.isCameraOn && track ? (
+                    <RemoteVideoView track={track} className="w-full h-full object-cover bg-black" />
+                  ) : (
+                    <div className="flex flex-col items-center gap-1.5 text-center px-2">
+                      <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-200 shadow">
+                        {initials(p.name)}
+                      </div>
+                      <p className="text-[11px] font-medium text-white truncate max-w-[120px]">{p.name}</p>
+                      <span className="text-[9px] text-slate-500">
+                        {p.isCameraOn ? "Connecting camera..." : "Camera off"}
                       </span>
                     </div>
+                  )}
+
+                  {/* Label badge */}
+                  <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded bg-black/75 backdrop-blur-sm text-[10px] font-medium text-white flex items-center gap-1 z-10 border border-white/10">
+                    {p.isMicOn !== false ? (
+                      <Mic className="w-2.5 h-2.5 text-emerald-400" />
+                    ) : (
+                      <MicOff className="w-2.5 h-2.5 text-rose-400" />
+                    )}
+                    <span className="truncate max-w-[110px]">{p.name}</span>
                   </div>
-                )}
+
+                  {/* Hand raised badge */}
+                  {isHandUp && (
+                    <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-amber-500 text-black text-[9px] font-black flex items-center gap-1 z-10 shadow">
+                      <Hand className="w-2.5 h-2.5" />
+                      <span>Raised</span>
+                    </div>
+                  )}
+
+                  {/* Pin action button */}
+                  <button
+                    onClick={() => setPinnedParticipantId(p.id)}
+                    className="absolute top-1.5 right-1.5 p-1 rounded bg-black/60 hover:bg-black/90 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
+                    title={`Pin ${p.name} to main stage`}
+                  >
+                    <Pin className="w-3 h-3" />
+                  </button>
+                </div>
+              );
+            })}
+
+          {/* Empty state when teacher is live and no students joined yet */}
+          {userInfo.isTeacher &&
+            realtimeParticipants.filter((p) => p.role !== "TEACHER").length === 0 && (
+              <div className="p-4 rounded-xl bg-white/[0.03] border border-dashed border-white/10 flex flex-col items-center justify-center text-center gap-2 py-8 text-slate-400">
+                <Users className="w-6 h-6 text-slate-500" />
+                <p className="text-xs font-medium text-slate-300">Students appear here</p>
+                <span className="text-[10px] text-slate-500 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  {admittedList.length > 0
+                    ? `${admittedList.length} student${admittedList.length > 1 ? "s" : ""} admitted`
+                    : "Waiting for students to join"}
+                </span>
               </div>
             )}
-            <div className="absolute bottom-2 left-2 px-2 py-1 rounded-md bg-black/70 text-[10px] sm:text-[11px] font-medium text-white flex items-center gap-1.5 z-10">
-              {(!userInfo.isTeacher ? isMicOn : remoteParticipant?.isMicOn !== false)
-                ? <Mic className="w-3 h-3 text-emerald-400" />
-                : <MicOff className="w-3 h-3 text-rose-400" />}
-              <span>{!userInfo.isTeacher ? `${userInfo.name} (You)` : (remoteParticipant?.name || admittedList[0]?.name || "Student")}</span>
-            </div>
-            {isHandRaised && !userInfo.isTeacher && (
-              <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-amber-500 text-[10px] font-bold text-black flex items-center gap-1 z-10">
-                <Hand className="w-3 h-3" />
-                Hand Raised
-              </div>
-            )}
-          </div>
         </div>
 
         {/* ── Sidebar ── */}

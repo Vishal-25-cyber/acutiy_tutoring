@@ -40,6 +40,7 @@ const AdmissionEntrySchema = new Schema(
 const AdmittedEntrySchema = new Schema(
   {
     userId:     { type: String, required: true },
+    name:       { type: String, default: "Student" },
     admittedAt: { type: Date, default: Date.now },
   },
   { _id: false }

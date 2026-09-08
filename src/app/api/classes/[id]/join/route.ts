@@ -216,6 +216,7 @@ export async function POST(
         livekitRoomId: liveClass.livekitRoomId || liveClass.meetingId,
         status: liveClass.status,
         teacher: liveClass.teacherId,
+        teacherId: (typeof liveClass.teacherId === "object" ? liveClass.teacherId?._id?.toString() : liveClass.teacherId?.toString()) || "",
         materials: liveClass.materials || [],
       },
       isAdmitted: (liveClass.admittedStudents || []).some(

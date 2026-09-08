@@ -12,6 +12,11 @@ export async function createLivekitToken(params: {
   const at = new AccessToken(apiKey, apiSecret, {
     identity: params.participantIdentity,
     name: params.participantName,
+    metadata: JSON.stringify({
+      role: params.isTeacher ? "TEACHER" : "STUDENT",
+      isTeacher: params.isTeacher,
+      name: params.participantName,
+    }),
     ttl: "4h",
   });
 
