@@ -12,7 +12,8 @@ import {
   Building, ExternalLink, Quote, Heart, Cpu, Brain,
   Compass, School, UserCheck, Star, Image as ImageIcon,
   Menu, X, Laptop, Rocket, Maximize2, Play, Video, Film,
-  ChevronDown, ChevronUp, Plus
+  ChevronDown, ChevronUp, Plus, Code2, TrendingUp, Camera,
+  Lightbulb, Layers
 } from "lucide-react";
 
 type AuthMode = "SIGNIN" | "SIGNUP";
@@ -138,7 +139,7 @@ export default function HomePage() {
   // Gallery Lightbox Modal State
   const [selectedGalleryIdx, setSelectedGalleryIdx] = useState<number | null>(null);
 
-  // Our Side / Schools Section State
+  // Our Works / Services State
   const [selectedSchoolModal, setSelectedSchoolModal] = useState<any | null>(null);
   const [customVideoUrls, setCustomVideoUrls] = useState<Record<string, string>>({});
   const [videoModalOpen, setVideoModalOpen] = useState(false);
@@ -229,9 +230,8 @@ export default function HomePage() {
   const navItems = [
     { name: "About", href: "#about" },
     { name: "Tutoring Hub", href: "#tutoring-hub" },
-    { name: "Our Side", href: "#our-side" },
+    { name: "Our Works", href: "#our-works" },
     { name: "Team", href: "#team" },
-    { name: "Mentors", href: "#mentors" },
     { name: "Testimonials", href: "#testimonials" },
     { name: "Gallery", href: "#gallery" },
   ];
@@ -240,7 +240,7 @@ export default function HomePage() {
     if (href.startsWith("#")) {
       e.preventDefault();
       const targetId = href.replace("#", "");
-      const targetEl = document.getElementById(targetId);
+      const targetEl = document.getElementById(targetId) || (targetId === "our-side" ? document.getElementById("our-works") : null);
       if (targetEl) {
         targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
         window.history.pushState(null, "", href);
@@ -373,12 +373,15 @@ export default function HomePage() {
         setOk("Login verified. Redirecting…");
         setTimeout(() => {
           const resolvedRole = data.user?.role || loginRole;
+          const isTrialExpired = resolvedRole === "STUDENT" && data.user?.trial?.isTrialExpired;
           const targetUrl =
             resolvedRole === "TEACHER"
               ? "/teacher/dashboard"
               : resolvedRole === "ADMIN"
                 ? "/admin/dashboard"
-                : "/student/dashboard";
+                : isTrialExpired
+                  ? "/student/fees"
+                  : "/student/dashboard";
           window.location.href = targetUrl;
         }, 250);
         return true;
@@ -575,11 +578,11 @@ export default function HomePage() {
               ))}
             </nav>
 
-            {/* 3-Lines (Hamburger) Toggle Button for Sidebar (Available on Desktop & Mobile) */}
+            {/* 3-Lines (Hamburger) Toggle Button for Sidebar (Mobile Only) */}
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-slate-700 hover:text-[#004b79] hover:bg-slate-100 border border-slate-200/80 transition-all cursor-pointer shadow-2xs"
+              className="lg:hidden p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-slate-700 hover:text-[#004b79] hover:bg-slate-100 border border-slate-200/80 transition-all cursor-pointer shadow-2xs"
               aria-label="Toggle Navigation Sidebar"
               aria-expanded={mobileMenuOpen}
             >
@@ -1442,84 +1445,346 @@ export default function HomePage() {
         </section>
 
         {/* ═══════════════════════════════════════════════════════════════════════
-          PAGE 3: OUR SIDE (ALL-IN-ONE SINGLE VIEWPORT MATCHED SHOWCASE)
+          PAGE 3: OUR WORKS (WHAT WE DO — 4 CORE VERTICALS)
+          1. Freelancing (Fullstack, Digital Marketing, Video Editing, Video Shooting)
+          2. Guidance for Ideation
+          3. Online Tutoring (Our Flagship Project)
+          4. Workshops (Featuring Kongu National School AI Seminar with Session Video)
       ═══════════════════════════════════════════════════════════════════════ */}
         <section
-          id="our-side"
-          className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] lg:h-[calc(100vh-5rem)] border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/40 to-white py-6 lg:py-8 flex flex-col justify-center"
+          id="our-works"
+          className="relative scroll-mt-20 border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/50 to-white py-12 lg:py-20 flex flex-col justify-center"
         >
-          <div className="w-full max-w-6xl mx-auto px-6 sm:px-10 lg:px-14 flex flex-col justify-center space-y-6 lg:space-y-7">
+          {/* Fallback anchor for existing bookmarks / links */}
+          <span id="our-side" className="sr-only" />
+          
+          <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 lg:space-y-14">
 
-            {/* Section Heading */}
-            <div className="text-center space-y-1">
+            {/* Section Header */}
+            <div className="text-center space-y-2.5 max-w-3xl mx-auto">
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002137] tracking-tight">
-                Our Side
+                Our Works
               </h2>
-              <p className="text-xs sm:text-sm lg:text-base font-bold text-[#8c6924] tracking-normal max-w-xl mx-auto">
-                Empowering school teachers and academic institutions with practical AI tools.
+              <p className="text-sm sm:text-base font-bold text-[#8c6924] tracking-normal max-w-2xl mx-auto">
+                Digital engineering, ideation support, online tutoring, and AI workshops.
               </p>
             </div>
 
-            {/* Direct Matched Presentation: Image Height Matches Opposite Content */}
-            <div>
-              {outreachSchools.map((school: any) => (
-                <div
-                  key={school.id}
-                  className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center"
-                >
-                  {/* Image Side: Full Perfect Image Without Any Cropping */}
-                  <div className="lg:col-span-6 flex items-center justify-center">
-                    <div className="relative w-full rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 border border-slate-200/90 bg-white group">
-                      <img
-                        src={school.bannerImage || "/images/ai_seminar_banner.png"}
-                        alt={school.sessionTitle}
-                        className="w-full h-auto block object-contain group-hover:scale-[1.01] transition-transform duration-500"
-                      />
-                    </div>
+            {/* ══════════════════════════════════════════════════════════════
+                VERTICAL 1: FREELANCING
+                (Fullstack, Digital Marketing, Video Editing, Video Shooting)
+            ══════════════════════════════════════════════════════════════ */}
+            <div className="space-y-8 pt-2">
+              {/* Centered Topic Header */}
+              <div className="text-center space-y-1.5 max-w-2xl mx-auto">
+                <span className="text-[11px] font-black uppercase tracking-widest text-[#8c6924]">
+                  01 / DIGITAL SOLUTIONS &amp; CREATIVE AGENCY
+                </span>
+                <h3 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">
+                  Freelancing Services
+                </h3>
+                <p className="text-xs sm:text-sm text-[#8c6924] font-bold tracking-normal max-w-xl mx-auto">
+                  End-to-end technical development and creative media production.
+                </p>
+              </div>
+
+              {/* Cardless 4-Column Editorial Showcase */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-slate-200/80 border-y border-slate-200/80 py-4">
+                
+                {/* Service 1: Full Stack */}
+                <div className="py-6 px-4 sm:px-6 lg:px-7 space-y-3.5 text-left first:pl-0 last:pr-0">
+                  <div className="w-12 h-12 rounded-2xl bg-[#002137] text-white flex items-center justify-center shadow-md">
+                    <Code2 className="w-6 h-6 text-[#dfb74a]" />
                   </div>
-
-                  {/* Opposite Side: Perfectly Aligned Content (No Top Pill Badge) */}
-                  <div className="lg:col-span-6 flex flex-col justify-center space-y-3.5 text-left">
-                    <h3 className="text-2xl sm:text-3xl lg:text-[30px] font-black text-[#002137] tracking-tight leading-tight">
-                      {school.name}
-                    </h3>
-
-                    <div className="space-y-0.5">
-                      <h4 className="text-base sm:text-lg font-extrabold text-[#004b79]">
-                        {school.sessionTitle}
-                      </h4>
-                      <p className="text-xs sm:text-sm font-semibold text-slate-500 italic">
-                        {school.subtitle || "From Everyday AI Tools to Transformative Learning Experiences"}
-                      </p>
-                    </div>
-
-                    <p className="text-xs sm:text-sm lg:text-[14.5px] text-slate-600 leading-relaxed font-medium">
-                      MANTIF conducted an interactive faculty empowerment seminar exploring practical AI tools, empowering teachers to enhance student engagement and modernize classroom learning.
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-[#8c6924]">
+                      Engineering
+                    </span>
+                    <h4 className="text-lg font-black text-[#002137] tracking-tight mt-0.5">
+                      Fullstack Development
+                    </h4>
+                    <p className="text-xs sm:text-[13px] text-slate-600 font-medium mt-2 leading-relaxed">
+                      We engineer scalable web and mobile applications using modern frontend frameworks, high-throughput APIs, and reliable cloud database architectures.
                     </p>
-
-                    <div className="pt-1">
-                      <button
-                        onClick={() => setSelectedSchoolModal(school)}
-                        className="group inline-flex items-center gap-2.5 px-6 py-2.5 rounded-xl bg-[#002137] hover:bg-[#004b79] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
-                      >
-                        <BookOpen className="w-4 h-4 text-[#dfb74a]" />
-                        <span>View Session Story &amp; Video</span>
-                        <ArrowRight className="w-4 h-4 text-amber-300 group-hover:translate-x-1 transition-transform" />
-                      </button>
-                    </div>
                   </div>
                 </div>
-              ))}
+
+                {/* Service 2: Digital Marketing */}
+                <div className="py-6 px-4 sm:px-6 lg:px-7 space-y-3.5 text-left">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#8c6924] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-md">
+                    <TrendingUp className="w-6 h-6 text-[#002137]" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-[#8c6924]">
+                      Growth
+                    </span>
+                    <h4 className="text-lg font-black text-[#002137] tracking-tight mt-0.5">
+                      Digital Marketing
+                    </h4>
+                    <p className="text-xs sm:text-[13px] text-slate-600 font-medium mt-2 leading-relaxed">
+                      We execute targeted SEO, data-driven paid advertising campaigns, and strategic content funnels built to convert audience interest into loyal clients.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Service 3: Video Editing */}
+                <div className="py-6 px-4 sm:px-6 lg:px-7 space-y-3.5 text-left">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-950 to-indigo-700 text-white flex items-center justify-center shadow-md">
+                    <Film className="w-6 h-6 text-indigo-200" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700">
+                      Post-Production
+                    </span>
+                    <h4 className="text-lg font-black text-[#002137] tracking-tight mt-0.5">
+                      Video Editing
+                    </h4>
+                    <p className="text-xs sm:text-[13px] text-slate-600 font-medium mt-2 leading-relaxed">
+                      We craft high-retention video content using cinematic pacing, professional sound design, motion graphics, and visual polish optimized for social algorithms.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Service 4: Video Shooting */}
+                <div className="py-6 px-4 sm:px-6 lg:px-7 space-y-3.5 text-left">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#002137] to-[#004b79] text-white flex items-center justify-center shadow-md">
+                    <Camera className="w-6 h-6 text-[#dfb74a]" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-[#004b79]">
+                      Cinematography
+                    </span>
+                    <h4 className="text-lg font-black text-[#002137] tracking-tight mt-0.5">
+                      Video Shooting
+                    </h4>
+                    <p className="text-xs sm:text-[13px] text-slate-600 font-medium mt-2 leading-relaxed">
+                      We capture high-definition 4K multi-camera footage with professional lighting and crisp studio audio for campus seminars, corporate events, and founder reels.
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+
+
             </div>
 
-            {/* Animated Loading Symbol for "Still more" (Clean Loading Animation, No AI Symbols) */}
-            <div className="pt-2 flex items-center justify-center">
-              <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-white border border-slate-200/90 shadow-xs text-slate-700 hover:border-[#b89047]/70 transition-all">
-                <Loader2 className="w-4 h-4 text-[#b89047] animate-spin shrink-0" />
-                <span className="text-xs font-bold text-[#002137] tracking-wide">
-                  Still more...
+            {/* ══════════════════════════════════════════════════════════════
+                VERTICAL 2: GUIDANCE FOR IDEATION
+            ══════════════════════════════════════════════════════════════ */}
+            <div className="space-y-8 pt-8 border-t border-slate-200/80">
+              {/* Centered Topic Header */}
+              <div className="text-center space-y-1.5 max-w-2xl mx-auto">
+                <span className="text-[11px] font-black uppercase tracking-widest text-[#8c6924]">
+                  02 / PROJECT &amp; IDEA SUPPORT
                 </span>
+                <h3 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">
+                  Guidance for Ideation
+                </h3>
+                <p className="text-xs sm:text-sm text-[#8c6924] font-bold tracking-normal max-w-xl mx-auto">
+                  Turning innovative project concepts into working software prototypes.
+                </p>
               </div>
+
+              {/* Simple, Non-Messy 4 Steps */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-200/80 border-y border-slate-200/80 py-4">
+                {[
+                  {
+                    step: "01",
+                    title: "Idea & Planning",
+                    desc: "We discuss your concept, define the core features, and map out a simple, realistic roadmap."
+                  },
+                  {
+                    step: "02",
+                    title: "Tech Stack Selection",
+                    desc: "We help you select the most suitable tools, languages, and database for your project."
+                  },
+                  {
+                    step: "03",
+                    title: "Prototype Building",
+                    desc: "We provide hands-on technical guidance to build and run a working version of your application."
+                  },
+                  {
+                    step: "04",
+                    title: "Review & Demo Prep",
+                    desc: "We test your prototype, resolve issues, and help you prepare clear documentation and project demos."
+                  }
+                ].map((item, idx) => (
+                  <div key={idx} className="py-6 px-4 sm:px-6 lg:px-7 space-y-2 text-left first:pl-0 last:pr-0">
+                    <span className="font-mono text-xs font-black text-[#8c6924]">
+                      Step {item.step}
+                    </span>
+                    <h4 className="text-base font-black text-[#002137] tracking-tight">
+                      {item.title}
+                    </h4>
+                    <p className="text-xs sm:text-[13px] text-slate-600 font-medium leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+
+            </div>
+
+            {/* ══════════════════════════════════════════════════════════════
+                VERTICAL 3: ONLINE TUTORING (OUR PROJECT)
+            ══════════════════════════════════════════════════════════════ */}
+            <div className="space-y-8 pt-8 border-t border-slate-200/80">
+              {/* Centered Topic Header */}
+              <div className="text-center space-y-1.5 max-w-2xl mx-auto">
+                <span className="text-[11px] font-black uppercase tracking-widest text-[#8c6924]">
+                  03 / OUR FLAGSHIP EDTECH PLATFORM
+                </span>
+                <h3 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">
+                  Online Tutoring
+                </h3>
+                <p className="text-xs sm:text-sm text-[#8c6924] font-bold tracking-normal max-w-xl mx-auto">
+                  Live interactive tuition and AI diagnostics for Classes 6 to 10.
+                </p>
+              </div>
+
+              {/* Simple, Non-Messy 4 Pillars (Reduced Content) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-200/80 border-y border-slate-200/80 py-4">
+                {[
+                  {
+                    title: "Live Interactive Classes",
+                    desc: "Daily small-batch online sessions with subject specialists and two-way doubt solving."
+                  },
+                  {
+                    title: "AI Diagnostic Quizzes",
+                    desc: "Chapter-wise automated evaluations to spot concept gaps before school examinations."
+                  },
+                  {
+                    title: "Curated Study Notes",
+                    desc: "Clear chapter summaries, formula cheat sheets, and solved question banks for every topic."
+                  },
+                  {
+                    title: "Parent Progress Tracking",
+                    desc: "Regular attendance updates, test score reports, and continuous academic feedback."
+                  }
+                ].map((item, idx) => (
+                  <div key={idx} className="py-6 px-4 sm:px-6 lg:px-7 space-y-2 text-left first:pl-0 last:pr-0">
+                    <span className="font-mono text-xs font-black text-[#8c6924]">
+                      0{idx + 1}.
+                    </span>
+                    <h4 className="text-base font-black text-[#002137] tracking-tight">
+                      {item.title}
+                    </h4>
+                    <p className="text-xs sm:text-[13px] text-slate-600 font-medium leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Simple Bottom Strip */}
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="space-y-0.5 text-center sm:text-left">
+                  <p className="text-xs sm:text-sm font-bold text-[#002137]">
+                    Classes 6 to 10 • Mathematics, Science, English &amp; AI
+                  </p>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    Learn more about our comprehensive curriculum and student ecosystem.
+                  </p>
+                </div>
+                <div className="flex items-center shrink-0">
+                  <a
+                    href="#about"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                      window.history.pushState(null, "", "#about");
+                    }}
+                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#002137] hover:bg-[#004b79] text-white text-xs sm:text-sm font-bold shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <GraduationCap className="w-4 h-4 text-[#dfb74a]" />
+                    <span>Explore</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-[#dfb74a]" />
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* ══════════════════════════════════════════════════════════════
+                VERTICAL 4: WORKSHOPS (INSTITUTION OUTREACH)
+                (Uploaded Image Details & Video Modal Trigger)
+            ══════════════════════════════════════════════════════════════ */}
+            <div className="space-y-8 pt-8 border-t border-slate-200/80">
+              {/* Centered Topic Header */}
+              <div className="text-center space-y-1.5 max-w-2xl mx-auto">
+                <span className="text-[11px] font-black uppercase tracking-widest text-[#8c6924]">
+                  04 / INSTITUTIONAL OUTREACH &amp; SEMINARS
+                </span>
+                <h3 className="text-3xl sm:text-4xl font-black text-[#002137] tracking-tight">
+                  Workshops
+                </h3>
+                <p className="text-xs sm:text-sm text-[#8c6924] font-bold tracking-normal max-w-xl mx-auto">
+                  Hands-on AI empowerment seminars for educators and schools.
+                </p>
+              </div>
+
+              {/* Direct Matched Workshop (Cardless 2-Column) */}
+              <div>
+                {outreachSchools.map((school: any) => (
+                  <div
+                    key={school.id}
+                    className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center py-2"
+                  >
+                    {/* Image Side: Full Perfect Image Without Any Cropping */}
+                    <div className="lg:col-span-6 flex items-center justify-center">
+                      <div className="relative w-full rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-slate-200/90 bg-white group">
+                        <img
+                          src={school.bannerImage || "/images/ai_seminar_banner.png"}
+                          alt={school.sessionTitle}
+                          className="w-full h-auto block object-contain group-hover:scale-[1.01] transition-transform duration-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Content Side: Perfectly Aligned Content */}
+                    <div className="lg:col-span-6 flex flex-col justify-center space-y-3.5 text-left border-t lg:border-t-0 lg:border-l border-slate-200/80 lg:pl-8 pt-6 lg:pt-0">
+                      <h3 className="text-2xl sm:text-3xl lg:text-[30px] font-black text-[#002137] tracking-tight leading-tight">
+                        {school.name}
+                      </h3>
+
+                      <div className="space-y-0.5">
+                        <h4 className="text-base sm:text-lg font-extrabold text-[#004b79]">
+                          {school.sessionTitle}
+                        </h4>
+                        <p className="text-xs sm:text-sm font-semibold text-slate-500 italic">
+                          {school.subtitle || "From Everyday AI Tools to Transformative Learning Experiences"}
+                        </p>
+                      </div>
+
+                      <p className="text-xs sm:text-sm lg:text-[14.5px] text-slate-600 leading-relaxed font-medium">
+                        MANTIF conducted an interactive faculty empowerment seminar exploring practical AI tools, empowering teachers to enhance student engagement and modernize classroom learning.
+                      </p>
+
+                      <div className="pt-1">
+                        <button
+                          onClick={() => setSelectedSchoolModal(school)}
+                          className="group inline-flex items-center gap-2.5 px-6 py-2.5 rounded-xl bg-[#002137] hover:bg-[#004b79] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+                        >
+                          <BookOpen className="w-4 h-4 text-[#dfb74a]" />
+                          <span>View Session Story &amp; Video</span>
+                          <ArrowRight className="w-4 h-4 text-amber-300 group-hover:translate-x-1 transition-transform" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Animated Loading Symbol for "Still more to come" */}
+              <div className="pt-4 flex items-center justify-center">
+                <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-white border border-slate-200/90 shadow-xs text-slate-700 hover:border-[#b89047]/70 transition-all">
+                  <Loader2 className="w-4 h-4 text-[#b89047] animate-spin shrink-0" />
+                  <span className="text-xs font-bold text-[#002137] tracking-wide">
+                    Still more to come...
+                  </span>
+                </div>
+              </div>
+
             </div>
 
           </div>
@@ -1560,14 +1825,6 @@ export default function HomePage() {
                   <p className="text-xs sm:text-sm font-extrabold text-[#8c6924]">Founder</p>
                 </div>
               </div>
-              <a
-                href="#mentors"
-                onClick={(e) => handleNavClick(e, "#mentors")}
-                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#004b79] hover:text-[#002137] bg-slate-100/80 hover:bg-slate-200/80 px-4 py-2 rounded-full border border-slate-200 transition-all cursor-pointer shadow-2xs"
-              >
-                <span>Explore Mentors &amp; Tech Teams</span>
-                <span className="text-sm">↓</span>
-              </a>
             </div>
 
           </div>

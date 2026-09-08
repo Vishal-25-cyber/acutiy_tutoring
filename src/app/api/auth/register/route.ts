@@ -77,7 +77,11 @@ export async function POST(req: NextRequest) {
 
       const passwordHash = await hashPassword(password);
 
-      // Save to `users` collection (PENDING_APPROVAL status until Admin approves)
+      const now = new Date();
+      const trialStartDate = now;
+      const trialEndsAt = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000); // 2 Days (48 Hours) Free Trial
+
+      // Save to `users` collection (Students are ACTIVE immediately without admin approval)
       const user = await User.create({
         name: name.trim(),
         email: email.trim().toLowerCase(),
@@ -85,7 +89,7 @@ export async function POST(req: NextRequest) {
         district: district?.trim() || "",
         passwordHash,
         role: "STUDENT",
-        status: "PENDING_APPROVAL",
+        status: "ACTIVE", // Free login without admin approval!
       });
 
       const normalizedGender = (gender || "OTHER").toString().toUpperCase();
@@ -112,12 +116,14 @@ export async function POST(req: NextRequest) {
         streakCount: 0,
         totalClassesAttended: 0,
         totalClassesScheduled: 0,
+        trialStartDate,
+        trialEndsAt,
       });
 
       return NextResponse.json({
         success: true,
-        message: "Student registration submitted! Your account is pending admin approval. You will be able to log in once approved by the administrator.",
-        user: { name: user.name, email: user.email, role: "STUDENT", status: "PENDING_APPROVAL", studentId: formattedStudentId },
+        message: "Registration successful! Your 2-day free trial is now active. You can log in immediately.",
+        user: { name: user.name, email: user.email, role: "STUDENT", status: "ACTIVE", studentId: formattedStudentId },
       }, { status: 201 });
     }
 

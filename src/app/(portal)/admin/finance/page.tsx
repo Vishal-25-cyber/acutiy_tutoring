@@ -282,9 +282,22 @@ export default function AdminFinancePage() {
                         type="button"
                         disabled={updatingId === p._id}
                         onClick={() => handleMarkPaid(p._id)}
-                        className="px-3 py-1 rounded-lg text-xs font-bold bg-[#004b79] hover:bg-[#003b60] text-white transition-all cursor-pointer shadow-2xs disabled:opacity-60"
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer shadow-2xs disabled:opacity-60 flex items-center gap-1.5 ${
+                          p.status === "PENDING_VERIFICATION"
+                            ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-700/20"
+                            : "bg-[#004b79] hover:bg-[#003b60] text-white"
+                        }`}
                       >
-                        {updatingId === p._id ? "Updating..." : "Mark Paid"}
+                        {updatingId === p._id ? (
+                          <span>Updating...</span>
+                        ) : p.status === "PENDING_VERIFICATION" ? (
+                          <>
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Approve &amp; Unlock Student</span>
+                          </>
+                        ) : (
+                          <span>Mark Paid</span>
+                        )}
                       </button>
                     ) : (
                       <span className="text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center gap-1">

@@ -10,6 +10,7 @@ import Payment from "@/models/Payment";
 import { hashPassword } from "@/lib/auth/passwords";
 import { recordAuditLog } from "@/lib/audit";
 import { isValid10DigitPhone, isValidAcuityOrGmail, sanitize10DigitPhone } from "@/lib/validations/phone";
+import { emitPaymentStatusUpdate } from "@/lib/payment-events";
 
 export async function GET(req: NextRequest) {
   try {
@@ -55,7 +56,50 @@ export async function GET(req: NextRequest) {
       );
     });
 
-    return NextResponse.json({ students: filtered });
+    const userIds = filtered.map((p) => (p.userId as any)?._id || p.userId).filter(Boolean);
+    const allPayments = await Payment.find({ studentId: { $in: userIds } })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const now = new Date();
+
+    const enriched = filtered.map((p) => {
+      const u = p.userId as any;
+      const sId = u?._id?.toString() || p.userId?.toString();
+      const studentPayments = allPayments.filter((pay: any) => pay.studentId?.toString() === sId);
+
+      const paidPayment = studentPayments.find((pay: any) => pay.status === "PAID");
+      const pendingVerification = studentPayments.find((pay: any) => pay.status === "PENDING_VERIFICATION");
+      const latestPayment = pendingVerification || paidPayment || studentPayments[0] || null;
+
+      const hasPaid = !!paidPayment;
+      const start = p.trialStartDate || (p as any).createdAt || u?.createdAt || now;
+      const startDate = new Date(start);
+      const endDate = p.trialEndsAt ? new Date(p.trialEndsAt) : new Date(startDate.getTime() + 2 * 24 * 60 * 60 * 1000);
+      const diffMs = endDate.getTime() - now.getTime();
+      const remainingHours = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60)));
+      const isTrialActive = !hasPaid && diffMs > 0;
+      const isTrialExpired = !hasPaid && diffMs <= 0;
+
+      const baseObj = typeof (p as any).toObject === "function" ? (p as any).toObject() : p;
+
+      return {
+        ...baseObj,
+        latestPayment,
+        hasPaid,
+        pendingVerification: !!pendingVerification,
+        trial: {
+          isTrialActive,
+          isTrialExpired,
+          trialEndsAt: endDate.toISOString(),
+          trialStartDate: startDate.toISOString(),
+          remainingHours,
+          hasPaid,
+        },
+      };
+    });
+
+    return NextResponse.json({ students: enriched });
   } catch (error: any) {
     console.error("Admin Students Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -184,6 +228,7 @@ export async function PATCH(req: NextRequest) {
       attendanceRiskLevel,
       status,
       resetPassword,
+      approvePayment,
     } = body;
 
     if (!studentId) {
@@ -220,6 +265,70 @@ export async function PATCH(req: NextRequest) {
     if (status) userUpdate.status = status;
     if (resetPassword && resetPassword.trim()) {
       userUpdate.passwordHash = await hashPassword(resetPassword.trim());
+    }
+
+    // If approving student or explicitly approving payment, activate user & mark payment as PAID
+    const shouldApprovePayment = approvePayment || status === "ACTIVE";
+    if (shouldApprovePayment) {
+      userUpdate.status = "ACTIVE";
+
+      let targetPayment = await Payment.findOne({
+        studentId,
+        status: { $in: ["PENDING_VERIFICATION", "PENDING", "OVERDUE"] },
+      }).sort({ createdAt: -1 });
+
+      if (!targetPayment && approvePayment) {
+        targetPayment = await Payment.findOne({ studentId }).sort({ createdAt: -1 });
+      }
+
+      if (targetPayment) {
+        targetPayment.status = "PAID";
+        targetPayment.paidDate = new Date();
+        targetPayment.paymentMethod = targetPayment.paymentMethod || "Admin Verified (Online UPI / Netbanking)";
+        if (!targetPayment.transactionId) {
+          targetPayment.transactionId = `TXN-VERIFIED-${Date.now().toString().slice(-6)}`;
+        }
+        await targetPayment.save();
+
+        emitPaymentStatusUpdate({
+          paymentId: targetPayment._id.toString(),
+          studentId: studentId.toString(),
+          courseId: targetPayment.courseId,
+          courseName: targetPayment.courseName || targetPayment.billingMonth,
+          status: "PAID",
+          amount: targetPayment.amount,
+          transactionId: targetPayment.transactionId,
+          receiptNumber: targetPayment.receiptNumber,
+          billingMonth: targetPayment.billingMonth,
+          verifiedAt: new Date().toISOString(),
+        });
+      } else if (approvePayment) {
+        const currentMonthStr = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date());
+        const studentProfile = await StudentProfile.findOne({ userId: studentId }).lean();
+        const createdPayment = await Payment.create({
+          studentId,
+          amount: 1999,
+          billingMonth: currentMonthStr,
+          courseName: `${studentProfile?.currentClass || "Class 10"} ${studentProfile?.board || "CBSE"} — Core Academic Tuition`,
+          dueDate: new Date(),
+          paidDate: new Date(),
+          status: "PAID",
+          paymentMethod: "Admin Verified (Online UPI / Netbanking)",
+          transactionId: `TXN-VERIFIED-${Date.now().toString().slice(-6)}`,
+          receiptNumber: `REC-${Date.now().toString().slice(-6)}`,
+        });
+
+        emitPaymentStatusUpdate({
+          paymentId: createdPayment._id.toString(),
+          studentId: studentId.toString(),
+          status: "PAID",
+          amount: createdPayment.amount,
+          transactionId: createdPayment.transactionId,
+          receiptNumber: createdPayment.receiptNumber,
+          billingMonth: createdPayment.billingMonth,
+          verifiedAt: new Date().toISOString(),
+        });
+      }
     }
 
     if (Object.keys(userUpdate).length > 0) {

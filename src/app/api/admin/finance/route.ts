@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db/mongoose";
 import { getSession } from "@/lib/auth/session";
+import User from "@/models/User";
 import Payment from "@/models/Payment";
 import StudentProfile from "@/models/StudentProfile";
 import SystemSettings from "@/models/SystemSettings";
@@ -131,6 +132,10 @@ export async function PATCH(req: NextRequest) {
         typeof updated.studentId === "object" && updated.studentId !== null && "_id" in updated.studentId
           ? (updated.studentId as any)._id.toString()
           : updated.studentId.toString();
+
+      if (studentIdStr) {
+        await User.findByIdAndUpdate(studentIdStr, { status: "ACTIVE" });
+      }
 
       emitPaymentStatusUpdate({
         paymentId: updated._id.toString(),

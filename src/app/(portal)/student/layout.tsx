@@ -28,10 +28,6 @@ export default function StudentLayout({ children }: { children?: React.ReactNode
     }
   }, [authData, isLoading, router]);
 
-  if (isClassroom) {
-    return <>{children || <Outlet />}</>;
-  }
-
   // If user is confirmed to be teacher/admin, don't render student dashboard while redirecting
   if (!isLoading && authData?.user && authData.user.role !== "STUDENT") {
     return null;
@@ -43,6 +39,15 @@ export default function StudentLayout({ children }: { children?: React.ReactNode
   const isTrialActive = !hasPaid && !!trial?.isTrialActive;
   const isTrialExpired = !hasPaid && !!trial?.isTrialExpired;
   const isFeesPage = pathname === "/student/fees" || pathname.startsWith("/student/fees/");
+
+  // Strictly enforce trial lockout: lock classroom if trial expired and not paid
+  if (isClassroom) {
+    if (isTrialExpired && !hasPaid) {
+      router.replace("/student/fees");
+      return null;
+    }
+    return <>{children || <Outlet />}</>;
+  }
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans overflow-hidden">
@@ -84,6 +89,9 @@ export default function StudentLayout({ children }: { children?: React.ReactNode
               studentClass={user?.profile?.currentClass}
               studentId={user?.profile?.studentId}
               trialEndsAt={trial?.trialEndsAt}
+              pendingVerification={!!trial?.pendingVerification}
+              transactionId={trial?.pendingTransactionId}
+              amount={trial?.pendingAmount}
             />
           ) : (
             children || <Outlet />

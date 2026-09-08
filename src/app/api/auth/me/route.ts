@@ -54,12 +54,17 @@ export async function GET(req: NextRequest) {
     let trialData: any = null;
 
     if (user.role === "STUDENT") {
+      if (user.status === "PENDING_APPROVAL") {
+        user.status = "ACTIVE";
+        await user.save();
+      }
       profileData = await StudentProfile.findOne({ userId: user._id }).populate("batchId").lean();
 
-      // Check real payment records for this student
-      const payments = await Payment.find({ studentId: user._id }).lean();
-      const hasPaid = payments.some((p: any) => p.status === "PAID");
-      const pendingVerification = payments.some((p: any) => p.status === "PENDING_VERIFICATION");
+      const payments = await Payment.find({ studentId: user._id }).sort({ createdAt: -1 }).lean();
+      const paidPayment = payments.find((p: any) => p.status === "PAID");
+      const pendingPayment = payments.find((p: any) => p.status === "PENDING_VERIFICATION");
+      const hasPaid = !!paidPayment;
+      const pendingVerification = !!pendingPayment;
 
       // Calculate 2-Day (48 Hours) Free Trial
       const start = profileData?.trialStartDate || profileData?.createdAt || user.createdAt || new Date();
@@ -86,6 +91,16 @@ export async function GET(req: NextRequest) {
         hasPaid,
         hasAccess,
         pendingVerification,
+        pendingTransactionId: pendingPayment?.transactionId || undefined,
+        pendingAmount: pendingPayment?.amount || undefined,
+        latestPaid: paidPayment
+          ? {
+              receiptNumber: paidPayment.receiptNumber,
+              amount: paidPayment.amount,
+              billingMonth: paidPayment.billingMonth,
+              paidDate: paidPayment.paidDate,
+            }
+          : null,
       };
     } else if (user.role === "TEACHER") {
       profileData = teacherProfile || (await TeacherProfile.findOne({ userId: user._id }).lean());

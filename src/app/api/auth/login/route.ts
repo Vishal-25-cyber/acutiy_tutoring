@@ -51,14 +51,10 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Invalid credentials. Student not found." }, { status: 401 });
       }
 
+      // Students can log in freely without admin approval
       if (user.status === "PENDING_APPROVAL") {
-        return NextResponse.json(
-          {
-            error: "Your student account is awaiting administrator approval. You will be able to sign in once activated by the admin.",
-            status: "PENDING_APPROVAL",
-          },
-          { status: 403 }
-        );
+        user.status = "ACTIVE";
+        await user.save();
       }
 
       if (user.status === "SUSPENDED" || user.status === "REJECTED") {
@@ -79,12 +75,29 @@ export async function POST(req: NextRequest) {
       // Resolve Student Profile & Assigned Batch Timing
       let studentProfile = await StudentProfile.findOne({ userId: user._id });
       if (!studentProfile) {
+        const start = user.createdAt || new Date();
         studentProfile = await StudentProfile.create({
           userId: user._id,
           currentClass: "Class 10",
           board: "State Board",
           schoolName: "SSVS",
+          trialStartDate: start,
+          trialEndsAt: new Date(new Date(start).getTime() + 2 * 24 * 60 * 60 * 1000),
         });
+      } else {
+        let needsSave = false;
+        if (!studentProfile.trialStartDate) {
+          studentProfile.trialStartDate = user.createdAt || new Date();
+          needsSave = true;
+        }
+        if (!studentProfile.trialEndsAt) {
+          const startMs = new Date(studentProfile.trialStartDate).getTime();
+          studentProfile.trialEndsAt = new Date(startMs + 2 * 24 * 60 * 60 * 1000);
+          needsSave = true;
+        }
+        if (needsSave) {
+          await studentProfile.save();
+        }
       }
 
       const assignedBatchId = studentProfile.batchId ? studentProfile.batchId.toString() : "";
@@ -164,6 +177,12 @@ export async function POST(req: NextRequest) {
         currentClass: studentProfile.currentClass,
       });
 
+      const start = studentProfile.trialStartDate || user.createdAt || new Date();
+      const trialEndDate = studentProfile.trialEndsAt
+        ? new Date(studentProfile.trialEndsAt)
+        : new Date(new Date(start).getTime() + 2 * 24 * 60 * 60 * 1000);
+      const isTrialExpired = Date.now() >= trialEndDate.getTime();
+
       const response = NextResponse.json({
         success: true,
         user: {
@@ -174,6 +193,11 @@ export async function POST(req: NextRequest) {
           currentClass: studentProfile.currentClass,
           batchId: assignedBatchId,
           batchName: assignedBatchName,
+          trial: {
+            isTrialActive: !isTrialExpired,
+            isTrialExpired,
+            trialEndsAt: trialEndDate.toISOString(),
+          },
         },
         token,
       });

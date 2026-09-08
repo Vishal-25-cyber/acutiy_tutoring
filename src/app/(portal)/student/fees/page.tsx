@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   CreditCard,
   CheckCircle2,
@@ -17,6 +18,7 @@ import {
   Info,
   Lock,
   Receipt,
+  Sparkles,
 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { useFastFetch } from "@/lib/api-cache";
@@ -192,6 +194,11 @@ export default function StudentFeesPage() {
               <Lock className="w-3.5 h-3.5 text-amber-600" />
               <span>Payment Locked (Verification in Progress)</span>
             </div>
+          ) : isTrialActive ? (
+            <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              <span>2-Day Free Trial Active</span>
+            </div>
           ) : (
             <button
               type="button"
@@ -204,6 +211,63 @@ export default function StudentFeesPage() {
           )}
         </div>
       </div>
+
+      {/* Complimentary Free Trial Info Banner */}
+      {isTrialActive && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#002137] to-[#004b79] text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md border border-[#dfb74a]/40 animate-in fade-in duration-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#dfb74a]/20 flex items-center justify-center text-[#dfb74a] shrink-0">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-sm sm:text-base text-white">
+                2-Day Free Trial Active (No Tuition Payment Required)
+              </h3>
+              <p className="text-xs text-slate-200 mt-0.5">
+                You are currently enjoying complimentary access. All live classes, notes, and dashboards are 100% unlocked. Fees only become due after your 48-hour trial concludes.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/student/dashboard"
+            className="px-4 py-2 rounded-xl bg-[#dfb74a] hover:bg-[#c9a33e] text-[#002137] font-extrabold text-xs shrink-0 transition-all shadow-sm flex items-center gap-1.5"
+          >
+            <span>Back to Dashboard</span>
+            <span>→</span>
+          </Link>
+        </div>
+      )}
+
+      {/* Payment Successful Banner when student has paid & verified */}
+      {hasPaid && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#001726] border border-emerald-500/30 dark:border-emerald-500/20 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in duration-150">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100">
+                  Payment Successful
+                </h3>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  Verified by Administrator
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                Your monthly tuition fee is fully verified. All live classrooms, study notes, and assignments are unlocked.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/student/classes"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#004b79] hover:bg-[#003b60] text-white font-bold text-xs flex items-center justify-center gap-2 shrink-0 transition-all shadow-xs cursor-pointer group"
+          >
+            <span>Start Learning</span>
+            <span className="group-hover:translate-x-0.5 transition-transform">→</span>
+          </Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-200 dark:divide-slate-800 pb-2">
         <div className="py-2 sm:px-6 first:pl-0 space-y-1">

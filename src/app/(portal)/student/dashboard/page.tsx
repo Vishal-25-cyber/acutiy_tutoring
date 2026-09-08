@@ -16,10 +16,12 @@ import {
   Clock,
   GraduationCap,
   Hash,
+  ArrowRight,
 } from "lucide-react";
 import { useFastFetch } from "@/lib/api-cache";
 import { formatStudentId } from "@/lib/id-generator";
 import { PortalHeader } from "@/components/layout/PortalHeader";
+import { StudentTrialCountdownBanner } from "@/components/student/StudentTrialCountdownBanner";
 
 
 export default function StudentDashboardPage() {
@@ -29,7 +31,8 @@ export default function StudentDashboardPage() {
 
   const authUser = authData?.user;
   const trial = authUser?.trial;
-  const isTrialActive = !trial?.hasPaid && !!trial?.isTrialActive;
+  const hasPaid = !!trial?.hasPaid || !!paymentData?.history?.length || !!data?.feeStatus?.isPaid;
+  const isTrialActive = !hasPaid && !!trial?.isTrialActive;
   const student = data?.student;
 
   const rawName = student?.name || (authUser?.role === "STUDENT" ? authUser?.name : null) || "Student";
@@ -104,15 +107,66 @@ export default function StudentDashboardPage() {
       
       {/* ── 1. CLEAN HEADER (PERFECT ALIGNMENT) ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200 dark:border-slate-800">
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-          Welcome, {safeName}
-        </h1>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+            Welcome, {safeName}
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+            {classLevel} • {board} • {batchName}
+          </p>
+        </div>
 
-        <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
-          <Calendar className="w-4 h-4 text-slate-400" />
-          <span>{todayFormatted}</span>
+        <div className="flex flex-col items-start sm:items-end gap-1 shrink-0">
+          <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
+            <Calendar className="w-4 h-4 text-slate-400" />
+            <span>{todayFormatted}</span>
+          </div>
+
+          {/* Cardless countdown directly under the date */}
+          {isTrialActive && (
+            <StudentTrialCountdownBanner
+              trialEndsAt={trial?.trialEndsAt}
+              trialStartDate={trial?.trialStartDate}
+              remainingHours={trial?.remainingHours}
+              studentName={safeName}
+              onExpire={() => {
+                window.location.reload();
+              }}
+            />
+          )}
         </div>
       </div>
+
+      {/* ── PAYMENT SUCCESSFUL CARD (CLEAN & SIMPLE) ── */}
+      {hasPaid && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#001726] border border-emerald-500/30 dark:border-emerald-500/20 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100">
+                  Payment Successful
+                </h3>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  Account Approved
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                Your tuition payment has been verified by the administrator. All live classes, syllabus notes, and academic portals are unlocked.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/student/classes"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#004b79] hover:bg-[#003b60] text-white font-bold text-xs flex items-center justify-center gap-2 shrink-0 transition-all shadow-xs cursor-pointer group"
+          >
+            <span>Start Learning</span>
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
+        </div>
+      )}
 
       {/* ── 2. ACADEMIC VITAL METRICS (BORDERLESS EQUAL ALIGNMENT) ── */}
       <div>

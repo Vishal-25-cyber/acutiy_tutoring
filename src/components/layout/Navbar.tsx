@@ -11,7 +11,7 @@ export function Navbar() {
   const navLinks = [
     { name: "About", href: "/#about" },
     { name: "Tutoring Hub", href: "/#tutoring-hub" },
-    { name: "Our Side", href: "/#our-side" },
+    { name: "Our Works", href: "/#our-works" },
     { name: "Team", href: "/#team" },
     { name: "Testimonials", href: "/#testimonials" },
     { name: "Gallery", href: "/#gallery" },
@@ -40,7 +40,7 @@ export function Navbar() {
           </div>
         </Link>
 
-        {/* Desktop Navigation & 3-Lines Sidebar Button */}
+        {/* Desktop Navigation */}
         <div className="flex items-center gap-4 sm:gap-6">
           <nav className="hidden lg:flex items-center gap-7 xl:gap-8 text-sm font-bold text-slate-700 dark:text-slate-200">
             {navLinks.map((item) => (
@@ -55,11 +55,11 @@ export function Navbar() {
             ))}
           </nav>
 
-          {/* 3-Lines Hamburger Button (Universal on Desktop & Mobile) */}
+          {/* 3-Lines Hamburger Button (Mobile Only) */}
           <button
             type="button"
             onClick={() => setIsOpen(!isOpen)}
-            className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-slate-700 hover:text-[#004b79] dark:text-slate-300 dark:hover:text-[#dfb74a] hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition-all cursor-pointer shadow-2xs"
+            className="lg:hidden p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-slate-700 hover:text-[#004b79] dark:text-slate-300 dark:hover:text-[#dfb74a] hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition-all cursor-pointer shadow-2xs"
             aria-label="Toggle navigation sidebar"
           >
             {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
