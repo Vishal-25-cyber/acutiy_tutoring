@@ -1,0 +1,20 @@
+﻿# robots.txt for https://mantif.com
+User-agent: *
+Allow: /
+Allow: /images/
+Allow: /videos/
+
+# Disallow private user portals and internal APIs
+Disallow: /admin/
+Disallow: /admin/*
+Disallow: /teacher/
+Disallow: /teacher/*
+Disallow: /student/
+Disallow: /student/*
+Disallow: /classroom/
+Disallow: /classroom/*
+Disallow: /api/
+Disallow: /api/*
+
+# Sitemap Location
+Sitemap: https://mantif.com/sitemap.xml
