@@ -1,8 +1,30 @@
-﻿# robots.txt for https://mantif.com
+# robots.txt for https://mantif.com
 User-agent: *
 Allow: /
 Allow: /images/
 Allow: /videos/
+Allow: /favicon*
+Allow: /site.webmanifest
+
+User-agent: Googlebot-Favicon
+Allow: /
+Allow: /favicon*
+Allow: /images/
+
+User-agent: Googlebot-Image
+Allow: /
+Allow: /favicon*
+Allow: /images/
+
+User-agent: Bingbot
+Allow: /
+Allow: /favicon*
+Allow: /images/
+
+User-agent: Applebot
+Allow: /
+Allow: /favicon*
+Allow: /images/
 
 # Disallow private user portals and internal APIs
 Disallow: /admin/

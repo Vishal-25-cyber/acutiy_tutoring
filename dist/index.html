@@ -20,31 +20,39 @@
     </script>
     <!-- Critical Asset Preloading -->
     <link rel="preload" as="image" href="/images/mantif_logo.png" />
-    <!-- Favicon and App Icons -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/site.webmanifest" />
+    <!-- Favicon and App Icons (Versioned for Instant Search & Browser Cache Invalidation) -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=6" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=6" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=6" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=6" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=6" />
+    <link rel="manifest" href="/site.webmanifest?v=6" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <!-- Primary SEO Meta Tags -->
+    <!-- Primary SEO & Search Engine Summary Meta Tags (Google, Bing, Yahoo, DuckDuckGo, Safari, Edge) -->
     <title>Mantif — Human x Artificial Intelligence | Online Tutoring &amp; Learning Platform</title>
     <meta name="title" content="Mantif — Human x Artificial Intelligence | Online Tutoring &amp; Learning Platform" />
     <meta name="description" content="Mantif is an intelligent online tutoring platform combining expert educators with AI-powered personalized learning for Classes 6 to 10. Live interactive classrooms, curriculum mastery, and real-world results." />
+    <meta name="abstract" content="Mantif — Human x Artificial Intelligence Online Tutoring &amp; Learning Platform for Classes 6 to 10." />
+    <meta name="summary" content="Mantif delivers live interactive online classes, formula handbooks, personalized mentoring, and AI-powered learning assistance for students in Classes 6 through 10." />
+    <meta name="subject" content="Online Tutoring, Live Interactive Classes, AI Learning for Classes 6-10" />
+    <meta name="topic" content="CBSE and State Board Online Tuition" />
+    <meta name="classification" content="Education, Online Tuition, AI Learning Platform" />
     <meta name="keywords" content="Mantif, Mantif Tutoring, online tuition, live classes, Class 6 to 10 tuition, CBSE tuition, ICSE tuition, AI tutoring, online tutoring India, Mathematics tuition, Science tuition, personalized learning, interactive live classroom" />
     <meta name="author" content="Mantif Education" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <link rel="canonical" href="https://mantif.com/" />
     <meta name="theme-color" content="#002137" />
 
-    <!-- Open Graph / Facebook / WhatsApp / LinkedIn -->
+    <!-- Open Graph / Facebook / WhatsApp / LinkedIn / Edge / Safari Rich Previews -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://mantif.com/" />
     <meta property="og:title" content="Mantif — Human x Artificial Intelligence | Online Tutoring Platform" />
-    <meta property="og:description" content="Personalized online tuition for Classes 6 to 10 powered by expert faculty and intelligent AI assistance. Join live interactive classes today." />
+    <meta property="og:description" content="Mantif is an intelligent online tutoring platform combining expert educators with AI-powered personalized learning for Classes 6 to 10. Live interactive classrooms, curriculum mastery, and real-world results." />
     <meta property="og:image" content="https://mantif.com/images/mantif_logo.png" />
+    <meta property="og:image:width" content="1024" />
+    <meta property="og:image:height" content="682" />
+    <meta property="og:image:alt" content="Mantif Logo" />
     <meta property="og:site_name" content="Mantif" />
     <meta property="og:locale" content="en_US" />
 
@@ -56,7 +64,7 @@
     <meta name="twitter:image" content="https://mantif.com/images/mantif_logo.png" />
     <meta name="twitter:domain" content="mantif.com" />
 
-    <!-- Structured Data (JSON-LD) for Search Engines -->
+    <!-- Structured Data (JSON-LD) for Search Engines & AI Assistants -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -65,9 +73,16 @@
           "@type": "EducationalOrganization",
           "@id": "https://mantif.com/#organization",
           "name": "Mantif",
+          "alternateName": "Mantif Tutoring",
+          "slogan": "Human x Artificial Intelligence",
           "url": "https://mantif.com",
-          "logo": "https://mantif.com/images/mantif_logo.png",
-          "description": "MSME-registered EdTech platform offering live interactive tutoring and AI-assisted personalized learning for school students.",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://mantif.com/images/mantif_logo.png",
+            "width": 1024,
+            "height": 682
+          },
+          "description": "MSME-registered EdTech platform offering live interactive tutoring and AI-assisted personalized learning for school students in Classes 6 through 10.",
           "email": "info@mantif.com",
           "telephone": "+91 98427 43538",
           "sameAs": [
@@ -80,6 +95,7 @@
           "@id": "https://mantif.com/#website",
           "url": "https://mantif.com",
           "name": "Mantif Tutoring",
+          "description": "Intelligent online tutoring platform combining expert educators with AI-powered personalized learning.",
           "publisher": {
             "@id": "https://mantif.com/#organization"
           }
@@ -97,6 +113,35 @@
             "courseMode": "Online",
             "courseWorkload": "PT1H"
           }
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is Mantif?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Mantif is an intelligent online tutoring platform that pairs expert subject teachers with AI-assisted learning for school students in Classes 6 to 10."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Which classes and boards does Mantif support?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Mantif provides comprehensive tutoring for Classes 6, 7, 8, 9, and 10 across CBSE and State Board curricula in Mathematics, Science, and English."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How do live tutoring sessions work on Mantif?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Classes are conducted live online with interactive video, two-way audio, digital whiteboard, doubt resolution, and recorded sessions available in the Learning Hub."
+              }
+            }
+          ]
         }
       ]
     }
@@ -111,6 +156,52 @@
     <link rel="stylesheet" crossorigin href="/assets/index-CyPgmWgz.css">
   </head>
   <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased font-sans">
-    <div id="root"></div>
+    <!-- Pre-rendered Semantic SEO Fallback (Crawled by Google, Bing, Yahoo, DuckDuckGo, Edge Copilot, Safari) -->
+    <div id="root">
+      <div style="max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #0f172a;">
+        <header style="margin-bottom: 2rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1.5rem;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1rem;">
+            <img src="/images/mantif_icon.png" alt="Mantif Logo" width="48" height="48" style="border-radius: 12px; object-fit: contain;" />
+            <div>
+              <span style="font-size: 24px; font-weight: 900; letter-spacing: 0.1em; color: #002137; font-family: 'Montserrat', sans-serif;">M<span style="color: #b89047;">Λ</span>NTIF</span>
+              <p style="font-size: 11px; font-weight: 700; color: #b89047; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">Human x Artificial Intelligence</p>
+            </div>
+          </div>
+          <h1 style="font-size: 2rem; font-weight: 800; color: #002137; line-height: 1.25; margin: 0.5rem 0;">
+            Mantif — Human x Artificial Intelligence | Online Tutoring &amp; Learning Platform
+          </h1>
+          <p style="font-size: 1.1rem; color: #475569; max-width: 800px; line-height: 1.6;">
+            Mantif is an intelligent online tutoring platform combining expert educators with AI-powered personalized learning for Classes 6 to 10. Live interactive classrooms, curriculum mastery, and real-world results.
+          </p>
+        </header>
+
+        <main style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+          <section style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem;">
+            <h2 style="font-size: 1.25rem; font-weight: 700; color: #002137; margin-top: 0;">Comprehensive Curriculum</h2>
+            <p style="font-size: 0.95rem; color: #64748b; line-height: 1.6;">
+              Strictly aligned with CBSE and State Board standards for Class 6, Class 7, Class 8, Class 9, and Class 10. Comprehensive syllabus coverage across Mathematics, Science (Physics, Chemistry, Biology), and English.
+            </p>
+          </section>
+
+          <section style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem;">
+            <h2 style="font-size: 1.25rem; font-weight: 700; color: #002137; margin-top: 0;">Live Interactive Classrooms</h2>
+            <p style="font-size: 0.95rem; color: #64748b; line-height: 1.6;">
+              High-definition live video sessions with verified academic faculty, interactive whiteboard, live doubt resolution, and real-time attendance tracking.
+            </p>
+          </section>
+
+          <section style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem;">
+            <h2 style="font-size: 1.25rem; font-weight: 700; color: #002137; margin-top: 0;">AI Learning Assistant &amp; Resources</h2>
+            <p style="font-size: 0.95rem; color: #64748b; line-height: 1.6;">
+              24/7 AI-powered continuous learning, formula handbooks, syllabus-specific question papers, and downloadable study guides in our dedicated Learning Hub.
+            </p>
+          </section>
+        </main>
+
+        <footer style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0; color: #94a3b8; font-size: 0.85rem;">
+          <p>Mantif Education Platform • MSME Registered Educational Institution • Contact: info@mantif.com | +91 98427 43538 • <a href="https://mantif.com" style="color: #004b79; text-decoration: none; font-weight: 600;">https://mantif.com</a></p>
+        </footer>
+      </div>
+    </div>
   </body>
 </html>

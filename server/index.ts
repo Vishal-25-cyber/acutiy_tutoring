@@ -234,6 +234,8 @@ app.use(
         res.setHeader("Expires", "0");
       } else if (normalizedPath.includes("/assets/")) {
         res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      } else if (normalizedPath.includes("favicon") || normalizedPath.endsWith("site.webmanifest")) {
+        res.setHeader("Cache-Control", "no-cache, must-revalidate");
       } else if (/\.(jpe?g|png|webp|svg|gif|ico|avif|woff2?|ttf|eot|mp4|webm)$/i.test(normalizedPath)) {
         res.setHeader("Cache-Control", "public, max-age=604800, stale-while-revalidate=86400");
       }
