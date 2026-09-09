@@ -48,6 +48,7 @@ function RemoteVideoView({
       ref={videoElRef}
       autoPlay
       playsInline
+      muted
       className={className}
     />
   );
@@ -179,7 +180,6 @@ export function JitsiClassroom({
   /* ── Main Stage Fullscreen ── */
   const mainStageRef = useRef<HTMLDivElement | null>(null);
   const [isHostFullscreen, setIsHostFullscreen] = useState(false);
-  const [showFilmstrip, setShowFilmstrip] = useState<boolean>(true);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -819,6 +819,11 @@ export function JitsiClassroom({
               isPTeacher = true;
             }
 
+            // CRITICAL: If the current user is the host teacher, any remote participant is a student/viewer
+            if (userInfoRef.current.isTeacher) {
+              isPTeacher = false;
+            }
+
             // Check admitted list for accurate name if still generic
             if (!parsedName || parsedName === "Student") {
               const matchedAdmitted = admittedListRef.current.find(a => String(a.userId) === String(p.identity));
@@ -826,13 +831,13 @@ export function JitsiClassroom({
             }
 
             const hasCam = Array.from(p.trackPublications.values()).some(
-              (pub) => pub.source === Track.Source.Camera && pub.isSubscribed && !pub.isMuted
-            );
+              (pub) => (pub.source === Track.Source.Camera || pub.kind === Track.Kind.Video) && !pub.isMuted
+            ) || Boolean(remoteTracks[p.identity]?.videoTrack);
             const hasMic = Array.from(p.trackPublications.values()).some(
-              (pub) => pub.source === Track.Source.Microphone && pub.isSubscribed && !pub.isMuted
+              (pub) => pub.source === Track.Source.Microphone && !pub.isMuted
             );
             const hasScreen = Array.from(p.trackPublications.values()).some(
-              (pub) => pub.source === Track.Source.ScreenShare && pub.isSubscribed && !pub.isMuted
+              (pub) => pub.source === Track.Source.ScreenShare && !pub.isMuted
             );
 
             list.push({
@@ -844,18 +849,38 @@ export function JitsiClassroom({
               isScreenSharing: hasScreen,
               lastSeen: Date.now(),
             });
+
+            // Also ensure remote tracks from existing publications are registered
+            p.trackPublications.forEach((pub) => {
+              if (pub.track && pub.track.kind === Track.Kind.Video) {
+                const isScreen = pub.source === Track.Source.ScreenShare || pub.track.source === Track.Source.ScreenShare;
+                setRemoteTracks((prev) => {
+                  if (!isScreen && prev[p.identity]?.videoTrack === pub.track) return prev;
+                  if (isScreen && prev[p.identity]?.screenTrack === pub.track) return prev;
+                  return {
+                    ...prev,
+                    [p.identity]: {
+                      ...prev[p.identity],
+                      videoTrack: !isScreen ? pub.track : prev[p.identity]?.videoTrack,
+                      screenTrack: isScreen ? pub.track : prev[p.identity]?.screenTrack,
+                    },
+                  };
+                });
+              }
+            });
           });
 
           // If Host/Teacher: also immediately display admitted students who are currently connecting
           if (userInfoRef.current.isTeacher) {
             admittedListRef.current.forEach((admitted) => {
-              if (seen.has(admitted.userId) || String(admitted.userId) === String(userInfoRef.current.id)) return;
-              seen.add(admitted.userId);
+              const uId = String(admitted.userId);
+              if (seen.has(uId)) return;
+              seen.add(uId);
               list.push({
-                id: admitted.userId,
+                id: uId,
                 name: admitted.name || "Student",
                 role: "STUDENT",
-                isCameraOn: false,
+                isCameraOn: Boolean(remoteTracks[uId]?.videoTrack),
                 isMicOn: false,
                 lastSeen: Date.now(),
               });
@@ -1068,8 +1093,13 @@ export function JitsiClassroom({
         } catch (e) {}
 
         // Enable local camera and mic
-        await room.localParticipant.setCameraEnabled(isCameraOnRef.current);
-        await room.localParticipant.setMicrophoneEnabled(isMicOnRef.current);
+        const shouldEnableCam = isCameraOnRef.current || !userInfoRef.current.isTeacher;
+        await room.localParticipant.setCameraEnabled(shouldEnableCam);
+        if (shouldEnableCam) {
+          setIsCameraOn(true);
+          isCameraOnRef.current = true;
+        }
+        await room.localParticipant.setMicrophoneEnabled(isMicOnRef.current || !userInfoRef.current.isTeacher);
 
         // Attach local camera video track to local preview
         const camPub = room.localParticipant.getTrackPublication(Track.Source.Camera);
@@ -1928,14 +1958,21 @@ export function JitsiClassroom({
               }
 
               // Pinned remote participant
-              const pinnedP = realtimeParticipants.find((p) => p.id === pinnedParticipantId);
+              const pinnedP = realtimeParticipants.find((p) => p.id === pinnedParticipantId) ||
+                (admittedList.find((a) => a.userId === pinnedParticipantId) ? {
+                  id: pinnedParticipantId,
+                  name: admittedList.find((a) => a.userId === pinnedParticipantId)?.name || "Student",
+                  role: "STUDENT" as const,
+                  isCameraOn: Boolean(remoteTracks[pinnedParticipantId]?.videoTrack),
+                  isMicOn: true,
+                } : null);
+
               if (pinnedP) {
-                const track = remoteTracks[pinnedP.id]?.screenTrack || remoteTracks[pinnedP.id]?.videoTrack;
-                const isScreen = Boolean(remoteTracks[pinnedP.id]?.screenTrack);
+                const track = remoteTracks[pinnedP.id]?.screenTrack || remoteTracks[pinnedP.id]?.videoTrack || remoteTracks[String(pinnedP.id)]?.videoTrack;
 
                 return (
                   <div className="relative w-full h-full flex items-center justify-center">
-                    {track && (pinnedP.isCameraOn || isScreen) ? (
+                    {track ? (
                       <RemoteVideoView
                         track={track}
                         className="w-full h-full transition-all duration-200 object-contain bg-black"
@@ -1953,7 +1990,7 @@ export function JitsiClassroom({
                     )}
                     <div className="absolute bottom-3 left-3 px-2.5 py-1 rounded-md bg-black/70 backdrop-blur-sm text-xs font-medium text-white flex items-center gap-1.5 z-10 border border-white/10">
                       {pinnedP.isMicOn !== false ? <Mic className="w-3.5 h-3.5 text-emerald-400" /> : <MicOff className="w-3.5 h-3.5 text-rose-400" />}
-                      <span>{pinnedP.name} · {pinnedP.role === "TEACHER" ? "Host" : "Student"}</span>
+                      <span>{pinnedP.name} · {pinnedP.role === "TEACHER" ? "Host" : "Student"} (Pinned)</span>
                     </div>
                   </div>
                 );
@@ -2032,28 +2069,18 @@ export function JitsiClassroom({
             );
           })()}
 
-          {/* Action Bar: Unpin, Filmstrip Toggle, and Full Screen Toggle */}
+          {/* Action Bar: Unpin and Full Screen Toggle */}
           <div className="absolute top-3 left-3 flex items-center gap-1.5 sm:gap-2 z-20 flex-wrap max-w-[80%]">
             {pinnedParticipantId && (
               <button
                 onClick={() => setPinnedParticipantId(null)}
-                className="px-2.5 py-1.5 rounded-lg bg-black/75 hover:bg-black/90 text-white text-xs font-medium flex items-center gap-1.5 backdrop-blur-sm border border-white/20 transition-all cursor-pointer shadow-md"
+                className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1.5 backdrop-blur-sm border border-blue-400/30 transition-all cursor-pointer shadow-md"
                 title="Unpin and return to Host"
               >
-                <PinOff className="w-3.5 h-3.5 text-blue-400" />
-                <span className="hidden sm:inline">Unpin</span>
+                <PinOff className="w-3.5 h-3.5 text-white" />
+                <span>Unpin</span>
               </button>
             )}
-
-            {/* Filmstrip Hide/Show Toggle */}
-            <button
-              onClick={() => setShowFilmstrip((prev) => !prev)}
-              className="flex px-2.5 py-1.5 rounded-lg bg-black/75 hover:bg-black/90 text-white text-xs font-medium items-center gap-1.5 backdrop-blur-sm border border-white/20 hover:border-white/40 transition-all cursor-pointer shadow-md"
-              title={showFilmstrip ? "Hide sidebar filmstrip for full stage" : "Show sidebar filmstrip"}
-            >
-              <Users className="w-3.5 h-3.5 text-sky-400" />
-              <span>{showFilmstrip ? "Hide Filmstrip" : "Show Filmstrip"}</span>
-            </button>
 
             {/* Fullscreen Button */}
             <button
@@ -2074,108 +2101,10 @@ export function JitsiClassroom({
               )}
             </button>
           </div>
-
-          {/* Picture-in-Picture (PiP) Floating Card — Active when Filmstrip is hidden */}
-          {!showFilmstrip && (
-            <div className="absolute top-3 right-3 w-28 sm:w-36 aspect-video rounded-xl overflow-hidden border-2 border-white/20 bg-black shadow-2xl z-20">
-              {!userInfo.isTeacher ? (
-                pinnedParticipantId === userInfo.id ? (
-                  // Student pinned themselves: show Host Teacher in PiP
-                  remoteTeacher ? (
-                    (() => {
-                      const teacherTrack = teacherTrackInfo?.videoTrack || teacherTrackInfo?.screenTrack;
-                      return (
-                        <div className="relative w-full h-full flex items-center justify-center">
-                          {teacherTrack && remoteTeacher.isCameraOn ? (
-                            <RemoteVideoView track={teacherTrack} className="w-full h-full object-contain bg-black" />
-                          ) : (
-                            <div className="flex flex-col items-center gap-1 text-center p-1">
-                              <div className="w-8 h-8 rounded-full bg-indigo-700 flex items-center justify-center text-[11px] font-bold text-white shadow">
-                                {initials(teacherName)}
-                              </div>
-                              <span className="text-[10px] text-slate-300 truncate max-w-[80px]">{teacherName}</span>
-                            </div>
-                          )}
-                          <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/80 text-[9px] font-semibold text-white flex items-center gap-1">
-                            {remoteTeacher.isMicOn !== false ? <Mic className="w-2.5 h-2.5 text-emerald-400" /> : <MicOff className="w-2.5 h-2.5 text-rose-400" />}
-                            <span className="truncate max-w-[60px]">{teacherName}</span>
-                          </div>
-                        </div>
-                      );
-                    })()
-                  ) : null
-                ) : (
-                  // Normal student self-view in PiP
-                  <div className="relative w-full h-full flex items-center justify-center">
-                    {isCameraOn ? (
-                      <video
-                        ref={(el) => {
-                          localVideoRef.current = el;
-                          if (el) {
-                            if (localStreamRef.current && el.srcObject !== localStreamRef.current) {
-                              el.srcObject = localStreamRef.current;
-                            }
-                            el.play().catch(() => {});
-                          }
-                        }}
-                        autoPlay
-                        playsInline
-                        muted
-                        className="w-full h-full object-contain bg-black -scale-x-100"
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center gap-1 text-center p-1">
-                        <div className="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center text-[11px] font-bold text-white shadow">
-                          {initials(userInfo.name)}
-                        </div>
-                        <span className="text-[10px] font-medium text-slate-300">You</span>
-                      </div>
-                    )}
-                    <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/80 text-[9px] font-semibold text-white flex items-center gap-1">
-                      {isMicOn ? <Mic className="w-2.5 h-2.5 text-emerald-400" /> : <MicOff className="w-2.5 h-2.5 text-rose-400" />}
-                      <span>You</span>
-                    </div>
-                  </div>
-                )
-              ) : (
-                // Teacher viewing remote student on PiP (if any)
-                realtimeParticipants.filter((p) => p.id !== userInfo.id).length > 0 ? (
-                  (() => {
-                    const firstStudent = realtimeParticipants.filter((p) => p.id !== userInfo.id)[0];
-                    const track = remoteTracks[firstStudent.id]?.videoTrack;
-                    return (
-                      <div className="relative w-full h-full flex items-center justify-center">
-                        {track && firstStudent.isCameraOn ? (
-                          <RemoteVideoView track={track} className="w-full h-full object-contain bg-black" />
-                        ) : (
-                          <div className="flex flex-col items-center gap-1 text-center p-1">
-                            <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-[11px] font-bold text-slate-200">
-                              {initials(firstStudent.name)}
-                            </div>
-                            <span className="text-[10px] text-slate-300 truncate max-w-[80px]">{firstStudent.name}</span>
-                          </div>
-                        )}
-                        <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/80 text-[9px] font-semibold text-white flex items-center gap-1">
-                          {firstStudent.isMicOn !== false ? <Mic className="w-2.5 h-2.5 text-emerald-400" /> : <MicOff className="w-2.5 h-2.5 text-rose-400" />}
-                          <span className="truncate max-w-[60px]">{firstStudent.name}</span>
-                        </div>
-                      </div>
-                    );
-                  })()
-                ) : (
-                  <div className="relative w-full h-full flex items-center justify-center">
-                    <div className="flex flex-col items-center gap-1 text-center p-1">
-                      <span className="text-[10px] text-slate-400 font-medium">Solo host</span>
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-          )}
         </div>
 
         {/* ── 2. Right Side Filmstrip (Small Tiles, Google Meet Style) ── */}
-        <div className={`${showFilmstrip ? "flex" : "hidden"} w-36 sm:w-48 md:w-56 lg:w-72 max-w-[28%] sm:max-w-[30%] h-full min-h-0 flex-col gap-2 overflow-y-auto shrink-0 pr-1 select-none transition-all duration-200`}>
+        <div className="flex w-32 sm:w-44 md:w-56 lg:w-72 max-w-[32%] sm:max-w-[30%] h-full min-h-0 flex-col gap-2 overflow-y-auto shrink-0 pr-1 select-none transition-all duration-200">
           {(() => {
             const activeRemoteTeacher = realtimeParticipants.find((p) => p.role === "TEACHER" && p.id !== userInfo.id);
 
@@ -2193,12 +2122,12 @@ export function JitsiClassroom({
             return (
               <>
                 {/* 1. Host Teacher Tile in Filmstrip: ALWAYS FIRST (#1) AT THE TOP whenever not on main stage! */}
-                {/* "the host should not moved to the last if student joined and on the camera it should display indown of the host" */}
                 {!isHostOnMainStage && (
                   isLocalTeacher ? (
                     <div
                       key="host-teacher-self"
-                      className="aspect-video w-full rounded-xl overflow-hidden bg-black border-2 border-emerald-500/40 relative flex items-center justify-center shrink-0 group shadow-md"
+                      onClick={() => setPinnedParticipantId(null)}
+                      className="aspect-video w-full rounded-xl overflow-hidden bg-black border-2 border-emerald-500/40 relative flex items-center justify-center shrink-0 group shadow-md cursor-pointer hover:border-emerald-400"
                     >
                       {isCameraOn || isScreenSharing ? (
                         <video
@@ -2229,22 +2158,28 @@ export function JitsiClassroom({
                         <span className="truncate max-w-[80px] sm:max-w-[100px]">{userInfo.name} (You) · Host</span>
                       </div>
                       <button
-                        onClick={() => setPinnedParticipantId(null)}
-                        className="absolute top-1.5 right-1.5 p-1 rounded bg-black/60 hover:bg-black/90 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPinnedParticipantId(null);
+                        }}
+                        className="absolute top-1.5 right-1.5 px-2 py-0.5 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold flex items-center gap-1 shadow-md cursor-pointer z-10"
                         title="Return Host to main stage"
                       >
-                        <Pin className="w-3 h-3 text-emerald-400" />
+                        <Pin className="w-2.5 h-2.5 fill-current" />
+                        <span>Host</span>
                       </button>
                     </div>
                   ) : activeRemoteTeacher ? (
                     (() => {
-                      const teacherTrack = remoteTracks[activeRemoteTeacher.id]?.screenTrack || remoteTracks[activeRemoteTeacher.id]?.videoTrack;
+                      const teacherTrack = remoteTracks[activeRemoteTeacher.id]?.screenTrack || remoteTracks[activeRemoteTeacher.id]?.videoTrack || remoteTracks[String(activeRemoteTeacher.id)]?.videoTrack;
                       const isScreen = Boolean(remoteTracks[activeRemoteTeacher.id]?.screenTrack);
 
                       return (
                         <div
                           key={`host-${activeRemoteTeacher.id}`}
-                          className="aspect-video w-full rounded-xl overflow-hidden bg-black border-2 border-emerald-500/50 relative flex items-center justify-center shrink-0 group shadow-md"
+                          onClick={() => setPinnedParticipantId(null)}
+                          className="aspect-video w-full rounded-xl overflow-hidden bg-black border-2 border-emerald-500/50 relative flex items-center justify-center shrink-0 group shadow-md cursor-pointer hover:border-emerald-400"
                         >
                           {teacherTrack && (activeRemoteTeacher.isCameraOn || isScreen) ? (
                             <RemoteVideoView track={teacherTrack} className="w-full h-full object-contain bg-black" />
@@ -2262,11 +2197,16 @@ export function JitsiClassroom({
                             <span className="truncate max-w-[80px] sm:max-w-[100px]">{activeRemoteTeacher.name} · Host</span>
                           </div>
                           <button
-                            onClick={() => setPinnedParticipantId(null)}
-                            className="absolute top-1.5 right-1.5 p-1 rounded bg-black/60 hover:bg-black/90 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPinnedParticipantId(null);
+                            }}
+                            className="absolute top-1.5 right-1.5 px-2 py-0.5 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold flex items-center gap-1 shadow-md cursor-pointer z-10"
                             title="Return Host to main stage"
                           >
-                            <Pin className="w-3 h-3 text-emerald-400" />
+                            <Pin className="w-2.5 h-2.5 fill-current" />
+                            <span>Host</span>
                           </button>
                         </div>
                       );
@@ -2275,12 +2215,11 @@ export function JitsiClassroom({
                 )}
 
                 {/* 2. Student Self-View Tile in Filmstrip */}
-                {/* NEVER show self-view in strip if student is already pinned to main stage! */}
-                {/* "I pinned my but it showing in right also fix it" */}
                 {!userInfo.isTeacher && pinnedParticipantId !== userInfo.id && (
                   <div
                     key="student-self"
-                    className="aspect-video w-full rounded-xl overflow-hidden bg-black border border-white/10 relative flex items-center justify-center shrink-0 group"
+                    onClick={() => setPinnedParticipantId(userInfo.id)}
+                    className="aspect-video w-full rounded-xl overflow-hidden bg-black border border-white/10 relative flex items-center justify-center shrink-0 group hover:border-blue-500/60 cursor-pointer shadow-sm"
                   >
                     {isCameraOn ? (
                       <video
@@ -2320,21 +2259,26 @@ export function JitsiClassroom({
                       </div>
                     )}
                     <button
-                      onClick={() => setPinnedParticipantId(userInfo.id)}
-                      className="absolute top-1.5 right-1.5 p-1 rounded bg-black/60 hover:bg-black/90 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPinnedParticipantId(userInfo.id);
+                      }}
+                      className="absolute top-1.5 right-1.5 px-2 py-0.5 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold flex items-center gap-1 shadow-md transition-all cursor-pointer z-10"
                       title="Pin to main stage"
                     >
-                      <Pin className="w-3 h-3" />
+                      <Pin className="w-2.5 h-2.5 fill-current" />
+                      <span>Pin</span>
                     </button>
                   </div>
                 )}
 
                 {/* 3. Other Remote Students: Rendered below the Host, sorted with Camera ON first */}
-                {/* "if any student on the camera it should also displayed at the right of the student but the host should not moved to the last if student joined and on the camera it should display indown of the host" */}
                 {realtimeParticipants
                   .filter((p) => {
-                    // Do not duplicate oneself
-                    if (p.id === userInfo.id) return false;
+                    // If student: do not duplicate oneself (self-view is rendered above at #2)
+                    // If teacher: keep all remote participants (never drop even if testing on same account)
+                    if (!userInfo.isTeacher && p.id === userInfo.id) return false;
                     // Do not duplicate pinned participant on main stage
                     if (pinnedParticipantId && p.id === pinnedParticipantId) return false;
                     // If student is viewing without pinning, activeRemoteTeacher is already on main stage
@@ -2350,15 +2294,16 @@ export function JitsiClassroom({
                     return a.name.localeCompare(b.name);
                   })
                   .map((p) => {
-                    const track = remoteTracks[p.id]?.videoTrack;
+                    const track = remoteTracks[p.id]?.videoTrack || remoteTracks[p.id]?.screenTrack || remoteTracks[String(p.id)]?.videoTrack;
                     const isHandUp = p.isHandRaised || (remoteParticipant?.id === p.id && remoteHandRaised);
 
                     return (
                       <div
                         key={p.id}
-                        className="aspect-video w-full rounded-xl overflow-hidden bg-black border border-white/10 relative flex items-center justify-center shrink-0 group transition-all hover:border-white/30"
+                        onClick={() => setPinnedParticipantId(p.id)}
+                        className="aspect-video w-full rounded-xl overflow-hidden bg-black border border-white/10 relative flex items-center justify-center shrink-0 group transition-all hover:border-blue-500/60 cursor-pointer shadow-sm"
                       >
-                        {p.isCameraOn && track ? (
+                        {track ? (
                           <RemoteVideoView track={track} className="w-full h-full object-contain bg-black" />
                         ) : (
                           <div className="flex flex-col items-center gap-1 text-center px-2">
@@ -2392,11 +2337,16 @@ export function JitsiClassroom({
 
                         {/* Pin action button */}
                         <button
-                          onClick={() => setPinnedParticipantId(p.id)}
-                          className="absolute top-1.5 right-1.5 p-1 rounded bg-black/60 hover:bg-black/90 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPinnedParticipantId(p.id);
+                          }}
+                          className="absolute top-1.5 right-1.5 px-2 py-0.5 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold flex items-center gap-1 shadow-md transition-all cursor-pointer z-10"
                           title={`Pin ${p.name} to main stage`}
                         >
-                          <Pin className="w-3 h-3" />
+                          <Pin className="w-2.5 h-2.5 fill-current" />
+                          <span>Pin</span>
                         </button>
                       </div>
                     );
@@ -2407,7 +2357,7 @@ export function JitsiClassroom({
 
           {/* Empty state when teacher is live and no students joined yet */}
           {userInfo.isTeacher &&
-            realtimeParticipants.filter((p) => p.id !== userInfo.id).length === 0 && (
+            realtimeParticipants.filter((p) => (userInfo.isTeacher ? true : p.id !== userInfo.id) && p.id !== pinnedParticipantId).length === 0 && (
               <div className="p-3 rounded-xl bg-white/[0.03] border border-dashed border-white/10 flex flex-col items-center justify-center text-center gap-2 py-6 text-slate-400">
                 <Users className="w-5 h-5 text-slate-500" />
                 <p className="text-xs font-medium text-slate-300">Students appear here</p>
