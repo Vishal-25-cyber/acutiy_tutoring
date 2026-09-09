@@ -51,8 +51,8 @@ export async function GET() {
       User.countDocuments({ role: "TEACHER", status: "PENDING_APPROVAL" }),
       LiveSession.countDocuments({ date: todayDateStr }),
       LiveSession.countDocuments({ status: "LIVE" }),
-      Payment.find().lean(),
-      Attendance.find().limit(200).lean(),
+      Payment.find({}, "amount status").lean(),
+      Attendance.find({}, "status").limit(200).lean(),
       StudentProfile.countDocuments({ attendanceRiskLevel: "HIGH" }),
       LiveSession.find({
         status: { $in: ["SCHEDULED", "PUBLISHED", "LIVE"] },
@@ -63,18 +63,18 @@ export async function GET() {
         .sort({ date: 1, startTime: 1 })
         .limit(4)
         .lean(),
-      AuditLog.find()
+      AuditLog.find({}, "action actorId entityType details createdAt")
         .populate("actorId", "name email role")
         .sort({ createdAt: -1 })
         .limit(10)
         .lean(),
-      AssignmentSubmission.find()
+      AssignmentSubmission.find({}, "studentId assignmentId status marksObtained createdAt updatedAt")
         .populate("studentId", "name email")
         .populate("assignmentId", "title subject maxMarks")
         .sort({ createdAt: -1 })
         .limit(5)
         .lean(),
-      User.find()
+      User.find({}, "name email role createdAt")
         .sort({ createdAt: -1 })
         .limit(5)
         .lean(),

@@ -20,7 +20,7 @@ import {
 import { useFastFetch } from "@/lib/api-cache";
 
 export default function AdminDashboardPage() {
-  const { data } = useFastFetch("/api/admin/dashboard");
+  const { data, isLoading } = useFastFetch("/api/admin/dashboard");
   const [currentDateTime, setCurrentDateTime] = useState<Date>(new Date());
 
   // Ticking real-time clock
@@ -98,7 +98,7 @@ export default function AdminDashboardPage() {
         return {
           label: `Starts in ${days}d ${hours}h`,
           isLive: false,
-          color: "bg-blue-50 text-[#004b79] dark:bg-[#002137] dark:text-[#dfb74a] border-blue-200 dark:border-[#004b79]/60",
+          color: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border-amber-200 dark:border-amber-800",
         };
       }
 
@@ -106,17 +106,17 @@ export default function AdminDashboardPage() {
         return {
           label: `Starts in ${hours}h ${minutes}m`,
           isLive: false,
-          color: "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+          color: "bg-blue-50 text-[#004b79] dark:bg-[#002137] dark:text-[#dfb74a] border-blue-200 dark:border-[#004b79]/60",
         };
       }
 
       return {
-        label: `Starts in ${minutes} mins`,
+        label: `Starts in ${minutes}m`,
         isLive: false,
-        color: "bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 font-bold",
+        color: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 animate-pulse font-bold",
       };
     } catch {
-      return { label: "Scheduled", isLive: false, color: "bg-blue-50 text-[#004b79]" };
+      return { label: "Upcoming", isLive: false, color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200" };
     }
   };
 
@@ -169,7 +169,11 @@ export default function AdminDashboardPage() {
             Enrolled Students
           </span>
           <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 font-mono">
-            {metrics.totalStudents}
+            {isLoading && !data ? (
+              <span className="inline-block w-12 h-7 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md" />
+            ) : (
+              metrics.totalStudents
+            )}
           </p>
           <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
             {metrics.activeStudents} Active in Batches
@@ -182,7 +186,11 @@ export default function AdminDashboardPage() {
             Faculty Staff
           </span>
           <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 font-mono">
-            {metrics.totalTeachers}
+            {isLoading && !data ? (
+              <span className="inline-block w-12 h-7 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md" />
+            ) : (
+              metrics.totalTeachers
+            )}
           </p>
           <p className="text-xs text-purple-600 dark:text-purple-400 font-medium">
             {metrics.pendingApprovals > 0 ? `${metrics.pendingApprovals} Pending Approval` : "All Verified"}
@@ -195,7 +203,11 @@ export default function AdminDashboardPage() {
             Live Lectures Today
           </span>
           <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 font-mono">
-            {metrics.todayClasses}
+            {isLoading && !data ? (
+              <span className="inline-block w-12 h-7 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md" />
+            ) : (
+              metrics.todayClasses
+            )}
           </p>
           <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
             {metrics.activeLiveSessions > 0 ? `${metrics.activeLiveSessions} In Progress` : "Scheduled Today"}
@@ -208,15 +220,17 @@ export default function AdminDashboardPage() {
             Monthly Collections
           </span>
           <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 font-mono">
-            ₹{Number(metrics.monthlyRevenue).toLocaleString("en-IN")}
+            {isLoading && !data ? (
+              <span className="inline-block w-20 h-7 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md" />
+            ) : (
+              `₹${Number(metrics.monthlyRevenue).toLocaleString("en-IN")}`
+            )}
           </p>
           <p className="text-xs text-slate-400">
             Pending: ₹{Number(metrics.pendingRevenue).toLocaleString("en-IN")}
           </p>
         </Link>
       </div>
-
-
 
       {/* ── 4. SCHEDULED & UPCOMING LIVE LECTURES (CARDLESS TABLE) ── */}
       {upcomingClasses.length > 0 && (

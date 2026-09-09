@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   Bell,
   Check,
@@ -54,6 +55,11 @@ export function NotificationBell() {
   const [showAllModal, setShowAllModal] = useState(false);
   const [modalFilter, setModalFilter] = useState<"ALL" | "UNREAD">("ALL");
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const loadNotifications = async () => {
     try {
@@ -240,15 +246,19 @@ export function NotificationBell() {
         </>
       )}
 
-      {/* ── VIEW ALL MODAL ── */}
-      {showAllModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      {/* ── VIEW ALL MODAL (Portaled to document.body) ── */}
+      {showAllModal && mounted && typeof document !== "undefined" && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-150"
+          onClick={() => setShowAllModal(false)}
+        >
           <div
-            className="relative w-full max-w-md bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden flex flex-col max-h-[88vh]"
-            style={{ boxShadow: "0 30px 80px rgba(0,0,0,0.3)" }}
+            className="relative w-full max-w-lg bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden flex flex-col max-h-[85vh] shadow-2xl animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+            style={{ boxShadow: "0 25px 70px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05)" }}
           >
             {/* Modal Header */}
-            <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0 bg-slate-50/80 dark:bg-slate-900/60">
+            <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0 bg-slate-50/90 dark:bg-slate-900/80">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-[#004b79]/10 dark:bg-[#004b79]/25 flex items-center justify-center">
                   <Bell className="w-4 h-4 text-[#004b79] dark:text-blue-400" />
@@ -280,7 +290,7 @@ export function NotificationBell() {
             </div>
 
             {/* Filter Pills */}
-            <div className="px-4 py-2.5 flex items-center gap-1.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 shrink-0">
+            <div className="px-5 py-2.5 flex items-center gap-1.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 shrink-0">
               {(["ALL", "UNREAD"] as const).map((f) => (
                 <button
                   key={f}
@@ -288,7 +298,7 @@ export function NotificationBell() {
                   onClick={() => setModalFilter(f)}
                   className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
                     modalFilter === f
-                      ? "bg-[#004b79] text-white shadow-sm"
+                      ? "bg-[#002137] dark:bg-[#004b79] text-white shadow-xs"
                       : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
                 >
@@ -298,7 +308,7 @@ export function NotificationBell() {
             </div>
 
             {/* Notification list */}
-            <div className="p-3 overflow-y-auto flex-1 space-y-0.5">
+            <div className="p-3 overflow-y-auto flex-1 space-y-1.5">
               {filteredModalNotifications.length === 0 ? (
                 <div className="py-14 text-center space-y-2">
                   <Inbox className="w-9 h-9 text-slate-300 dark:text-slate-600 mx-auto" />
@@ -326,7 +336,8 @@ export function NotificationBell() {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

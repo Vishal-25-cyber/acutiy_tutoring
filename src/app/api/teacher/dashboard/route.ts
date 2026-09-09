@@ -49,18 +49,48 @@ export async function GET() {
 
     const classesTaught = profile?.classesTaught || [];
 
-    // 1. Fetch today's classes and active sessions for this teacher
-    let todayClasses = await LiveSession.find({
-      teacherId: session.userId,
-      $or: [
-        { date: todayDateStr },
-        { status: "LIVE" },
-      ],
-    })
-      .populate("batchId")
-      .sort({ startTime: 1 })
-      .lean();
+    const teacherSubjects = profile?.subjects && profile.subjects.length > 0 ? profile.subjects : ["Mathematics"];
 
+    // Fetch dashboard datasets concurrently in parallel
+    const [
+      rawTodayClasses,
+      upcomingClasses,
+      totalStudents,
+      totalMaterials,
+      teacherAssignments,
+      allTeacherSessions,
+      allStudentProfiles,
+    ] = await Promise.all([
+      LiveSession.find({
+        teacherId: session.userId,
+        $or: [{ date: todayDateStr }, { status: "LIVE" }],
+      })
+        .populate("batchId")
+        .sort({ startTime: 1 })
+        .lean(),
+      LiveSession.find({
+        teacherId: session.userId,
+        status: { $in: ["SCHEDULED", "PUBLISHED", "LIVE"] },
+      })
+        .populate("batchId")
+        .sort({ date: 1, startTime: 1 })
+        .limit(6)
+        .lean(),
+      StudentProfile.countDocuments(
+        classesTaught.length > 0 ? { currentClass: { $in: classesTaught } } : {}
+      ),
+      Material.countDocuments({ uploadedBy: session.userId }),
+      Assignment.find({
+        $or: [
+          { teacherId: session.userId },
+          { subject: { $in: teacherSubjects } },
+        ],
+      }).select("_id").lean(),
+      LiveSession.find({ teacherId: session.userId }, "_id status batchId classLevel").lean(),
+      StudentProfile.find({}, "batchId currentClass").lean(),
+    ]);
+
+    let todayClasses = rawTodayClasses;
     if (todayClasses.length === 0) {
       todayClasses = await LiveSession.find({
         teacherId: session.userId,
@@ -72,45 +102,18 @@ export async function GET() {
         .lean();
     }
 
-    const upcomingClasses = await LiveSession.find({
-      teacherId: session.userId,
-      status: { $in: ["SCHEDULED", "PUBLISHED", "LIVE"] },
-    })
-      .populate("batchId")
-      .sort({ date: 1, startTime: 1 })
-      .limit(6)
-      .lean();
-
-    // 2. Real dynamic student count enrolled in teacher's classes/grades
-    const totalStudents = await StudentProfile.countDocuments(
-      classesTaught.length > 0 ? { currentClass: { $in: classesTaught } } : {}
-    );
-
-    // 3. Real Materials uploaded by teacher
-    const totalMaterials = await Material.countDocuments({ uploadedBy: session.userId });
-
-    // 4. Real Pending Evaluations count
-    const teacherSubjects = profile?.subjects && profile.subjects.length > 0 ? profile.subjects : ["Mathematics"];
-    const teacherAssignments = await Assignment.find({
-      $or: [
-        { teacherId: session.userId },
-        { subject: { $in: teacherSubjects } },
-      ],
-    }).select("_id").lean();
     const assignmentIds = teacherAssignments.map((a: any) => a._id);
-    const pendingEvaluations = await AssignmentSubmission.countDocuments({
-      assignmentId: { $in: assignmentIds },
-      status: "SUBMITTED",
-    });
-
-    // 5. Real Strictly Calculated Attendance Turnout from Database Records
-    const allTeacherSessions = await LiveSession.find({ teacherId: session.userId }).lean();
     const allTeacherSessionIds = allTeacherSessions.map((s: any) => s._id);
-    const teacherAttendanceRecords = await Attendance.find({
-      sessionId: { $in: allTeacherSessionIds },
-    }).lean();
 
-    const allStudentProfiles = await StudentProfile.find({}).lean();
+    const [pendingEvaluations, teacherAttendanceRecords] = await Promise.all([
+      AssignmentSubmission.countDocuments({
+        assignmentId: { $in: assignmentIds },
+        status: "SUBMITTED",
+      }),
+      Attendance.find({
+        sessionId: { $in: allTeacherSessionIds },
+      }, "sessionId status").lean(),
+    ]);
     const batchStudentCountMap = new Map<string, number>();
     allStudentProfiles.forEach((st) => {
       const bId = st.batchId?.toString();

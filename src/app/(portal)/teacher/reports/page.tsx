@@ -210,26 +210,26 @@ export default function TeacherStudentReportsPage() {
             <button
               type="button"
               onClick={() => setReportMode("SCHOOL")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer select-text ${
                 reportMode === "SCHOOL"
                   ? "bg-[#002137] dark:bg-[#004b79] text-white shadow-xs"
                   : "text-slate-600 dark:text-slate-300 hover:text-slate-900"
               }`}
             >
               <School className="w-3.5 h-3.5 text-[#dfb74a]" />
-              <span>School Cohort Report</span>
+              <span className={reportMode === "SCHOOL" ? "text-white font-bold" : ""}>School Report</span>
             </button>
             <button
               type="button"
               onClick={() => setReportMode("INDIVIDUAL")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer select-text ${
                 reportMode === "INDIVIDUAL"
                   ? "bg-[#002137] dark:bg-[#004b79] text-white shadow-xs"
                   : "text-slate-600 dark:text-slate-300 hover:text-slate-900"
               }`}
             >
               <User className="w-3.5 h-3.5" />
-              <span>Individual Student</span>
+              <span className={reportMode === "INDIVIDUAL" ? "text-white font-bold" : ""}>Individual Student</span>
             </button>
           </div>
 

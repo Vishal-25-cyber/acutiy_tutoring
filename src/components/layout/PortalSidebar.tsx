@@ -201,13 +201,13 @@ export function PortalSidebar({ role }: SidebarProps) {
 
   return (
     <aside className="w-64 border-r border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#001726] flex flex-col h-screen sticky top-0 shrink-0 select-none z-30">
-      {/* Sidebar Header (Fixed Branding without Hamburger Button) */}
+      {/* Sidebar Header (Static Brand Header - Not a button/link to home page) */}
       <div className="h-20 flex items-center justify-between px-4 border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#00121e]/50 shrink-0">
-        <Link href="/" className="flex items-center gap-3 group min-w-0">
+        <div className="flex items-center gap-3 min-w-0 select-none cursor-default">
           <img
             src="/images/mantif_logo.png"
             alt="Mantif Logo"
-            className="w-10 h-10 object-contain group-hover:scale-105 transition-transform shrink-0"
+            className="w-10 h-10 object-contain shrink-0"
           />
           <div className="flex flex-col justify-center min-w-0">
             <div className="flex items-center gap-1.5">
@@ -225,7 +225,7 @@ export function PortalSidebar({ role }: SidebarProps) {
               Human x AI
             </p>
           </div>
-        </Link>
+        </div>
       </div>
 
       {/* Navigation Links */}

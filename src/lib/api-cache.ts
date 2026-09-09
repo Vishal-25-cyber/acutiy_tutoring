@@ -28,15 +28,41 @@ function getAuthHeaders(isAuthMe = false): Record<string, string> {
   return headers;
 }
 
+function getFromStorage(url: string) {
+  if (typeof window === "undefined" || !url || url.includes("/api/auth/me")) return null;
+  try {
+    const raw = sessionStorage.getItem(`mantif_cache_${url}`);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && Date.now() - parsed.timestamp < 300000) { // 5 min TTL
+        memoryCache.set(url, parsed);
+        return parsed.data;
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function saveToStorage(url: string, data: any) {
+  if (typeof window === "undefined" || !url || url.includes("/api/auth/me")) return;
+  try {
+    sessionStorage.setItem(`mantif_cache_${url}`, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch {
+    // ignore
+  }
+}
+
 /**
  * Prefetches and caches an API endpoint in the background with deduplication.
  */
 export async function prefetchApi(url: string): Promise<any> {
   if (!url || typeof window === "undefined" || url.includes("/api/auth/me")) return null;
 
-  const cached = memoryCache.get(url);
-  if (cached && Date.now() - cached.timestamp < CACHE_STALE_MS) {
-    return cached.data;
+  const cached = memoryCache.get(url)?.data ?? getFromStorage(url);
+  if (cached) {
+    return cached;
   }
 
   if (inflightRequests.has(url)) {
@@ -54,6 +80,7 @@ export async function prefetchApi(url: string): Promise<any> {
         const data = await res.json();
         if (!url.includes("/api/auth/me")) {
           memoryCache.set(url, { data, timestamp: Date.now() });
+          saveToStorage(url, data);
         }
         return data;
       }
@@ -131,7 +158,8 @@ export function useFastFetch<T = any>(
   const getCached = useCallback(() => {
     if (!url || isAuthMe) return null;
     const entry = memoryCache.get(url);
-    return entry ? entry.data : null;
+    if (entry && entry.data !== undefined) return entry.data;
+    return getFromStorage(url);
   }, [url, isAuthMe]);
 
   const [data, setData] = useState<T | null>(() => {
@@ -159,7 +187,7 @@ export function useFastFetch<T = any>(
       setIsLoading(true);
       return;
     }
-    const cached = memoryCache.get(url)?.data;
+    const cached = memoryCache.get(url)?.data ?? getFromStorage(url);
     if (cached !== undefined && cached !== null) {
       setData(cached);
       setIsLoading(false);
@@ -172,7 +200,7 @@ export function useFastFetch<T = any>(
     async (isManual = false) => {
       if (!url) return;
 
-      const cached = isAuthMe ? null : memoryCache.get(url)?.data;
+      const cached = isAuthMe ? null : (memoryCache.get(url)?.data ?? getFromStorage(url));
       if (!isManual && cached !== undefined && cached !== null) {
         setIsLoading(false);
         setIsRevalidating(true);
@@ -191,6 +219,7 @@ export function useFastFetch<T = any>(
           const json = await res.json();
           if (!isAuthMe) {
             memoryCache.set(url, { data: json, timestamp: Date.now() });
+            saveToStorage(url, json);
           }
           if (isMountedRef.current) {
             setData(json);
@@ -262,6 +291,7 @@ export function useFastFetch<T = any>(
  */
 export function setCachedData(url: string, data: any) {
   memoryCache.set(url, { data, timestamp: Date.now() });
+  saveToStorage(url, data);
   cacheListeners.forEach((listener) => listener(url));
 }
 
@@ -279,6 +309,23 @@ export function invalidateCache(urlPrefix: string = "") {
       }
     }
   }
+
+  if (typeof window !== "undefined") {
+    try {
+      const prefix = `mantif_cache_${urlPrefix}`;
+      const toRemove: string[] = [];
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key && (urlPrefix === "" || urlPrefix === "/api" || urlPrefix === "all" ? key.startsWith("mantif_cache_") : key.startsWith(prefix))) {
+          toRemove.push(key);
+        }
+      }
+      toRemove.forEach((k) => sessionStorage.removeItem(k));
+    } catch {
+      // ignore
+    }
+  }
+
   cacheListeners.forEach((listener) => listener(urlPrefix));
 }
 
@@ -294,6 +341,15 @@ export function clearAuthAndCaches() {
       localStorage.removeItem("acuity_user_name");
       localStorage.removeItem("acuity_user_role");
       sessionStorage.removeItem("acuity_auth_token");
+
+      const toRemove: string[] = [];
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key && key.startsWith("mantif_cache_")) {
+          toRemove.push(key);
+        }
+      }
+      toRemove.forEach((k) => sessionStorage.removeItem(k));
     } catch {
       // ignore
     }

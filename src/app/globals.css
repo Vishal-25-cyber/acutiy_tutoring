@@ -78,6 +78,31 @@
   }
 }
 
+/* Universal high-contrast text selection - Always white text on dark side / selection */
+::selection {
+  background-color: #0284c7;
+  color: #ffffff !important;
+}
+
+::-moz-selection {
+  background-color: #0284c7;
+  color: #ffffff !important;
+}
+
+.dark ::selection,
+.dark::-moz-selection,
+[class*="bg-[#002137]"] ::selection,
+[class*="bg-[#001726]"] ::selection,
+[class*="bg-[#00121e]"] ::selection,
+[class*="bg-[#004b79]"] ::selection,
+[class*="bg-[#0c1e33]"] ::selection,
+[class*="bg-slate-900"] ::selection,
+[class*="bg-slate-800"] ::selection,
+button ::selection {
+  background-color: #0284c7;
+  color: #ffffff !important;
+}
+
 /* Hide scrollbar for Chrome, Safari and Opera */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
