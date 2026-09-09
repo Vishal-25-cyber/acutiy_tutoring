@@ -205,7 +205,7 @@ export function PortalSidebar({ role }: SidebarProps) {
       <div className="h-20 flex items-center justify-between px-4 border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#00121e]/50 shrink-0">
         <div className="flex items-center gap-3 min-w-0 select-none cursor-default">
           <img
-            src="/images/mantif_logo.png"
+            src="/images/mantif_icon.png"
             alt="Mantif Logo"
             className="w-10 h-10 object-contain shrink-0"
           />

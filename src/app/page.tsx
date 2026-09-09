@@ -542,12 +542,12 @@ export default function HomePage() {
             className="flex items-center gap-3.5 group text-left cursor-pointer shrink-0"
           >
             <img
-              src="/images/mantif_logo.png"
+              src="/images/mantif_icon.png"
               alt="MANTIF Logo"
-              width={50}
-              height={50}
+              width={48}
+              height={48}
               fetchPriority="high"
-              className="w-12 h-12 sm:w-[50px] sm:h-[50px] object-contain group-hover:scale-105 transition-transform shrink-0"
+              className="w-11 h-11 sm:w-12 sm:h-12 object-contain group-hover:scale-105 transition-transform shrink-0"
             />
             <div className="flex flex-col justify-center">
               <span
@@ -615,7 +615,7 @@ export default function HomePage() {
                   className="flex items-center gap-3 cursor-pointer group"
                 >
                   <img
-                    src="/images/mantif_logo.png"
+                    src="/images/mantif_icon.png"
                     alt="MANTIF Logo"
                     className="w-10 h-10 object-contain shrink-0 group-hover:scale-105 transition-transform"
                   />

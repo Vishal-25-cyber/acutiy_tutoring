@@ -24,34 +24,45 @@ export interface DownloadableMaterial {
 /**
  * Bulletproof PDF trigger that forces the exact filename and .pdf extension across all browsers.
  */
+/**
+ * Bulletproof PDF trigger that forces the exact filename and .pdf extension across all browsers.
+ * Uses authentic Blob creation to eliminate 0-byte corruptions on mobile and desktop.
+ */
 function triggerPdfDownload(doc: jsPDF, fileName: string): boolean {
   const cleanName = fileName.toLowerCase().endsWith(".pdf") ? fileName : `${fileName}.pdf`;
   try {
-    // Primary: jsPDF standard save which properly sets content-disposition & filename
-    doc.save(cleanName);
-    return true;
+    const pdfBlob = doc.output("blob");
+    return triggerBlobDownload(pdfBlob, cleanName);
   } catch (err) {
-    console.warn("doc.save failed, trying DataURI fallback:", err);
+    console.warn("doc.output('blob') failed, trying fallback:", err);
     try {
-      // Fallback: Base64 Data URI with explicit download attribute
-      const dataUri = doc.output("datauristring");
-      const link = document.createElement("a");
-      link.href = dataUri;
-      link.setAttribute("download", cleanName);
-      link.download = cleanName;
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => {
-        if (document.body.contains(link)) {
-          document.body.removeChild(link);
-        }
-      }, 500);
+      doc.save(cleanName);
       return true;
     } catch (fallbackErr) {
       console.error("PDF download fallback error:", fallbackErr);
       return false;
     }
   }
+}
+
+/**
+ * Safely converts a Data URL (base64) into a binary Blob with accurate MIME type.
+ * Uses browser native fetch engine first, with a robust fallback.
+ */
+export async function dataUrlToBlobAsync(dataUrl: string, fallbackFileName?: string): Promise<Blob> {
+  try {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    if (blob && blob.size > 100) {
+      if (fallbackFileName?.toLowerCase().endsWith(".pdf") && (!blob.type || blob.type === "application/octet-stream")) {
+        return new Blob([await blob.arrayBuffer()], { type: "application/pdf" });
+      }
+      return blob;
+    }
+  } catch {
+    // Fall back to manual decoder
+  }
+  return dataUrlToBlob(dataUrl, fallbackFileName);
 }
 
 /**
@@ -65,16 +76,27 @@ export function dataUrlToBlob(dataUrl: string, fallbackFileName?: string): Blob 
       return new Blob([], { type: "application/pdf" });
     }
     const header = dataUrl.substring(0, commaIndex);
-    const base64Data = dataUrl.substring(commaIndex + 1);
+    let raw = dataUrl.substring(commaIndex + 1).trim();
 
-    // Extract MIME type from header e.g. "data:application/pdf;base64"
-    let mimeType = "";
+    // Clean up base64: unescape URL encoding, replace spaces with +, remove illegal chars
+    if (raw.includes("%")) {
+      try {
+        raw = decodeURIComponent(raw);
+      } catch {}
+    }
+    raw = raw.replace(/\s/g, "+").replace(/[^A-Za-z0-9+/=]/g, "");
+
+    // Add padding if missing
+    while (raw.length % 4 !== 0) {
+      raw += "=";
+    }
+
+    let mimeType = "application/pdf";
     const mimeMatch = header.match(/data:([^;,]+)/);
     if (mimeMatch && mimeMatch[1]) {
       mimeType = mimeMatch[1].toLowerCase();
     }
 
-    // Fix or infer generic types
     if (!mimeType || mimeType === "application/octet-stream" || mimeType === "binary/octet-stream") {
       if (fallbackFileName?.toLowerCase().endsWith(".pdf")) {
         mimeType = "application/pdf";
@@ -86,11 +108,11 @@ export function dataUrlToBlob(dataUrl: string, fallbackFileName?: string): Blob 
       ) {
         mimeType = "image/jpeg";
       } else {
-        if (base64Data.startsWith("JVBERi0")) {
+        if (raw.startsWith("JVBERi0")) {
           mimeType = "application/pdf";
-        } else if (base64Data.startsWith("iVBORw0KGgo")) {
+        } else if (raw.startsWith("iVBORw0KGgo")) {
           mimeType = "image/png";
-        } else if (base64Data.startsWith("/9j/")) {
+        } else if (raw.startsWith("/9j/")) {
           mimeType = "image/jpeg";
         } else {
           mimeType = "application/pdf";
@@ -98,7 +120,7 @@ export function dataUrlToBlob(dataUrl: string, fallbackFileName?: string): Blob 
       }
     }
 
-    const binaryString = atob(base64Data.trim());
+    const binaryString = atob(raw);
     const len = binaryString.length;
     const bytes = new Uint8Array(len);
     for (let i = 0; i < len; i++) {
@@ -114,24 +136,42 @@ export function dataUrlToBlob(dataUrl: string, fallbackFileName?: string): Blob 
 
 /**
  * Triggers a reliable browser file download using URL.createObjectURL.
- * Avoids Chrome's data-URI download restrictions for files > 500KB.
+ * Avoids Chrome's data-URI download restrictions and mobile 0-byte corruptions.
  */
 export function triggerBlobDownload(blob: Blob, fileName: string): boolean {
   try {
-    const blobUrl = URL.createObjectURL(blob);
+    if (!blob || blob.size === 0) {
+      console.error("Cannot download empty or 0-byte blob");
+      return false;
+    }
+
+    const cleanName = fileName.includes(".") ? fileName : `${fileName}.pdf`;
+
+    let finalBlob = blob;
+    if (cleanName.toLowerCase().endsWith(".pdf") && (!blob.type || blob.type === "application/octet-stream")) {
+      finalBlob = new Blob([blob], { type: "application/pdf" });
+    }
+
+    const blobUrl = URL.createObjectURL(finalBlob);
     const link = document.createElement("a");
     link.style.display = "none";
     link.href = blobUrl;
-    link.setAttribute("download", fileName);
-    link.download = fileName;
+    link.setAttribute("download", cleanName);
+    link.download = cleanName;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+
     document.body.appendChild(link);
     link.click();
+
+    // 3 minutes timeout to guarantee mobile download manager receives all streamed bytes
     setTimeout(() => {
       if (document.body.contains(link)) {
         document.body.removeChild(link);
       }
       URL.revokeObjectURL(blobUrl);
-    }, 15000);
+    }, 180000);
+
     return true;
   } catch (err) {
     console.error("triggerBlobDownload error:", err);
@@ -286,7 +326,7 @@ export function generateStudyNotesPdfDoc(material: DownloadableMaterial): jsPDF 
  * Opens the uploaded document for viewing / reading in the browser.
  * Ensures the student or teacher sees the exact uploaded file.
  */
-export function openMaterial(material: DownloadableMaterial): boolean {
+export async function openMaterial(material: DownloadableMaterial): Promise<boolean> {
   try {
     const cleanFileName = getCleanMaterialFileName(material);
     let url = material.fileUrl?.trim();
@@ -298,15 +338,20 @@ export function openMaterial(material: DownloadableMaterial): boolean {
 
     // 1. Data URL (Base64 file uploaded by teacher)
     if (url && url.startsWith("data:")) {
-      const blob = dataUrlToBlob(url, cleanFileName);
-      const blobUrl = URL.createObjectURL(blob);
-      const newWin = window.open(blobUrl, "_blank");
-      if (!newWin) {
-        // Pop-up blocker might have intercepted, trigger download instead
-        triggerBlobDownload(blob, cleanFileName);
+      const blob = await dataUrlToBlobAsync(url, cleanFileName);
+      if (blob && blob.size > 100) {
+        let finalBlob = blob;
+        if (cleanFileName.toLowerCase().endsWith(".pdf") && (!blob.type || blob.type === "application/octet-stream")) {
+          finalBlob = new Blob([blob], { type: "application/pdf" });
+        }
+        const blobUrl = URL.createObjectURL(finalBlob);
+        const newWin = window.open(blobUrl, "_blank");
+        if (!newWin) {
+          triggerBlobDownload(finalBlob, cleanFileName);
+        }
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 180000);
+        return true;
       }
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 120000);
-      return true;
     }
 
     // 2. Real remote or server URL
@@ -321,13 +366,13 @@ export function openMaterial(material: DownloadableMaterial): boolean {
 
     // 3. Fallback: generate study guide PDF and open in browser tab
     const doc = generateStudyNotesPdfDoc(material);
-    const blob = doc.output("blob");
-    const blobUrl = URL.createObjectURL(blob);
+    const pdfBlob = doc.output("blob");
+    const blobUrl = URL.createObjectURL(pdfBlob);
     const newWin = window.open(blobUrl, "_blank");
     if (!newWin) {
-      triggerPdfDownload(doc, cleanFileName);
+      triggerBlobDownload(pdfBlob, cleanFileName);
     }
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 120000);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 180000);
     return true;
   } catch (err) {
     console.error("Failed to open material:", err);
@@ -336,9 +381,9 @@ export function openMaterial(material: DownloadableMaterial): boolean {
 }
 
 /**
- * Downloads a material file to the user's computer.
+ * Downloads a material file to the user's computer or mobile device.
  * Guaranteed to download the real uploaded file when present,
- * using binary Blobs to eliminate browser data URI caps.
+ * and ensures output is a valid, readable PDF file that opens on any device.
  */
 export async function downloadMaterial(material: DownloadableMaterial): Promise<boolean> {
   try {
@@ -352,8 +397,10 @@ export async function downloadMaterial(material: DownloadableMaterial): Promise<
 
     // 1. If it's a data URL (User-uploaded file)
     if (url && url.startsWith("data:")) {
-      const blob = dataUrlToBlob(url, cleanFileName);
-      return triggerBlobDownload(blob, cleanFileName);
+      const blob = await dataUrlToBlobAsync(url, cleanFileName);
+      if (blob && blob.size > 100) {
+        return triggerBlobDownload(blob, cleanFileName);
+      }
     }
 
     // 2. If it's a real HTTP/HTTPS or local path (not placeholder)
@@ -366,21 +413,12 @@ export async function downloadMaterial(material: DownloadableMaterial): Promise<
         const res = await fetch(url);
         if (res.ok) {
           const blob = await res.blob();
-          return triggerBlobDownload(blob, cleanFileName);
+          if (blob && blob.size > 100) {
+            return triggerBlobDownload(blob, cleanFileName);
+          }
         }
       } catch (fetchErr) {
         console.warn("Direct fetch failed, falling back to direct link download:", fetchErr);
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute("download", cleanFileName);
-        link.download = cleanFileName;
-        link.target = "_blank";
-        document.body.appendChild(link);
-        link.click();
-        setTimeout(() => {
-          if (document.body.contains(link)) document.body.removeChild(link);
-        }, 1000);
-        return true;
       }
     }
 
