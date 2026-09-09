@@ -150,7 +150,7 @@ export async function GET(
     const disposition = isDownload ? "attachment" : "inline";
     const encodedFileName = encodeURIComponent(fileName);
 
-    return new NextResponse(fileBuffer, {
+    return new NextResponse(new Uint8Array(fileBuffer), {
       status: 200,
       headers: {
         "Content-Type": contentType,

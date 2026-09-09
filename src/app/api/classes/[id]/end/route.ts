@@ -56,13 +56,14 @@ export async function PUT(
       const r1 = getRoom(id);
       r1.isEnded = true;
       r1.signalSeq = (r1.signalSeq || 0) + 1;
-      r1.signals.push({ id: r1.signalSeq, from: session.userId, type: "CLASS_ENDED", timestamp: Date.now() });
+      const fromUserId = actorId || session?.userId || "SYSTEM";
+      r1.signals.push({ id: r1.signalSeq, from: fromUserId, type: "CLASS_ENDED", timestamp: Date.now() });
 
       if (liveClass.livekitRoomId && liveClass.livekitRoomId !== id) {
         const r2 = getRoom(liveClass.livekitRoomId);
         r2.isEnded = true;
         r2.signalSeq = (r2.signalSeq || 0) + 1;
-        r2.signals.push({ id: r2.signalSeq, from: session.userId, type: "CLASS_ENDED", timestamp: Date.now() });
+        r2.signals.push({ id: r2.signalSeq, from: fromUserId, type: "CLASS_ENDED", timestamp: Date.now() });
       }
     } catch {}
 
@@ -70,7 +71,7 @@ export async function PUT(
     try {
       const StaffAttendance = (await import("@/models/StaffAttendance")).default;
       const todayDateStr = new Date().toISOString().split("T")[0];
-      const teacherUserId = liveClass.teacherId || session.userId;
+      const teacherUserId = liveClass.teacherId || actorId || session?.userId;
       await StaffAttendance.findOneAndUpdate(
         { teacherId: teacherUserId, date: todayDateStr },
         {
