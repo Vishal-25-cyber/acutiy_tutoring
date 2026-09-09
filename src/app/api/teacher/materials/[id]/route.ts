@@ -35,6 +35,21 @@ export async function DELETE(
       });
     }
 
+    if (deletedDoc?.fileUrl) {
+      const match = deletedDoc.fileUrl.match(/\/api\/materials\/file\/([0-9a-fA-F]{24})/);
+      if (match && match[1]) {
+        try {
+          const db = mongoose.connection.db;
+          if (db) {
+            const bucket = new mongoose.mongo.GridFSBucket(db, { bucketName: "materials" });
+            await bucket.delete(new mongoose.Types.ObjectId(match[1]));
+          }
+        } catch (e) {
+          console.warn("GridFS cleanup error:", e);
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: "Study material deleted from MongoDB successfully.",

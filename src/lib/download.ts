@@ -336,7 +336,13 @@ export async function openMaterial(material: DownloadableMaterial): Promise<bool
       url = `data:application/pdf;base64,${url}`;
     }
 
-    // 1. Data URL (Base64 file uploaded by teacher)
+    // 1. Direct server streaming route or uploaded asset
+    if (url && (url.startsWith("/api/materials/file/") || url.startsWith("/uploads/"))) {
+      window.open(url, "_blank", "noopener,noreferrer");
+      return true;
+    }
+
+    // 2. Data URL (Base64 file uploaded by teacher)
     if (url && url.startsWith("data:")) {
       const blob = await dataUrlToBlobAsync(url, cleanFileName);
       if (blob && blob.size > 100) {
@@ -354,7 +360,7 @@ export async function openMaterial(material: DownloadableMaterial): Promise<bool
       }
     }
 
-    // 2. Real remote or server URL
+    // 3. Real remote or server URL
     if (
       url &&
       (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/")) &&
@@ -364,7 +370,7 @@ export async function openMaterial(material: DownloadableMaterial): Promise<bool
       return true;
     }
 
-    // 3. Fallback: generate study guide PDF and open in browser tab
+    // 4. Fallback: generate study guide PDF and open in browser tab
     const doc = generateStudyNotesPdfDoc(material);
     const pdfBlob = doc.output("blob");
     const blobUrl = URL.createObjectURL(pdfBlob);
@@ -395,7 +401,26 @@ export async function downloadMaterial(material: DownloadableMaterial): Promise<
       url = `data:application/pdf;base64,${url}`;
     }
 
-    // 1. If it's a data URL (User-uploaded file)
+    // 1. Direct server streaming route or uploaded asset: Trigger native OS download via attachment header
+    if (url && (url.startsWith("/api/materials/file/") || url.startsWith("/uploads/"))) {
+      const downloadUrl = url.includes("?") ? `${url}&download=1` : `${url}?download=1`;
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.setAttribute("download", cleanFileName);
+      link.download = cleanFileName;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+      }, 10000);
+      return true;
+    }
+
+    // 2. If it's a data URL (User-uploaded base64 file)
     if (url && url.startsWith("data:")) {
       const blob = await dataUrlToBlobAsync(url, cleanFileName);
       if (blob && blob.size > 100) {
@@ -403,7 +428,7 @@ export async function downloadMaterial(material: DownloadableMaterial): Promise<
       }
     }
 
-    // 2. If it's a real HTTP/HTTPS or local path (not placeholder)
+    // 3. If it's a real HTTP/HTTPS or local path (not placeholder)
     if (
       url &&
       (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/")) &&
@@ -422,7 +447,7 @@ export async function downloadMaterial(material: DownloadableMaterial): Promise<
       }
     }
 
-    // 3. Fallback: Generate the structured, printable Mantif Study Notes PDF
+    // 4. Fallback: Generate the structured, printable Mantif Study Notes PDF
     const doc = generateStudyNotesPdfDoc(material);
     return triggerPdfDownload(doc, cleanFileName);
   } catch (error) {

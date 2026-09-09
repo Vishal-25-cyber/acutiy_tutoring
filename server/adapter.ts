@@ -69,8 +69,8 @@ export function adaptRoute(handler: (req: any, ctx?: any) => Promise<any>) {
               const json = await nextResponse.json();
               return res.json(json);
             } else {
-              const text = await nextResponse.text();
-              return res.send(text);
+              const arrayBuffer = await nextResponse.arrayBuffer();
+              return res.send(Buffer.from(arrayBuffer));
             }
           }
 

@@ -79,6 +79,9 @@ app.post("/api/teacher/materials", adaptRoute(TeacherMaterials.POST));
 app.delete("/api/teacher/materials", adaptRoute(TeacherMaterials.DELETE));
 app.get("/api/teacher/materials/:id", adaptRoute(TeacherMaterialDetail.GET));
 app.delete("/api/teacher/materials/:id", adaptRoute(TeacherMaterialDetail.DELETE));
+
+import * as MaterialFileRoute from "../src/app/api/materials/file/[id]/route";
+app.get("/api/materials/file/:id", adaptRoute(MaterialFileRoute.GET));
 app.get("/api/teacher/assignments", adaptRoute(TeacherAssignments.GET));
 app.post("/api/teacher/assignments", adaptRoute(TeacherAssignments.POST));
 app.get("/api/teacher/students", adaptRoute(TeacherStudents.GET));
@@ -217,6 +220,8 @@ const distPath = fs.existsSync(path.resolve(process.cwd(), "dist"))
   : path.join(process.cwd(), "dist");
 
 console.log(`[Server] Serving static frontend from: ${distPath} (exists: ${fs.existsSync(distPath)})`);
+
+app.use("/uploads", express.static(path.join(process.cwd(), "public", "uploads")));
 
 app.use(
   express.static(distPath, {

@@ -34,6 +34,10 @@ export async function GET() {
   }
 }
 
+import { Readable } from "stream";
+import fs from "fs";
+import path from "path";
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
@@ -52,14 +56,80 @@ export async function POST(req: NextRequest) {
     }
 
     await connectToDatabase();
+    const db = mongoose.connection.db;
+
+    let permanentFileUrl = fileUrl || "https://acuity.edu/materials/sample-notes.pdf";
+    let actualFileSize = fileSize || "1.4 MB";
+    const cleanFileName = (fileName || `${title.toLowerCase().replace(/\s+/g, "_")}.pdf`)
+      .replace(/[^a-zA-Z0-9._-]/g, "_");
+
+    // Handle large base64 file uploads: stream into MongoDB GridFS (no 16MB document limit!)
+    if (fileUrl && fileUrl.startsWith("data:")) {
+      let mimeType = "application/pdf";
+      let base64Data = "";
+      const commaIdx = fileUrl.indexOf(",");
+      if (commaIdx !== -1) {
+        const header = fileUrl.substring(0, commaIdx);
+        base64Data = fileUrl.substring(commaIdx + 1).replace(/\s/g, "+");
+        const match = header.match(/data:([^;,]+)/);
+        if (match && match[1]) {
+          mimeType = match[1].toLowerCase();
+        }
+      } else {
+        base64Data = fileUrl.replace(/\s/g, "+");
+      }
+
+      const fileBuffer = Buffer.from(base64Data, "base64");
+      const mb = (fileBuffer.length / (1024 * 1024)).toFixed(1);
+      actualFileSize = `${mb} MB`;
+
+      if (db) {
+        const bucket = new mongoose.mongo.GridFSBucket(db, { bucketName: "materials" });
+        const uploadStream = bucket.openUploadStream(cleanFileName, {
+          contentType: mimeType,
+          metadata: {
+            title,
+            classLevel,
+            subject,
+            category,
+            uploadedBy: session.userId,
+            originalName: fileName,
+            fileSize: actualFileSize,
+            createdAt: new Date(),
+          },
+        });
+
+        await new Promise<void>((resolve, reject) => {
+          const readable = Readable.from(fileBuffer);
+          readable
+            .pipe(uploadStream)
+            .on("finish", () => resolve())
+            .on("error", (err) => reject(err));
+        });
+
+        const gridFsId = uploadStream.id.toString();
+        permanentFileUrl = `/api/materials/file/${gridFsId}`;
+
+        // Also cache to server disk public/uploads/materials/
+        try {
+          const uploadsDir = path.join(process.cwd(), "public", "uploads", "materials");
+          if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+          }
+          fs.writeFileSync(path.join(uploadsDir, `${gridFsId}_${cleanFileName}`), fileBuffer);
+        } catch (diskErr) {
+          console.warn("Could not cache file to disk:", diskErr);
+        }
+      }
+    }
 
     const newMaterial = await Material.create({
       title,
       description: description || "",
       category,
-      fileUrl: fileUrl || "https://acuity.edu/materials/sample-notes.pdf",
-      fileName: fileName || `${title.toLowerCase().replace(/\s+/g, "_")}.pdf`,
-      fileSize: fileSize || "1.4 MB",
+      fileUrl: permanentFileUrl,
+      fileName: cleanFileName,
+      fileSize: actualFileSize,
       classLevel,
       subject,
       batchId: batchId || undefined,
@@ -110,13 +180,29 @@ export async function DELETE(req: NextRequest) {
     }
 
     await connectToDatabase();
+    const db = mongoose.connection.db;
+
+    let deletedDoc: any = null;
 
     if (mongoose.Types.ObjectId.isValid(materialId)) {
-      await Material.findByIdAndDelete(materialId);
+      deletedDoc = await Material.findByIdAndDelete(materialId);
     } else {
-      await Material.findOneAndDelete({
+      deletedDoc = await Material.findOneAndDelete({
         $or: [{ _id: materialId }, { title: materialId }],
       });
+    }
+
+    // Clean up GridFS file if linked
+    if (deletedDoc?.fileUrl && db) {
+      const match = deletedDoc.fileUrl.match(/\/api\/materials\/file\/([0-9a-fA-F]{24})/);
+      if (match && match[1]) {
+        try {
+          const bucket = new mongoose.mongo.GridFSBucket(db, { bucketName: "materials" });
+          await bucket.delete(new mongoose.Types.ObjectId(match[1]));
+        } catch (e) {
+          console.warn("GridFS file cleanup warning:", e);
+        }
+      }
     }
 
     return NextResponse.json({
