@@ -1,0 +1,1 @@
+import{r as i}from"./vendor-react-DHiGrMjF.js";import{c as r}from"./class-timing-CJT9ZLKW.js";function f(e){const[n,s]=i.useState(()=>r(e));return i.useEffect(()=>{s(r(e));const m=setInterval(()=>{s(r(e))},1e3);return()=>clearInterval(m)},[e==null?void 0:e._id,e==null?void 0:e.startTime,e==null?void 0:e.endTime,JSON.stringify(e==null?void 0:e.days)]),n}export{f as u};
