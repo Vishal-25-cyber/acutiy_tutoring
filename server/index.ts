@@ -162,6 +162,7 @@ app.put("/api/classes/:id/start", adaptRoute(ClassStartRoute.PUT));
 app.put("/api/classes/:id/cancel", adaptRoute(ClassCancelRoute.PUT));
 app.post("/api/classes/:id/join", adaptRoute(ClassJoinRoute.POST));
 app.put("/api/classes/:id/end", adaptRoute(ClassEndRoute.PUT));
+app.post("/api/classes/:id/end", adaptRoute(ClassEndRoute.POST || ClassEndRoute.PUT));
 app.get("/api/classes/:id/participants", adaptRoute(ClassParticipantsRoute.GET));
 app.get("/api/classes/:id/admit", adaptRoute(ClassAdmitRoute.GET));
 app.post("/api/classes/:id/admit", adaptRoute(ClassAdmitRoute.POST));

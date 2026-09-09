@@ -24,6 +24,117 @@ import {
 } from "lucide-react";
 import { getSubjectsForClassAndBoard, CLASS_LIST } from "@/lib/curriculum";
 
+/* ── 12-Hour Time Picker with AM / PM Buttons ── */
+function TimePicker12h({
+  label,
+  value,
+  onChange,
+  required = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (val: string) => void;
+  required?: boolean;
+}) {
+  const [h24Str = "09", mStr = "00"] = (value || "09:00").split(":");
+  const h24 = parseInt(h24Str, 10) || 0;
+  const mins = parseInt(mStr, 10) || 0;
+  const isPM = h24 >= 12;
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+
+  const updateTime = (newH12: number, newMins: number, newIsPM: boolean) => {
+    let finalH24 = newH12;
+    if (newIsPM) {
+      finalH24 = newH12 === 12 ? 12 : newH12 + 12;
+    } else {
+      finalH24 = newH12 === 12 ? 0 : newH12;
+    }
+    const finalHStr = String(finalH24).padStart(2, "0");
+    const finalMStr = String(newMins).padStart(2, "0");
+    onChange(`${finalHStr}:${finalMStr}`);
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+          {label} {required && <span className="text-rose-500">*</span>}
+        </label>
+        <span className="text-[11px] font-mono font-bold text-[#004b79] dark:text-[#dfb74a] bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-md border border-blue-200/50 dark:border-blue-900/40">
+          {String(h12).padStart(2, "0")}:{String(mins).padStart(2, "0")} {isPM ? "PM" : "AM"}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        {/* Hour (1-12) */}
+        <select
+          value={h12}
+          onChange={(e) => updateTime(parseInt(e.target.value, 10), mins, isPM)}
+          className="flex h-10 flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#004b79] transition-colors shadow-xs cursor-pointer"
+        >
+          {Array.from({ length: 12 }, (_, i) => i + 1).map((hr) => (
+            <option key={hr} value={hr}>
+              {String(hr).padStart(2, "0")} Hour
+            </option>
+          ))}
+        </select>
+
+        <span className="text-sm font-bold text-slate-400">:</span>
+
+        {/* Minute (00-59) */}
+        <select
+          value={mins}
+          onChange={(e) => updateTime(h12, parseInt(e.target.value, 10), isPM)}
+          className="flex h-10 flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#004b79] transition-colors shadow-xs cursor-pointer"
+        >
+          {Array.from({ length: 60 }, (_, i) => i).map((m) => (
+            <option key={m} value={m}>
+              {String(m).padStart(2, "0")} Min
+            </option>
+          ))}
+        </select>
+
+        {/* AM / PM Toggle Buttons */}
+        <div className="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shrink-0">
+          <button
+            type="button"
+            onClick={() => updateTime(h12, mins, false)}
+            className={`px-3 py-1.5 text-xs font-black rounded-lg transition-all cursor-pointer ${
+              !isPM
+                ? "bg-[#004b79] text-white shadow-xs scale-105"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            AM
+          </button>
+          <button
+            type="button"
+            onClick={() => updateTime(h12, mins, true)}
+            className={`px-3 py-1.5 text-xs font-black rounded-lg transition-all cursor-pointer ${
+              isPM
+                ? "bg-[#004b79] text-white shadow-xs scale-105"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            PM
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function getInitialLiveTime() {
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  const curH = now.getHours();
+  const curM = now.getMinutes();
+  const startTime = `${pad(curH)}:${pad(curM)}`;
+  const endTime = `${pad((curH + 1) % 24)}:${pad(curM)}`;
+  return { dateStr, startTime, endTime };
+}
+
 export default function TeacherCreateLiveClassPage() {
   const router = useRouter();
   const isSubmittingRef = useRef(false);
@@ -32,6 +143,8 @@ export default function TeacherCreateLiveClassPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
+  const initialTime = getInitialLiveTime();
+
   const [formData, setFormData] = useState({
     title: "",
     subject: "Mathematics",
@@ -39,12 +152,29 @@ export default function TeacherCreateLiveClassPage() {
     batchId: "",
     topic: "",
     description: "",
-    date: new Date().toISOString().split("T")[0],
-    startTime: "",
-    endTime: "",
+    date: initialTime.dateStr,
+    startTime: initialTime.startTime,
+    endTime: initialTime.endTime,
     gracePeriodMinutes: 5,
     attendanceThresholdPercent: 75,
   });
+
+  // Real-time ticking live clock
+  const [liveClock, setLiveClock] = useState(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setLiveClock(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const setLiveCurrentTime = () => {
+    const live = getInitialLiveTime();
+    setFormData((prev) => ({
+      ...prev,
+      date: live.dateStr,
+      startTime: live.startTime,
+      endTime: live.endTime,
+    }));
+  };
 
   const [materials, setMaterials] = useState<
     { title: string; fileUrl: string; fileName?: string; fileSize?: string; category: string }[]
@@ -75,8 +205,9 @@ export default function TeacherCreateLiveClassPage() {
             setFormData((prev) => ({
               ...prev,
               batchId: firstBatch._id,
-              startTime: prev.startTime || firstBatch.startTime || "18:00",
-              endTime: prev.endTime || firstBatch.endTime || "19:00",
+              // Keep live time defaults unless manually chosen
+              startTime: prev.startTime || initialTime.startTime,
+              endTime: prev.endTime || initialTime.endTime,
             }));
           }
         }
@@ -373,14 +504,31 @@ export default function TeacherCreateLiveClassPage() {
 
         {/* Section 3: Date & Timing */}
         <div className="space-y-4 pb-6 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-[#004b79] dark:text-[#dfb74a]" />
-            <h2 className="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
-              Schedule &amp; Time Slots
-            </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-[#004b79] dark:text-[#dfb74a]" />
+              <h2 className="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                Schedule &amp; Time Slots (Live Timing)
+              </h2>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                Live: {liveClock.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+              </span>
+              <button
+                type="button"
+                onClick={setLiveCurrentTime}
+                className="px-2.5 py-1 rounded-lg bg-[#004b79]/10 hover:bg-[#004b79]/20 text-[#004b79] dark:bg-amber-400/10 dark:hover:bg-amber-400/20 dark:text-amber-400 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 border border-[#004b79]/20"
+                title="Synchronize session date and time to right now"
+              >
+                ⚡ Set to Right Now
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             <div className="space-y-1.5">
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                 Session Date <span className="text-rose-500">*</span>
@@ -392,33 +540,24 @@ export default function TeacherCreateLiveClassPage() {
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                 className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#004b79] transition-colors shadow-xs"
               />
+              <span className="text-[10px] text-slate-400 block">
+                {formData.date === initialTime.dateStr ? "Today (Live Date)" : "Scheduled for future date"}
+              </span>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                Start Time <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="time"
-                required
-                value={formData.startTime}
-                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#004b79] transition-colors shadow-xs"
-              />
-            </div>
+            <TimePicker12h
+              label="Start Time"
+              value={formData.startTime}
+              onChange={(val) => setFormData({ ...formData, startTime: val })}
+              required
+            />
 
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                End Time <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="time"
-                required
-                value={formData.endTime}
-                onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#004b79] transition-colors shadow-xs"
-              />
-            </div>
+            <TimePicker12h
+              label="End Time"
+              value={formData.endTime}
+              onChange={(val) => setFormData({ ...formData, endTime: val })}
+              required
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">

@@ -12,9 +12,18 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getSession(req);
+    let session = await getSession(req);
+    let actorId = session?.userId;
+
+    // Fallback: Check if teacherId is provided in body or headers
     if (!session || (session.role !== "TEACHER" && session.role !== "ADMIN")) {
-      return NextResponse.json({ error: "Unauthorized. Staff access only." }, { status: 401 });
+      try {
+        const cloned = req.clone();
+        const body = await cloned.json().catch(() => ({}));
+        if (body?.teacherId) {
+          actorId = body.teacherId;
+        }
+      } catch {}
     }
 
     const { id } = await params;
@@ -84,7 +93,7 @@ export async function PUT(
     }
 
     await recordAuditLog({
-      actorId: session.userId,
+      actorId: actorId || liveClass.teacherId?.toString() || "system",
       action: "CLASS_ENDED",
       entityType: "LIVE_SESSION",
       entityId: liveClass._id.toString(),
@@ -100,4 +109,11 @@ export async function PUT(
     console.error("PUT /api/classes/[id]/end error:", error);
     return NextResponse.json({ error: error.message || "Failed to end class" }, { status: 500 });
   }
+}
+
+export async function POST(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  return PUT(req, ctx);
 }

@@ -37,24 +37,33 @@ export async function GET(
       return NextResponse.json({ error: "Class not found." }, { status: 404 });
     }
 
+    // If class is completed or cancelled, always return status so students know it concluded
+    if (liveClass.status === "COMPLETED" || liveClass.status === "CANCELLED") {
+      return NextResponse.json({ class: liveClass });
+    }
+
     // Role checks
-    if (session.role === "STUDENT") {
+    if (session && session.role === "STUDENT") {
       const studentProfile = await StudentProfile.findOne({ userId: session.userId });
-      if (!studentProfile) {
-        return NextResponse.json({ error: "Student profile not found." }, { status: 403 });
-      }
+      if (studentProfile) {
+        const studentBatchId = studentProfile.batchId?.toString();
+        const classBatchId =
+          typeof liveClass.batchId === "object"
+            ? (liveClass.batchId as any)?._id?.toString()
+            : liveClass.batchId?.toString();
 
-      const studentBatchId = studentProfile.batchId?.toString();
-      const classBatchId =
-        typeof liveClass.batchId === "object"
-          ? (liveClass.batchId as any)?._id?.toString()
-          : liveClass.batchId?.toString();
-
-      if (studentBatchId !== classBatchId) {
-        return NextResponse.json(
-          { error: "Forbidden: You do not belong to this class batch." },
-          { status: 403 }
-        );
+        if (classBatchId && studentBatchId && studentBatchId !== classBatchId) {
+          // If student was admitted to this class, allow them
+          const isAdmitted = (liveClass.admittedStudents || []).some(
+            (a: any) => String(a.userId) === String(session.userId)
+          );
+          if (!isAdmitted) {
+            return NextResponse.json(
+              { error: "Forbidden: You do not belong to this class batch." },
+              { status: 403 }
+            );
+          }
+        }
       }
 
       if (liveClass.status === "DRAFT") {

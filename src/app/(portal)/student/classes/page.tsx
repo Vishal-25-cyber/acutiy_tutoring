@@ -85,15 +85,22 @@ export default function StudentClassesPage() {
       (!c.date || c.date === todayDateStr)
   );
 
-  const activeDoc = liveClassDoc || todayDbClass;
-  const isClassCurrentlyLive = Boolean(liveClassDoc);
-  const liveOrTodayDbClass = activeDoc;
+  const todayCompletedClass = data?.classes?.find(
+    (c: any) =>
+      c.status === "COMPLETED" &&
+      (!c.date || c.date === todayDateStr)
+  );
+
+  const activeDoc = liveClassDoc || todayDbClass || todayCompletedClass;
+  const isClassCurrentlyLive = Boolean(liveClassDoc && liveClassDoc.status === "LIVE");
+  const liveOrTodayDbClass = liveClassDoc || todayDbClass;
 
   const rawWeeklySchedule = (
     Array.isArray(data?.weeklySchedule) ? data.weeklySchedule : []
   ).map((item: any) => {
     const isToday = currentDay.toLowerCase() === item.day?.toLowerCase() || liveDay.toLowerCase() === item.day?.toLowerCase();
     if (isToday && activeDoc) {
+      const resolvedStatus = isClassCurrentlyLive ? "LIVE" : (item.status === "COMPLETED" || activeDoc.status === "COMPLETED" ? "COMPLETED" : item.status || "SCHEDULED");
       return {
         ...item,
         subject: activeDoc.subject || item.subject,
@@ -102,8 +109,8 @@ export default function StudentClassesPage() {
         startTime: activeDoc.startTime || item.startTime,
         endTime: activeDoc.endTime || item.endTime,
         time: activeDoc.startTime && activeDoc.endTime ? `${activeDoc.startTime} – ${activeDoc.endTime}` : item.time,
-        status: isClassCurrentlyLive ? "LIVE" : "SCHEDULED",
-        roomId: activeDoc.livekitRoomId || activeDoc.meetingId || timing.permanentRoomId,
+        status: resolvedStatus,
+        roomId: activeDoc.livekitRoomId || activeDoc.meetingId || item.roomId || timing.permanentRoomId,
       };
     }
     return item;
@@ -286,10 +293,20 @@ export default function StudentClassesPage() {
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                       CLASS IS LIVE NOW
                     </span>
+                  ) : liveOrTodayDbClass ? (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
+                      <Clock className="w-3.5 h-3.5 text-amber-500" />
+                      SCHEDULED FOR TODAY
+                    </span>
+                  ) : todayCompletedClass ? (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                      <Check className="w-3.5 h-3.5 text-emerald-500" />
+                      TODAY'S CLASS COMPLETED
+                    </span>
                   ) : (
                     <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
                       <Clock className="w-3.5 h-3.5 text-amber-500" />
-                      {liveOrTodayDbClass ? "SCHEDULED FOR TODAY" : "TIMED ENTRY LOCK"}
+                      TIMED ENTRY LOCK
                     </span>
                   )}
 
@@ -324,14 +341,34 @@ export default function StudentClassesPage() {
                       <ArrowRight className="w-4 h-4" />
                     </Button>
                   </Link>
+                ) : liveOrTodayDbClass ? (
+                  <div className="space-y-1 text-left lg:text-right">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-semibold">
+                      <Lock className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Starts at {liveOrTodayDbClass.startTime}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Live session for {batchName}
+                    </p>
+                  </div>
+                ) : todayCompletedClass ? (
+                  <div className="space-y-1 text-left lg:text-right">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-semibold border border-emerald-200/50">
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Concluded for Today</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Session completed · Replay & notes available
+                    </p>
+                  </div>
                 ) : (
                   <div className="space-y-1 text-left lg:text-right">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-semibold">
                       <Lock className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{liveOrTodayDbClass ? `Starts at ${liveOrTodayDbClass.startTime}` : timing.countdownText}</span>
+                      <span>{timing.countdownText}</span>
                     </div>
                     <p className="text-[11px] text-slate-400">
-                      {liveOrTodayDbClass ? `Live session for ${batchName}` : `Opens automatically during ${batchName}`}
+                      Opens automatically during {batchName}
                     </p>
                   </div>
                 )}
@@ -424,23 +461,73 @@ export default function StudentClassesPage() {
 
                         {/* Col 4: Status / Join Action */}
                         <div className="col-span-2 flex items-center justify-start md:justify-end">
-                          {canJoinToday ? (
-                            <Link href={`/classroom/${timing.permanentRoomId}`}>
-                              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors cursor-pointer">
-                                <Video className="w-3.5 h-3.5" />
-                                <span>Join Live</span>
-                              </button>
-                            </Link>
-                          ) : isToday ? (
-                            <div className="flex items-center gap-1.5 text-xs font-mono text-amber-600 dark:text-amber-400">
-                              <Lock className="w-3.5 h-3.5" />
-                              <span className="text-[11px] font-medium">{timing.countdownText}</span>
-                            </div>
-                          ) : (
-                            <span className="text-xs font-medium text-slate-400">
-                              {item.status || "Scheduled"}
-                            </span>
-                          )}
+                          {(() => {
+                            const isCompleted = item.status === "COMPLETED" || (item.date && item.date < todayDateStr);
+                            if (isCompleted) {
+                              return (
+                                <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                                  COMPLETED
+                                </span>
+                              );
+                            }
+
+                            const isLive = item.status === "LIVE" || (isToday && isClassCurrentlyLive);
+                            if (isLive) {
+                              return (
+                                <Link href={`/classroom/${item.roomId || activeRoomId}`}>
+                                  <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors cursor-pointer shadow-xs animate-pulse">
+                                    <Video className="w-3.5 h-3.5" />
+                                    <span>Join Live</span>
+                                  </button>
+                                </Link>
+                              );
+                            }
+
+                            if (isToday) {
+                              const [sh = "0", sm = "0"] = (item.startTime || "").split(":");
+                              const [eh = "23", em = "59"] = (item.endTime || "").split(":");
+                              const startMin = parseInt(sh, 10) * 60 + parseInt(sm, 10);
+                              const endMin = parseInt(eh, 10) * 60 + parseInt(em, 10);
+
+                              if (currentMinutes > endMin) {
+                                return (
+                                  <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                                    COMPLETED
+                                  </span>
+                                );
+                              }
+
+                              if (currentMinutes >= (startMin - 15) && currentMinutes <= endMin) {
+                                return (
+                                  <Link href={`/classroom/${item.roomId || activeRoomId}`}>
+                                    <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors cursor-pointer shadow-xs">
+                                      <Video className="w-3.5 h-3.5" />
+                                      <span>Join Live</span>
+                                    </button>
+                                  </Link>
+                                );
+                              }
+
+                              if (currentMinutes < startMin) {
+                                const diff = startMin - currentMinutes;
+                                const h = Math.floor(diff / 60);
+                                const m = diff % 60;
+                                const cd = h > 0 ? `${h}h ${m}m` : `${m}m`;
+                                return (
+                                  <div className="flex items-center gap-1.5 text-xs font-mono text-amber-600 dark:text-amber-400">
+                                    <Lock className="w-3.5 h-3.5" />
+                                    <span className="text-[11px] font-medium">Starts in {cd}</span>
+                                  </div>
+                                );
+                              }
+                            }
+
+                            return (
+                              <span className="text-xs font-medium text-slate-400">
+                                {item.status || "Scheduled"}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
                     );

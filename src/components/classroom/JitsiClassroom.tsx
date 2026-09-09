@@ -530,10 +530,39 @@ export function JitsiClassroom({
   const admittedListRef = useRef(admittedList);
   useEffect(() => { admittedListRef.current = admittedList; }, [admittedList]);
 
+  // Auto-mark class as ended if teacher abruptly closes window or tab
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (!userInfoRef.current.isTeacher) return;
+      const curUserId = userInfoRef.current.id || currentUserId;
+      const targetClassId = classDataRef.current?.id || classDataRef.current?.livekitRoomId || classId;
+      const token = typeof window !== "undefined" ? (localStorage.getItem("acuity_auth_token") || sessionStorage.getItem("acuity_auth_token")) : "";
+      try {
+        fetch(`/api/classes/${targetClassId}/end`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}`, "x-auth-token": token } : {}),
+          },
+          body: JSON.stringify({ teacherId: curUserId }),
+          keepalive: true,
+        }).catch(() => {});
+      } catch {}
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("pagehide", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("pagehide", handleBeforeUnload);
+    };
+  }, [classId, currentUserId]);
+
   const handleLeaveClass = useCallback(async () => {
     if (pollTimerRef.current) clearInterval(pollTimerRef.current);
     const curUserId = userInfoRef.current.id || currentUserId;
     const targetClassId = classDataRef.current?.id || classDataRef.current?.livekitRoomId || classId;
+    const token = typeof window !== "undefined" ? (localStorage.getItem("acuity_auth_token") || sessionStorage.getItem("acuity_auth_token")) : "";
 
     if (userInfoRef.current.isTeacher) {
       // 1. Broadcast CLASS_ENDED to all connected students across LiveKit DataChannel
@@ -548,6 +577,8 @@ export function JitsiClassroom({
             })
           );
           await livekitRoomRef.current.localParticipant.publishData(endPayload, { reliable: true });
+          // Short delay to ensure DataChannel packet flushes out to network before disconnecting
+          await new Promise((r) => setTimeout(r, 300));
         } catch (e) {
           console.warn("LiveKit broadcast CLASS_ENDED warning:", e);
         }
@@ -557,13 +588,30 @@ export function JitsiClassroom({
       try {
         await fetch(`/api/classes/${targetClassId}/end`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}`, "x-auth-token": token } : {}),
+          },
+          body: JSON.stringify({ teacherId: curUserId }),
+          keepalive: true,
         });
       } catch (e) {
         console.warn("Failed to mark class as ended:", e);
       }
 
-      // 3. Stop media and redirect teacher
+      // 3. Clear admissions
+      try {
+        await fetch(`/api/classes/${targetClassId}/admit`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}`, "x-auth-token": token } : {}),
+          },
+          keepalive: true,
+        });
+      } catch {}
+
+      // 4. Stop media and redirect teacher
       stopAllMediaTracks();
       stopAllMedia();
       if (typeof window !== "undefined") {
@@ -881,6 +929,42 @@ export function JitsiClassroom({
             return copy;
           });
           syncRoomParticipants();
+
+          // If current user is student and the disconnected participant is the teacher / host:
+          if (!userInfoRef.current.isTeacher) {
+            let isHost = false;
+            if (participant.metadata) {
+              try {
+                const meta = JSON.parse(participant.metadata);
+                if (meta.role === "TEACHER" || meta.isTeacher) isHost = true;
+              } catch {}
+            }
+            const teacherId = String(
+              classDataRef.current?.teacherId ||
+              classDataRef.current?.teacher?._id ||
+              classDataRef.current?.teacher?.id ||
+              ""
+            );
+            if (teacherId && String(participant.identity) === teacherId) isHost = true;
+            const teacherName = classDataRef.current?.teacher?.name || "";
+            if (teacherName && participant.name && participant.name.trim().toLowerCase() === teacherName.trim().toLowerCase()) {
+              isHost = true;
+            }
+
+            if (isHost) {
+              console.log("[Classroom] Host teacher disconnected. Concluding session for student.");
+              stopAllMediaTracks();
+              stopAllMedia();
+              setStage("ENDED");
+              setTimeout(() => {
+                if (typeof window !== "undefined") {
+                  window.location.href = "/student/classes";
+                } else {
+                  router.push("/student/classes");
+                }
+              }, 2500);
+            }
+          }
         });
         room.on(RoomEvent.TrackPublished, () => syncRoomParticipants());
         room.on(RoomEvent.TrackMuted, () => syncRoomParticipants());
@@ -1348,10 +1432,16 @@ export function JitsiClassroom({
     // Fast check: if instructor has concluded the call, transition immediately to ENDED
     const checkStatus = async () => {
       try {
-        const res = await fetch(`/api/classes/${targetClassId}`, { cache: "no-store" });
+        const token = typeof window !== "undefined" ? (localStorage.getItem("acuity_auth_token") || sessionStorage.getItem("acuity_auth_token")) : "";
+        const res = await fetch(`/api/classes/${targetClassId}`, {
+          cache: "no-store",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}`, "x-auth-token": token } : {}),
+          },
+        });
         if (res.ok) {
           const data = await res.json();
-          if (data.class?.status === "COMPLETED") {
+          if (data.class?.status === "COMPLETED" || data.class?.status === "CANCELLED") {
             stopAllMediaTracks();
             stopAllMedia();
             setStage("ENDED");
@@ -1935,8 +2025,8 @@ export function JitsiClassroom({
             );
           })()}
 
-          {/* Top-Right Action Bar: Unpin and Full Screen Toggle */}
-          <div className="absolute top-3 right-3 flex items-center gap-2 z-20">
+          {/* Action Bar: Unpin and Full Screen Toggle */}
+          <div className="absolute top-3 left-3 flex items-center gap-2 z-20">
             {pinnedParticipantId && (
               <button
                 onClick={() => setPinnedParticipantId(null)}
@@ -1956,20 +2046,89 @@ export function JitsiClassroom({
               {isHostFullscreen ? (
                 <>
                   <Minimize2 className="w-3.5 h-3.5 text-indigo-400" />
-                  <span className="hidden sm:inline">Exit Full Screen</span>
+                  <span className="text-xs">Exit Full Screen</span>
                 </>
               ) : (
                 <>
                   <Maximize2 className="w-3.5 h-3.5 text-indigo-400" />
-                  <span className="hidden sm:inline">Full Screen</span>
+                  <span className="text-xs">Full Screen</span>
                 </>
               )}
             </button>
           </div>
+
+          {/* Mobile Picture-in-Picture (PiP) Floating Card (Google Meet / FaceTime style) */}
+          <div className="md:hidden absolute top-3 right-3 w-28 sm:w-32 aspect-[3/4] sm:aspect-video rounded-xl overflow-hidden border-2 border-white/20 bg-[#1e1e1e] shadow-2xl z-20">
+            {!userInfo.isTeacher ? (
+              // Student self-view on mobile
+              <div className="relative w-full h-full flex items-center justify-center">
+                {isCameraOn ? (
+                  <video
+                    ref={(el) => {
+                      localVideoRef.current = el;
+                      if (el) {
+                        if (localStreamRef.current && el.srcObject !== localStreamRef.current) {
+                          el.srcObject = localStreamRef.current;
+                        }
+                        el.play().catch(() => {});
+                      }
+                    }}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover -scale-x-100"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center gap-1 text-center p-1">
+                    <div className="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center text-[11px] font-bold text-white shadow">
+                      {initials(userInfo.name)}
+                    </div>
+                    <span className="text-[10px] font-medium text-slate-300">You</span>
+                  </div>
+                )}
+                <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/80 text-[9px] font-semibold text-white flex items-center gap-1">
+                  {isMicOn ? <Mic className="w-2.5 h-2.5 text-emerald-400" /> : <MicOff className="w-2.5 h-2.5 text-rose-400" />}
+                  <span>You</span>
+                </div>
+              </div>
+            ) : (
+              // Teacher viewing remote student on mobile PiP (if any)
+              realtimeParticipants.filter((p) => p.id !== userInfo.id).length > 0 ? (
+                (() => {
+                  const firstStudent = realtimeParticipants.filter((p) => p.id !== userInfo.id)[0];
+                  const track = remoteTracks[firstStudent.id]?.videoTrack;
+                  return (
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      {track && firstStudent.isCameraOn ? (
+                        <RemoteVideoView track={track} className="w-full h-full object-cover bg-black" />
+                      ) : (
+                        <div className="flex flex-col items-center gap-1 text-center p-1">
+                          <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-[11px] font-bold text-slate-200">
+                            {initials(firstStudent.name)}
+                          </div>
+                          <span className="text-[10px] text-slate-300 truncate max-w-[80px]">{firstStudent.name}</span>
+                        </div>
+                      )}
+                      <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/80 text-[9px] font-semibold text-white flex items-center gap-1">
+                        {firstStudent.isMicOn !== false ? <Mic className="w-2.5 h-2.5 text-emerald-400" /> : <MicOff className="w-2.5 h-2.5 text-rose-400" />}
+                        <span className="truncate max-w-[60px]">{firstStudent.name}</span>
+                      </div>
+                    </div>
+                  );
+                })()
+              ) : (
+                <div className="relative w-full h-full flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-1 text-center p-1">
+                    <span className="text-[10px] text-slate-400 font-medium">Solo host</span>
+                  </div>
+                </div>
+              )
+            )}
+          </div>
         </div>
 
         {/* ── 2. Right Side Filmstrip (Users in Small Tiles, Google Meet Style) ── */}
-        <div className="w-64 sm:w-72 md:w-80 h-full min-h-0 flex flex-col gap-2.5 overflow-y-auto shrink-0 pr-1 select-none">
+        <div className="hidden md:flex w-72 lg:w-80 h-full min-h-0 flex-col gap-2.5 overflow-y-auto shrink-0 pr-1 select-none">
           {/* If Student: Show Self-View Tile First */}
           {!userInfo.isTeacher && (
             <div className="aspect-video w-full rounded-xl overflow-hidden bg-[#1e1e1e] border border-white/10 relative flex items-center justify-center min-h-[120px] shrink-0 group">
