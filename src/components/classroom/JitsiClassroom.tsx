@@ -24,7 +24,7 @@ import {
 /* ─────────────────────────────────────────────── */
 function RemoteVideoView({
   track,
-  className = "w-full h-full object-cover bg-black",
+  className = "w-full h-full object-contain bg-black",
 }: {
   track?: RemoteTrack | null;
   className?: string;
@@ -179,6 +179,8 @@ export function JitsiClassroom({
   /* ── Main Stage Fullscreen ── */
   const mainStageRef = useRef<HTMLDivElement | null>(null);
   const [isHostFullscreen, setIsHostFullscreen] = useState(false);
+  const [videoFit, setVideoFit] = useState<"contain" | "cover">("contain");
+  const [showFilmstrip, setShowFilmstrip] = useState<boolean>(true);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -1905,7 +1907,11 @@ export function JitsiClassroom({
                         autoPlay
                         playsInline
                         muted
-                        className={`w-full h-full ${isScreenSharing ? "object-contain bg-black" : "object-cover -scale-x-100"}`}
+                        className={`w-full h-full transition-all duration-200 ${
+                          isScreenSharing || videoFit === "contain"
+                            ? "object-contain bg-black"
+                            : "object-cover -scale-x-100"
+                        }`}
                       />
                     ) : (
                       <div className="flex flex-col items-center gap-3 text-center px-4">
@@ -1935,7 +1941,14 @@ export function JitsiClassroom({
                 return (
                   <div className="relative w-full h-full flex items-center justify-center">
                     {track && (pinnedP.isCameraOn || isScreen) ? (
-                      <RemoteVideoView track={track} className={isScreen ? "w-full h-full object-contain bg-black" : "w-full h-full object-cover bg-black"} />
+                      <RemoteVideoView
+                        track={track}
+                        className={`w-full h-full transition-all duration-200 ${
+                          isScreen || videoFit === "contain"
+                            ? "object-contain bg-black"
+                            : "object-cover bg-black"
+                        }`}
+                      />
                     ) : (
                       <div className="flex flex-col items-center gap-3 text-center px-4">
                         <div className="w-20 sm:w-24 h-20 sm:h-24 rounded-full bg-slate-700 flex items-center justify-center text-2xl sm:text-3xl font-bold text-slate-200 shadow-xl ring-4 ring-white/10">
@@ -1974,7 +1987,11 @@ export function JitsiClassroom({
                       autoPlay
                       playsInline
                       muted
-                      className={`w-full h-full ${isScreenSharing ? "object-contain bg-black" : "object-cover -scale-x-100"}`}
+                      className={`w-full h-full transition-all duration-200 ${
+                        isScreenSharing || videoFit === "contain"
+                          ? "object-contain bg-black"
+                          : "object-cover -scale-x-100"
+                      }`}
                     />
                   ) : (
                     <div className="flex flex-col items-center gap-3 text-center px-4">
@@ -2002,7 +2019,14 @@ export function JitsiClassroom({
             return (
               <div className="relative w-full h-full flex items-center justify-center">
                 {teacherTrack && (remoteTeacher?.isCameraOn || isScreen) ? (
-                  <RemoteVideoView track={teacherTrack} className={isScreen ? "w-full h-full object-contain bg-black" : "w-full h-full object-cover bg-black"} />
+                  <RemoteVideoView
+                    track={teacherTrack}
+                    className={`w-full h-full transition-all duration-200 ${
+                      isScreen || videoFit === "contain"
+                        ? "object-contain bg-black"
+                        : "object-cover bg-black"
+                    }`}
+                  />
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3.5 text-center px-4 bg-[#141414]">
                     <div className="w-20 sm:w-24 h-20 sm:h-24 rounded-full bg-gradient-to-tr from-blue-700 via-indigo-600 to-cyan-500 flex items-center justify-center text-2xl sm:text-3xl font-bold text-white shadow-2xl ring-4 ring-white/10">
@@ -2025,8 +2049,8 @@ export function JitsiClassroom({
             );
           })()}
 
-          {/* Action Bar: Unpin and Full Screen Toggle */}
-          <div className="absolute top-3 left-3 flex items-center gap-2 z-20">
+          {/* Action Bar: Unpin, Live Frame Fit Toggle, Filmstrip Toggle, and Full Screen Toggle */}
+          <div className="absolute top-3 left-3 flex items-center gap-1.5 sm:gap-2 z-20 flex-wrap max-w-[80%]">
             {pinnedParticipantId && (
               <button
                 onClick={() => setPinnedParticipantId(null)}
@@ -2034,10 +2058,40 @@ export function JitsiClassroom({
                 title="Unpin and return to Host"
               >
                 <PinOff className="w-3.5 h-3.5 text-blue-400" />
-                <span>Unpin</span>
+                <span className="hidden sm:inline">Unpin</span>
               </button>
             )}
 
+            {/* Live Camera Frame Sizing: Fit (Live Uncropped) vs Fill (Cover) */}
+            <button
+              onClick={() => setVideoFit((prev) => (prev === "contain" ? "cover" : "contain"))}
+              className="px-2.5 py-1.5 rounded-lg bg-black/75 hover:bg-black/90 text-white text-xs font-medium flex items-center gap-1.5 backdrop-blur-sm border border-white/20 hover:border-white/40 transition-all cursor-pointer shadow-md"
+              title={videoFit === "contain" ? "Live camera size is active (Full frame, uncropped). Click to crop and fill screen." : "Cover mode active (Cropped). Click to view full live camera frame."}
+            >
+              {videoFit === "contain" ? (
+                <>
+                  <Maximize2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Live Frame (Fit)</span>
+                </>
+              ) : (
+                <>
+                  <Minimize2 className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Fill Screen (Cover)</span>
+                </>
+              )}
+            </button>
+
+            {/* Desktop Filmstrip Hide/Show Toggle */}
+            <button
+              onClick={() => setShowFilmstrip((prev) => !prev)}
+              className="hidden md:flex px-2.5 py-1.5 rounded-lg bg-black/75 hover:bg-black/90 text-white text-xs font-medium items-center gap-1.5 backdrop-blur-sm border border-white/20 hover:border-white/40 transition-all cursor-pointer shadow-md"
+              title={showFilmstrip ? "Hide sidebar filmstrip for 100% full stage" : "Show sidebar filmstrip"}
+            >
+              <Users className="w-3.5 h-3.5 text-sky-400" />
+              <span>{showFilmstrip ? "Hide Filmstrip" : "Show Filmstrip"}</span>
+            </button>
+
+            {/* Fullscreen Button */}
             <button
               onClick={toggleHostFullscreen}
               className="px-2.5 py-1.5 rounded-lg bg-black/75 hover:bg-black/90 text-white text-xs font-medium flex items-center gap-1.5 backdrop-blur-sm border border-white/20 hover:border-white/40 transition-all cursor-pointer shadow-md"
@@ -2128,7 +2182,7 @@ export function JitsiClassroom({
         </div>
 
         {/* ── 2. Right Side Filmstrip (Users in Small Tiles, Google Meet Style) ── */}
-        <div className="hidden md:flex w-72 lg:w-80 h-full min-h-0 flex-col gap-2.5 overflow-y-auto shrink-0 pr-1 select-none">
+        <div className={`${showFilmstrip ? "hidden md:flex" : "hidden"} w-72 lg:w-80 h-full min-h-0 flex-col gap-2.5 overflow-y-auto shrink-0 pr-1 select-none transition-all duration-200`}>
           {/* If Student: Show Self-View Tile First */}
           {!userInfo.isTeacher && (
             <div className="aspect-video w-full rounded-xl overflow-hidden bg-[#1e1e1e] border border-white/10 relative flex items-center justify-center min-h-[120px] shrink-0 group">
