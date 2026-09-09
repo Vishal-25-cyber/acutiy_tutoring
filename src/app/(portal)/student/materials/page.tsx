@@ -16,11 +16,12 @@ import {
   GraduationCap,
   ShieldCheck,
   Sparkles,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { useFastFetch } from "@/lib/api-cache";
-import { downloadMaterial, DownloadableMaterial } from "@/lib/download";
+import { downloadMaterial, openMaterial, DownloadableMaterial } from "@/lib/download";
 
 export default function StudentMaterialsPage() {
   const { data, isLoading } = useFastFetch("/api/student/materials");
@@ -79,6 +80,10 @@ export default function StudentMaterialsPage() {
     } finally {
       setDownloadingId(null);
     }
+  };
+
+  const handleOpen = (mat: DownloadableMaterial) => {
+    openMaterial(mat);
   };
 
   const getSubjectBadge = (subject: string) => {
@@ -288,11 +293,21 @@ export default function StudentMaterialsPage() {
                         <p className="text-[10px] text-slate-400">Faculty Specialist</p>
                       </div>
 
-                      {/* Column 4: Actions (col-span-2 text-right) */}
-                      <div className="col-span-2 flex items-center justify-start md:justify-end gap-2">
+                      {/* Column 4: Actions */}
+                      <div className="col-span-2 flex items-center justify-start md:justify-end gap-1.5">
+                        <button
+                          onClick={() => handleOpen(mat)}
+                          className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-[#004b79] dark:hover:text-[#dfb74a] transition-colors cursor-pointer"
+                          title="Open and read document in browser tab"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 text-[#004b79] dark:text-[#dfb74a]" />
+                          <span>Open</span>
+                        </button>
+
                         <button
                           onClick={() => setPreviewMaterial(mat)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-[#004b79] dark:hover:text-[#dfb74a] transition-colors cursor-pointer"
+                          title="Preview details"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           <span>Preview</span>
@@ -304,20 +319,21 @@ export default function StudentMaterialsPage() {
                           className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                             isDownloaded
                               ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
-                              : "bg-indigo-600 hover:bg-indigo-500 text-white"
+                              : "bg-[#004b79] hover:bg-[#003b60] text-white"
                           }`}
+                          title="Download document file"
                         >
                           {isDownloading ? (
                             <span className="animate-spin text-xs">⏳</span>
                           ) : isDownloaded ? (
                             <>
                               <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                              <span>Downloaded</span>
+                              <span className="hidden sm:inline">Downloaded</span>
                             </>
                           ) : (
                             <>
                               <Download className="w-3.5 h-3.5" />
-                              <span>Download PDF</span>
+                              <span className="hidden sm:inline">Download</span>
                             </>
                           )}
                         </button>
@@ -383,28 +399,38 @@ export default function StudentMaterialsPage() {
                       </div>
                     </div>
 
-                    {/* Primary Action Button */}
-                    <div className="pt-3">
+                    {/* Primary Action Buttons: Open & Download */}
+                    <div className="pt-3 flex flex-col sm:flex-row items-center gap-3">
+                      <button
+                        onClick={() => handleOpen(previewMaterial)}
+                        className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold bg-[#004b79] hover:bg-[#003b60] text-white shadow-md shadow-[#004b79]/20 transition-all cursor-pointer"
+                        title="Open and view full document in new tab"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        <span>Open / Read Document</span>
+                      </button>
+
                       <button
                         onClick={() => handleDownload(previewMaterial)}
                         disabled={downloadingId === (previewMaterial._id || previewMaterial.title)}
-                        className={`w-full inline-flex items-center justify-center gap-2 py-3 px-5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                        className={`w-full sm:flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                           downloadedId === (previewMaterial._id || previewMaterial.title)
                             ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
-                            : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20"
+                            : "border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200"
                         }`}
+                        title="Download official file"
                       >
                         {downloadingId === (previewMaterial._id || previewMaterial.title) ? (
-                          <span className="animate-spin text-xs">⏳ Generating PDF...</span>
+                          <span className="animate-spin text-xs">⏳ Downloading...</span>
                         ) : downloadedId === (previewMaterial._id || previewMaterial.title) ? (
                           <>
                             <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                            <span>PDF Downloaded Successfully</span>
+                            <span>File Downloaded</span>
                           </>
                         ) : (
                           <>
                             <Download className="w-4 h-4" />
-                            <span>Download Official PDF Document</span>
+                            <span>Download File</span>
                           </>
                         )}
                       </button>

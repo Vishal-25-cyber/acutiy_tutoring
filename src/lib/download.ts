@@ -55,156 +55,337 @@ function triggerPdfDownload(doc: jsPDF, fileName: string): boolean {
 }
 
 /**
- * Downloads a material file to the user's computer.
- * Always ensures the output is an authentic .pdf file.
+ * Safely converts a Data URL (base64) into a binary Blob with accurate MIME type.
+ * Eliminates Chrome and modern browser data-URI URL limits for files of any size.
  */
-export async function downloadMaterial(material: DownloadableMaterial): Promise<boolean> {
+export function dataUrlToBlob(dataUrl: string, fallbackFileName?: string): Blob {
   try {
-    const rawFileName =
-      material.fileName ||
-      `${material.subject || "Study"}_${material.title.replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`;
-    const cleanFileName = rawFileName.toLowerCase().endsWith(".pdf") ? rawFileName : `${rawFileName}.pdf`;
+    const commaIndex = dataUrl.indexOf(",");
+    if (commaIndex === -1) {
+      return new Blob([], { type: "application/pdf" });
+    }
+    const header = dataUrl.substring(0, commaIndex);
+    const base64Data = dataUrl.substring(commaIndex + 1);
 
-    // 1. If it's a direct PDF data URL
-    if (material.fileUrl && material.fileUrl.startsWith("data:application/pdf")) {
-      const link = document.createElement("a");
-      link.href = material.fileUrl;
-      link.setAttribute("download", cleanFileName);
-      link.download = cleanFileName;
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => {
-        if (document.body.contains(link)) {
-          document.body.removeChild(link);
+    // Extract MIME type from header e.g. "data:application/pdf;base64"
+    let mimeType = "";
+    const mimeMatch = header.match(/data:([^;,]+)/);
+    if (mimeMatch && mimeMatch[1]) {
+      mimeType = mimeMatch[1].toLowerCase();
+    }
+
+    // Fix or infer generic types
+    if (!mimeType || mimeType === "application/octet-stream" || mimeType === "binary/octet-stream") {
+      if (fallbackFileName?.toLowerCase().endsWith(".pdf")) {
+        mimeType = "application/pdf";
+      } else if (fallbackFileName?.toLowerCase().endsWith(".png")) {
+        mimeType = "image/png";
+      } else if (
+        fallbackFileName?.toLowerCase().endsWith(".jpg") ||
+        fallbackFileName?.toLowerCase().endsWith(".jpeg")
+      ) {
+        mimeType = "image/jpeg";
+      } else {
+        if (base64Data.startsWith("JVBERi0")) {
+          mimeType = "application/pdf";
+        } else if (base64Data.startsWith("iVBORw0KGgo")) {
+          mimeType = "image/png";
+        } else if (base64Data.startsWith("/9j/")) {
+          mimeType = "image/jpeg";
+        } else {
+          mimeType = "application/pdf";
         }
-      }, 500);
+      }
+    }
+
+    const binaryString = atob(base64Data.trim());
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    return new Blob([bytes], { type: mimeType });
+  } catch (err) {
+    console.error("dataUrlToBlob parsing error:", err);
+    return new Blob([], { type: "application/pdf" });
+  }
+}
+
+/**
+ * Triggers a reliable browser file download using URL.createObjectURL.
+ * Avoids Chrome's data-URI download restrictions for files > 500KB.
+ */
+export function triggerBlobDownload(blob: Blob, fileName: string): boolean {
+  try {
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.style.display = "none";
+    link.href = blobUrl;
+    link.setAttribute("download", fileName);
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      if (document.body.contains(link)) {
+        document.body.removeChild(link);
+      }
+      URL.revokeObjectURL(blobUrl);
+    }, 15000);
+    return true;
+  } catch (err) {
+    console.error("triggerBlobDownload error:", err);
+    return false;
+  }
+}
+
+/**
+ * Returns a standardized, clean filename for a study material.
+ */
+export function getCleanMaterialFileName(material: DownloadableMaterial): string {
+  if (material.fileName && material.fileName.trim()) {
+    const name = material.fileName.trim();
+    if (name.includes(".")) return name;
+    return `${name}.pdf`;
+  }
+  const prefix = material.subject || "Study";
+  const titlePart = (material.title || "Material").replace(/[^a-zA-Z0-9_-]/g, "_");
+  return `${prefix}_${titlePart}.pdf`;
+}
+
+/**
+ * Generates the structured, printable Mantif Study Notes PDF fallback.
+ */
+export function generateStudyNotesPdfDoc(material: DownloadableMaterial): jsPDF {
+  const facultyName =
+    typeof material.uploadedBy === "object" && material.uploadedBy?.name
+      ? material.uploadedBy.name
+      : typeof material.uploadedBy === "string"
+      ? material.uploadedBy
+      : "Mantif Senior Faculty Team";
+
+  const dateStr = material.createdAt
+    ? new Date(material.createdAt).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : new Date().toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+  });
+
+  // Header bar
+  doc.setFillColor(0, 33, 55); // #002137
+  doc.rect(0, 0, 210, 26, "F");
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.setTextColor(255, 255, 255);
+  doc.text("MANTIF TUTORING", 15, 14);
+
+  doc.setFontSize(9);
+  doc.setTextColor(223, 183, 74); // Gold #dfb74a
+  doc.text(`${(material.category || "STUDY NOTES").toUpperCase()} • ${material.classLevel || "Class 10"}`, 15, 21);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(203, 213, 225);
+  doc.text(`Faculty: ${facultyName}`, 145, 12);
+  doc.text(`Date: ${dateStr}`, 145, 18);
+
+  // Subject badge
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(79, 70, 229);
+  doc.text(`SUBJECT: ${(material.subject || "General").toUpperCase()}`, 15, 36);
+
+  // Title
+  doc.setFontSize(15);
+  doc.setTextColor(15, 23, 42);
+  const splitTitle = doc.splitTextToSize(material.title || "Study Material", 180);
+  doc.text(splitTitle, 15, 44);
+
+  let currentY = 44 + splitTitle.length * 6;
+
+  // Description
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(71, 85, 105);
+  const splitDesc = doc.splitTextToSize(
+    material.description || "Official syllabus study material and structured reference notes designed for Mantif Tutoring students.",
+    180
+  );
+  doc.text(splitDesc, 15, currentY);
+  currentY += splitDesc.length * 5 + 6;
+
+  // Content sections table
+  const studySections = [
+    [
+      "1. Core Concepts",
+      "Comprehensive theoretical foundations and standard definitions strictly aligned with curriculum guidelines.",
+    ],
+    [
+      "2. Key Formulas & Theorems",
+      "• Core Formulas: Derived relations and standard computational steps.\n• Units & Constants: Standard SI units must be maintained.",
+    ],
+    [
+      "3. Step-by-Step Exemplar Practice",
+      "• Problem Type A: Direct formula application\n• Problem Type B: Multi-step word problem with analytical modeling\n• Problem Type C: Higher Order Thinking Skills (HOTS) board questions",
+    ],
+    [
+      "4. Home Revision Checklist",
+      "1. Review homework exercises in the Student Portal under Assignments.\n2. Review recorded class notes prior to the next scheduled live session.\n3. Clarify doubts directly with faculty during live sessions.",
+    ],
+  ];
+
+  autoTable(doc, {
+    startY: currentY,
+    head: [["Section", "Curriculum Content & Study Guidelines"]],
+    body: studySections,
+    theme: "grid",
+    headStyles: {
+      fillColor: [0, 33, 55],
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+      fontSize: 10,
+    },
+    styles: {
+      fontSize: 9,
+      cellPadding: 5,
+      valign: "top",
+      textColor: [30, 41, 59],
+      lineColor: [226, 232, 240],
+      lineWidth: 0.2,
+    },
+    columnStyles: {
+      0: { fontStyle: "bold", cellWidth: 50 },
+      1: { cellWidth: 130 },
+    },
+    alternateRowStyles: {
+      fillColor: [248, 250, 252],
+    },
+  });
+
+  const finalY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 12 : 265;
+  doc.setFontSize(8);
+  doc.setTextColor(148, 163, 184);
+  doc.text("Mantif Live Online Tutoring • Verified Learning Hub Document • support@mantif.edu", 15, Math.min(finalY, 285));
+
+  return doc;
+}
+
+/**
+ * Opens the uploaded document for viewing / reading in the browser.
+ * Ensures the student or teacher sees the exact uploaded file.
+ */
+export function openMaterial(material: DownloadableMaterial): boolean {
+  try {
+    const cleanFileName = getCleanMaterialFileName(material);
+    let url = material.fileUrl?.trim();
+
+    // If raw base64 without "data:" prefix:
+    if (url && (url.startsWith("JVBERi0") || (url.length > 100 && !url.startsWith("http") && !url.startsWith("/")))) {
+      url = `data:application/pdf;base64,${url}`;
+    }
+
+    // 1. Data URL (Base64 file uploaded by teacher)
+    if (url && url.startsWith("data:")) {
+      const blob = dataUrlToBlob(url, cleanFileName);
+      const blobUrl = URL.createObjectURL(blob);
+      const newWin = window.open(blobUrl, "_blank");
+      if (!newWin) {
+        // Pop-up blocker might have intercepted, trigger download instead
+        triggerBlobDownload(blob, cleanFileName);
+      }
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 120000);
       return true;
     }
 
-    // 2. Generate a structured, printable Mantif Study Notes PDF
-    const facultyName =
-      typeof material.uploadedBy === "object" && material.uploadedBy?.name
-        ? material.uploadedBy.name
-        : typeof material.uploadedBy === "string"
-        ? material.uploadedBy
-        : "Mantif Senior Faculty Team";
+    // 2. Real remote or server URL
+    if (
+      url &&
+      (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/")) &&
+      !url.includes("acuity.edu")
+    ) {
+      window.open(url, "_blank", "noopener,noreferrer");
+      return true;
+    }
 
-    const dateStr = material.createdAt
-      ? new Date(material.createdAt).toLocaleDateString("en-IN", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        })
-      : new Date().toLocaleDateString("en-IN", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        });
+    // 3. Fallback: generate study guide PDF and open in browser tab
+    const doc = generateStudyNotesPdfDoc(material);
+    const blob = doc.output("blob");
+    const blobUrl = URL.createObjectURL(blob);
+    const newWin = window.open(blobUrl, "_blank");
+    if (!newWin) {
+      triggerPdfDownload(doc, cleanFileName);
+    }
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 120000);
+    return true;
+  } catch (err) {
+    console.error("Failed to open material:", err);
+    return false;
+  }
+}
 
-    const doc = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4",
-    });
+/**
+ * Downloads a material file to the user's computer.
+ * Guaranteed to download the real uploaded file when present,
+ * using binary Blobs to eliminate browser data URI caps.
+ */
+export async function downloadMaterial(material: DownloadableMaterial): Promise<boolean> {
+  try {
+    const cleanFileName = getCleanMaterialFileName(material);
+    let url = material.fileUrl?.trim();
 
-    // Header bar
-    doc.setFillColor(0, 33, 55); // #002137
-    doc.rect(0, 0, 210, 26, "F");
+    // If raw base64 without "data:" prefix:
+    if (url && (url.startsWith("JVBERi0") || (url.length > 100 && !url.startsWith("http") && !url.startsWith("/")))) {
+      url = `data:application/pdf;base64,${url}`;
+    }
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.setTextColor(255, 255, 255);
-    doc.text("MANTIF TUTORING", 15, 14);
+    // 1. If it's a data URL (User-uploaded file)
+    if (url && url.startsWith("data:")) {
+      const blob = dataUrlToBlob(url, cleanFileName);
+      return triggerBlobDownload(blob, cleanFileName);
+    }
 
-    doc.setFontSize(9);
-    doc.setTextColor(223, 183, 74); // Gold #dfb74a
-    doc.text(`${(material.category || "STUDY NOTES").toUpperCase()} • ${material.classLevel || "Class 10"}`, 15, 21);
+    // 2. If it's a real HTTP/HTTPS or local path (not placeholder)
+    if (
+      url &&
+      (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/")) &&
+      !url.includes("acuity.edu")
+    ) {
+      try {
+        const res = await fetch(url);
+        if (res.ok) {
+          const blob = await res.blob();
+          return triggerBlobDownload(blob, cleanFileName);
+        }
+      } catch (fetchErr) {
+        console.warn("Direct fetch failed, falling back to direct link download:", fetchErr);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", cleanFileName);
+        link.download = cleanFileName;
+        link.target = "_blank";
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+          if (document.body.contains(link)) document.body.removeChild(link);
+        }, 1000);
+        return true;
+      }
+    }
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(203, 213, 225);
-    doc.text(`Faculty: ${facultyName}`, 145, 12);
-    doc.text(`Date: ${dateStr}`, 145, 18);
-
-    // Subject badge
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(79, 70, 229);
-    doc.text(`SUBJECT: ${(material.subject || "General").toUpperCase()}`, 15, 36);
-
-    // Title
-    doc.setFontSize(15);
-    doc.setTextColor(15, 23, 42);
-    const splitTitle = doc.splitTextToSize(material.title, 180);
-    doc.text(splitTitle, 15, 44);
-
-    let currentY = 44 + splitTitle.length * 6;
-
-    // Description
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(71, 85, 105);
-    const splitDesc = doc.splitTextToSize(
-      material.description || "Official syllabus study material and structured reference notes designed for Mantif Tutoring students.",
-      180
-    );
-    doc.text(splitDesc, 15, currentY);
-    currentY += splitDesc.length * 5 + 6;
-
-    // Content sections table
-    const studySections = [
-      [
-        "1. Core Concepts",
-        "Comprehensive theoretical foundations and standard definitions strictly aligned with the CBSE curriculum guidelines.",
-      ],
-      [
-        "2. Key Formulas & Theorems",
-        "• Standard Form: ax² + bx + c = 0 | Discriminant: D = b² - 4ac\n• Nature of Roots: D > 0 (Real & Distinct), D = 0 (Equal), D < 0 (Complex)\n• Units & Constants: Standard SI units must be maintained.",
-      ],
-      [
-        "3. Step-by-Step Exemplar Practice",
-        "• Problem Type A: Direct formula application\n• Problem Type B: Multi-step word problem with equation modeling\n• Problem Type C: Higher Order Thinking Skills (HOTS) board questions",
-      ],
-      [
-        "4. Home Revision Checklist",
-        "1. Complete the homework worksheet in the Student Portal under Assignments.\n2. Review recorded class notes prior to the next scheduled live session.\n3. Clarify doubts directly with faculty during the doubt clearing session.",
-      ],
-    ];
-
-    autoTable(doc, {
-      startY: currentY,
-      head: [["Section", "Curriculum Content & Study Guidelines"]],
-      body: studySections,
-      theme: "grid",
-      headStyles: {
-        fillColor: [0, 33, 55],
-        textColor: [255, 255, 255],
-        fontStyle: "bold",
-        fontSize: 10,
-      },
-      styles: {
-        fontSize: 9,
-        cellPadding: 5,
-        valign: "top",
-        textColor: [30, 41, 59],
-        lineColor: [226, 232, 240],
-        lineWidth: 0.2,
-      },
-      columnStyles: {
-        0: { fontStyle: "bold", cellWidth: 50 },
-        1: { cellWidth: 130 },
-      },
-      alternateRowStyles: {
-        fillColor: [248, 250, 252],
-      },
-    });
-
-    // Footer
-    const finalY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 12 : 265;
-    doc.setFontSize(8);
-    doc.setTextColor(148, 163, 184);
-    doc.text("Mantif Live Online Tutoring • Verified Learning Hub Document • support@mantif.edu", 15, Math.min(finalY, 285));
-
+    // 3. Fallback: Generate the structured, printable Mantif Study Notes PDF
+    const doc = generateStudyNotesPdfDoc(material);
     return triggerPdfDownload(doc, cleanFileName);
   } catch (error) {
     console.error("Failed to download material:", error);

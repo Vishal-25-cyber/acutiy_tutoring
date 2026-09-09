@@ -16,7 +16,7 @@ import {
 import { Modal } from "@/components/ui/modal";
 import { getSubjectsForClassAndBoard, CLASS_LIST } from "@/lib/curriculum";
 import { useFastFetch, invalidateCache } from "@/lib/api-cache";
-import { downloadMaterial, DownloadableMaterial } from "@/lib/download";
+import { downloadMaterial, openMaterial, DownloadableMaterial } from "@/lib/download";
 
 export default function TeacherMaterialsPage() {
   const { data, refetch, isLoading } = useFastFetch("/api/teacher/materials");
@@ -67,7 +67,13 @@ export default function TeacherMaterialsPage() {
 
       const reader = new FileReader();
       reader.onload = (event) => {
-        const base64Url = event.target?.result as string;
+        let base64Url = event.target?.result as string;
+        if (file.name.toLowerCase().endsWith(".pdf") && base64Url.startsWith("data:") && !base64Url.startsWith("data:application/pdf")) {
+          const commaIdx = base64Url.indexOf(",");
+          if (commaIdx !== -1) {
+            base64Url = "data:application/pdf;base64," + base64Url.substring(commaIdx + 1);
+          }
+        }
         setFormData((prev) => ({
           ...prev,
           fileName: file.name,
@@ -90,6 +96,31 @@ export default function TeacherMaterialsPage() {
 
     setIsUploading(true);
     try {
+      let finalFileUrl = formData.fileUrl;
+      let finalFileName = formData.fileName || selectedFile?.name;
+      let finalFileSize = formData.fileSize;
+
+      // Ensure file reading is fully complete before uploading
+      if (selectedFile && (!finalFileUrl || !finalFileUrl.startsWith("data:"))) {
+        finalFileUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            let res = event.target?.result as string;
+            if (selectedFile.name.toLowerCase().endsWith(".pdf") && res.startsWith("data:") && !res.startsWith("data:application/pdf")) {
+              const commaIdx = res.indexOf(",");
+              if (commaIdx !== -1) {
+                res = "data:application/pdf;base64," + res.substring(commaIdx + 1);
+              }
+            }
+            resolve(res);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(selectedFile);
+        });
+        finalFileName = selectedFile.name;
+        finalFileSize = `${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB`;
+      }
+
       const res = await fetch("/api/teacher/materials", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -97,9 +128,9 @@ export default function TeacherMaterialsPage() {
           ...formData,
           title: formData.title.trim(),
           description: formData.description.trim(),
-          fileUrl: formData.fileUrl || "https://acuity.edu/materials/class-material.pdf",
-          fileName: formData.fileName || `${formData.classLevel}_${formData.subject}_Notes.pdf`,
-          fileSize: formData.fileSize || "1.8 MB",
+          fileUrl: finalFileUrl || "https://acuity.edu/materials/class-material.pdf",
+          fileName: finalFileName || `${formData.classLevel}_${formData.subject}_Notes.pdf`,
+          fileSize: finalFileSize || "1.8 MB",
         }),
       });
 
@@ -352,15 +383,31 @@ export default function TeacherMaterialsPage() {
                     <p className="text-[10px] text-slate-400">CBSE / State Board</p>
                   </div>
 
-                  {/* Col 4: Actions (Delete alone) */}
-                  <div className="col-span-2 flex items-center justify-start md:justify-end">
+                  {/* Col 4: Actions (View, Download, Delete) */}
+                  <div className="col-span-2 flex items-center justify-start md:justify-end gap-1.5">
+                    <button
+                      onClick={() => openMaterial(mat)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                      title="Open and view uploaded document in browser tab"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-[#004b79] dark:text-[#dfb74a]" />
+                      <span>View</span>
+                    </button>
+
+                    <button
+                      onClick={() => downloadMaterial(mat)}
+                      className="inline-flex items-center gap-1 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                      title="Download document file"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                    </button>
+
                     <button
                       onClick={() => handleDelete(mat._id)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold text-rose-600 dark:text-rose-400 transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 p-1.5 rounded-xl border border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 transition-colors cursor-pointer"
                       title="Delete Material"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      <span>Delete</span>
                     </button>
                   </div>
                 </div>
