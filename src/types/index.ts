@@ -56,6 +56,7 @@ export interface IStudentProfile {
   totalClassesScheduled: number;
   trialStartDate?: Date;
   trialEndsAt?: Date;
+  hasSeenTrialWelcome?: boolean;
 }
 
 export interface ITrialInfo {
@@ -68,6 +69,7 @@ export interface ITrialInfo {
   hasPaid: boolean;
   hasAccess: boolean;
   pendingVerification: boolean;
+  hasSeenTrialWelcome?: boolean;
 }
 
 export interface ITeacherProfile {

@@ -197,6 +197,7 @@ export async function POST(req: NextRequest) {
             isTrialActive: !isTrialExpired,
             isTrialExpired,
             trialEndsAt: trialEndDate.toISOString(),
+            hasSeenTrialWelcome: !!studentProfile.hasSeenTrialWelcome,
           },
         },
         token,

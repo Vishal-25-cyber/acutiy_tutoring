@@ -8,7 +8,6 @@ import { LivePaymentListener } from "@/components/payment/LivePaymentListener";
 import { StudentTrialLockScreen } from "@/components/student/StudentTrialLockScreen";
 import { StudentTrialWelcomeModal } from "@/components/student/StudentTrialWelcomeModal";
 import { useFastFetch } from "@/lib/api-cache";
-import { Clock } from "lucide-react";
 
 export default function StudentLayout({ children }: { children?: React.ReactNode }) {
   const pathname = usePathname();
@@ -62,6 +61,7 @@ export default function StudentLayout({ children }: { children?: React.ReactNode
           remainingHours={trial?.remainingHours}
           trialEndsAt={trial?.trialEndsAt}
           isTrialActive={isTrialActive}
+          hasSeenTrialWelcome={!!trial?.hasSeenTrialWelcome}
         />
       )}
 

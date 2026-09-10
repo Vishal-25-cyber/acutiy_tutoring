@@ -93,6 +93,7 @@ export async function GET(req: NextRequest) {
         pendingVerification,
         pendingTransactionId: pendingPayment?.transactionId || undefined,
         pendingAmount: pendingPayment?.amount || undefined,
+        hasSeenTrialWelcome: !!profileData?.hasSeenTrialWelcome,
         latestPaid: paidPayment
           ? {
               receiptNumber: paidPayment.receiptNumber,

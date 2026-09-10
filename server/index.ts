@@ -42,6 +42,7 @@ import * as StudentPaymentStream from "../src/app/api/student/payments/stream/ro
 import * as StudentPerformance from "../src/app/api/student/performance/route";
 import * as StudentParentView from "../src/app/api/student/parent-view/route";
 import * as StudentAiAssistant from "../src/app/api/student/ai-assistant/route";
+import * as StudentTrialSeen from "../src/app/api/student/trial/seen/route";
 
 app.get("/api/student/dashboard", adaptRoute(StudentDashboard.GET));
 app.get("/api/student/classes", adaptRoute(StudentClasses.GET));
@@ -56,6 +57,7 @@ app.get("/api/student/payments/stream", adaptRoute(StudentPaymentStream.GET));
 app.get("/api/student/performance", adaptRoute(StudentPerformance.GET));
 app.get("/api/student/parent-view", adaptRoute(StudentParentView.GET));
 app.post("/api/student/ai-assistant", adaptRoute(StudentAiAssistant.POST));
+app.post("/api/student/trial/seen", adaptRoute(StudentTrialSeen.POST));
 
 // ── TEACHER ROUTES ──
 import * as TeacherDashboard from "../src/app/api/teacher/dashboard/route";

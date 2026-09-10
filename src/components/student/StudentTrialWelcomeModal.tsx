@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Modal } from "@/components/ui/modal";
 import { Clock, ArrowRight } from "lucide-react";
 
@@ -8,40 +8,43 @@ interface StudentTrialWelcomeModalProps {
   userId?: string;
   studentName?: string;
   remainingHours?: number;
+  /** Kept for API compatibility — not rendered in this modal. */
   trialEndsAt?: string | Date;
   isTrialActive: boolean;
+  hasSeenTrialWelcome?: boolean;
 }
 
 export function StudentTrialWelcomeModal({
   userId,
   studentName = "Student",
   remainingHours = 48,
-  trialEndsAt,
+  trialEndsAt: _trialEndsAt, // acknowledged but not used
   isTrialActive,
+  hasSeenTrialWelcome = false,
 }: StudentTrialWelcomeModalProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     if (!isTrialActive || !userId) return;
 
-    const storageKey = `mantif_trial_welcome_seen_${userId}`;
-    const alreadySeenInSession = sessionStorage.getItem(storageKey);
+    // If the DB says they've already seen it, never show again
+    if (hasSeenTrialWelcome) return;
 
-    if (!alreadySeenInSession) {
-      const timer = setTimeout(() => {
-        setIsOpen(true);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isTrialActive, userId]);
+    const timer = setTimeout(() => {
+      setIsOpen(true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [isTrialActive, userId, hasSeenTrialWelcome]);
 
   const handleDismiss = () => {
-    if (userId) {
-      try {
-        sessionStorage.setItem(`mantif_trial_welcome_seen_${userId}`, "true");
-      } catch {}
-    }
     setIsOpen(false);
+    // Persist to DB so it never shows again on any device / browser
+    if (userId) {
+      fetch("/api/student/trial/seen", {
+        method: "POST",
+        credentials: "include",
+      }).catch(() => {});
+    }
   };
 
   if (!isTrialActive) return null;
@@ -55,6 +58,7 @@ export function StudentTrialWelcomeModal({
       description={`Welcome, ${studentName}! You have full access to all live classes and study materials.`}
     >
       <div className="space-y-4 pt-1 text-slate-800 dark:text-slate-100 select-none">
+        {/* Time remaining pill */}
         <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs">
           <span className="font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
             <Clock className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -65,6 +69,7 @@ export function StudentTrialWelcomeModal({
           </span>
         </div>
 
+        {/* CTA */}
         <button
           type="button"
           onClick={handleDismiss}
