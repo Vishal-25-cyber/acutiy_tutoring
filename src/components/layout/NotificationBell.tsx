@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   Bell,
@@ -56,10 +56,38 @@ export function NotificationBell() {
   const [modalFilter, setModalFilter] = useState<"ALL" | "UNREAD">("ALL");
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [mounted, setMounted] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Close dropdown whenever user touches or clicks anywhere outside / in the side
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleOutsideInteraction = (event: MouseEvent | TouchEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideInteraction, true);
+    document.addEventListener("touchstart", handleOutsideInteraction, { capture: true, passive: true });
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideInteraction, true);
+      document.removeEventListener("touchstart", handleOutsideInteraction, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
 
   const loadNotifications = async () => {
     try {
@@ -166,7 +194,7 @@ export function NotificationBell() {
   };
 
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
       {/* Bell button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -188,7 +216,14 @@ export function NotificationBell() {
       {/* ── QUICK DROPDOWN ── */}
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+          {mounted && typeof document !== "undefined" && createPortal(
+            <div
+              className="fixed inset-0 z-40 bg-transparent cursor-default"
+              onClick={() => setIsOpen(false)}
+              onTouchStart={() => setIsOpen(false)}
+            />,
+            document.body
+          )}
           <div
             className="absolute right-0 mt-2 w-80 sm:w-[360px] bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl z-50 overflow-hidden"
             style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.1)" }}
@@ -251,10 +286,16 @@ export function NotificationBell() {
         <div
           className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-150"
           onClick={() => setShowAllModal(false)}
+          onTouchStart={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowAllModal(false);
+            }
+          }}
         >
           <div
             className="relative w-full max-w-lg bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden flex flex-col max-h-[85vh] shadow-2xl animate-in zoom-in-95 duration-150"
             onClick={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
             style={{ boxShadow: "0 25px 70px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05)" }}
           >
             {/* Modal Header */}
