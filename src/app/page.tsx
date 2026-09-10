@@ -289,6 +289,18 @@ export default function HomePage() {
     }
   }, []);
 
+  // Lock background scroll when detail modal, lightbox or cinema player is open to ensure fixed view
+  useEffect(() => {
+    if (selectedSchoolModal || selectedGalleryIdx !== null || fullscreenVideo) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [selectedSchoolModal, selectedGalleryIdx, fullscreenVideo]);
+
   const phone1 = (contactSettings?.supportPhone1 || "9876543210").replace(/\D/g, "").slice(-10);
   const phone2 = (contactSettings?.supportPhone2 || "9876543211").replace(/\D/g, "").slice(-10);
   const phone3 = (contactSettings?.supportPhone3 || "9876543212").replace(/\D/g, "").slice(-10);
@@ -542,7 +554,7 @@ export default function HomePage() {
             className="flex items-center gap-3.5 group text-left cursor-pointer shrink-0"
           >
             <img
-              src="/images/mantif_icon.png"
+              src="/images/mantif_icon.png?v=3"
               alt="MANTIF Logo"
               width={48}
               height={48}
@@ -615,7 +627,7 @@ export default function HomePage() {
                   className="flex items-center gap-3 cursor-pointer group"
                 >
                   <img
-                    src="/images/mantif_icon.png"
+                    src="/images/mantif_icon.png?v=3"
                     alt="MANTIF Logo"
                     className="w-10 h-10 object-contain shrink-0 group-hover:scale-105 transition-transform"
                   />
@@ -2217,76 +2229,81 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* ─── School Detail Modal (Professional Editorial Layout with 2 Video Players & Compact Proportions) ─── */}
+          {/* ─── School Detail Modal (Fixed Layout - Zero Scroll Dialog with Perfectly Balanced Proportions) ─── */}
           {selectedSchoolModal && (
             <div
-              className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6 select-none overflow-y-auto sm:overflow-hidden"
               onClick={() => setSelectedSchoolModal(null)}
             >
               <div
-                className="relative w-full max-w-3xl lg:max-w-4xl max-h-[88vh] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-2xl bg-white border border-slate-200/90 shadow-2xl p-5 sm:p-7 space-y-5 text-left"
+                className="relative w-full max-w-3xl lg:max-w-4xl max-h-[94vh] sm:max-h-[92vh] rounded-2xl sm:rounded-3xl bg-white border border-slate-200/90 shadow-2xl p-4 sm:p-5 lg:p-6 space-y-3 sm:space-y-3.5 text-left overflow-y-auto sm:overflow-hidden select-text flex flex-col justify-between"
                 onClick={(e) => e.stopPropagation()}
               >
-                {/* Modal Top Header (Clean Single-Line School Name + Unique Signature Close Button) */}
-                <div className="flex items-center justify-between gap-3 pb-4 border-b border-slate-200/80">
-                  <div className="space-y-0.5">
-                    <h3 className="text-lg sm:text-xl md:text-2xl font-black text-[#002137] tracking-tight leading-snug">
+                {/* Modal Top Header (Clean Single-Line School Name + Location & Signature Close Button) */}
+                <div className="flex items-center justify-between gap-3 pb-2.5 sm:pb-3 border-b border-slate-200/80 shrink-0">
+                  <div className="space-y-0.5 min-w-0">
+                    <h3 className="text-base sm:text-lg md:text-xl font-black text-[#002137] tracking-tight leading-snug truncate">
                       {selectedSchoolModal.name}
                     </h3>
+                    {selectedSchoolModal.district && (
+                      <p className="text-[10px] sm:text-[11px] font-bold text-[#8c6924] uppercase tracking-wider truncate">
+                        {selectedSchoolModal.district} • {selectedSchoolModal.tag || "Academic Faculty Empowerment Seminar"}
+                      </p>
+                    )}
                   </div>
 
                   {/* Unique Signature Designed Close Button */}
                   <button
                     onClick={() => setSelectedSchoolModal(null)}
-                    className="group relative inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1 rounded-full bg-[#002137] hover:bg-[#004b79] text-white border-2 border-[#dfb74a]/60 shadow-md hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer shrink-0"
+                    className="group relative inline-flex items-center gap-1.5 pl-2.5 pr-1 py-1 rounded-full bg-[#002137] hover:bg-[#004b79] text-white border-2 border-[#dfb74a]/60 shadow-md hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer shrink-0"
                     title="Close Dialog"
                   >
                     <span className="text-[10px] font-black uppercase tracking-wider text-[#dfb74a] hidden sm:inline-block">
                       Close
                     </span>
-                    <div className="w-6 h-6 rounded-full bg-[#dfb74a] text-[#002137] group-hover:bg-white flex items-center justify-center shadow-inner transition-colors">
-                      <X className="w-3.5 h-3.5 stroke-[3] transition-transform duration-300 group-hover:rotate-90" />
+                    <div className="w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-full bg-[#dfb74a] text-[#002137] group-hover:bg-white flex items-center justify-center shadow-inner transition-colors">
+                      <X className="w-3 h-3 stroke-[3] transition-transform duration-300 group-hover:rotate-90" />
                     </div>
                   </button>
                 </div>
 
-                {/* Unified Full-Width Narrative Paragraph */}
-                <div className="space-y-2.5">
+                {/* Unified Full-Width Narrative Paragraph (Fixed Clean Typography) */}
+                <div className="space-y-2 shrink-0">
                   <div className="space-y-0.5">
-                    <p className="text-[11px] font-black uppercase tracking-widest text-[#004b79]">
+                    <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-[#004b79]">
                       Academic Focus &amp; Practical Training
                     </p>
-                    <h4 className="text-base sm:text-lg lg:text-xl font-black text-[#002137] leading-snug">
+                    <h4 className="text-sm sm:text-base lg:text-lg font-black text-[#002137] leading-snug">
                       “{selectedSchoolModal.sessionTitle}”
                     </h4>
                   </div>
 
-                  <p className="text-slate-700 text-xs sm:text-sm lg:text-[15px] leading-relaxed font-normal">
+                  <p className="text-slate-700 text-xs sm:text-[13px] leading-relaxed font-normal">
                     {selectedSchoolModal.summary}{" "}
                     {selectedSchoolModal.description}{" "}
                     {selectedSchoolModal.milestoneQuote}
                   </p>
 
                   <div className="flex items-center gap-1.5 pt-0.5">
-                    <span className="w-2 h-2 rounded-full bg-[#b89047]" />
-                    <p className="text-xs font-extrabold text-[#002137] tracking-wide">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#b89047]" />
+                    <p className="text-[11px] sm:text-xs font-extrabold text-[#002137] tracking-wide">
                       — Ms. Karunya S, Founder (Alumna)
                     </p>
                   </div>
                 </div>
 
                 {/* ─── DUAL VIDEO SHOWCASE (2 DEDICATED VIDEOS) ─── */}
-                <div className="space-y-3.5 pt-4 border-t border-slate-200/80">
+                <div className="space-y-2.5 pt-2.5 sm:pt-3 border-t border-slate-200/80 shrink-0">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-[#002137] text-[#dfb74a] flex items-center justify-center shadow-xs">
-                        <Video className="w-3.5 h-3.5" />
+                      <div className="w-6 h-6 rounded-md bg-[#002137] text-[#dfb74a] flex items-center justify-center shadow-xs">
+                        <Video className="w-3 h-3" />
                       </div>
                       <div>
-                        <h4 className="text-sm sm:text-base font-black text-[#002137]">
+                        <h4 className="text-xs sm:text-sm font-black text-[#002137]">
                           Session Video Recordings
                         </h4>
-                        <p className="text-xs text-slate-500 font-medium">
+                        <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium">
                           2 Dedicated video streams covering workshop highlights &amp; founder interactions
                         </p>
                       </div>
@@ -2294,7 +2311,7 @@ export default function HomePage() {
                   </div>
 
                   {/* 2-Column Responsive Video Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-5">
 
                     {/* VIDEO SLOT 1 */}
                     {(() => {
@@ -2304,15 +2321,15 @@ export default function HomePage() {
                       const slotTitle1 = selectedSchoolModal.videoTitle1 || "Session Video 1: Faculty AI Workshop";
 
                       return (
-                        <div className="space-y-2.5">
+                        <div className="space-y-1.5">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-black uppercase text-[#002137] tracking-wide truncate max-w-full">
+                            <span className="text-[10px] sm:text-[11px] font-black uppercase text-[#002137] tracking-wide truncate max-w-full">
                               {slotTitle1}
                             </span>
                           </div>
 
                           {/* Player Container */}
-                          <div className="relative rounded-2xl overflow-hidden shadow-xl border-2 border-slate-300 bg-black aspect-video flex items-center justify-center group">
+                          <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-lg border-2 border-slate-300 bg-black aspect-[16/9] max-h-[170px] sm:max-h-[185px] w-full flex items-center justify-center group">
                             {effectiveVid1 && isVidPlaying1 ? (
                               <div className="relative w-full h-full bg-black">
                                 {effectiveVid1.includes("youtube.com") || effectiveVid1.includes("youtu.be") ? (
@@ -2333,7 +2350,7 @@ export default function HomePage() {
                                 )}
                               </div>
                             ) : (
-                              <div className="relative w-full h-full flex items-center justify-center p-4 text-white select-none overflow-hidden">
+                              <div className="relative w-full h-full flex items-center justify-center p-3 text-white select-none overflow-hidden">
                                 {/* Video Real Thumbnail Background */}
                                 {effectiveVid1 && !effectiveVid1.includes("youtube.com") && !effectiveVid1.includes("youtu.be") ? (
                                   <video
@@ -2347,19 +2364,19 @@ export default function HomePage() {
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/50 group-hover:via-black/10 transition-all duration-300" />
 
                                 {/* Center Play Button */}
-                                <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-2">
+                                <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-1.5">
                                   <button
                                     onClick={() => {
                                       if (effectiveVid1) {
                                         setPlayingVideoSlotId(slotKey);
                                       }
                                     }}
-                                    className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all cursor-pointer group-hover:ring-4 group-hover:ring-amber-300/50"
+                                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all cursor-pointer group-hover:ring-4 group-hover:ring-amber-300/50"
                                     title="Play Video"
                                   >
-                                    <Play className="w-6 h-6 fill-current ml-0.5" />
+                                    <Play className="w-5 h-5 fill-current ml-0.5" />
                                   </button>
-                                  <p className="text-xs font-black text-white drop-shadow-md">
+                                  <p className="text-[11px] font-black text-white drop-shadow-md">
                                     Click to Play Video
                                   </p>
                                 </div>
@@ -2378,15 +2395,15 @@ export default function HomePage() {
                       const slotTitle2 = selectedSchoolModal.videoTitle2 || "Session Video 2: Founder Address & Q&A";
 
                       return (
-                        <div className="space-y-2.5">
+                        <div className="space-y-1.5">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-black uppercase text-[#002137] tracking-wide truncate max-w-full">
+                            <span className="text-[10px] sm:text-[11px] font-black uppercase text-[#002137] tracking-wide truncate max-w-full">
                               {slotTitle2}
                             </span>
                           </div>
 
                           {/* Player Container */}
-                          <div className="relative rounded-2xl overflow-hidden shadow-xl border-2 border-slate-300 bg-black aspect-video flex items-center justify-center group">
+                          <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-lg border-2 border-slate-300 bg-black aspect-[16/9] max-h-[170px] sm:max-h-[185px] w-full flex items-center justify-center group">
                             {effectiveVid2 && isVidPlaying2 ? (
                               <div className="relative w-full h-full bg-black">
                                 {effectiveVid2.includes("youtube.com") || effectiveVid2.includes("youtu.be") ? (
@@ -2407,7 +2424,7 @@ export default function HomePage() {
                                 )}
                               </div>
                             ) : (
-                              <div className="relative w-full h-full flex items-center justify-center p-4 text-white select-none overflow-hidden">
+                              <div className="relative w-full h-full flex items-center justify-center p-3 text-white select-none overflow-hidden">
                                 {/* Video Real Thumbnail Background */}
                                 {effectiveVid2 && !effectiveVid2.includes("youtube.com") && !effectiveVid2.includes("youtu.be") ? (
                                   <video
@@ -2421,19 +2438,19 @@ export default function HomePage() {
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/50 group-hover:via-black/10 transition-all duration-300" />
 
                                 {/* Center Play Button */}
-                                <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-2">
+                                <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-1.5">
                                   <button
                                     onClick={() => {
                                       if (effectiveVid2) {
                                         setPlayingVideoSlotId(slotKey2);
                                       }
                                     }}
-                                    className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all cursor-pointer group-hover:ring-4 group-hover:ring-amber-300/50"
+                                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-gradient-to-tr from-[#b89047] to-[#dfb74a] text-[#002137] flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all cursor-pointer group-hover:ring-4 group-hover:ring-amber-300/50"
                                     title="Play Video"
                                   >
-                                    <Play className="w-6 h-6 fill-current ml-0.5" />
+                                    <Play className="w-5 h-5 fill-current ml-0.5" />
                                   </button>
-                                  <p className="text-xs font-black text-white drop-shadow-md">
+                                  <p className="text-[11px] font-black text-white drop-shadow-md">
                                     Click to Play Video
                                   </p>
                                 </div>
